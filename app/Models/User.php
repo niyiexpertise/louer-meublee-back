@@ -18,9 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'lastname', 'firstname', 'password', 'telephone', 'email', 'country', 'piece_of_identity', 'city', 'address', 'sex', 'postal_code', 'is_deleted', 'is_blocked', 'icone',
     ];
 
     /**
@@ -40,6 +38,38 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
+
+    public function user_role()
+    {
+        return $this->hasMany(User_role::class);
+    }
+    
+
+    public function user_language()
+    {
+        return $this->hasMany(User_language::class);
+                   
+    }
+    public function reservation()
+    {
+        return $this->hasMany(Reservation::class);
+    }
+    public function note()
+    {
+        return $this->hasMany(Note::class);
+    }
+    public function user_preference()
+    {
+        return $this->hasMany(User_preference::class);
+                   
+    }
+    public function housing()
+    {
+        return $this->hasMany(Housing::class);
+    }
+    public function review()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

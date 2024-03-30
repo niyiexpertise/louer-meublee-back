@@ -22,6 +22,10 @@ class Equipment extends Model
         return $this->hasMany(housing_equipment::class);
         
     }
+    public function housing_category_equipment()
+    {
+        return $this->hasMany(housing_category_equipment::class);
+    }
 
 
 }

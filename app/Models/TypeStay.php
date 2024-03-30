@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TypeStay extends Model
 {
     use HasFactory;
+    protected $fillable = ['name'];
     public function housing_price()
     {
         return $this->hasMany(housing_price::class);

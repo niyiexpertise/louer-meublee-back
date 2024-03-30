@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('lastname');
             $table->string('firstname');
             $table->string('email')->unique();
+            $table->string('code_pays');
             $table->string('telephone');
             $table->string('country');
             $table->string('file_profil')->nullable(); // Chemin vers l'image de profil

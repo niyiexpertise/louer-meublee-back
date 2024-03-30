@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class User_preference extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'user_id',
+        'preference_id',
+    ];
     public function preference()
     {
         return $this->belongsTo(Preference::class);

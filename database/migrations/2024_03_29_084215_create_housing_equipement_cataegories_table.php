@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accessibilities', function (Blueprint $table) {
+        Schema::create('housing_equipement_cataegories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
+            $table->foreignId('housing_id')->constrained()->onDelete('cascade');
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreignId('equipment_id')->constrained()->onDelete('cascade');
             $table->string('icone')->nullable();
+            $table->timestamps();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
-            $table->timestamps();
         });
     }
 
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accessibilities');
+        Schema::dropIfExists('housing_equipement_cataegories');
     }
 };

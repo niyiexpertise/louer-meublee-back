@@ -20,6 +20,11 @@ class Category extends Model
     {
         return $this->hasMany(housing_category_file::class);
     }
+
+    public function housing_category_equipment()
+    {
+        return $this->hasMany(housing_category_equipment::class);
+    }
     
 
 }

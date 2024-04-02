@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\User_role;
 use App\Models\User_language;
+use App\Models\Review;
+use App\Models\Language;
 use Validator;
 class UserController extends Controller
 {
@@ -95,8 +97,7 @@ class UserController extends Controller
 }
 /**
  * @OA\Post(
- *   path="/api/register",
- *   operationId="registerUser",
+ *   path="/api/users/register",
  *   tags={"User"},
  *   summary="Enregistrer un nouvel utilisateur",
  *   description="Enregistre un nouvel utilisateur avec les informations fournies",
@@ -126,22 +127,11 @@ class UserController extends Controller
  *           format="binary",
  *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
  *         ),
- *         @OA\Property(
- *           property="piece_of_identity",
- *           type="string",
- *           format="binary",
- *           description="Image de la pièce d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
- *         ),
  *         @OA\Property(property="ville", type="string", example="Paris"),
  *         @OA\Property(property="addresse", type="string", example="123 Rue de la Paix"),
  *         @OA\Property(property="sexe", type="string", example="Masculin"),
  *         @OA\Property(property="postal_code", type="string", example="75001"),
- *         @OA\Property(
- *           property="language_id",
- *           type="array",
- *           items={"type": "integer"},
- *           description="Liste des identifiants de langue"
- *         ),
+ *         @OA\Property(property="langage_id", type="string", example="[1,2,4]"),
  *         @OA\Property(
  *           property="password_confirmation",
  *           type="string",
@@ -149,7 +139,7 @@ class UserController extends Controller
  *           example="Password123",
  *           description="Confirmation du mot de passe (doit correspondre au mot de passe)"
  *         ),
- *         required={"nom", "prenom", "password", "code_pays", "telephone", "email", "pays", "identity_profil", "piece_of_identity", "ville", "addresse", "sexe", "postal_code", "language_id", "password_confirmation"}
+ *         required={"nom", "prenom", "password", "code_pays", "telephone", "email", "pays", "ville", "addresse", "sexe", "postal_code", "language_id", "password_confirmation"}
  *       )
  *     )
  *   ),
@@ -170,15 +160,11 @@ class UserController extends Controller
  * )
  */
 
-
-
-
-     
-
     public function register(Request $request)
     {
         // Validation des données
-
+        
+        
         $validator = Validator::make($request->all(), [
             'nom' => 'required|string',
             'prenom' => 'required|string',
@@ -193,8 +179,7 @@ class UserController extends Controller
             'telephone' => 'required|String|numeric',
             'email' => 'required|email|unique:users',
             'pays' => 'required|string',
-            'identity_profil' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'piece_of_identity' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'ville' => 'required|string',
             'addresse' => 'required|string',
             'sexe' => 'required|string',
@@ -212,16 +197,12 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
         
+        if ($request->hasFile('identity_profil')) {
         $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
-        $piece_of_identity_name = uniqid() . '.' . $request->file('piece_of_identity')->getClientOriginalExtension();
-
-        $identity_profil_path = $request->file('identity_profil')->move(public_path('image/piece_d_identite'), $identity_profil_name);
-        $piece_of_identity_path = $request->file('piece_of_identity')->move(public_path('image/photo_profil'), $piece_of_identity_name);
-
+        $identity_profil_path = $request->file('identity_profil')->move(public_path('image/photo_profil'), $identity_profil_name);
         $base_url = url('/');
-        $identity_profil_url = $base_url . '/image/piece_d_identite/' . $identity_profil_name;
-        $piece_of_identity_url = $base_url . '/image/photo_profil/' . $piece_of_identity_name;
-
+        $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
+        }
         $user = new User([
             'lastname' => $request->nom,
             'firstname' => $request->prenom,
@@ -231,7 +212,6 @@ class UserController extends Controller
             'email' => $request->email,
             'country' => $request->pays,
             'file_profil' => $identity_profil_url,
-            'piece_of_identity' => $piece_of_identity_url,
             'city' => $request->ville,
             'address' => $request->addresse,
             'sexe' => $request->sexe,
@@ -248,7 +228,6 @@ class UserController extends Controller
         ]);
 
         $userRole->save();
-
         $userLanguages = json_decode($request->language_id);
         
         foreach ($userLanguages as $language_id) {
@@ -287,12 +266,152 @@ class UserController extends Controller
     {
         //
     }
+/**
+ * @OA\Delete(
+ *   path="/api/users/destroy/{id}",
+ *   tags={"User"},
+ *   summary="Marquer un utilisateur comme supprimé",
+ *   description="Marque un utilisateur comme supprimé en définissant is_deleted à true.",
+ *  @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the language",
+     *         @OA\Schema(type="integer")
+     *     ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="Utilisateur marqué comme supprimé avec succès",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Utilisateur marqué comme supprimé avec succès")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=404,
+ *     description="Utilisateur non trouvé",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="error", type="string", example="Utilisateur non trouvé")
+ *     )
+ *   )
+ * )
+ */
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
-    {
-        //
+{
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
     }
+    $user->is_deleted = true;
+    $user->save();
+
+    return response()->json(['message' => 'Utilisateur marqué comme supprimé avec succès'], 200);
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/users/userReviews",
+ *     tags={"User"},
+ *     summary="Obtenir les avis de l'utilisateur connecté",
+ *     description="Récupère les avis associés à l'utilisateur connecté.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des avis de l'utilisateur connecté",
+ *         @OA\JsonContent(
+ *            
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non autorisé"
+ *     )
+ * )
+ */
+public function userReviews()
+{
+    $user_Id=26;
+    //$userId = Auth::id();
+    $reviews = Review::where('user_id', $user_Id)->get();
+
+    return response()->json([
+        'data' => $reviews
+    ]);
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/users/userLanguages",
+ *     tags={"User"},
+ *     summary="Obtenir les langues de l'utilisateur connecté",
+ *     description="Récupère les langues associées à l'utilisateur connecté.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Langues de l'utilisateur connecté",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array", @OA\Items(type="string"))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non autorisé"
+ *     )
+ * )
+ */
+public function userLanguages()
+{
+    $user_Id=26;
+    //$userId = Auth::id();
+    $user = User::with('user_language.language')->find($user_Id);
+
+    if (!$user) {
+        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+    }
+
+    $languages = $user->user_language->map(function ($userLanguage) {
+        return $userLanguage->language->name;
+    });
+
+    return response()->json([
+        'data' => $languages
+    ]);
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/users/userPreferences",
+ *     tags={"User"},
+ *     summary="Afficher les préférences de l'utilisateur connecté",
+ *     description="Récupère les préférences de l'utilisateur connecté.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des préférences de l'utilisateur connecté",
+ *         @OA\JsonContent(
+ *         
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non autorisé"
+ *     )
+ * )
+ */
+public function showUserPreferences()
+    {
+        $user_Id=26;
+        //$userId = Auth::id();
+        $user = User::findOrFail($user_Id);
+
+        $userPreferences = $user->user_preference()->with('preference')->get();
+
+        return response()->json([
+            'data' => $userPreferences,
+        ]);
+    }
+
+
 }

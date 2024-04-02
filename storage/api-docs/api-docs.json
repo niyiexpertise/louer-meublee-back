@@ -296,6 +296,20 @@
                 }
             }
         },
+        "/api/category/indexCategorieEquipments": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Get all categories and them equipment",
+                "operationId": "8c6c211be557977b14750f7d04825782",
+                "responses": {
+                    "200": {
+                        "description": "List of categorys"
+                    }
+                }
+            }
+        },
         "/api/category/store": {
             "post": {
                 "tags": [
@@ -352,6 +366,34 @@
                 ],
                 "summary": "Get a specific category by ID",
                 "operationId": "f401da07600b39baede4342b6a41924e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the category",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category details"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                }
+            }
+        },
+        "/api/category/showEquipments/{id}": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Get a specific category by ID and they equipment",
+                "operationId": "2cf7f9e094738572ce980dec498ec629",
                 "parameters": [
                     {
                         "name": "id",
@@ -928,6 +970,47 @@
                 }
             }
         },
+        "/api/equipment/showCategories/{id}": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get information about a specific equipment and their  category",
+                "operationId": "54c32ab6b2ece90d0c33694bffd7081d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the specified categories in the category"
+                    },
+                    "404": {
+                        "description": "Equipment not found for the specified category",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Équipement introuvable pour cette catégorie."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/equipment/update/{id}": {
             "put": {
                 "tags": [
@@ -1027,13 +1110,13 @@
                 }
             }
         },
-        "api/equipment/destroy/{id}": {
+        "/api/equipment/destroy/{id}": {
             "delete": {
                 "tags": [
                     "Equipment"
                 ],
                 "summary": "Delete an equipment by ID",
-                "operationId": "75bb96c111eb6c51cc9c85f999fcbab3",
+                "operationId": "bfd597dbedfe15972170f1f324a88fa9",
                 "parameters": [
                     {
                         "name": "id",
@@ -2308,8 +2391,8 @@
                 "tags": [
                     "Review"
                 ],
-                "summary": "Create a new review ",
-                "operationId": "a9736b6f888e0085c2609cd30bca6c56",
+                "summary": "Créer un nouvel avis",
+                "operationId": "createReview",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2321,7 +2404,7 @@
                                 "properties": {
                                     "content": {
                                         "type": "string",
-                                        "example": "j'apprécie la démarche,etc"
+                                        "example": "J'apprécie la démarche, etc."
                                     }
                                 },
                                 "type": "object"
@@ -2331,10 +2414,23 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Review  created successfully"
+                        "description": "Avis créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Création réussie"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Invalid credentials"
+                        "description": "Identifiants invalides"
                     }
                 }
             }
@@ -3126,14 +3222,14 @@
                 }
             }
         },
-        "/api/register": {
+        "/api/users/register": {
             "post": {
                 "tags": [
                     "User"
                 ],
                 "summary": "Enregistrer un nouvel utilisateur",
                 "description": "Enregistre un nouvel utilisateur avec les informations fournies",
-                "operationId": "registerUser",
+                "operationId": "758e750cf3b7f1b6a9c906c443a12b83",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3147,8 +3243,6 @@
                                     "telephone",
                                     "email",
                                     "pays",
-                                    "identity_profil",
-                                    "piece_of_identity",
                                     "ville",
                                     "addresse",
                                     "sexe",
@@ -3194,11 +3288,6 @@
                                         "type": "string",
                                         "format": "binary"
                                     },
-                                    "piece_of_identity": {
-                                        "description": "Image de la pièce d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
                                     "ville": {
                                         "type": "string",
                                         "example": "Paris"
@@ -3215,12 +3304,9 @@
                                         "type": "string",
                                         "example": "75001"
                                     },
-                                    "language_id": {
-                                        "description": "Liste des identifiants de langue",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
+                                    "langage_id": {
+                                        "type": "string",
+                                        "example": "[1,2,4]"
                                     },
                                     "password_confirmation": {
                                         "description": "Confirmation du mot de passe (doit correspondre au mot de passe)",
@@ -3272,14 +3358,163 @@
                 }
             }
         },
-        "/api/users//preference/add": {
+        "/api/users/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Marquer un utilisateur comme supprimé",
+                "description": "Marque un utilisateur comme supprimé en définissant is_deleted à true.",
+                "operationId": "2440c968ffc558aee3d990c6410a009b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the language",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur marqué comme supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur marqué comme supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Utilisateur non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/userReviews": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Obtenir les avis de l'utilisateur connecté",
+                "description": "Récupère les avis associés à l'utilisateur connecté.",
+                "operationId": "0967546a3643a42d377e6730e4f7d11e",
+                "responses": {
+                    "200": {
+                        "description": "Liste des avis de l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/userLanguages": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Obtenir les langues de l'utilisateur connecté",
+                "description": "Récupère les langues associées à l'utilisateur connecté.",
+                "operationId": "2a078e8e4bafaaea1d32d9ead01af31d",
+                "responses": {
+                    "200": {
+                        "description": "Langues de l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/userPreferences": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Afficher les préférences de l'utilisateur connecté",
+                "description": "Récupère les préférences de l'utilisateur connecté.",
+                "operationId": "e6cc649aafe43a704cadaffe24ab37c6",
+                "responses": {
+                    "200": {
+                        "description": "Liste des préférences de l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/preference/add": {
             "post": {
                 "tags": [
                     "User_preference"
                 ],
                 "summary": "Ajouter les préférences d'un utilisateur",
                 "description": "Ajoute les préférences sélectionnées par un utilisateur.",
-                "operationId": "fa24bdba20ba023ed087e4e5131b7256",
+                "operationId": "082aa7f313c2e68cf6c737bbb929b127",
                 "requestBody": {
                     "required": true,
                     "content": {

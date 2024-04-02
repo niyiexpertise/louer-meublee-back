@@ -14,6 +14,7 @@ use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\EquipementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\User_preferenceController;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,10 +80,13 @@ Route::prefix('criteria')->group(function () {
 
 //Gestion des équipements.
 
+
 Route::prefix('equipment')->group(function () {
     Route::get('/index', [EquipementController::class, 'index']);
+    Route::get('/indexEquipmentCategories', [EquipementController::class, 'indexEquipmentCategories']);
     Route::post('/store', [EquipementController::class, 'store']);
     Route::get('/show/{id}', [EquipementController::class, 'show']);
+    Route::get('/showCategories/{id}', [EquipementController::class, 'showCategories']);
     Route::put('/update/{id}', [EquipementController::class, 'update']);
     Route::delete('/destroy/{id}', [EquipementController::class, 'destroy']);
     Route::put('/block/{id}', [EquipementController::class, 'block']);
@@ -92,8 +96,10 @@ Route::prefix('equipment')->group(function () {
 //Gestion des catégories.
 
 Route::prefix('category')->group(function () {
+    Route::get('/indexCategorieEquipments', [CategorieController::class, 'indexCategorieEquipments']);
     Route::get('/index', [CategorieController::class, 'index']);
     Route::post('/store', [CategorieController::class, 'store']);
+    Route::get('/showEquipments/{id}', [CategorieController::class, 'showEquipments']);
     Route::get('/show/{id}', [CategorieController::class, 'show']);
     Route::put('/update/{id}', [CategorieController::class, 'update']);
     Route::delete('/destroy/{id}', [CategorieController::class, 'destroy']);
@@ -151,6 +157,18 @@ Route::prefix('accessibility')->group(function () {
     Route::put('/unblock/{id}', [AccessibilityController::class, 'unblock']);
 });
 
+// Gestion des commentaires
+
+Route::prefix('review')->group(function () {
+    Route::get('/index', [ReviewController::class, 'index']);
+    Route::post('/store', [ReviewController::class, 'store']);
+    Route::get('/show/{id}', [ReviewController::class, 'show']);
+    Route::put('/update/{id}', [ReviewController::class, 'update']);
+    Route::delete('/destroy/{id}', [ReviewController::class, 'destroy']);
+    Route::put('/block/{id}', [ReviewController::class, 'block']);
+    Route::put('/unblock/{id}', [ReviewController::class, 'unblock']);
+});
+
 //Gestion des Users.
 
 Route::prefix('users')->group(function () {
@@ -162,6 +180,9 @@ Route::prefix('users')->group(function () {
     Route::put('/block/{id}', [UserController::class, 'block']);
     Route::put('/unblock/{id}', [UserController::class, 'unblock']);
     Route::post('/preference/add', [User_preferenceController::class, 'AddUserPreferences']);
+    Route::get('/userReviews', [UserController::class, 'userReviews']);
+    Route::get('/userLanguages', [UserController::class, 'userLanguages']);
+    Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
 });
 
 

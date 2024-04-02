@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
@@ -144,17 +145,83 @@ class EquipementController extends Controller
                 if (!$equipment) {
                     return response()->json(['error' => 'Équipement introuvable pour cette catégorie.'], 404);
                 }
-                $equipmentD = [
-                    'equipment' => $equipment,
-                    'equipment_category' => $equipment_category
-                ];
 
-                return response()->json(['data' => $equipmentD], 200);
+
+                return response()->json(['data' => $equipment], 200);
         } catch(Exception $e) {    
             return response()->json($e);
         }
 
     }
+
+            /**
+     * @OA\Get(
+     *     path="/api/equipment/showCategories/{id}",
+     *     summary="Get information about a specific equipment and their  category",
+     *     tags={"Equipment"},
+     *  @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the equipment",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Information about the specified categories in the category",
+     *         
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Equipment not found for the specified category",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Équipement introuvable pour cette catégorie.")
+     *         )
+     *     )
+     * )
+     */
+
+     public function showCategories($id)
+     {
+         try{
+                $equipment = Equipment::find($id);
+                 // $equipment_category = EquipmentCategory::where('equipment_id',$id)->get();
+                $equipment_category = $equipment->equipment_category()->get();
+                $a = [];
+                foreach ($equipment_category as $e) {
+                    $b = Category::where('id',$e->category_id)->get();
+                    foreach ($b as $k) {
+                        $a[] = [
+                            'id' => $k->id,
+                            'name' => $k->name,
+                            'is_deleted' => $k->is_deleted,
+                            'is_blocked' => $k->is_blocked,
+                            'created_at' => $k->created_at,
+                            'updated_at' => $k->updated_at
+                        ];
+                       }
+                }
+                 if (!$equipment) {
+                     return response()->json(['error' => 'Équipement introuvable pour cette catégorie.'], 404);
+                 }
+ 
+ 
+                 return response()->json([
+                    'data' => [
+                        'id' => $equipment->id,
+                        'name' =>$equipment->name,
+                        'is_deleted' =>$equipment->id_deleted,
+                        'is_blocked' =>$equipment->is_blocked,
+                        'created_at' =>$equipment->created_at,
+                        'updated_at' =>$equipment->updated_at,
+                        'categories' => $a
+                    ]
+                ], 200);
+         } catch(Exception $e) {    
+             return response()->json($e);
+         }
+ 
+     }
     /**
      * @OA\Put(
      *     path="/api/equipment/update/{id}",
@@ -219,7 +286,7 @@ class EquipementController extends Controller
                 $equipment->save();
 
                 return response()->json(['data' => 'Équipement mis à jour avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e);
         }
     }
@@ -227,7 +294,7 @@ class EquipementController extends Controller
 
         /**
      * @OA\Delete(
-     *     path="api/equipment/destroy/{id}",
+     *     path="/api/equipment/destroy/{id}",
      *     summary="Delete an equipment by ID",
      *     tags={"Equipment"},
      *     @OA\Parameter(
@@ -264,7 +331,6 @@ class EquipementController extends Controller
 
                 $equipment->is_deleted = true;
 
-            
                 $equipment->save();
 
                 return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);

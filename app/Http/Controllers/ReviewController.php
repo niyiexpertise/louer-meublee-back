@@ -41,44 +41,50 @@ class ReviewController extends Controller
         //
     }
 
-  /**
-      * @OA\Post(
-      *     path="/api/review/store",
-      *     summary="Create a new review ",
-      *     tags={"Review"},
-      *     @OA\RequestBody(
-      *         required=true,
-      *         @OA\JsonContent(
-      *             required={"content"},
-      *             @OA\Property(property="content", type="string", example="j'apprécie la démarche,etc"),
-      *         )
-      *     ),
-      *     @OA\Response(
-      *         response=200,
-      *         description="Review  created successfully"
-      *     ),
-      *     @OA\Response(
-      *         response=401,
-      *         description="Invalid credentials"
-      *     )
-      * )
-      */
-    public function store(Request $request)
-    {
-        try{
-            $review = new Review();
-            // $review->user_id = Auth::user()->id;
-            $review->user_id = 1;
-            $review->content = $request->content;
-            $review->save();
-            return redirect()->json([
-                'message' => 'Successfully created',
-                'data' => $review
-            ]);
-        }catch (Exception $e){
-            return response()->json($e);
-        }
+/**
+ * @OA\Post(
+ *     path="/api/review/store",
+ *     operationId="createReview",
+ *     summary="Créer un nouvel avis",
+ *     tags={"Review"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"content"},
+ *             @OA\Property(property="content", type="string", example="J'apprécie la démarche, etc.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Avis créé avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Création réussie"),
+ *          
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Identifiants invalides"
+ *     )
+ * )
+ */
+public function store(Request $request)
+{
+    try {
+        $review = new Review();
+        // $review->user_id = Auth::user()->id; // Pour l'utilisateur authentifié
+        $review->user_id = 26;
+        $review->content = $request->content;
+        $review->save();
+
+        return response()->json([
+            'message' => 'Création réussie',
+            'data' => $review
+        ]);
+    } catch (Exception $e) {
+        return response()->json($e);
     }
+}
 
      /**
      * @OA\Get(

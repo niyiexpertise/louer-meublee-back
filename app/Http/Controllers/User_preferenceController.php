@@ -13,7 +13,7 @@ class User_preferenceController extends Controller
 {
 /**
  * @OA\Post(
- *   path="/api/users//preference/add",
+ *   path="/api/users/preference/add",
  *   tags={"User_preference"},
  *   summary="Ajouter les préférences d'un utilisateur",
  *   description="Ajoute les préférences sélectionnées par un utilisateur.",
@@ -62,7 +62,7 @@ public function AddUserPreferences(Request $request)
         'preferences' => 'required|array',
     ]);
      //$user = auth()->user()->id;
-    $user_id = 11;
+    $user_id = 26;
 
     try {
         foreach ($request->preferences as $preferenceId) {

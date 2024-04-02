@@ -26,7 +26,6 @@ class User extends Authenticatable
         'email',
         'country',
         'file_profil',
-        'piece_of_identity',
         'city',
         'address',
         'sexe',

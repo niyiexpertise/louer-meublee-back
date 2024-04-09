@@ -51,7 +51,7 @@ class PreferenceController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="français,anglais,etc")
+     *             @OA\Property(property="name", type="string", example="communication,plage,etc")
      *         )
      *     ),
  *     @OA\Response(
@@ -73,7 +73,7 @@ class PreferenceController extends Controller
                 $preference = new Preference();
                 $preference->name = $request->name;
                 $preference->save();
-                return response()->json(['data' => 'Type de propriété créé avec succès.', 'preference' => $preference], 201);
+                return response()->json(['data' => 'Type de preference créé avec succès.', 'preference' => $preference], 201);
         } catch(Exception $e) {    
             return response()->json($e);
         }
@@ -141,7 +141,7 @@ class PreferenceController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="français,anglais,etc")
+     *             @OA\Property(property="name", type="string", example="preference1")
      *         )
      *     ),
      *     @OA\Response(

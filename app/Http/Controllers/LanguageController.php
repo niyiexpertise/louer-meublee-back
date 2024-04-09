@@ -33,13 +33,7 @@ class LanguageController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+
 
 /**
      * @OA\Post(
@@ -68,24 +62,33 @@ class LanguageController extends Controller
      * )
      */
     public function store(Request $request)
-    {
-        try{
-                $data = $request->validate([
-                    'name' => 'required|unique:languages|max:255',
-                ]);
-                $language = new Language();
-                $language->name = $request->name;
-                $language->icone = $request->icone;
-                $language->save();
-                return response()->json([
-                    'message' =>'Language created successfully',
-                    'data' => $language
-                ]);
-        } catch(Exception $e) {    
-            return response()->json($e);
-        }
+{
+    try {
+        $data = $request->validate([
+            'name' => 'required|unique:languages|max:255',
+        ]);
 
+        $language = new Language();
+        $language->name = $request->name;
+        $language->icone = $request->icone;
+        $language->save();
+
+        return response()->json([
+            'message' => 'Language created successfully',
+            'data' => $language
+        ]);
+    } catch(ValidationException $e) {
+        return response()->json([
+            'error' => 'Validation failed',
+            'message' => $e->validator->errors()->first()
+        ], 422);
+    } catch(Exception $e) {
+        return response()->json([
+            'error' => 'An error occurred',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
   /**
      * @OA\Get(
@@ -125,13 +128,6 @@ class LanguageController extends Controller
 
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
 /**
      * @OA\Put(

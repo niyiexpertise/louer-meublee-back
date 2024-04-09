@@ -282,6 +282,1112 @@
                 }
             }
         },
+        "/api/users/assignPermToRole/{role}/{permission}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "ajouter une permission à un rôle",
+                "operationId": "4c7f90c820db261d2a181b6f4e6ec6bc",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "permission assigned to role sucessfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "permission assigned to role sucessfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "permission not assigned to role",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "permission not assigned to role"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/RevokePermToRole/{role}/{permission}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "retirer une permission à un rôle",
+                "operationId": "5987e90ac760ae571fe0663bf7e8a171",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "permission revoke to role successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "permission revoke to role successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "permission don't revoke to role ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "permission don't revoke to role "
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/getUserRoles/{id}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Récupérer la liste des rôle assigner a un utilisateur",
+                "operationId": "b6742e4d777803fc73125a2bf338727b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list taked succesfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked succesfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list don't taked ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list don't taked "
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/assignRoleToUser/{id}/{role}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "assigner un rôle à un utilisateur",
+                "operationId": "73289d5cf8906707f20e8adfc9ea055f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "role assigned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "role assigned successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "role not assigned",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "role not assigned"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/RevokeRoleToUser/{id}/{role}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "retirer un rôle à un utilisateur",
+                "operationId": "42bdc0513e477f3e7aba1d99a5965774",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "revoke role to user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "revoke role to user"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "role not revoked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "role not revoked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/assignPermToUser/{id}/{permission}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "ajouter une permission à un utilisateur",
+                "operationId": "75483fd2e7c474a3a485ac4392e64df1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "permission grant to user successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "permission grant to user successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "permission not granted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "permission not granted"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/revokePermToUser/{id}/{permission}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "retirer une permission à un rôle",
+                "operationId": "9455336bf0b53e079a79d174b9bdfa92",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "permission revoked to user successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "permission revoked to user successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "permission not revoked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "permission not revoked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/getUserPerms/{id}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Récupérer la liste des permissions assigner a un utilisateur",
+                "operationId": "ab55b11b507fcee44afc6e37c1133ae8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of user permissions granted to the user given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list not taked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithRole/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Liste des utilisateurs ayant un rôle donné",
+                "operationId": "2c77c0b16cb8a56014ba67bee89396e6",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of users with role given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list not taked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithRoleCount/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Nombre des utilisateurs ayant un rôle donné",
+                "operationId": "a0560fadb57f3426dcdd13c00b906e83",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "number of users with role given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "count done successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "count not done",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "count not done"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithPerm/{permission}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Liste des utilisateurs ayant une permission donné",
+                "operationId": "a9eec18b7ee3f1ef48e5ba5914d504a1",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of users with permissions given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list not taked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithPermCount/{permission}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "nombre des utilisateurs ayant une permission donné",
+                "operationId": "0b62499997cfc7eef4ce24ff8171b2a1",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "number of users without permissions given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "count done successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "count not done ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "count not done "
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithoutRole/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Liste des utilisateurs n'ayant pas un rôle donné",
+                "operationId": "747e47fe804f079e57f443ac331c4cfe",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of users without role given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list not taked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithoutRoleCount/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Nombre des utilisateurs n'ayant pas un rôle donné",
+                "operationId": "83544c6e27290f9bf315861a709a7d4f",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "number of users without role given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list of permissions'roles"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": " not count",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": " not count"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithoutPerm/{permission}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Liste des utilisateurs n'ayant une permission donné",
+                "operationId": "4ec4fb90387fa0de0895946f75c980ca",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of users without permissions given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list taked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "list not taked ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not taked "
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersWithoutPermCount/{permission}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Nombre des utilisateurs n'ayant une permission donné",
+                "operationId": "416caca6ec0a32c5d7f627ba2f39bd7a",
+                "parameters": [
+                    {
+                        "name": "permission",
+                        "in": "path",
+                        "description": "ID of the permission ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "count of users without permission given",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "count done successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "count done successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "count done successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/usersRoles": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "liste des utilisateurs et leur rôles",
+                "operationId": "8488be0fa00c562e397de2fafac1307c",
+                "responses": {
+                    "200": {
+                        "description": "list of users and their roles"
+                    }
+                }
+            }
+        },
+        "/api/users/usersPerms": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "liste des utilisateurs et leur permissions",
+                "operationId": "402344274697145e5747d4716472663c",
+                "responses": {
+                    "200": {
+                        "description": "List of users and their permissions"
+                    }
+                }
+            }
+        },
+        "/api/users/rolesPerms/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "liste des permissions d'un rôle",
+                "operationId": "3837e934d3577cae5c551a005b5aa2fd",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of permissions'roles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "list of permissions'roles"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Users not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "list not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/rolesPermsCount/{role}": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "nombre des permissions d'un rôle",
+                "operationId": "e6f35c29f024b8da36571a6a9d2f47ad",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "ID of the role ",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "count of permissions of role",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "count done successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "count not done ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "count not done "
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/switchToHote": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "quitter le role voyageur au role hote",
+                "operationId": "aedf1d55a26b5c612c813bb49f15a059",
+                "responses": {
+                    "200": {
+                        "description": "move to hote"
+                    }
+                }
+            }
+        },
+        "/api/users/switchToTraveler": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "quitter le role hote au role voyageur",
+                "operationId": "0bf453f6289ad809f9cb3d5d8af08159",
+                "responses": {
+                    "200": {
+                        "description": "move to traveler"
+                    }
+                }
+            }
+        },
         "/api/category/index": {
             "get": {
                 "tags": [
@@ -603,6 +1709,164 @@
                 }
             }
         },
+        "/api/commission/updateCommissionValueByAnother": {
+            "put": {
+                "tags": [
+                    "Commission"
+                ],
+                "summary": "Remplacer la valeur d'une commission par défaut par une autre valeur",
+                "operationId": "feaeb0c7f0c7ab9676242398506632f0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "commission",
+                                    "valeur_commission"
+                                ],
+                                "properties": {
+                                    "commission": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "valeur_commission": {
+                                        "type": "integer",
+                                        "example": 20
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Commission successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Commissions updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Commission not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Commission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid input data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/commission/updateCommissionForSpecifiqueUser": {
+            "post": {
+                "tags": [
+                    "Commission"
+                ],
+                "summary": "Modifier la valeur de la commission pour un ou plusieurs utilisateurs donnés",
+                "operationId": "1d73235380f9f99c3348b602bbaca9d6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "commission_percentage",
+                                    "user_ids"
+                                ],
+                                "properties": {
+                                    "commission_percentage": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "user_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": "[1, 2, ...]"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Commission updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input data"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/commission/usersWithCommission/{commission}": {
+            "get": {
+                "tags": [
+                    "Commission"
+                ],
+                "summary": "Récupérer les utilisateurs associés à une commission spécifique",
+                "operationId": "7a39912373a807839cf0e4f746d4d96c",
+                "parameters": [
+                    {
+                        "name": "commission",
+                        "in": "path",
+                        "description": "value of the commission",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Commission details"
+                    },
+                    "404": {
+                        "description": "Commission not found"
+                    }
+                }
+            }
+        },
         "/api/criteria/index": {
             "get": {
                 "tags": [
@@ -859,6 +2123,418 @@
                                         "error": {
                                             "type": "string",
                                             "example": "Criteria not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/document/index": {
+            "get": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Get all documents",
+                "operationId": "18b041bd5f7edb7119fb8dbe43af342b",
+                "responses": {
+                    "200": {
+                        "description": "List of documents"
+                    }
+                }
+            }
+        },
+        "/api/document/store": {
+            "post": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Create a new document",
+                "operationId": "17e4c777de0baafb108dcd06ecb2dab6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "piece d'identite, CIP, passport"
+                                    },
+                                    "is_actif": {
+                                        "type": "boolen",
+                                        "example": "0,1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Document created successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/document/show/{id}": {
+            "get": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Get a specific document by ID",
+                "operationId": "928d0644038c7f8aaf9dcbf4c38d3c02",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document details"
+                    },
+                    "404": {
+                        "description": "Document not found"
+                    }
+                }
+            }
+        },
+        "/api/document/update/{id}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Update a document by ID",
+                "operationId": "cb56a092fc7025a59779fbc50be32a68",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "pice of identity, CIP, passport"
+                                    },
+                                    "is_actif": {
+                                        "type": "booleen",
+                                        "example": "0,1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document updated successfully"
+                    },
+                    "404": {
+                        "description": "Document not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/document/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Delete a document by ID",
+                "operationId": "2ae1254815a702c0023426862d55abc9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Document deleted successfully"
+                    },
+                    "404": {
+                        "description": "Document not found"
+                    }
+                }
+            }
+        },
+        "/api/document/block/{id}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Block a document",
+                "operationId": "40f6ea3080f60bbecc36bee68cb2d317",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document to block",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document successfully blocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully blocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/document/unblock/{id}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Unblock a document",
+                "operationId": "2fa44264cf0751680c7dd5a51a0b7d67",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document to unblock",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document successfully unblocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully unblocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/document/document_actif": {
+            "get": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Get all documents",
+                "operationId": "752ac1e48909981be75ed4105a19c19b",
+                "responses": {
+                    "200": {
+                        "description": "List of inactif documents"
+                    }
+                }
+            }
+        },
+        "/api/document/document_inactif": {
+            "get": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Get all documents",
+                "operationId": "7ebcd1e85a833b11dfa047184c3f4e36",
+                "responses": {
+                    "200": {
+                        "description": "List of actif documents"
+                    }
+                }
+            }
+        },
+        "/api/document/active/{id}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "active a document",
+                "operationId": "f890f05dc81c3eeb50464a0d4cf213be",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document to active",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document successfully active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully active"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/document/inactive/{id}": {
+            "put": {
+                "tags": [
+                    "Document"
+                ],
+                "summary": "inactive a document",
+                "operationId": "711dc0c1c98d801734d2762ecf7ecfe6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the document to inactive",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document successfully inactive",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully inactive"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
                                         }
                                     },
                                     "type": "object"
@@ -1827,6 +3503,259 @@
                 }
             }
         },
+        "/api/notifications/index": {
+            "get": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Get all notification in the site",
+                "operationId": "35983e8c29c4df4b1df3cc642a98dbad",
+                "responses": {
+                    "200": {
+                        "description": "List of the notification"
+                    }
+                }
+            }
+        },
+        "/api/notifications/store": {
+            "post": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
+                "operationId": "c2aed4b34d3adeaa74c32156265397d8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "name"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur",
+                                        "type": "integer",
+                                        "example": "1"
+                                    },
+                                    "name": {
+                                        "description": "Nom de la notification",
+                                        "type": "string",
+                                        "example": "Notification Example"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification ajoutée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification 'Notification Example' ajoutée à l'utilisateur 'John Doe' avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/notifications/users": {
+            "get": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Récupérer la liste de notifications pour un utilisateur connecté",
+                "operationId": "3837af30e379118ab3830607350739c6",
+                "responses": {
+                    "200": {
+                        "description": "Liste des notifications avec succès pour l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/permission/index": {
+            "get": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Get all permissions",
+                "operationId": "2306a1f461cca99b72b7b4de8fa9ac21",
+                "responses": {
+                    "200": {
+                        "description": "List of permissions"
+                    }
+                }
+            }
+        },
+        "/api/permission/store": {
+            "post": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Create a new permission ",
+                "operationId": "aaa9a1489978d8237d358f1010932130",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "create"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permission  created successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/permission/show/{id}": {
+            "get": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Get a specific permission by ID",
+                "operationId": "1cae0ef6ddb328b988765a8129134b9d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the permission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permission details"
+                    },
+                    "404": {
+                        "description": "Permission not found"
+                    }
+                }
+            }
+        },
+        "/api/permission/update/{id}": {
+            "put": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Update a permission by ID",
+                "operationId": "10621bd1d3510464e7a1e4e7e3c77dfe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the permission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "permission_id"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "create"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permission updated successfully"
+                    },
+                    "404": {
+                        "description": "Permission not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/permission/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Delete a permission by ID",
+                "operationId": "1d26711ac0e6cd7a1fe89efc131e7404",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the permission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Permission deleted successfully"
+                    },
+                    "404": {
+                        "description": "Permission not found"
+                    }
+                }
+            }
+        },
         "/api/preference/index": {
             "get": {
                 "tags": [
@@ -1859,7 +3788,7 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "français,anglais,etc"
+                                        "example": "communication,plage,etc"
                                     }
                                 },
                                 "type": "object"
@@ -1934,7 +3863,7 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "français,anglais,etc"
+                                        "example": "preference1"
                                     }
                                 },
                                 "type": "object"
@@ -2487,11 +4416,11 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
+                                    "content",
                                     "review_id"
                                 ],
                                 "properties": {
-                                    "name": {
+                                    "content": {
                                         "type": "string",
                                         "example": "j'apprécie la démarche,etc"
                                     }
@@ -2657,11 +4586,11 @@
                 "tags": [
                     "Role"
                 ],
-                "summary": "Tous les types de role possibles",
+                "summary": "Get all roles",
                 "operationId": "b3d674de4d1bfdce32734bddc8628891",
                 "responses": {
                     "200": {
-                        "description": "Liste de tous les différentes sortes de role"
+                        "description": "List of roles"
                     }
                 }
             }
@@ -2671,7 +4600,7 @@
                 "tags": [
                     "Role"
                 ],
-                "summary": "Créer un nouveau type de role",
+                "summary": "Create a new role ",
                 "operationId": "217d536f741ea073dee6d97e5bb36df9",
                 "requestBody": {
                     "required": true,
@@ -2684,7 +4613,7 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "admin,hôte,voyageur,manageur,etc"
+                                        "example": "traveler"
                                     }
                                 },
                                 "type": "object"
@@ -2693,21 +4622,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Type de role créé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de role créé avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "200": {
+                        "description": "Role  created successfully"
                     },
                     "401": {
                         "description": "Invalid credentials"
@@ -2720,13 +4636,13 @@
                 "tags": [
                     "Role"
                 ],
-                "summary": "Obtenir un type de role spécifique par ID",
+                "summary": "Get a specific role by ID",
                 "operationId": "a40324f1b443d45a408830e2695bbeb9",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID du type de role",
+                        "description": "ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -2735,60 +4651,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Détails du type de role"
+                        "description": "Role details"
                     },
                     "404": {
-                        "description": "Type de role non trouvé"
-                    }
-                }
-            }
-        },
-        "/api/role/update/{id}": {
-            "put": {
-                "tags": [
-                    "Role"
-                ],
-                "summary": "Mettre à jour un type de role par ID",
-                "operationId": "f6da161c8057fb32789ec426171684c8",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de role",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "voyageur"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Type de role mis à jour avec succès"
-                    },
-                    "404": {
-                        "description": "Type de role non trouvé"
-                    },
-                    "422": {
-                        "description": "Erreur de validation"
+                        "description": "Role not found"
                     }
                 }
             }
@@ -2798,13 +4664,13 @@
                 "tags": [
                     "Role"
                 ],
-                "summary": "\n    * Supprimer un type de role par ID",
+                "summary": "Delete a role by ID",
                 "operationId": "fa71958128495cee0ebb0097bad4087f",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID du type de role",
+                        "description": "ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -2813,119 +4679,10 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Type de role supprimé avec succès"
+                        "description": "Role deleted successfully"
                     },
                     "404": {
-                        "description": "Type de role non trouvé"
-                    }
-                }
-            }
-        },
-        "/api/role/block/{id}": {
-            "put": {
-                "tags": [
-                    "Role"
-                ],
-                "summary": "Bloquer un type de role",
-                "operationId": "7b4257bf061cde148725c987a37ec7fe",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de role à bloquer",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Type de role bloqué avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de role bloqué avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Type de role non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Type de role non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/role/unblock/{id}": {
-            "put": {
-                "tags": [
-                    "Role"
-                ],
-                "summary": "Débloquer un type de role",
-                "operationId": "047ba0c341952c07aafbd428e06e1bfd",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de role à débloquer",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Type de role débloqué avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de role débloqué avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Type de role non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Type de role non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Role not found"
                     }
                 }
             }
@@ -3217,7 +4974,146 @@
                 "operationId": "0805ec6c84d0da39ad28b974443fc310",
                 "responses": {
                     "200": {
-                        "description": "List of users"
+                        "description": "List of users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "lastname": {
+                                                "type": "string",
+                                                "example": "Doe"
+                                            },
+                                            "firstname": {
+                                                "type": "string",
+                                                "example": "John"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "example": "john.doe@example.com"
+                                            },
+                                            "code_pays": {
+                                                "type": "string",
+                                                "example": "FR"
+                                            },
+                                            "telephone": {
+                                                "type": "string",
+                                                "example": "0123456789"
+                                            },
+                                            "country": {
+                                                "type": "string",
+                                                "example": "France"
+                                            },
+                                            "file_profil": {
+                                                "type": "string",
+                                                "example": "profile.jpg"
+                                            },
+                                            "piece_of_identity": {
+                                                "type": "string",
+                                                "example": "id_card.jpg"
+                                            },
+                                            "city": {
+                                                "type": "string",
+                                                "example": "Paris"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "example": "123 Rue de la Liberté"
+                                            },
+                                            "sexe": {
+                                                "type": "string",
+                                                "example": "M"
+                                            },
+                                            "postal_code": {
+                                                "type": "string",
+                                                "example": "75001"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_blocked": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "email_verified_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-04-03 10:00:00"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-01-01 08:00:00"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-02-01 09:00:00"
+                                            },
+                                            "user_role": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Admin"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "user_language": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "language_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "French"
+                                                        },
+                                                        "icone": {
+                                                            "type": "string",
+                                                            "example": "fr.png"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "user_preference": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "preference_id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Theme"
+                                                        },
+                                                        "icone": {
+                                                            "type": "string",
+                                                            "example": "theme.png"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3370,7 +5266,7 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the language",
+                        "description": "ID of the user",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -3507,6 +5403,450 @@
                 ]
             }
         },
+        "/api/users/update_profile_photo": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Mettre à jour la photo de profil de l'utilisateur",
+                "description": "Permet à l'utilisateur de mettre à jour sa photo de profil en téléchargeant une nouvelle image",
+                "operationId": "ed8c68d39d7751288f6b978dc23375a4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "profile_photo"
+                                ],
+                                "properties": {
+                                    "profile_photo": {
+                                        "description": "Nouvelle photo de profil de l'utilisateur (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Photo de profil mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Photo de profil mise à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/block/{id}": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Block a user",
+                "operationId": "d50e401c3c063634eda5cf5b636f0037",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the users to block",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Users successfully blocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "User successfully blocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "User not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/unblock/{id}": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Unblock a users",
+                "operationId": "f1fc4c086407cb34fd8afd058e0dd8f7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the userto unblock",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User successfully unblocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "User successfully unblocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "User not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/pays/{pays}": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get all users from a country",
+                "operationId": "c9ac6ebc89a18c1dea28b632a1c71055",
+                "parameters": [
+                    {
+                        "name": "pays",
+                        "in": "path",
+                        "description": "Code of the country",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of users from the specified country",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/update_password": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user password",
+                "description": "Update user password.",
+                "operationId": "87b3fccdbf4f57f8da4464af32da82b9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "old_password",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "old_password": {
+                                        "type": "string",
+                                        "example": "old_password"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "example": "new_password"
+                                    },
+                                    "new_password_confirmation": {
+                                        "type": "string",
+                                        "example": "new_password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/travelers": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Obtenir la liste des utilisateurs voyageurs",
+                "operationId": "3f2d4bf4a37b79aa0d0018e65e8c5cf3",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs avec le rôle 'traveler'",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun utilisateur avec le rôle 'traveler' trouvé"
+                    }
+                }
+            }
+        },
+        "/api/users/update": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Mettre à jour les informations d'un utilisateur",
+                "operationId": "189e1acde2c3406ead476c354f1ee37a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    },
+                                    "prenom": {
+                                        "type": "string"
+                                    },
+                                    "telephone": {
+                                        "type": "string"
+                                    },
+                                    "code_pays": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "pays": {
+                                        "type": "string"
+                                    },
+                                    "ville": {
+                                        "type": "string"
+                                    },
+                                    "addresse": {
+                                        "type": "string"
+                                    },
+                                    "sexe": {
+                                        "type": "string"
+                                    },
+                                    "postal_code": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Informations de l'utilisateur mises à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Informations de l'utilisateur mises à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données"
+                    },
+                    "404": {
+                        "description": "Utilisateur non trouvé"
+                    }
+                }
+            }
+        },
+        "/api/users/hotes": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Obtenir la liste des utilisateurs hote",
+                "operationId": "3956df73298648ef2edffb651c77b261",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs ayant le rôle 'hote'",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun utilisateur avec le rôle 'traveller' trouvé"
+                    }
+                }
+            }
+        },
+        "/api/users/admins": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Obtenir la liste des utilisateurs admin",
+                "operationId": "6bb01b94a71a6320d26e908b15a0f38f",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs ayant le rôle 'admin'",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun utilisateur avec le rôle 'admin' trouvé"
+                    }
+                }
+            }
+        },
         "/api/users/preference/add": {
             "post": {
                 "tags": [
@@ -3583,6 +5923,353 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/index": {
+            "get": {
+                "tags": [
+                    "verification_document"
+                ],
+                "summary": "Récupérer la liste des documents de vérification par utilisateur",
+                "description": "Récupère la liste des documents de vérification groupés par utilisateur avec leur statut.",
+                "operationId": "listVerificationDocumentsByUser",
+                "responses": {
+                    "200": {
+                        "description": "Liste des documents de vérification par utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur est survenue lors de la récupération des documents de vérification."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/store": {
+            "post": {
+                "tags": [
+                    "verification_document"
+                ],
+                "summary": "Enregistrer des documents de vérification avec des images",
+                "operationId": "e6999abc11a25c6d95936d686a0563a2",
+                "requestBody": {
+                    "description": "Données pour enregistrer les documents de vérification",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id_document",
+                                    "image_piece"
+                                ],
+                                "properties": {
+                                    "id_document[]": {
+                                        "description": "ID du document",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "image_piece[]": {
+                                        "description": "Image de la pièce",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Documents de vérification créés avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/show/{id}": {
+            "get": {
+                "tags": [
+                    "verification_document"
+                ],
+                "summary": "Afficher les detail d'une demande pour être hôte",
+                "operationId": "382104a8b7a63c05ac443b592c9bfd78",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information detaillée e la demande pour être hote"
+                    },
+                    "404": {
+                        "description": "verification_document not found"
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/hote/valider/all": {
+            "post": {
+                "tags": [
+                    "Validation documents pour etre hôte"
+                ],
+                "summary": "Valider les documents en un coup ,bref valider tout en un clic",
+                "description": "Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.",
+                "operationId": "12c2fea3e0430756950eccf1f3044da8",
+                "requestBody": {
+                    "description": "Données requises pour la validation des documents",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "verification_document_ids"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "L'identifiant de l'utilisateur",
+                                        "type": "integer"
+                                    },
+                                    "verification_document_ids": {
+                                        "description": "Les identifiants des documents de vérification à valider",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Succès. Les documents ont été validés avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de succès",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation. Vérifiez les données d'entrée.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/hote/valider/one": {
+            "post": {
+                "tags": [
+                    "Validation documents pour etre hôte"
+                ],
+                "summary": "Valider un document de vérification pour devenir hôte(ici on valide document par document)",
+                "operationId": "9268f1c2d8863cea00e76fabba1aef51",
+                "requestBody": {
+                    "description": "Données pour valider un document de vérification",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "verification_document_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur",
+                                        "type": "integer"
+                                    },
+                                    "verification_document_id": {
+                                        "description": "ID du document de vérification à valider",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document de vérification validé avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données"
+                    },
+                    "404": {
+                        "description": "Document de vérification non trouvé"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                }
+            }
+        },
+        "/api/users/result/demande": {
+            "get": {
+                "tags": [
+                    "verification_document"
+                ],
+                "summary": "Affiche pour un utiliateur connecté,le statut de ses documents soumis et le statut de sa demande",
+                "operationId": "093281058feacc15f5160fd22c7e7e4e",
+                "responses": {
+                    "200": {
+                        "description": "Demandes de vérification récupérées avec succès pour l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "verification_documents": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "document_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "document_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "path": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "request_status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des documents de vérification"
+                    }
+                }
+            }
+        },
+        "/api/verificationdocument/update": {
+            "post": {
+                "tags": [
+                    "verification_document"
+                ],
+                "summary": "Changer un document de vérification",
+                "operationId": "1a305c842f1cb92f87adb26f283ea16e",
+                "requestBody": {
+                    "description": "Données pour changer le document de vérification",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "verification_document_id",
+                                    "new_document"
+                                ],
+                                "properties": {
+                                    "verification_document_id": {
+                                        "description": "ID du document de vérification à changer",
+                                        "type": "integer"
+                                    },
+                                    "new_document": {
+                                        "description": "Nouveau document à téléverser",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document changé avec succès"
+                    },
+                    "400": {
+                        "description": "Impossible de changer le document"
+                    },
+                    "500": {
+                        "description": "Erreur lors du changement de document"
                     }
                 }
             }

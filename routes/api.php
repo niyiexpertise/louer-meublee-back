@@ -15,7 +15,12 @@ use App\Http\Controllers\EquipementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\User_preferenceController;
 use App\Http\Controllers\ReviewController;
-
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\CommissionController;
+use App\Http\Controllers\VerificationDocumentController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -51,18 +56,6 @@ Route::prefix('typestays')->group(function () {
     Route::delete('/destroy/{id}', [TypeStayController::class, 'destroy']);
     Route::put('/block/{id}', [TypeStayController::class, 'block']);
     Route::put('/unblock/{id}', [TypeStayController::class, 'unblock']);
-});
-
-//Gestion des types de role possible.
-
-Route::prefix('role')->group(function () {
-    Route::get('/index', [RoleController::class, 'index']);
-    Route::post('/store', [RoleController::class, 'store']);
-    Route::get('/show/{id}', [RoleController::class, 'show']);
-    Route::put('/update/{id}', [RoleController::class, 'update']);
-    Route::delete('/destroy/{id}', [RoleController::class, 'destroy']);
-    Route::put('/block/{id}', [RoleController::class, 'block']);
-    Route::put('/unblock/{id}', [RoleController::class, 'unblock']);
 });
 
 //Gestion  des critères de note .
@@ -183,6 +176,124 @@ Route::prefix('users')->group(function () {
     Route::get('/userReviews', [UserController::class, 'userReviews']);
     Route::get('/userLanguages', [UserController::class, 'userLanguages']);
     Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
+    Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto']);
+    Route::put('/block/{id}', [UserController::class, 'block']);
+    Route::put('/unblock/{id}', [UserController::class, 'unblock']);
+    Route::get('/pays/{pays}', [UserController::class, 'getUsersByCountry']);
+    Route::put('/update_password', [UserController::class, 'updatePassword']);
+    Route::get('/travelers', [UserController::class, 'getUsersWithRoletraveler']);
+    Route::get('/hotes', [UserController::class, 'getUsersWithRoleHost']);
+    Route::get('/admins', [UserController::class, 'getUsersWithRoleAdmin']);
+    Route::put('/update', [UserController::class, 'updateUser']);
+    Route::get('/result/demande', [VerificationDocumentController::class, 'userVerificationRequests']);
+
+
+    
+    
+});
+
+
+
+//Gestion des types de role possible.
+
+Route::prefix('role')->group(function () {
+    Route::get('/index', [RoleController::class, 'index']);
+    Route::post('/store', [RoleController::class, 'store']);
+    Route::get('/show/{id}', [RoleController::class, 'show']);
+    Route::delete('/destroy/{id}', [RoleController::class, 'destroy']);
+    Route::put('/block/{id}', [RoleController::class, 'block']);
+    Route::put('/unblock/{id}', [RoleController::class, 'unblock']);
+});
+
+
+//Gestion des types de permission possible.
+
+Route::prefix('permission')->group(function () {
+    Route::get('/index', [PermissionController::class, 'index']);
+    Route::post('/store', [PermissionController::class, 'store']);
+    Route::get('/show/{id}', [PermissionController::class, 'show']);
+    Route::put('/update/{id}', [PermissionController::class, 'update']);
+    Route::delete('/destroy/{id}', [PermissionController::class, 'destroy']);
+    Route::put('/block/{id}', [PermissionController::class, 'block']);
+    Route::put('/unblock/{id}', [PermissionController::class, 'unblock']);
+});
+
+//Gestion des accès des utilisateurs.
+
+// Route::group(['middleware' => ['role:manager']], function () {
+     Route::prefix('users')->group(function () {
+        Route::post('/assignPermToRole/{role}/{permission}', [AuthController::class, 'assignPermToRole']);
+        Route::post('/RevokePermToRole/{role}/{permission}', [AuthController::class, 'RevokePermToRole']);
+        Route::get('/getUserRoles/{id}', [AuthController::class, 'getUserRoles']);
+        Route::post('/assignRoleToUser/{id}/{role}', [AuthController::class, 'assignRoleToUser']);
+        Route::post('/RevokeRoleToUser/{id}/{role}', [AuthController::class, 'RevokeRoleToUser']);
+        Route::post('/assignPermToUser/{id}/{permission}', [AuthController::class, 'assignPermToUser']);
+        Route::post('/revokePermToUser/{id}/{permission}', [AuthController::class, 'revokePermToUser']);
+        Route::get('/getUserPerms/{id}', [AuthController::class, 'getUserPerms']);
+        Route::get('/usersWithRole/{role}', [AuthController::class, 'usersWithRole']);
+        Route::get('/usersWithRoleCount/{role}', [AuthController::class, 'usersWithRoleCount']);
+        Route::get('/usersWithPerm/{permission}', [AuthController::class, 'usersWithPerm']);
+        Route::get('/usersWithPermCount/{permission}', [AuthController::class, 'usersWithPermCount']);
+        Route::get('/usersWithoutRole/{role}', [AuthController::class, 'usersWithoutRole']);
+        Route::get('/usersWithoutRoleCount/{role}', [AuthController::class, 'usersWithoutRoleCount']);
+        Route::get('/usersWithoutPerm/{permission}', [AuthController::class, 'usersWithoutPerm']);
+        Route::get('/usersWithoutPermCount/{permission}', [AuthController::class, 'usersWithoutPermCount']);
+        Route::get('/usersPerms', [AuthController::class, 'usersPerms']);
+        Route::get('/rolesPerms/{id}', [AuthController::class, 'rolesPerms']);
+        Route::get('/rolesPermsCount/{id}', [AuthController::class, 'rolesPermsCount']);
+        Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
+        Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
+        // Route::group(['middleware' => ['permission:publish articles']], function () { 
+            Route::get('/usersRoles', [AuthController::class, 'usersRoles']);
+        // });
+    });
+// });
+// Route::group(['middleware' => ['permission:publish articles']], function () { ... });
+// Route::group(['middleware' => ['role_or_permission:publish articles']], function () { ... });
+
+
+
+// Gestion des notifications
+
+Route::prefix('notifications')->group(function () {
+    Route::get('/index', [NotificationController::class, 'index']);
+    Route::post('/store', [NotificationController::class, 'store']);
+    Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
+    Route::get('users', [NotificationController::class, 'getUserNotifications']);
+});
+
+//Gestion de la liste des documents à soumettre pour la demande à être hôte
+Route::prefix('document')->group(function () {
+    Route::get('/index', [DocumentController::class, 'index']);
+    Route::post('/store', [DocumentController::class, 'store']);
+    Route::get('/show/{id}', [DocumentController::class, 'show']);
+    Route::put('/update/{id}', [DocumentController::class, 'update']);
+    Route::delete('/destroy/{id}', [DocumentController::class, 'destroy']);
+    Route::put('/block/{id}', [DocumentController::class, 'block']);
+    Route::put('/unblock/{id}', [DocumentController::class, 'unblock']);
+    Route::put('/active/{id}', [DocumentController::class, 'active']);
+    Route::put('/inactive/{id}', [DocumentController::class, 'inactive']);
+    Route::get('/document_actif', [DocumentController::class, 'document_actif']);
+    Route::get('/document_inactif', [DocumentController::class, 'document_inactif']);
+});
+
+//Verification document
+Route::prefix('verificationdocument')->group(function () {
+    Route::get('/index', [VerificationDocumentController::class, 'index']);
+    Route::post('/store', [VerificationDocumentController::class, 'store']);
+    Route::get('/show/{id}', [VerificationDocumentController::class, 'show']);
+    Route::post('/update', [VerificationDocumentController::class, 'changeDocument']);
+    Route::delete('/destroy/{id}', [VerificationDocumentController::class, 'destroy']);
+    Route::post('/hote/valider/all', [VerificationDocumentController::class, 'validateDocuments']);
+    Route::post('/hote/valider/one', [VerificationDocumentController::class, 'validateDocument']);
+});
+
+//Gestion des commissions
+
+Route::prefix('commission')->group(function () {
+    Route::post('/updateCommissionForSpecifiqueUser', [CommissionController::class, 'updateCommissionForSpecifiqueUser']);
+    Route::put('/updateCommissionValueByAnother', [CommissionController::class, 'updateCommissionValueByAnother']);
+    Route::get('/usersWithCommission/{commission}', [CommissionController::class, 'usersWithCommission']);
 });
 
 

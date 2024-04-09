@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('housing_prices', function (Blueprint $table) {
+        Schema::create('verification_documents', function (Blueprint $table) {
             $table->id();
-            $table->float('price');
-            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
-            $table->foreignId('type_stay_id')->references('id')->on('type_stays')->onDelete('cascade');
+            $table->foreignId('document_id')->references('id')->on('documents')->onDelete('cascade');
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->text('path');
+            $table->timestamps();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
-            $table->timestamps();
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housing_prices');
+        Schema::dropIfExists('verification_documents');
     }
 };

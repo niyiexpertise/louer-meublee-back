@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-          $table->string('icone')->nullable()->change();
+        Schema::table('users', function (Blueprint $table) {
+          $table->boolean('is_hote')->after('postal_code');
+          $table->boolean('is_traveller')->after('postal_code');
+          $table->boolean('is_admin')->after('postal_code');
         });
     }
 
@@ -21,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             //
         });
     }

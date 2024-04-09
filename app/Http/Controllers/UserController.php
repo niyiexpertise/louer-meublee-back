@@ -9,6 +9,7 @@ use App\Models\User_language;
 use App\Models\Review;
 use App\Models\Language;
 use App\Models\Notification;
+use App\Models\Commission;
 use Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -233,6 +234,7 @@ class UserController extends Controller
             'language_id' => [
                 'required',
                 'min:1',
+                'exists:languages,id'
                 
             ],
             'password_confirmation' => 'required|string',
@@ -297,29 +299,6 @@ class UserController extends Controller
     }
 
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 /**
  * @OA\Delete(
  *   path="/api/users/destroy/{id}",
@@ -969,8 +948,10 @@ public function updateUser(Request $request)
  */
 public function getUsersWithRoleHost()
 {
-    $usersWithRole = User::where('is_hote', true)
-        ->where('is_deleted', 0)
+    $usersWithRole = User::join('commissions', 'users.id', '=', 'commissions.user_id')
+        ->where('users.is_hote', true)
+        ->where('users.is_deleted', 0)
+        ->select('users.*', 'commissions.valeur as commission_value')
         ->with(['user_language.language', 'user_preference.preference'])
         ->get();
 
@@ -996,6 +977,7 @@ public function getUsersWithRoleHost()
             'is_hote' => $user->is_hote,
             'is_traveller' => $user->is_traveller,
             'is_admin' => $user->is_admin,
+            'commission' =>$user->commission_value,
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -1010,6 +992,7 @@ public function getUsersWithRoleHost()
                     'icone' => $userPreference->preference->icone,
                 ];
             }),
+            
         ];
 
         $formattedUsers[] = $formattedUser;
@@ -1017,6 +1000,7 @@ public function getUsersWithRoleHost()
 
     return response()->json(['users' => $formattedUsers], 200);
 }
+
 
 /**
  * @OA\Get(

@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('housing_accessibilities', function (Blueprint $table) {
+        Schema::create('housing_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
-            $table->foreignId('accessibility_id')->references('id')->on('accessibilities')->onDelete('cascade');
-            $table->boolean('is_deleted')->default(false);
-            $table->boolean('is_blocked')->default(false);
+            $table->foreignId('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->integer('number');
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housing_accessibilities');
+        Schema::dropIfExists('housing_categories');
     }
 };

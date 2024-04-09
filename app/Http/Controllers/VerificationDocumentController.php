@@ -49,7 +49,10 @@ public function index()
                      })
                      ->with('verificationDocuments', 'verificationDocuments.verificationStatut', 'verificationDocuments.document')
                      ->get();
-
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'Aucun utilisateur avec des documents de vérification en attente trouvé.'], 404);
+                    }
+                    
         $verificationDocumentsByUser = [];
 
         foreach ($users as $user) {

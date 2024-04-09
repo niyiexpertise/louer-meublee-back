@@ -72,7 +72,7 @@ class CriteriaController extends Controller
             $criteria = new Criteria();
             $criteria->name = $request->name;
             $criteria->save();
-            return response()->json(['data' => 'Type de propriété créé avec succès.', 'criteria' => $criteria], 201);
+            return response()->json(['data' => 'Critère créé avec succès.', 'criteria' => $criteria], 201);
     } catch(Exception $e) {    
         return response()->json($e);
     }

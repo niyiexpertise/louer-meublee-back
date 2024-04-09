@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('housing_category_files', function (Blueprint $table) {
+        Schema::create('reductions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('housing_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('file_id')->constrained()->onDelete('cascade');
-            $table->string('icone')->nullable();
-            $table->timestamps();
+            $table->integer('night_number');
+            $table->float('value');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
+            $table->timestamps();
         });
     }
 
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housing_category_files');
+        Schema::dropIfExists('reductions');
     }
 };

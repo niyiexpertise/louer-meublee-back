@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('housing_equipments', function (Blueprint $table) {
+        Schema::create('promotions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
-            $table->foreignId('equipment_id')->references('id')->on('equipment')->onDelete('cascade');
+            $table->integer('number_of_reservation');
+            $table->float('value');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housing_equipments');
+        Schema::dropIfExists('promotions');
     }
 };

@@ -27,38 +27,8 @@ class CategorieController extends Controller
     {
         try{
                 $categories = Category::where('is_deleted',false)->get();
-                $data = [];
-                $a = [];
-
-               
-
-                foreach ($categories as $category) {
-                    $equipment_category = $category->equipment_category()->get();
-                    foreach ($equipment_category as $e) {
-                        $b= Equipment::where('id',$e->equipment_id)->get();
-                       foreach ($b as $k) {
-                        $a[] = [
-                            'id' => $k->id,
-                            'name' => $k->name,
-                            'is_deleted' => $k->is_deleted,
-                            'is_blocked' => $k->is_blocked,
-                            'created_at' => $k->created_at,
-                            'updated_at' => $k->updated_at
-                        ];
-                       }
-                    }
-                    $data[] =[
-                        'id' =>$category->id,
-                        'name' =>$category->name,
-                        'is_deleted' =>$category->id_deleted,
-                        'is_blocked' =>$category->is_blocked,
-                        'created_at' =>$category->created_at,
-                        'updated_at' =>$category->updated_at,
-                        'equipment' => $a
-                    ];
-                }
                 return response()->json([
-                    'data' => $data
+                    'data' => $categories 
                 ],200);
         } catch(Exception $e) {
             return response()->json($e);
@@ -66,67 +36,6 @@ class CategorieController extends Controller
 
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/category/indexCategorieEquipments",
-     *     summary="Get all categories and them equipment",
-     *     tags={"Category"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of categorys"
-     *
-     *     )
-     * )
-     */
-    public function indexCategorieEquipments()
-    {
-        try{
-                $categories = Category::where('is_deleted',false)->get();
-                $data = [];
-                $a = [];
-
-
-                foreach ($categories as $category) {
-                    $equipment_category = $category->equipment_category()->get();
-                    foreach ($equipment_category as $e) {
-                        $b= Equipment::where('id',$e->equipment_id)->get();
-                       foreach ($b as $k) {
-                        $a[] = [
-                            'id' => $k->id,
-                            'name' => $k->name,
-                            'is_deleted' => $k->is_deleted,
-                            'is_blocked' => $k->is_blocked,
-                            'created_at' => $k->created_at,
-                            'updated_at' => $k->updated_at
-                        ];
-                       }
-                    }
-                    $data[] =[
-                        'id' =>$category->id,
-                        'name' =>$category->name,
-                        'is_deleted' =>$category->id_deleted,
-                        'is_blocked' =>$category->is_blocked,
-                        'created_at' =>$category->created_at,
-                        'updated_at' =>$category->updated_at,
-                        'equipment' => $a
-                    ];
-                }
-                return response()->json([
-                    'data' => $data
-                ],200);
-        } catch(Exception $e) {
-            return response()->json($e);
-        }
-
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
 /**
      * @OA\Post(
@@ -200,21 +109,6 @@ class CategorieController extends Controller
     {
         try{
             $category = Category::find($id);
-            // $equipment_category = $category->equipment_category()->get();
-            // $a = [];
-            // foreach ($equipment_category as $e) {
-            //     $b= Equipment::where('id',$e->equipment_id)->get();
-            //    foreach ($b as $k) {
-            //     $a[] = [
-            //         'id' => $k->id,
-            //         'name' => $k->name,
-            //         'is_deleted' => $k->is_deleted,
-            //         'is_blocked' => $k->is_blocked,
-            //         'created_at' => $k->created_at,
-            //         'updated_at' => $k->updated_at
-            //     ];
-            //    }
-            // }
             if (!$category) {
                 return response()->json(['error' => 'Catégorie non trouvé.'], 404);
             }
@@ -227,7 +121,6 @@ class CategorieController extends Controller
                     'is_blocked' =>$category->is_blocked,
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
-                    // 'equipment' => $a
                 ]
             ], 200);
     
@@ -236,69 +129,6 @@ class CategorieController extends Controller
         }
 
     } 
-
-        /**
-     * @OA\Get(
-     *     path="/api/category/showEquipments/{id}",
-     *     summary="Get a specific category by ID and they equipment",
-     *     tags={"Category"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the category",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Category details"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Category not found"
-     *     )
-     * )
-     */
-    public function showEquipments(string $id)
-    {
-        try{
-            $category = Category::find($id);
-            $equipment_category = $category->equipment_category()->get();
-            $a = [];
-            foreach ($equipment_category as $e) {
-                $b= Equipment::where('id',$e->equipment_id)->get();
-               foreach ($b as $k) {
-                $a[] = [
-                    'id' => $k->id,
-                    'name' => $k->name,
-                    'is_deleted' => $k->is_deleted,
-                    'is_blocked' => $k->is_blocked,
-                    'created_at' => $k->created_at,
-                    'updated_at' => $k->updated_at
-                ];
-               }
-            }
-            if (!$category) {
-                return response()->json(['error' => 'Catégorie non trouvé.'], 404);
-            }
-
-            return response()->json([
-                'data' => [
-                    'id' => $category->id,
-                    'name' =>$category->name,
-                    'is_deleted' =>$category->id_deleted,
-                    'is_blocked' =>$category->is_blocked,
-                    'created_at' =>$category->created_at,
-                    'updated_at' =>$category->updated_at,
-                    'equipment' => $a
-                ]
-            ], 200);
-
-        } catch(Exception $e) { 
-            return response()->json($e);
-        }
-
-    }
 
 
     /**

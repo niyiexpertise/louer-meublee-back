@@ -138,18 +138,6 @@ Route::prefix('language')->group(function () {
 });
 
 
-//Gestion des accessibilitéq.
-
-Route::prefix('accessibility')->group(function () {
-    Route::get('/index', [AccessibilityController::class, 'index']);
-    Route::post('/store', [AccessibilityController::class, 'store']);
-    Route::get('/show/{id}', [AccessibilityController::class, 'show']);
-    Route::put('/update/{id}', [AccessibilityController::class, 'update']);
-    Route::delete('/destroy/{id}', [AccessibilityController::class, 'destroy']);
-    Route::put('/block/{id}', [AccessibilityController::class, 'block']);
-    Route::put('/unblock/{id}', [AccessibilityController::class, 'unblock']);
-});
-
 // Gestion des commentaires
 
 Route::prefix('review')->group(function () {

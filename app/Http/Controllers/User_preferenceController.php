@@ -62,7 +62,7 @@ public function AddUserPreferences(Request $request)
         'preferences' => 'required|array',
     ]);
      //$user = auth()->user()->id;
-    $user_id = 3;
+    $user_id = 2;
 
     try {
         foreach ($request->preferences as $preferenceId) {

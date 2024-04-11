@@ -9,8 +9,14 @@ class HousingType extends Model
 {
     use HasFactory;
     
+    protected $fillable = ['name', 'description'];
     public function housings()
     {
         return $this->hasMany(Housing::class);
+    }
+
+    public function subcategory()
+    {
+        return $this->hasMany(subcategory::class);
     }
 }

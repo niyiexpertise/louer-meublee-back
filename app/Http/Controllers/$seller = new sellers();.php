@@ -1,0 +1,18 @@
+$seller = new sellers();
+$seller->name = $user->name;
+$seller->email = $user->email;
+$seller->code_pays = $user->code_pays;
+$seller->rib = $user->rib;
+$seller->password = bcrypt($user->password);
+$seller->location = $user->location;
+$seller->number_phone = $user->number_phone;
+$seller->save();
+$seller->assignRole('seller');
+$commission=new Commission();
+$commission->seller_id=$seller->id;
+$commission->valeur=5;
+$commission->save();
+$verification = new verification_statues();
+$verification->status = 'unverified';
+$verification->seller_id = $seller->id;
+$verification->save();

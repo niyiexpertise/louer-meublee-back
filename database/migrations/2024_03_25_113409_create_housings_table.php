@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('number_of_bed');
             $table->integer('number_of_bathroom');
             $table->integer('number_of_traveller');
+            $table->integer('number_of_living_room');
             $table->double('sit_geo_lat');
             $table->double('sit_geo_lng');
             $table->string('country');
@@ -34,15 +35,20 @@ return new class extends Migration
             $table->boolean('is_disponible');
             $table->text('interior_regulation');
             $table->string('telephone');
+            $table->string('code_pays');
             $table->string('status')->nullable();
             $table->string('arrived_independently');
             $table->float('cleaning_fees');
             $table->string('icone')->nullable();
+            $table->boolean('is_instant_reservation');
+            $table->integer('maximum_duration');
+            $table->integer('minimum_duration');
+            $table->integer('time_before_reservation');
+            $table->text('cancelation_condition');
+            $table->text('departure_condition');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();
-            
-            
         });
     }
 

@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
             $table->foreignId('type_stay_id')->references('id')->on('type_stays')->onDelete('cascade');
+            $table->float('price');
+            $table->float('price_with_cleaning_fees');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

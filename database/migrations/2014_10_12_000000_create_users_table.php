@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('lastname');
             $table->string('firstname');
             $table->string('email')->unique();
+            $table->string('code_pays');
             $table->string('telephone');
             $table->string('country');
             $table->string('file_profil')->nullable(); // Chemin vers l'image de profil
@@ -29,6 +30,9 @@ return new class extends Migration
             $table->boolean('is_blocked')->default(false);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_admin');
+            $table->boolean('is_hote');
+            $table->boolean('is_traveller');
             $table->rememberToken();
             $table->timestamps();
             

@@ -58,5 +58,10 @@ class Housing extends Model
     {
         return $this->hasMany(Reservation::class);
     }
+
+    public function housing_category_equipment()
+    {
+        return $this->hasMany(housing_category_equipment::class);
+    }
 }
 

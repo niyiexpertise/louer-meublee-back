@@ -2230,6 +2230,593 @@
                 }
             }
         },
+        "/api/equipment/index": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get all equipments ",
+                "operationId": "af28be3aae06fce1219b289bb388fe61",
+                "responses": {
+                    "200": {
+                        "description": "List of equipments"
+                    }
+                }
+            }
+        },
+        "/api/equipment/store": {
+            "post": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Create a new equipment ",
+                "operationId": "8c93afb3e49a33e736c02a23845b7ca4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "category_id"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "palette,climatiseur"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description of the equipment"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Equipment  created successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/equipment/show/{id}": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get information about a specific equipment",
+                "operationId": "b7f43156c6f9e3598c05a56a6d737618",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the specified equipment "
+                    },
+                    "404": {
+                        "description": "Equipment not found for the specified ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Équipement introuvable ."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/equipment/update/{id}": {
+            "put": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Update an equipment by ID",
+                "operationId": "dcbe755b1e249fe724fb915f9764f737",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "category_id"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "New Equipment Name"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description of the updated equipment"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Equipment updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Equipment updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Equipment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Equipment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/equipment/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Delete an equipment by ID",
+                "operationId": "bfd597dbedfe15972170f1f324a88fa9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Equipment deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Equipment deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Equipment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Equipment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/equipment/block/{id}": {
+            "put": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Block an equipment",
+                "operationId": "3ac64c5c0f2861b5a9daec129e0846f4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment to block",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Equipment successfully blocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Equipment successfully blocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Equipment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Equipment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/equipment/unblock/{id}": {
+            "put": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Unblock an equipment",
+                "operationId": "eef800525531fd611afe7b5db6883779",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the equipment to unblock",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Equipment successfully unblocked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Equipment successfully unblocked"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Equipment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Equipment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/add-housing": {
+            "post": {
+                "tags": [
+                    "Logements"
+                ],
+                "summary": "Ajouter un logement",
+                "operationId": "61dfe5f87901e391ef2c0d86f21b3ec3",
+                "requestBody": {
+                    "description": "Données du logement à ajouter",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "housing_type_id": {
+                                        "description": "ID du type de logement",
+                                        "type": "integer"
+                                    },
+                                    "property_type_id": {
+                                        "description": "ID du type de propriété",
+                                        "type": "integer"
+                                    },
+                                    "name": {
+                                        "description": "Nom du logement",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Description du logement",
+                                        "type": "string"
+                                    },
+                                    "number_of_bed": {
+                                        "description": "Nombre de lits",
+                                        "type": "integer"
+                                    },
+                                    "number_of_traveller": {
+                                        "description": "Nombre de voyageurs",
+                                        "type": "integer"
+                                    },
+                                    "sit_geo_lat": {
+                                        "description": "Latitude géographique",
+                                        "type": "string"
+                                    },
+                                    "sit_geo_lng": {
+                                        "description": "Longitude géographique",
+                                        "type": "string"
+                                    },
+                                    "country": {
+                                        "description": "Pays",
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "description": "Adresse",
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "description": "Ville",
+                                        "type": "string"
+                                    },
+                                    "department": {
+                                        "description": "Département",
+                                        "type": "string"
+                                    },
+                                    "is_camera": {
+                                        "description": "Indicateur de présence de caméra de surveillance",
+                                        "type": "boolean"
+                                    },
+                                    "is_accepted_animal": {
+                                        "description": "Indicateur d'acceptation des animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_animal_exist": {
+                                        "description": "Indicateur de présence d'animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_disponible": {
+                                        "description": "Indicateur de disponibilité",
+                                        "type": "boolean"
+                                    },
+                                    "interior_regulation": {
+                                        "description": "Règlement intérieur",
+                                        "type": "string"
+                                    },
+                                    "telephone": {
+                                        "description": "Numéro de téléphone",
+                                        "type": "string"
+                                    },
+                                    "code_pays": {
+                                        "description": "Code pays",
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "description": "Statut",
+                                        "type": "string"
+                                    },
+                                    "arrived_independently": {
+                                        "description": "Indicateur d'arrivée indépendante",
+                                        "type": "boolean"
+                                    },
+                                    "icone": {
+                                        "description": "Icône",
+                                        "type": "string"
+                                    },
+                                    "is_instant_reservation": {
+                                        "description": "Indicateur de réservation instantanée",
+                                        "type": "boolean"
+                                    },
+                                    "maximum_duration": {
+                                        "description": "Durée maximale",
+                                        "type": "integer"
+                                    },
+                                    "minimum_duration": {
+                                        "description": "Durée minimale",
+                                        "type": "integer"
+                                    },
+                                    "time_before_reservation": {
+                                        "description": "Temps avant réservation",
+                                        "type": "integer"
+                                    },
+                                    "cancelation_condition": {
+                                        "description": "Condition d'annulation",
+                                        "type": "string"
+                                    },
+                                    "departure_condition": {
+                                        "description": "Condition de départ",
+                                        "type": "string"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "description": "Photos du logement",
+                                            "type": "file",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "profile_photo_id": {
+                                        "description": "ID de la photo de profil du logement",
+                                        "type": "integer"
+                                    },
+                                    "preferences": {
+                                        "description": "Liste des préférences du logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "reductions": {
+                                        "description": "Liste des réductions",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "night_number": {
+                                                    "description": "Nombre de nuitées",
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "description": "Valeur de la réduction",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "promotions": {
+                                        "description": "Liste des promotions",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "number_of_reservation": {
+                                                    "description": "Nombre de réservations",
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "description": "Valeur de la promotion",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "categories": {
+                                        "description": "Liste des catégories",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "category_id": {
+                                                    "description": "ID de la catégorie",
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "description": "Nombre",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "prices": {
+                                        "description": "Liste des prix",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "price_with_cleaning_fees": {
+                                                    "description": "Prix avec frais de nettoyage",
+                                                    "type": "integer"
+                                                },
+                                                "price_without_cleaning_fees": {
+                                                    "description": "Prix sans frais de nettoyage",
+                                                    "type": "integer"
+                                                },
+                                                "type_stay_id": {
+                                                    "description": "ID du type de séjour",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Logement ajouté avec succès"
+                    },
+                    "400": {
+                        "description": "Requête invalide"
+                    }
+                }
+            }
+        },
         "/api/housingtype/index": {
             "get": {
                 "tags": [
@@ -5129,6 +5716,46 @@
                 }
             }
         },
+        "/api/users/login": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "make authentification",
+                "operationId": "c9b20e2431404b7383ce7e626b4b6f05",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "a@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "P@$$w0rd"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": " connected successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
         "/api/users/preference/add": {
             "post": {
                 "tags": [
@@ -5554,6 +6181,16 @@
                         "description": "Erreur lors du changement de document"
                     }
                 }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     }

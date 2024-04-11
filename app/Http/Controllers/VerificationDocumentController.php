@@ -52,7 +52,7 @@ public function index()
         if ($users->isEmpty()) {
             return response()->json(['message' => 'Aucun utilisateur avec des documents de vérification en attente trouvé.'], 404);
                     }
-                    
+
         $verificationDocumentsByUser = [];
 
         foreach ($users as $user) {
@@ -136,8 +136,7 @@ public function store(Request $request)
 {
     try {
         $verificationDocuments = [];
-        //$user_id = auth()->user()->id;
-          $user_id = 2;
+        $user_id = auth()->user()->id;
         $idDocuments =$request->id_document;
         $imagePieces = $request->file('image_piece');     
         if (count($idDocuments) !== count($imagePieces)) {
@@ -309,6 +308,10 @@ public function validateDocuments(Request $request)
 
     $user_id = $data['user_id'];
     $verification_document_ids = $data['verification_document_ids'];
+    $verificationDocumentsExist = verification_statut::whereIn('verification_document_id', $verification_document_ids)->exists();
+    if (!$verificationDocumentsExist) {
+        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
+    }
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {

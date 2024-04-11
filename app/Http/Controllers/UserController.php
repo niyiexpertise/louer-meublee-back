@@ -1073,6 +1073,92 @@ public function getUsersWithRoleAdmin()
 }
 
 
+
+/**
+ * @OA\Post(
+ *     path="/api/users/login",
+ *     summary="make authentification",
+ *     tags={"User"},
+ *      @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"name"},
+ *             @OA\Property(property="email", type="string", example="a@gmail.com"),
+ *             @OA\Property(property="password", type="string", example="P@$$w0rd")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="connected successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="token_type", type="string", example="Bearer"),
+ *             @OA\Property(property="role", type="array", @OA\Items(type="string")),
+ *             @OA\Property(property="access_token", type="string", example="your-access-token")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Invalid credentials"
+ *     )
+ * )
+ */
+
+/**
+* @OA\Post(
+*     path="/api/users/login",
+*     summary="make authentification",
+*     tags={"User"},
+*      @OA\RequestBody(
+   *         required=true,
+   *         @OA\JsonContent(
+   *             required={"name"},
+   *             @OA\Property(property="email", type="string", example ="a@gmail.com"),
+   *             @OA\Property(property="password", type="string", example ="P@$$w0rd")
+   *         )
+   *     ),
+*     @OA\Response(
+*         response=201,
+*         description=" connected successfully"
+*     ),
+*     @OA\Response(
+*         response=401,
+*         description="Invalid credentials"
+*     )
+* )
+*/
+
+
+public function login(Request $request){
+    try{
+      $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+      ]);
+
+      $user = User::where('email', $request->email)->first();
+      if($user !=null){
+        if (Hash::check($request->password, $user->password)) {
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'token_type' => 'Bearer',
+                'user' => $user,
+                'role' => $user->getRoleNames(),
+                'access_token' => $token
+            ]);
+        } else {
+            return response()->json(['error' => 'Mot de passe invalide.'], 401);
+      }
+
+
+    }else {
+        return response()->json(['error' => 'Adresse email invalide.'], 401);
+    }
+
+   } catch(Exception $e) {    
+    return response()->json($e);
+    }
+}
+
 }
 
 

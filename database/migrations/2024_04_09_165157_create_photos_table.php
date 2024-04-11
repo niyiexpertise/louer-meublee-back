@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('photos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
+            $table->text('path');
+            $table->string('extension');
+            $table->boolean('is_couverture')->default(false);
             $table->timestamps();
+            $table->boolean('is_deleted')->default(false);
+            $table->boolean('is_blocked')->default(false);
         });
     }
 

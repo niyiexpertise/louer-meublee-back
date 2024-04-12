@@ -13,6 +13,7 @@ class LanguageController extends Controller
      *     path="/api/language/index",
      *     summary="Get all languages",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of languages"
@@ -40,6 +41,7 @@ class LanguageController extends Controller
      *     path="/api/language/store",
      *     summary="add new language",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -95,6 +97,7 @@ class LanguageController extends Controller
      *     path="/api/language/show/{id}",
      *     summary="Get a specific language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -134,6 +137,7 @@ class LanguageController extends Controller
      *     path="/api/language/update/{id}",
      *     summary="Update a language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -181,6 +185,7 @@ class LanguageController extends Controller
      *     path="/api/language/destroy/{id}",
      *     summary="Delete a language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -220,6 +225,7 @@ class LanguageController extends Controller
  *     path="/api/language/block/{id}",
  *     summary="Block a language",
  *     tags={"Language"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -266,6 +272,7 @@ class LanguageController extends Controller
  *     path="/api/language/unblock/{id}",
  *     summary="Unblock a language",
  *     tags={"Language"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

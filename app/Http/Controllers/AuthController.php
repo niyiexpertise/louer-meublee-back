@@ -1393,8 +1393,8 @@ class AuthController extends Controller
         //quitter le role voyageur au role hote
        public function switchToHote(){
             try{
-                // $id = auth()->id();
-                $id = 4;
+             $id = auth()->id();
+                
                 $user = User::find($id)->assignRole("hote");
                 $user = User::find($id)->removeRole("traveler");
                 return response()->json([

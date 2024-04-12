@@ -18,4 +18,8 @@ class HousingCategory extends Model
     {
         return $this->belongsTo(Housing::class);
     }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

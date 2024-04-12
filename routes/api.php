@@ -54,7 +54,7 @@ Route::prefix('users')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     //Gestion des catégories.
-    Route::group(['middleware' => ['permission:manageCategory']], function () {
+    Route::group(['middleware' => ['role:admin']], function () {
         Route::prefix('category')->group(function () {
             Route::get('/index', [CategorieController::class, 'index']);
             Route::post('/store', [CategorieController::class, 'store']);
@@ -128,7 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    Route::group(['middleware' => ['role:admin']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('users')->group(function () {
             
             Route::post('/assignPermToRole/{role}/{permission}', [AuthController::class, 'assignPermToRole']);
@@ -282,7 +282,7 @@ Route::group(['middleware' => ['permission:manageUser']], function () {
     });
 
     //Gestion des commissions
-    Route::group(['middleware' => ['permission: manageCommission']], function () {
+    Route::group(['middleware' => ['permission:manageCommission']], function () {
         
         Route::prefix('commission')->group(function () {
             Route::post('/updateCommissionForSpecifiqueUser', [CommissionController::class, 'updateCommissionForSpecifiqueUser']);
@@ -313,7 +313,7 @@ Route::group(['middleware' => ['permission:manageUser']], function () {
    });
 
     // Gestion logement côté hôte
-    Route::group(['middleware' => ['permission: manageHousing']], function () {
+    Route::group(['middleware' => ['role:hote']], function () {
         
         Route::prefix('logement')->group(function () {
             Route::get('/index', [HousingController::class, 'index']);
@@ -326,11 +326,22 @@ Route::group(['middleware' => ['permission:manageUser']], function () {
 
         });
     });
-    Route::group(['middleware' => ['permission: managePromotion']], function () {
+    //Gestion des logements en attente de validation pour être visible sur le site
+    
+    Route::group(['middleware' => ['role:admin']], function () {
+        Route::prefix('logement')->group(function () {
+            Route::get('/withoutvalidation', [HousingController::class, 'indexHousingwithoutConfirmation']);
+            Route::get('/withoutvalidation/show/{id}', [HousingController::class, 'ShowHousingwithoutConfirmation']);
+            Route::put('/validate/one/{id}', [HousingController::class, 'ValidateOneHousingwithoutConfirmation']);
+            Route::put('/validate/many/', [HousingController::class, 'ValidateManyHousingwithoutConfirmation']);
+    
+        });
+    });
+    Route::group(['middleware' => ['permission:managePromotion']], function () {
 
     });
 
-    Route::group(['middleware' => ['permission: manageReduction']], function () {
+    Route::group(['middleware' => ['permission:manageReduction']], function () {
 
     });
 

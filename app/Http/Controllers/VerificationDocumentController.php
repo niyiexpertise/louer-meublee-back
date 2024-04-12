@@ -462,9 +462,7 @@ public function validateDocument(Request $request)
 public function userVerificationRequests()
 {
     try {
-        //$userId = Auth::id();
-        $userId = 2;
-
+        $userId = Auth::id();
         $user = User::with(['verificationDocuments' => function ($query) {
             $query->with('verificationStatut');
         }])->findOrFail($userId);

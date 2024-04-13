@@ -13,6 +13,7 @@ class PermissionController extends Controller
      *     path="/api/permission/index",
      *     summary="Get all permissions",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of permissions"
@@ -47,6 +48,7 @@ class PermissionController extends Controller
       *     path="/api/permission/store",
       *     summary="Create a new permission ",
       *     tags={"Permission"},
+      security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(
@@ -85,6 +87,7 @@ class PermissionController extends Controller
      *     path="/api/permission/show/{id}",
      *     summary="Get a specific permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -127,6 +130,7 @@ class PermissionController extends Controller
      *     path="/api/permission/update/{id}",
      *     summary="Update a permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -176,6 +180,7 @@ class PermissionController extends Controller
      *     path="/api/permission/destroy/{id}",
      *     summary="Delete a permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

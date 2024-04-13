@@ -19,6 +19,14 @@ return new class extends Migration
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();
         });
+
+        // Insertion des données
+        DB::table('categories')->insert([
+            ['name' => 'Salon'],
+            ['name' => 'Chambre'],
+            ['name' => 'Cuisine'],
+            ['name' => 'Salle de bain'],
+        ]);
     }
 
     /**

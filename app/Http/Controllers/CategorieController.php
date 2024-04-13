@@ -16,6 +16,7 @@ class CategorieController extends Controller
      *     path="/api/category/index",
      *     summary="Get all categories",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of categorys"
@@ -42,6 +43,7 @@ class CategorieController extends Controller
      *     path="/api/category/store",
      *     summary="create new category",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -88,6 +90,7 @@ class CategorieController extends Controller
      *     path="/api/category/show/{id}",
      *     summary="Get a specific category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -144,6 +147,7 @@ class CategorieController extends Controller
      *     path="/api/category/update/{id}",
      *     summary="Update category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -192,6 +196,7 @@ class CategorieController extends Controller
      *     path="/api/category/destroy/{id}",
      *     summary="Delete category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -231,6 +236,7 @@ class CategorieController extends Controller
  *     path="/api/category/block/{id}",
  *     summary="Block a category",
  *     tags={"Category"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -280,6 +286,7 @@ class CategorieController extends Controller
  *     path="/api/category/unblock/{id}",
  *     summary="Unblock a category",
  *     tags={"Category"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

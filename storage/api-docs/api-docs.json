@@ -71,7 +71,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/RevokePermToRole/{role}/{permission}": {
@@ -136,7 +141,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/getUserRoles/{id}": {
@@ -191,7 +201,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/assignRoleToUser/{id}/{role}": {
@@ -256,7 +271,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/RevokeRoleToUser/{id}/{role}": {
@@ -321,7 +341,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/assignPermToUser/{id}/{permission}": {
@@ -386,7 +411,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/revokePermToUser/{id}/{permission}": {
@@ -451,7 +481,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/getUserPerms/{id}": {
@@ -506,7 +541,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithRole/{role}": {
@@ -561,7 +601,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithRoleCount/{role}": {
@@ -616,7 +661,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithPerm/{permission}": {
@@ -671,7 +721,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithPermCount/{permission}": {
@@ -726,7 +781,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithoutRole/{role}": {
@@ -781,7 +841,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithoutRoleCount/{role}": {
@@ -836,7 +901,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithoutPerm/{permission}": {
@@ -891,7 +961,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersWithoutPermCount/{permission}": {
@@ -946,7 +1021,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersRoles": {
@@ -960,7 +1040,12 @@
                     "200": {
                         "description": "list of users and their roles"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/usersPerms": {
@@ -974,7 +1059,12 @@
                     "200": {
                         "description": "List of users and their permissions"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/rolesPerms/{role}": {
@@ -1029,7 +1119,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/rolesPermsCount/{role}": {
@@ -1084,7 +1179,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/switchToHote": {
@@ -1098,7 +1198,12 @@
                     "200": {
                         "description": "move to hote"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/switchToTraveler": {
@@ -1112,7 +1217,12 @@
                     "200": {
                         "description": "move to traveler"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/index": {
@@ -1126,7 +1236,12 @@
                     "200": {
                         "description": "List of categorys"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/store": {
@@ -1175,7 +1290,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/show/{id}": {
@@ -1203,7 +1323,12 @@
                     "404": {
                         "description": "Category not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/update/{id}": {
@@ -1253,7 +1378,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/destroy/{id}": {
@@ -1281,7 +1411,12 @@
                     "404": {
                         "description": "Category not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/block/{id}": {
@@ -1336,7 +1471,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/category/unblock/{id}": {
@@ -1391,7 +1531,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/commission/updateCommissionValueByAnother": {
@@ -1474,7 +1619,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/commission/updateCommissionForSpecifiqueUser": {
@@ -1521,7 +1671,12 @@
                     "500": {
                         "description": "Internal server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/commission/usersWithCommission/{commission}": {
@@ -1549,7 +1704,12 @@
                     "404": {
                         "description": "Commission not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/index": {
@@ -1563,7 +1723,12 @@
                     "200": {
                         "description": "List of criterias"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/store": {
@@ -1599,7 +1764,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/show/{id}": {
@@ -1627,7 +1797,12 @@
                     "404": {
                         "description": "Criteria not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/update/{id}": {
@@ -1677,7 +1852,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/destroy/{id}": {
@@ -1705,7 +1885,12 @@
                     "404": {
                         "description": "Criteria not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/block/{id}": {
@@ -1760,7 +1945,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/criteria/unblock/{id}": {
@@ -1815,7 +2005,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/index": {
@@ -1829,7 +2024,12 @@
                     "200": {
                         "description": "List of documents"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/store": {
@@ -1869,7 +2069,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/show/{id}": {
@@ -1897,7 +2102,12 @@
                     "404": {
                         "description": "Document not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/update/{id}": {
@@ -1951,7 +2161,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/destroy/{id}": {
@@ -1979,7 +2194,12 @@
                     "404": {
                         "description": "Document not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/block/{id}": {
@@ -2034,7 +2254,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/unblock/{id}": {
@@ -2089,7 +2314,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/document_actif": {
@@ -2103,7 +2333,12 @@
                     "200": {
                         "description": "List of inactif documents"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/document_inactif": {
@@ -2117,7 +2352,12 @@
                     "200": {
                         "description": "List of actif documents"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/active/{id}": {
@@ -2172,7 +2412,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/document/inactive/{id}": {
@@ -2227,7 +2472,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/index": {
@@ -2241,7 +2491,12 @@
                     "200": {
                         "description": "List of equipments"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/store": {
@@ -2283,7 +2538,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/show/{id}": {
@@ -2324,7 +2584,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/update/{id}": {
@@ -2419,7 +2684,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/destroy/{id}": {
@@ -2473,7 +2743,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/block/{id}": {
@@ -2527,7 +2802,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/equipment/unblock/{id}": {
@@ -2581,240 +2861,12 @@
                             }
                         }
                     }
-                }
-            }
-        },
-        "/api/add-housing": {
-            "post": {
-                "tags": [
-                    "Logements"
-                ],
-                "summary": "Ajouter un logement",
-                "operationId": "61dfe5f87901e391ef2c0d86f21b3ec3",
-                "requestBody": {
-                    "description": "Données du logement à ajouter",
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "properties": {
-                                    "housing_type_id": {
-                                        "description": "ID du type de logement",
-                                        "type": "integer"
-                                    },
-                                    "property_type_id": {
-                                        "description": "ID du type de propriété",
-                                        "type": "integer"
-                                    },
-                                    "name": {
-                                        "description": "Nom du logement",
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "description": "Description du logement",
-                                        "type": "string"
-                                    },
-                                    "number_of_bed": {
-                                        "description": "Nombre de lits",
-                                        "type": "integer"
-                                    },
-                                    "number_of_traveller": {
-                                        "description": "Nombre de voyageurs",
-                                        "type": "integer"
-                                    },
-                                    "sit_geo_lat": {
-                                        "description": "Latitude géographique",
-                                        "type": "string"
-                                    },
-                                    "sit_geo_lng": {
-                                        "description": "Longitude géographique",
-                                        "type": "string"
-                                    },
-                                    "country": {
-                                        "description": "Pays",
-                                        "type": "string"
-                                    },
-                                    "address": {
-                                        "description": "Adresse",
-                                        "type": "string"
-                                    },
-                                    "city": {
-                                        "description": "Ville",
-                                        "type": "string"
-                                    },
-                                    "department": {
-                                        "description": "Département",
-                                        "type": "string"
-                                    },
-                                    "is_camera": {
-                                        "description": "Indicateur de présence de caméra de surveillance",
-                                        "type": "boolean"
-                                    },
-                                    "is_accepted_animal": {
-                                        "description": "Indicateur d'acceptation des animaux",
-                                        "type": "boolean"
-                                    },
-                                    "is_animal_exist": {
-                                        "description": "Indicateur de présence d'animaux",
-                                        "type": "boolean"
-                                    },
-                                    "is_disponible": {
-                                        "description": "Indicateur de disponibilité",
-                                        "type": "boolean"
-                                    },
-                                    "interior_regulation": {
-                                        "description": "Règlement intérieur",
-                                        "type": "string"
-                                    },
-                                    "telephone": {
-                                        "description": "Numéro de téléphone",
-                                        "type": "string"
-                                    },
-                                    "code_pays": {
-                                        "description": "Code pays",
-                                        "type": "string"
-                                    },
-                                    "status": {
-                                        "description": "Statut",
-                                        "type": "string"
-                                    },
-                                    "arrived_independently": {
-                                        "description": "Indicateur d'arrivée indépendante",
-                                        "type": "boolean"
-                                    },
-                                    "icone": {
-                                        "description": "Icône",
-                                        "type": "string"
-                                    },
-                                    "is_instant_reservation": {
-                                        "description": "Indicateur de réservation instantanée",
-                                        "type": "boolean"
-                                    },
-                                    "maximum_duration": {
-                                        "description": "Durée maximale",
-                                        "type": "integer"
-                                    },
-                                    "minimum_duration": {
-                                        "description": "Durée minimale",
-                                        "type": "integer"
-                                    },
-                                    "time_before_reservation": {
-                                        "description": "Temps avant réservation",
-                                        "type": "integer"
-                                    },
-                                    "cancelation_condition": {
-                                        "description": "Condition d'annulation",
-                                        "type": "string"
-                                    },
-                                    "departure_condition": {
-                                        "description": "Condition de départ",
-                                        "type": "string"
-                                    },
-                                    "photos": {
-                                        "type": "array",
-                                        "items": {
-                                            "description": "Photos du logement",
-                                            "type": "file",
-                                            "format": "binary"
-                                        }
-                                    },
-                                    "profile_photo_id": {
-                                        "description": "ID de la photo de profil du logement",
-                                        "type": "integer"
-                                    },
-                                    "preferences": {
-                                        "description": "Liste des préférences du logement",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "reductions": {
-                                        "description": "Liste des réductions",
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "night_number": {
-                                                    "description": "Nombre de nuitées",
-                                                    "type": "integer"
-                                                },
-                                                "value": {
-                                                    "description": "Valeur de la réduction",
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "promotions": {
-                                        "description": "Liste des promotions",
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "number_of_reservation": {
-                                                    "description": "Nombre de réservations",
-                                                    "type": "integer"
-                                                },
-                                                "value": {
-                                                    "description": "Valeur de la promotion",
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "categories": {
-                                        "description": "Liste des catégories",
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "category_id": {
-                                                    "description": "ID de la catégorie",
-                                                    "type": "integer"
-                                                },
-                                                "number": {
-                                                    "description": "Nombre",
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "prices": {
-                                        "description": "Liste des prix",
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "price_with_cleaning_fees": {
-                                                    "description": "Prix avec frais de nettoyage",
-                                                    "type": "integer"
-                                                },
-                                                "price_without_cleaning_fees": {
-                                                    "description": "Prix sans frais de nettoyage",
-                                                    "type": "integer"
-                                                },
-                                                "type_stay_id": {
-                                                    "description": "ID du type de séjour",
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
                 },
-                "responses": {
-                    "201": {
-                        "description": "Logement ajouté avec succès"
-                    },
-                    "400": {
-                        "description": "Requête invalide"
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
-                }
+                ]
             }
         },
         "/api/housingtype/index": {
@@ -2828,7 +2880,12 @@
                     "200": {
                         "description": "List of housing types"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/store": {
@@ -2869,7 +2926,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/show/{id}": {
@@ -2897,7 +2959,12 @@
                     "404": {
                         "description": "Housing type not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/update/{id}": {
@@ -2952,7 +3019,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/destroy/{id}": {
@@ -2980,7 +3052,12 @@
                     "404": {
                         "description": "Housing type not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/block/{id}": {
@@ -3035,7 +3112,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/housingtype/unblock/{id}": {
@@ -3090,7 +3172,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/index": {
@@ -3104,7 +3191,12 @@
                     "200": {
                         "description": "List of languages"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/store": {
@@ -3153,7 +3245,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/show/{id}": {
@@ -3181,7 +3278,12 @@
                     "404": {
                         "description": "Language not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/update/{id}": {
@@ -3231,7 +3333,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/destroy/{id}": {
@@ -3259,7 +3366,12 @@
                     "404": {
                         "description": "Language not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/block/{id}": {
@@ -3314,7 +3426,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/language/unblock/{id}": {
@@ -3369,7 +3486,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/index": {
@@ -3383,7 +3505,12 @@
                     "200": {
                         "description": "List of the notification"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/store": {
@@ -3444,7 +3571,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/users": {
@@ -3465,7 +3597,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permission/index": {
@@ -3479,7 +3616,12 @@
                     "200": {
                         "description": "List of permissions"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permission/store": {
@@ -3515,7 +3657,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permission/show/{id}": {
@@ -3543,7 +3690,12 @@
                     "404": {
                         "description": "Permission not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permission/update/{id}": {
@@ -3594,7 +3746,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permission/destroy/{id}": {
@@ -3622,7 +3779,12 @@
                     "404": {
                         "description": "Permission not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/index": {
@@ -3636,7 +3798,12 @@
                     "200": {
                         "description": "List of preferences"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/store": {
@@ -3672,7 +3839,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/show/{id}": {
@@ -3700,7 +3872,12 @@
                     "404": {
                         "description": "Preference not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/update/{id}": {
@@ -3750,7 +3927,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/destroy/{id}": {
@@ -3778,7 +3960,12 @@
                     "404": {
                         "description": "Preference not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/block/{id}": {
@@ -3833,7 +4020,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/preference/unblock/{id}": {
@@ -3888,7 +4080,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/index": {
@@ -3902,7 +4099,12 @@
                     "200": {
                         "description": "List of property types"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/store": {
@@ -3951,7 +4153,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/show/{id}": {
@@ -3979,7 +4186,12 @@
                     "404": {
                         "description": "Property type not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/update/{id}": {
@@ -4029,7 +4241,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/destroy/{id}": {
@@ -4057,7 +4274,12 @@
                     "404": {
                         "description": "Property type not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/block/{id}": {
@@ -4112,7 +4334,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/propertyType/unblock/{id}": {
@@ -4167,7 +4394,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/index": {
@@ -4181,7 +4413,12 @@
                     "200": {
                         "description": "List of reviews"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/store": {
@@ -4230,7 +4467,12 @@
                     "401": {
                         "description": "Identifiants invalides"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/show/{id}": {
@@ -4258,7 +4500,12 @@
                     "404": {
                         "description": "Review not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/update/{id}": {
@@ -4309,7 +4556,12 @@
                     "422": {
                         "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/destroy/{id}": {
@@ -4337,7 +4589,12 @@
                     "404": {
                         "description": "Review not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/block/{id}": {
@@ -4392,7 +4649,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/review/unblock/{id}": {
@@ -4447,7 +4709,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/role/index": {
@@ -4461,7 +4728,12 @@
                     "200": {
                         "description": "List of roles"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/role/store": {
@@ -4497,7 +4769,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/role/show/{id}": {
@@ -4525,7 +4802,12 @@
                     "404": {
                         "description": "Role not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/role/destroy/{id}": {
@@ -4553,7 +4835,12 @@
                     "404": {
                         "description": "Role not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/index": {
@@ -4567,7 +4854,12 @@
                     "200": {
                         "description": "Liste de tous les types de séjour"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/store": {
@@ -4616,7 +4908,12 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/show/{id}": {
@@ -4644,7 +4941,12 @@
                     "404": {
                         "description": "Type de séjour non trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/update/{id}": {
@@ -4694,7 +4996,12 @@
                     "422": {
                         "description": "Erreur de validation"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/destoy/{id}": {
@@ -4722,7 +5029,12 @@
                     "404": {
                         "description": "Type de séjour non trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/block/{id}": {
@@ -4777,7 +5089,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/typestays/unblock/{id}": {
@@ -4831,7 +5148,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/index": {
@@ -4984,7 +5306,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/register": {
@@ -5120,7 +5447,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/destroy/{id}": {
@@ -5175,7 +5507,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/userReviews": {
@@ -5335,7 +5672,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/block/{id}": {
@@ -5390,7 +5732,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/unblock/{id}": {
@@ -5445,7 +5792,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/pays/{pays}": {
@@ -5475,7 +5827,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/update_password": {
@@ -5594,7 +5951,12 @@
                     "404": {
                         "description": "Aucun utilisateur avec le rôle 'traveler' trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/update": {
@@ -5669,7 +6031,12 @@
                     "404": {
                         "description": "Utilisateur non trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/hotes": {
@@ -5691,7 +6058,12 @@
                     "404": {
                         "description": "Aucun utilisateur avec le rôle 'traveller' trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/admins": {
@@ -5713,7 +6085,12 @@
                     "404": {
                         "description": "Aucun utilisateur avec le rôle 'admin' trouvé"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/login": {
@@ -5753,7 +6130,53 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Check authentication status",
+                "description": "Check if the user is authenticated and retrieve user data and role",
+                "operationId": "ee70f3bb18e11e1c3720dfbf39b9c3f8",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "role": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/preference/add": {
@@ -5833,7 +6256,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/index": {
@@ -5869,7 +6297,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/store": {
@@ -5918,7 +6351,12 @@
                     "400": {
                         "description": "Erreur de validation"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/show/{id}": {
@@ -5946,7 +6384,12 @@
                     "404": {
                         "description": "verification_document not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/hote/valider/all": {
@@ -6134,7 +6577,12 @@
                     "500": {
                         "description": "Erreur lors de la récupération des documents de vérification"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/update": {
@@ -6180,17 +6628,21 @@
                     "500": {
                         "description": "Erreur lors du changement de document"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         }
     },
     "components": {
         "securitySchemes": {
-            "sanctum": {
-                "type": "apiKey",
-                "description": "Enter token in format (Bearer <token>)",
-                "name": "Authorization",
-                "in": "header"
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     }

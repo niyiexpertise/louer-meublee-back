@@ -15,6 +15,7 @@ class CriteriaController extends Controller
    *     path="/api/criteria/index",
    *     summary="Get all criterias",
    *     tags={"Criteria"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of criterias"
@@ -46,6 +47,7 @@ class CriteriaController extends Controller
 *     path="/api/criteria/store",
 *     summary="Create a new criteria",
 *     tags={"Criteria"},
+security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
@@ -84,6 +86,7 @@ class CriteriaController extends Controller
    *     path="/api/criteria/show/{id}",
    *     summary="Get a specific criteria by ID",
    *     tags={"Criteria"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -130,6 +133,7 @@ class CriteriaController extends Controller
    *     path="/api/criteria/update/{id}",
    *     summary="Update a criteria by ID",
    *     tags={"Criteria"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -177,6 +181,7 @@ class CriteriaController extends Controller
    *     path="/api/criteria/destroy/{id}",
    *     summary="Delete a criteria by ID",
    *     tags={"Criteria"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -216,6 +221,7 @@ class CriteriaController extends Controller
 *     path="/api/criteria/block/{id}",
 *     summary="Block a criteria",
 *     tags={"Criteria"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -266,6 +272,7 @@ class CriteriaController extends Controller
 *     path="/api/criteria/unblock/{id}",
 *     summary="Unblock a criteria",
 *     tags={"Criteria"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",

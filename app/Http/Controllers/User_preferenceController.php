@@ -15,6 +15,7 @@ class User_preferenceController extends Controller
  * @OA\Post(
  *   path="/api/users/preference/add",
  *   tags={"User_preference"},
+ * security={{"bearerAuth": {}}},
  *   summary="Ajouter les préférences d'un utilisateur",
  *   description="Ajoute les préférences sélectionnées par un utilisateur.",
  *   @OA\RequestBody(

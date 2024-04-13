@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\equipement_subcategory;
+use App\Models\Equipment_category;
 use Illuminate\Http\Request;
 
-class EquipementSubcategoryController extends Controller
+class EquipmentCategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -34,7 +34,7 @@ class EquipementSubcategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(equipement_subcategory $equipement_subcategory)
+    public function show(Equipment_category $equipment_category)
     {
         //
     }
@@ -42,7 +42,7 @@ class EquipementSubcategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(equipement_subcategory $equipement_subcategory)
+    public function edit(Equipment_category $equipment_category)
     {
         //
     }
@@ -50,7 +50,7 @@ class EquipementSubcategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, equipement_subcategory $equipement_subcategory)
+    public function update(Request $request, Equipment_category $equipment_category)
     {
         //
     }
@@ -58,7 +58,7 @@ class EquipementSubcategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(equipement_subcategory $equipement_subcategory)
+    public function destroy(Equipment_category $equipment_category)
     {
         //
     }

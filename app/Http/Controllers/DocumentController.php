@@ -17,6 +17,7 @@ class DocumentController extends Controller
    *     path="/api/document/index",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of documents"
@@ -53,6 +54,7 @@ class DocumentController extends Controller
 *     path="/api/document/store",
 *     summary="Create a new document",
 *     tags={"Document"},
+security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
@@ -98,6 +100,7 @@ class DocumentController extends Controller
    *     path="/api/document/show/{id}",
    *     summary="Get a specific document by ID",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -142,6 +145,7 @@ class DocumentController extends Controller
    *     path="/api/document/update/{id}",
    *     summary="Update a document by ID",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -190,6 +194,7 @@ class DocumentController extends Controller
    *     path="/api/document/destroy/{id}",
    *     summary="Delete a document by ID",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -228,6 +233,7 @@ class DocumentController extends Controller
 *     path="/api/document/block/{id}",
 *     summary="Block a document",
 *     tags={"Document"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -276,6 +282,7 @@ class DocumentController extends Controller
 *     path="/api/document/unblock/{id}",
 *     summary="Unblock a document",
 *     tags={"Document"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -327,6 +334,7 @@ class DocumentController extends Controller
    *     path="/api/document/document_actif",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of inactif documents"
@@ -361,6 +369,7 @@ class DocumentController extends Controller
    *     path="/api/document/document_inactif",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of actif documents"
@@ -386,6 +395,7 @@ class DocumentController extends Controller
 *     path="/api/document/active/{id}",
 *     summary="active a document",
 *     tags={"Document"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -433,6 +443,7 @@ public function active($id)
 *     path="/api/document/inactive/{id}",
 *     summary="inactive a document",
 *     tags={"Document"},
+security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\subcategory;
+use App\Models\Housing_equipment;
 use Illuminate\Http\Request;
 
-class SubcategoryController extends Controller
+class HousingEquipmentController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -34,7 +34,7 @@ class SubcategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(subcategory $subcategory)
+    public function show(Housing_equipment $housing_equipment)
     {
         //
     }
@@ -42,7 +42,7 @@ class SubcategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(subcategory $subcategory)
+    public function edit(Housing_equipment $housing_equipment)
     {
         //
     }
@@ -50,7 +50,7 @@ class SubcategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, subcategory $subcategory)
+    public function update(Request $request, Housing_equipment $housing_equipment)
     {
         //
     }
@@ -58,7 +58,7 @@ class SubcategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(subcategory $subcategory)
+    public function destroy(Housing_equipment $housing_equipment)
     {
         //
     }

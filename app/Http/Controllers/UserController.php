@@ -23,6 +23,7 @@ class UserController extends Controller
  *     path="/api/users/index",
  *     summary="Get all users",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="List of users",
@@ -147,6 +148,7 @@ class UserController extends Controller
  * @OA\Post(
  *   path="/api/users/register",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Enregistrer un nouvel utilisateur",
  *   description="Enregistre un nouvel utilisateur avec les informations fournies",
  *   @OA\RequestBody(
@@ -210,7 +212,6 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-        // Validation des données
         
         
         $validator = Validator::make($request->all(), [
@@ -303,6 +304,7 @@ class UserController extends Controller
  * @OA\Delete(
  *   path="/api/users/destroy/{id}",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Marquer un utilisateur comme supprimé",
  *   description="Marque un utilisateur comme supprimé en définissant is_deleted à true.",
  *  @OA\Parameter(
@@ -346,6 +348,7 @@ class UserController extends Controller
  * @OA\Get(
  *     path="/api/users/userReviews",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Obtenir les avis de l'utilisateur connecté",
  *     description="Récupère les avis associés à l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -364,8 +367,8 @@ class UserController extends Controller
  */
 public function userReviews()
 {
-    $user_Id=1;
-    //$userId = Auth::id();
+
+    $userId = Auth::id();
     $reviews = Review::where('user_id', $user_Id)->get();
 
     return response()->json([
@@ -377,6 +380,7 @@ public function userReviews()
  * @OA\Get(
  *     path="/api/users/userLanguages",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Obtenir les langues de l'utilisateur connecté",
  *     description="Récupère les langues associées à l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -396,8 +400,7 @@ public function userReviews()
  */
 public function userLanguages()
 {
-    $user_Id=1;
-    //$userId = Auth::id();
+    $userId = Auth::id();
     $user = User::with('user_language.language')->find($user_Id);
 
     if (!$user) {
@@ -417,6 +420,7 @@ public function userLanguages()
  * @OA\Get(
  *     path="/api/users/userPreferences",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Afficher les préférences de l'utilisateur connecté",
  *     description="Récupère les préférences de l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -435,8 +439,8 @@ public function userLanguages()
  */
 public function showUserPreferences()
     {
-        $user_Id=3;
-        //$userId = Auth::id();
+        
+        $userId = Auth::id();
         $user = User::findOrFail($user_Id);
 
         $userPreferences = $user->user_preference()->with('preference')->get();
@@ -450,6 +454,7 @@ public function showUserPreferences()
  * @OA\Post(
  *   path="/api/users/update_profile_photo",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Mettre à jour la photo de profil de l'utilisateur",
  *   description="Permet à l'utilisateur de mettre à jour sa photo de profil en téléchargeant une nouvelle image",
  *   @OA\RequestBody(
@@ -487,8 +492,7 @@ public function showUserPreferences()
 
  public function updateProfilePhoto(Request $request)
  {
-     //$userId = Auth::id();
-     $userId=5;
+     $userId = Auth::id();
      if (!$userId) {
          return response()->json(['error' => 'Unauthenticated'], 401);
      }
@@ -530,6 +534,7 @@ public function showUserPreferences()
  *     path="/api/users/block/{id}",
  *     summary="Block a user",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -579,6 +584,7 @@ public function showUserPreferences()
  *     path="/api/users/unblock/{id}",
  *     summary="Unblock a users",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -624,6 +630,7 @@ public function unblock($id)
  *     path="/api/users/pays/{pays}",
  *     summary="Get all users from a country",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="pays",
  *         in="path",
@@ -712,6 +719,7 @@ public function unblock($id)
      * @OA\Put(
      *     path="/api/users/update_password",
      *     tags={"User"},
+     * security={{"bearerAuth": {}}},
      *     summary="Update user password",
      *     description="Update user password.",
      *     security={{"bearerAuth": {}}},
@@ -753,8 +761,7 @@ public function unblock($id)
      */
 public function updatePassword(Request $request)
 {
-    //$userId = Auth::id();  // Récupère l'ID de l'utilisateur connecté
-    $userId=3;
+    $userId = Auth::id();
     $user = User::find($userId);
 
     $validator = Validator::make($request->all(), [
@@ -782,6 +789,7 @@ public function updatePassword(Request $request)
  *     path="/api/users/travelers",
  *     summary="Obtenir la liste des utilisateurs voyageurs",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des utilisateurs avec le rôle 'traveler'",
@@ -852,6 +860,7 @@ public function getUsersWithRoletraveler()
  *     path="/api/users/update",
  *     summary="Mettre à jour les informations d'un utilisateur",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -887,8 +896,7 @@ public function getUsersWithRoletraveler()
  */
 public function updateUser(Request $request)
 {
-     //$userId = Auth::id();
-    $userId=6;
+    $userId = Auth::id();
     $validator = Validator::make($request->all(), [
         'nom' => 'required|string',
         'prenom' => 'required|string',
@@ -933,6 +941,7 @@ public function updateUser(Request $request)
  *     path="/api/users/hotes",
  *     summary="Obtenir la liste des utilisateurs hote",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des utilisateurs ayant le rôle 'hote'",
@@ -1007,6 +1016,7 @@ public function getUsersWithRoleHost()
  *     path="/api/users/admins",
  *     summary="Obtenir la liste des utilisateurs admin",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des utilisateurs ayant le rôle 'admin'",
@@ -1079,6 +1089,7 @@ public function getUsersWithRoleAdmin()
  *     path="/api/users/login",
  *     summary="make authentification",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -1108,6 +1119,7 @@ public function getUsersWithRoleAdmin()
 *     path="/api/users/login",
 *     summary="make authentification",
 *     tags={"User"},
+*security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
@@ -1156,6 +1168,40 @@ public function login(Request $request){
 
    } catch(Exception $e) {    
     return response()->json($e);
+    }
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/user",
+ *     summary="Check authentication status",
+ *     description="Check if the user is authenticated and retrieve user data and role",
+ *     tags={"Authentication"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="data", type="object"),
+ *             @OA\Property(property="role", type="array", @OA\Items(type="string"))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function checkAuth(Request $request){
+
+    try{
+        return response()->json([
+            'data' => $request->user(),
+            'role'=>$request->user()->getRoleNames()
+        ]);
+
+    } catch (Exception $e) {
+        return response()->json($e->getMessage());
     }
 }
 

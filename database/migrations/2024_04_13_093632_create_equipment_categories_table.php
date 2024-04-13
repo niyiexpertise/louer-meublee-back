@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exceptional_stays', function (Blueprint $table) {
+        Schema::create('equipment_categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description');
-            $table->boolean('is_deleted')->default(false);
-            $table->boolean('is_blocked')->default(false);
-            $table->string('icone')->nullable();
+            $table->foreignId('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreignId('equipment_id')->references('id')->on('equipment')->onDelete('cascade');
             $table->timestamps();
-            
         });
     }
 
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exceptional_stays');
+        Schema::dropIfExists('equipment_categories');
     }
 };

@@ -118,10 +118,12 @@ Route::middleware('auth:sanctum')->group(function () {
     //Gestion des équipements.
     Route::group(['middleware' => ['permission:manageEquipment']], function () {
         Route::prefix('equipment')->group(function () {
-            Route::get('/index', [EquipementController::class, 'index']);
+            Route::get('/indexAdmin', [EquipementController::class, 'indexAdmin']);
+            Route::get('/indexCustomer', [EquipementController::class, 'indexCustomer']);
             Route::post('/store', [EquipementController::class, 'store']);
             Route::get('/show/{id}', [EquipementController::class, 'show']);
-            Route::put('/update/{id}', [EquipementController::class, 'update']);
+            Route::put('/updateName/{id}', [EquipementController::class, 'updateName']);
+            Route::put('/updateIcone/{id}', [EquipementController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [EquipementController::class, 'destroy']);
             Route::put('/block/{id}', [EquipementController::class, 'block']);
             Route::put('/unblock/{id}', [EquipementController::class, 'unblock']);
@@ -366,4 +368,6 @@ Route::get('/preference/index', [PreferenceController::class, 'index']);
 /** end Route ne nécéssitant pas l'authentification */
 
 
-
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [UserController::class, 'checkAuth']);
+});

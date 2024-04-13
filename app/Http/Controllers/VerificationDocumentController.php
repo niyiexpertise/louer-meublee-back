@@ -22,6 +22,7 @@ class VerificationDocumentController extends Controller
  *     description="Récupère la liste des documents de vérification groupés par utilisateur avec leur statut.",
  *     operationId="listVerificationDocumentsByUser",
  *     tags={"verification_document"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des documents de vérification par utilisateur",
@@ -100,6 +101,7 @@ public function index()
  *     path="/api/verificationdocument/store",
  *     summary="Enregistrer des documents de vérification avec des images",
  *     tags={"verification_document"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         description="Données pour enregistrer les documents de vérification",
@@ -193,6 +195,7 @@ public function store(Request $request)
    *     path="/api/verificationdocument/show/{id}",
    *     summary="Afficher les detail d'une demande pour être hôte",
    *     tags={"verification_document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -430,6 +433,7 @@ public function validateDocument(Request $request)
  *     path="/api/users/result/demande",
  *     summary="Affiche pour un utiliateur connecté,le statut de ses documents soumis et le statut de sa demande",
  *     tags={"verification_document"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Demandes de vérification récupérées avec succès pour l'utilisateur",
@@ -494,6 +498,7 @@ public function userVerificationRequests()
  *     path="/api/verificationdocument/update",
  *     summary="Changer un document de vérification",
  *     tags={"verification_document"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         description="Données pour changer le document de vérification",

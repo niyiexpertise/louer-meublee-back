@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
@@ -32,6 +32,27 @@ return new class extends Migration
 
             $table->unique(['name', 'guard_name']);
         });
+        DB::table($tableNames['permissions'])->insert([
+            ['name' => 'manageHousingType', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageType', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageRole', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageCriteria', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageEquipment', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageHousing', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageUser', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'managePermission', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageReview', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageLanguage', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageCategory', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'managePreference', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'managePropertyType', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageUsers', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageDocument', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageVerificationDocument', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageCommission', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'manageLogement', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+        
 
         Schema::create($tableNames['roles'], function (Blueprint $table) use ($teams, $columnNames) {
             $table->bigIncrements('id'); // role id
@@ -48,6 +69,14 @@ return new class extends Migration
                 $table->unique(['name', 'guard_name']);
             }
         });
+        // Insertion des rôles
+   DB::table($tableNames['roles'])->insert([
+    ['name' => 'traveler', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+    ['name' => 'host', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+    ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+    ['name' => 'superAdmin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+   ]);
+
 
         Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {
             $table->unsignedBigInteger($pivotPermission);
@@ -135,4 +164,7 @@ return new class extends Migration
         Schema::drop($tableNames['roles']);
         Schema::drop($tableNames['permissions']);
     }
+
+
+
 };

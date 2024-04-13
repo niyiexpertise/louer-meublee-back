@@ -19,6 +19,18 @@ return new class extends Migration
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();
         });
+        DB::table('criterias')->insert([
+            ['name' => 'Communication', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Accueil', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Propreté', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Confort', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Localisation', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Equipements', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Sécurité', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Flexibilité', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rapport qualité-prix', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Services', 'icone' => NULL, 'is_deleted' => 0, 'is_blocked' => 0, 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     /**

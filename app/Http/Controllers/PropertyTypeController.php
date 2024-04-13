@@ -14,6 +14,7 @@ class PropertyTypeController extends Controller
      *     path="/api/propertyType/index",
      *     summary="Get all property types",
      *     tags={"PropertyType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of property types"
@@ -48,6 +49,7 @@ class PropertyTypeController extends Controller
      *     path="/api/propertyType/store",
      *     summary="create new property type",
      *     tags={"PropertyType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -90,6 +92,7 @@ class PropertyTypeController extends Controller
      *     path="/api/propertyType/show/{id}",
      *     summary="Get a specific property type by ID",
      *     tags={"PropertyType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -138,6 +141,7 @@ class PropertyTypeController extends Controller
      *     path="/api/propertyType/update/{id}",
      *     summary="Update a property type by ID",
      *     tags={"PropertyType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -186,6 +190,7 @@ class PropertyTypeController extends Controller
      *     path="/api/propertyType/destroy/{id}",
      *     summary="Delete a property type by ID",
      *     tags={"PropertyType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -225,6 +230,7 @@ class PropertyTypeController extends Controller
  *     path="/api/propertyType/block/{id}",
  *     summary="Block a property type",
  *     tags={"PropertyType"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -274,6 +280,7 @@ class PropertyTypeController extends Controller
  *     path="/api/propertyType/unblock/{id}",
  *     summary="Unblock a property type",
  *     tags={"PropertyType"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

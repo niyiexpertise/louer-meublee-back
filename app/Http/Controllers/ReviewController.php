@@ -14,6 +14,7 @@ class ReviewController extends Controller
      *     path="/api/review/index",
      *     summary="Get all reviews",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of reviews"
@@ -49,6 +50,7 @@ class ReviewController extends Controller
  *     operationId="createReview",
  *     summary="Créer un nouvel avis",
  *     tags={"Review"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -93,6 +95,7 @@ public function store(Request $request)
      *     path="/api/review/show/{id}",
      *     summary="Get a specific review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -138,6 +141,7 @@ public function store(Request $request)
      *     path="/api/review/update/{id}",
      *     summary="Update a review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -200,6 +204,7 @@ public function store(Request $request)
      *     path="/api/review/destroy/{id}",
      *     summary="Delete a review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -237,6 +242,7 @@ public function store(Request $request)
         *     path="/api/review/block/{id}",
         *     summary="Block a review",
         *     tags={"Review"},
+        security={{"bearerAuth": {}}},
         *     @OA\Parameter(
         *         name="id",
         *         in="path",
@@ -284,6 +290,7 @@ public function store(Request $request)
  *     path="/api/review/unblock/{id}",
  *     summary="Unblock a review",
  *     tags={"Review"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

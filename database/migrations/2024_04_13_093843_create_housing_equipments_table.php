@@ -6,13 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('equipment_subcategories', function (Blueprint $table) {
+        Schema::create('housing_equipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('subcategory_id')->references('id')->on('subcategories')->onDelete('cascade');
             $table->foreignId('equipment_id')->references('id')->on('equipment')->onDelete('cascade');
+            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -22,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('equipment_subcategories');
+        Schema::dropIfExists('housing_equipments');
     }
 };

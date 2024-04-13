@@ -15,6 +15,7 @@ class PreferenceController extends Controller
      *     path="/api/preference/index",
      *     summary="Get all preferences",
      *     tags={"Preference"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of preferences"
@@ -47,6 +48,7 @@ class PreferenceController extends Controller
  *     path="/api/preference/store",
  *     summary="Create a new preference",
  *     tags={"Preference"},
+ * security={{"bearerAuth": {}}},
  *      @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -85,6 +87,7 @@ class PreferenceController extends Controller
      *     path="/api/preference/show/{id}",
      *     summary="Get a specific preference by ID",
      *     tags={"Preference"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -130,6 +133,7 @@ class PreferenceController extends Controller
      *     path="/api/preference/update/{id}",
      *     summary="Update a preference by ID",
      *     tags={"Preference"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -177,6 +181,7 @@ class PreferenceController extends Controller
      *     path="/api/preference/destroy/{id}",
      *     summary="Delete a preference by ID",
      *     tags={"Preference"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -215,6 +220,7 @@ class PreferenceController extends Controller
  *     path="/api/preference/block/{id}",
  *     summary="Block a preference",
  *     tags={"Preference"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -264,6 +270,7 @@ class PreferenceController extends Controller
  *     path="/api/preference/unblock/{id}",
  *     summary="Unblock a preference",
  *     tags={"Preference"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

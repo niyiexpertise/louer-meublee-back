@@ -15,6 +15,7 @@ class RoleController extends Controller
      *     path="/api/role/index",
      *     summary="Get all roles",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of roles"
@@ -49,6 +50,7 @@ class RoleController extends Controller
       *     path="/api/role/store",
       *     summary="Create a new role ",
       *     tags={"Role"},
+      security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(
@@ -87,6 +89,7 @@ class RoleController extends Controller
      *     path="/api/role/show/{id}",
      *     summary="Get a specific role by ID",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -130,6 +133,7 @@ class RoleController extends Controller
      *     path="/api/role/destroy/{id}",
      *     summary="Delete a role by ID",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

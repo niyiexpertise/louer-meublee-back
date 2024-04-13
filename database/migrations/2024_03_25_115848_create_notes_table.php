@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('reservation_id')->constrained()->onDelete('cascade');
             $table->foreignId('criteria_id')->constrained()->onDelete('cascade');
+            $table->text('content')->nullable();
+            $table->float('note');
             $table->string('icone')->nullable();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);

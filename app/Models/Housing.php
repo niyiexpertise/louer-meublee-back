@@ -62,10 +62,7 @@ class Housing extends Model
     {
         return $this->belongsTo(PropertyType::class);
     }
-    public function ExceptionalStay()
-    {
-        return $this->belongsTo(ExceptionalStay::class);
-    }
+
 
     public function housingPrice()
     {
@@ -76,13 +73,6 @@ class Housing extends Model
     {
       return $this->hasMany(housing_preference::class);
     }
-
-    public function housing_accessibility()
-    {
-        return $this->hasMany(housing_accessibility::class);
-        
-    }
-
 
     public function reservation()
     {
@@ -109,9 +99,14 @@ class Housing extends Model
         return $this->hasMany(promotion::class);
     }
 
-    public function categories()
+    public function housingEquipments()
     {
-        return $this->hasMany(HousingCategory::class);
+        return $this->hasMany(Housing_equipment::class);
+    }
+
+    public function housingCategoryFiles()
+    {
+        return $this->hasMany(Housing_category_file::class);
     }
 
 }

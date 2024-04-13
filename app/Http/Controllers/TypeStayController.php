@@ -13,6 +13,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/index",
      *     summary="Tous les types de séjour possibles",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Liste de tous les types de séjour",
@@ -37,6 +38,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/store",
      *     summary="Créer un nouveau type de séjour",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -78,6 +80,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/show/{id}",
      *     summary="Obtenir un type de séjour spécifique par ID",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -117,6 +120,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/update/{id}",
      *     summary="Mettre à jour un type de séjour par ID",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -173,6 +177,7 @@ class TypeStayController extends Controller
      *     summary="
     * Supprimer un type de séjour par ID",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -214,6 +219,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/block/{id}",
      *     summary="Bloquer un type de séjour",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -264,6 +270,7 @@ class TypeStayController extends Controller
      *     path="/api/typestays/unblock/{id}",
      *     summary="Débloquer un type de séjour",
      *     tags={"TypeStay"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

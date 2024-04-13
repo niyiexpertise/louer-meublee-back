@@ -9,9 +9,13 @@ use App\Models\reduction;
 use App\Models\promotion;
 use App\Models\photo;
 use App\Models\housing_price;
-use App\Models\HousingCategory;
+use App\Models\File;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Equipment;
+use App\Models\Equipment_category;
+use App\Models\Housing_equipment;
+use App\Models\Housing_category_file;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 class HousingController extends Controller
@@ -40,7 +44,6 @@ class HousingController extends Controller
      $housing->interior_regulation = $request->input('interior_regulation');
      $housing->telephone = $request->input('telephone');
      $housing->code_pays = $request->input('code_pays');
-     $housing->cleaning_fees = $request->input('cleaning_fees');
      $housing->status ="Unverified";
      $housing->arrived_independently = $request->input('arrived_independently');
      $housing->is_instant_reservation = $request->input('is_instant_reservation');
@@ -91,23 +94,75 @@ class HousingController extends Controller
          $promotion->housing_id = $housing->id;
          $promotion->save();
      }
- 
-     foreach ($request->input('category_id') as $index => $categoryId) {
-         $housingCategory = new HousingCategory();
-         $housingCategory->category_id = $categoryId;
-         $housingCategory->number = $request->input('number_category')[$index];
-         $housingCategory->housing_id = $housing->id;
-         $housingCategory->save();
-     }
- 
      foreach ($request->input('price_with_cleaning_fees') as $index => $priceWithCleaningFees) {
-         $housingPrice = new housing_price();
-         $housingPrice->price_with_cleaning_fees = $priceWithCleaningFees;
-         $housingPrice->price_without_cleaning_fees = $request->input('price_without_cleaning_fees')[$index];
-         $housingPrice->type_stay_id = $request->input('type_stay_id')[$index];
-         $housingPrice->housing_id = $housing->id;
-         $housingPrice->save();
-     }
+        $housingPrice = new housing_price();
+        $housingPrice->price_with_cleaning_fees = $priceWithCleaningFees;
+        $housingPrice->price_without_cleaning_fees = $request->input('price_without_cleaning_fees')[$index];
+        $housingPrice->type_stay_id = $request->input('type_stay_id')[$index];
+        $housingPrice->housing_id = $housing->id;
+        $housingPrice->save();
+    }
+    if ($request->has('equipment_housing')) {
+        foreach ($request->equipment_housing as $equipmentId) {
+            $equipment = Equipment::find($equipmentId);
+    
+            if ($equipment) {
+                $housingEquipment = new Housing_equipment();
+                $housingEquipment->equipment_id = $equipmentId;
+                $housingEquipment->housing_id = $housing->id;
+                $housingEquipment->save();
+            } else {
+               
+            }
+        }
+    }
+       // Sauvegarde des nouveaux équipements
+    if ($request->has('new_equipment') && $request->has('new_equipment_category')) {
+        $newEquipments = $request->input('new_equipment');
+        $newEquipmentCategories = $request->input('new_equipment_category');
+
+        foreach ($newEquipments as $index => $newEquipment) {
+            $equipment = new Equipment();
+            $equipment->name = $newEquipment;
+            $equipment->is_blocked = true;
+            $equipment->save();
+
+            $equipmentCategory = new Equipment_category();
+            $equipmentCategory->equipment_id = $equipment->id;
+            $equipmentCategory->category_id = $newEquipmentCategories[$index];
+            $equipmentCategory->save();
+
+            // Association du nouvel équipement au logement
+            $housingEquipment = new Housing_equipment();
+            $housingEquipment->equipment_id = $equipment->id;
+            $housingEquipment->housing_id = $housing->id;
+            $housingEquipment->save();
+        }
+    }
+    foreach ($request->input('category_id') as $index => $categoryId) {
+        $housingCategoryId = $housing->id;
+        $photoCategoryKey = 'photo_categories' . $categoryId;
+        $photoFiles = $request->file($photoCategoryKey);
+        foreach ($photoFiles as $fileId) {
+            // Sauvegarder le fichier dans la table files
+            $photoModel = new File();
+            $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+            $photoUrl = url('/image/photo_category/' . $photoName);
+        
+            $photoModel->path = $photoUrl;
+            $photoModel->save();
+        
+            // Sauvegarder l'association entre le fichier et la catégorie dans la table housing_category_files
+            $housingCategoryFile = new Housing_category_file();
+            $housingCategoryFile->housing_id = $housingCategoryId;
+            $housingCategoryFile->category_id = $categoryId;
+            $housingCategoryFile->file_id = $photoModel->id;
+            $housingCategoryFile->number = $request->input('number_category')[$index];
+            $housingCategoryFile->save();
+        }
+    }
+    
      $notificationName="Félicitation!Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'aprés validation de l'administrateur";
 
      $notification = new Notification([
@@ -124,6 +179,7 @@ class HousingController extends Controller
  
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
  }
+
 
  //Liste des logements en attente de validation par l'admin pour être présent sur le site
     public function indexHousingwithoutConfirmation()

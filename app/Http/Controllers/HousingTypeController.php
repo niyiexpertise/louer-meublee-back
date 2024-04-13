@@ -22,6 +22,7 @@ class HousingTypeController extends Controller
      *     path="/api/housingtype/index",
      *     summary="Get all housing types",
      *     tags={"HousingType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of housing types"
@@ -45,6 +46,7 @@ class HousingTypeController extends Controller
  *     path="/api/housingtype/store",
  *     summary="Create a new housing type",
  *     tags={"HousingType"},
+ * security={{"bearerAuth": {}}},
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -85,6 +87,7 @@ class HousingTypeController extends Controller
      *     path="/api/housingtype/show/{id}",
      *     summary="Get a specific housing type by ID",
      *     tags={"HousingType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -122,6 +125,7 @@ class HousingTypeController extends Controller
      *     path="/api/housingtype/update/{id}",
      *     summary="Update a housing type by ID",
      *     tags={"HousingType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -178,6 +182,7 @@ class HousingTypeController extends Controller
      *     path="/api/housingtype/destroy/{id}",
      *     summary="Delete a housing type by ID",
      *     tags={"HousingType"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -219,6 +224,7 @@ class HousingTypeController extends Controller
  *     path="/api/housingtype/block/{id}",
  *     summary="Block a housing type",
  *     tags={"HousingType"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -269,6 +275,7 @@ class HousingTypeController extends Controller
  *     path="/api/housingtype/unblock/{id}",
  *     summary="Unblock a housing type",
  *     tags={"HousingType"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

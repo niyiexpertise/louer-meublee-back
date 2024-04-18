@@ -9,7 +9,7 @@ class Equipment extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name', 'is_deleted', 'is_blocked', 'icone',
+        'name', 'is_deleted', 'is_blocked', 'icone','is_verified'
     ];
 
     public function equipment_category()

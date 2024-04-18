@@ -109,5 +109,10 @@ class Housing extends Model
         return $this->hasMany(Housing_category_file::class);
     }
 
+    public function housing_charge(){
+        return $this->hasMany(Housing_charge::class);
+    }
+    
+
 }
 

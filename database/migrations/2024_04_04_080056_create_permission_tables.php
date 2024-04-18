@@ -72,7 +72,7 @@ return new class extends Migration
         // Insertion des rôles
    DB::table($tableNames['roles'])->insert([
     ['name' => 'traveler', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
-    ['name' => 'host', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+    ['name' => 'hote', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
     ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
     ['name' => 'superAdmin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
    ]);

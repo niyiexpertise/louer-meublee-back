@@ -93,4 +93,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(verification_document::class);
     }
+
+    public function favorites()
+   {
+    return $this->hasMany(Favoris::class);
+   }
+
 }

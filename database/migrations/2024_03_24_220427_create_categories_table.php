@@ -22,10 +22,10 @@ return new class extends Migration
 
         // Insertion des données
         DB::table('categories')->insert([
-            ['name' => 'Salon'],
-            ['name' => 'Chambre'],
-            ['name' => 'Cuisine'],
-            ['name' => 'Salle de bain'],
+            ['name' => 'Salon','is_verified' => 1],
+            ['name' => 'Chambre','is_verified' => 1],
+            ['name' => 'Cuisine','is_verified' => 1],
+            ['name' => 'Salle de bain','is_verified' => 1],
         ]);
     }
 

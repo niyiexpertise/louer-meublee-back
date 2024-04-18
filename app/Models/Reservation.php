@@ -21,4 +21,8 @@ class Reservation extends Model
     {
         return $this->belongsTo(Housing::class);
     }
+    public function review()
+    {
+        return $this->hasOne(Review_reservation::class);
+    }
 }

@@ -144,71 +144,59 @@ class UserController extends Controller
 
     return response()->json(['date' => $formattedUsers], 200);
 }
+
 /**
  * @OA\Post(
- *   path="/api/users/register",
- *   tags={"User"},
- * security={{"bearerAuth": {}}},
- *   summary="Enregistrer un nouvel utilisateur",
- *   description="Enregistre un nouvel utilisateur avec les informations fournies",
- *   @OA\RequestBody(
- *     required=true,
- *     @OA\MediaType(
- *       mediaType="multipart/form-data",
- *       @OA\Schema(
- *         type="object",
- *         @OA\Property(property="nom", type="string", example="Doe"),
- *         @OA\Property(property="prenom", type="string", example="John"),
- *         @OA\Property(
- *           property="password",
- *           type="string",
- *           format="password",
- *           example="Password123",
- *           minLength=8,
- *           description="Mot de passe (min : 8 caractères, une majuscule, un chiffre, un caractère spécial)"
- *         ),
- *         @OA\Property(property="code_pays", type="string", example="FR"),
- *         @OA\Property(property="telephone", type="string", example="1234567890"),
- *         @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
- *         @OA\Property(property="pays", type="string", example="France"),
- *         @OA\Property(
- *           property="identity_profil",
- *           type="string",
- *           format="binary",
- *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
- *         ),
- *         @OA\Property(property="ville", type="string", example="Paris"),
- *         @OA\Property(property="addresse", type="string", example="123 Rue de la Paix"),
- *         @OA\Property(property="sexe", type="string", example="Masculin"),
- *         @OA\Property(property="postal_code", type="string", example="75001"),
- *         @OA\Property(property="langage_id", type="string", example="[1,2,4]"),
- *         @OA\Property(
- *           property="password_confirmation",
- *           type="string",
- *           format="password",
- *           example="Password123",
- *           description="Confirmation du mot de passe (doit correspondre au mot de passe)"
- *         ),
- *         required={"nom", "prenom", "password", "code_pays", "telephone", "email", "pays", "ville", "addresse", "sexe", "postal_code", "language_id", "password_confirmation"}
- *       )
+ *     path="/api/users/register",
+ *     tags={"User"},
+ *     summary="Enregistrer un nouvel utilisateur",
+ *     description="Enregistre un nouvel utilisateur avec les informations fournies",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(property="nom", type="string", example="Doe", description="Nom de l'utilisateur"),
+ *                 @OA\Property(property="prenom", type="string", example="John", description="Prénom de l'utilisateur"),
+ *                 @OA\Property(property="password", type="string", format="password", example="Bagdadi2000!", description="Mot de passe (min : 8 caractères, une majuscule, un chiffre, un caractère spécial)"),
+ *                 @OA\Property(property="code_pays", type="string", example="FR", description="Code du pays"),
+ *                 @OA\Property(property="telephone", type="string", example="1234567890", description="Numéro de téléphone"),
+ *                 @OA\Property(property="email", type="string", format="email", example="john.doe@example.com", description="Adresse e-mail de l'utilisateur"),
+ *                 @OA\Property(property="pays", type="string", example="France", description="Pays de l'utilisateur"),
+ *                 @OA\Property(property="identity_profil", type="file", format="binary", description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"),
+ *                 @OA\Property(property="ville", type="string", example="Paris", description="Ville de l'utilisateur"),
+ *                 @OA\Property(property="addresse", type="string", example="123 Rue de la Paix", description="Adresse de l'utilisateur"),
+ *                 @OA\Property(property="sexe", type="string", example="Masculin", description="Sexe de l'utilisateur"),
+ *                 @OA\Property(property="postal_code", type="string", example="75001", description="Code postal de l'utilisateur"),
+ *                 @OA\Property(
+ *                     property="language_id[]",
+ *                     type="array",
+ *                     @OA\Items(type="integer", description="ID de la langue préférée de l'utilisateur")
+ *                 ),
+ *                 @OA\Property(property="password_confirmation", type="string", format="password", example="Bagdadi2000!", description="Confirmation du mot de passe (doit correspondre au mot de passe)")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Utilisateur enregistré avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Utilisateur enregistré avec succès"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de validation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="object", additionalProperties={"type": "string"})
+ *         )
  *     )
- *   ),
- *   @OA\Response(
- *     response=201,
- *     description="Utilisateur enregistré avec succès",
- *     @OA\JsonContent(
- *       @OA\Property(property="message", type="string", example="Utilisateur enregistré avec succès")
- *     )
- *   ),
- *   @OA\Response(
- *     response=400,
- *     description="Erreur de validation",
- *     @OA\JsonContent(
- *       @OA\Property(property="errors", type="object", additionalProperties={"type": "string"})
- *     )
- *   )
  * )
  */
+
+
 
     public function register(Request $request)
     {
@@ -274,16 +262,17 @@ class UserController extends Controller
 
         $user->save();
         $user->assignRole('traveler');
-        $userLanguages = $request->language_id;
-        
+        $userLanguages = is_array($request->language_id) ? $request->language_id : explode(',', $request->language_id);
+
         foreach ($userLanguages as $language_id) {
             $userLanguage = new User_language([
-                'user_id' => $user->id,
-                'language_id' => $language_id,
-            ]);
+               'user_id' => $user->id,
+               'language_id' => $language_id,
+                 ]);
 
-            $userLanguage->save();
-        }
+           $userLanguage->save();
+               }
+
         $created_at = $user->created_at;
         $date_creation = Carbon::parse($created_at)->isoFormat('D MMMM YYYY [à] HH[h]mm');
         $message_notification = "Compte créé avec succès le " . $date_creation;

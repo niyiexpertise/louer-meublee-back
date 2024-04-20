@@ -165,8 +165,21 @@ class HousingCategoryFileController extends Controller
          $housingCategoryFile->category_id = $request->category_id;
          $housingCategoryFile->file_id = $photoModel->id;
          $housingCategoryFile->number = $request->number;
+         $housingCategoryFile->is_verified= false;
          $housingCategoryFile->save();
      }
+     $userId = Auth::id();
+    $notification = new Notification([
+        'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
+        'user_id' => $userId,
+       ]);
+     $adminUsers = User::where('is_admin', 1)->get();
+            foreach ($adminUsers as $adminUser) {
+                $notification = new Notification();
+                $notification->user_id = $adminUser->id;
+                $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider";
+                $notification->save();
+            }
  
      return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
  }
@@ -234,7 +247,10 @@ class HousingCategoryFileController extends Controller
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 400);
     }
-
+    $existingCategory = Category::where('name', $request->category_name)->first();
+    if ($existingCategory) {
+        return response()->json(['error' => 'Le nom de la catégorie existe déjà par défaut'], 400);
+    }
     $category = new Category();
     $category->name = $request->category_name;
     $category->is_verified = false;
@@ -254,9 +270,404 @@ class HousingCategoryFileController extends Controller
         $housingCategoryFile->category_id = $category_id;
         $housingCategoryFile->file_id = $photoModel->id;
         $housingCategoryFile->number = $request->number;
+        $housingCategoryFile->is_verified = false;
         $housingCategoryFile->save();
     }
+    $userId = Auth::id();
+    $notification = new Notification([
+        'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
+        'user_id' => $userId,
+       ]);
+     $adminUsers = User::where('is_admin', 1)->get();
+            foreach ($adminUsers as $adminUser) {
+                $notification = new Notification();
+                $notification->user_id = $adminUser->id;
+                $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce inexistante.Veuilez vous connecter pour valider";
+                $notification->save();
+            }
 
     return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
 }
+
+/**
+ * @OA\Get(
+ *      path="/api/logement/category/default/invalid",
+ *      tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *      summary="Récupérer les catégories existantes par défaut des logement en attente de validation",
+ *      description="Retourne une liste des catégories existantes par défaut des logement en attente de validation et les photos des catégories associées.",
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Liste des logements par catégorie",
+ *          @OA\JsonContent(
+ *          )
+ *      ),
+ * )
+ */
+public function getCategoryDefaultInvalidHousings()
+{
+    $categories = Category::where('is_verified', true)->get();
+
+    $data = [];
+
+    foreach ($categories as $category) {
+        $housingCategoryFiles = Housing_category_file::where('category_id', $category->id)
+            ->whereHas('housing', function ($query) {
+                $query->where('is_verified', false);
+            })
+            ->with('housing')
+            ->get();
+
+        foreach ($housingCategoryFiles as $housingCategoryFile) {
+            $housingId = $housingCategoryFile->housing->id;
+
+            $existingHousingIndex = null;
+            foreach ($data as $index => $existingHousing) {
+                if ($existingHousing['housing_id'] === $housingId && $existingHousing['category_id'] === $category->id) {
+                    $existingHousingIndex = $index;
+                    break;
+                }
+            }
+
+            if ($existingHousingIndex === null) {
+                $housingData = [
+                    'housing_category_file_id' => $housingCategoryFile->id,
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'housing_id' => $housingId,
+                    'housing_name' => $housingCategoryFile->housing->name,
+                    'housing_description' => $housingCategoryFile->housing->description,
+                    'photos_category' => $housingCategoryFile->file()->select('id', 'path')->get()->toArray(),
+                    'is_verified' => $housingCategoryFile->is_verified,
+                    'user_id' => $housingCategoryFile->housing->user->id,
+                    'user_lastname' => $housingCategoryFile->housing->user->lastname,
+                    'user_firstname' => $housingCategoryFile->housing->user->firstname,
+                    'is_verified' => $housingCategoryFile->is_verified,
+                ];
+
+                $data[] = $housingData;
+            } else {
+                $data[$existingHousingIndex]['photos_category'] = array_merge(
+                    $data[$existingHousingIndex]['photos_category'],
+                    $housingCategoryFile->file()->select('id', 'path')->get()->toArray()
+                );
+            }
+        }
+    }
+
+    return response()->json(['data' => $data]);
+}
+
+
+/**
+ * @OA\Put(
+ *      path="/api/logement/category/default/{housing_id}/{category_id}/validate",
+ *      tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *      summary="Valider une catégorie existante par défaut en attente de validation",
+ *      description="Valide une catégorie existante par défaut en attente de validation en mettant à jour le statut is_verified de housing_category_file à true.",
+ *      @OA\Parameter(
+ *          name="housing_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement associé à la catégorie",
+ *          @OA\Schema(
+ *              type="integer",
+ *          )
+ *      ),
+ *      @OA\Parameter(
+ *          name="category_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID de la catégorie à valider",
+ *          @OA\Schema(
+ *              type="integer",
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Catégorie validée avec succès"
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Erreur - Catégorie non trouvée"
+ *      )
+ * )
+ */
+public function validateDefaultCategoryHousing($housing_id, $category_id)
+{
+    $category = Category::find($category_id);
+
+    if (!$category || !$category->is_verified) {
+        return response()->json(['error' => 'La catégorie n\'est pas vérifiée, la validation ne peut pas être effectuée'], 400);
+    }
+
+    $housing = Housing::find($housing_id);
+
+    if (!$housing) {
+        return response()->json(['error' => 'Le logement associé n\'existe pas'], 404);
+    }
+
+    $housingCategoryFiles = Housing_category_file::where('housing_id', $housing_id)
+        ->where('category_id', $category_id)
+        ->get();
+
+    if ($housingCategoryFiles->isEmpty()) {
+        return response()->json(['error' => 'Aucune catégorie trouvée pour la validation'], 404);
+    }
+
+    $user_id = $housingCategoryFiles->first()->housing->user_id;
+
+    foreach ($housingCategoryFiles as $housingCategoryFile) {
+        $housingCategoryFile->update(['is_verified' => true]);
+    }
+
+    $notification = new Notification([
+        'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
+        'user_id' => $user_id,
+    ]);
+    $notification->save();
+
+    return response()->json(['message' => 'Catégories validées avec succès'], 200);
+}
+
+
+
+
+/**
+ * @OA\Get(
+ *      path="/api/logement/category/unexist/invalid",
+ *      tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *      summary="Récupérer les catégories inexistantes par défaut des logement en attente de validation",
+ *      description="Retourne une liste des catégories inexistantes par défaut des logement en attente de validation et les photos des catégories associées.",
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Liste des logements par catégorie",
+ *          @OA\JsonContent(
+ *          )
+ *      ),
+ * )
+ */
+public function getCategoryUnexistInvalidHousings()
+{
+    $categories = Category::where('is_verified', false)->get();
+
+    $data = [];
+
+    foreach ($categories as $category) {
+        $housingCategoryFiles = Housing_category_file::where('category_id', $category->id)
+            ->whereHas('housing', function ($query) {
+                $query->where('is_verified', false);
+            })
+            ->with('housing')
+            ->get();
+
+        foreach ($housingCategoryFiles as $housingCategoryFile) {
+            $housingId = $housingCategoryFile->housing->id;
+
+            // Vérifier si le housing_id et category_id existent déjà dans $data
+            $existingHousingIndex = null;
+            foreach ($data as $index => $existingHousing) {
+                if ($existingHousing['housing_id'] == $housingId && $existingHousing['category_id'] == $category->id) {
+                    $existingHousingIndex = $index;
+                    break;
+                }
+            }
+
+            if ($existingHousingIndex === null) {
+                $housingData = [
+                    'housing_category_file_id' => $housingCategoryFile->id,
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'housing_id' => $housingId,
+                    'housing_name' => $housingCategoryFile->housing->name,
+                    'housing_description' => $housingCategoryFile->housing->description,
+                    'photos_category' => $housingCategoryFile->file()->select('id', 'path')->get()->toArray(),
+                    'user_id' => $housingCategoryFile->housing->user->id,
+                    'user_lastname' => $housingCategoryFile->housing->user->lastname,
+                    'user_firstname' => $housingCategoryFile->housing->user->firstname,
+                    'is_verified' => $housingCategoryFile->is_verified,
+                ];
+
+                $data[] = $housingData;
+            } else {
+                // Ajouter les photos_category à l'entrée existante
+                $data[$existingHousingIndex]['photos_category'] = array_merge(
+                    $data[$existingHousingIndex]['photos_category'],
+                    $housingCategoryFile->file()->select('id', 'path')->get()->toArray()
+                );
+            }
+        }
+    }
+
+    return response()->json(['data' => $data]);
+}
+
+
+/**
+ * @OA\Put(
+ *      path="/api/logement/category/unexist/{housing_id}/{category_id}/validate",
+ *      tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *      summary="Valider une catégorie inexistante par défaut en attente de validation",
+ *      description="Valide une catégorie inexistante par défaut en attente de validation en mettant à jour le statut is_verified de housing_category_file à true.",
+ *      @OA\Parameter(
+ *          name="housing_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement associé à la catégorie",
+ *          @OA\Schema(
+ *              type="integer",
+ *          )
+ *      ),
+ *      @OA\Parameter(
+ *          name="category_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID de la catégorie à valider",
+ *          @OA\Schema(
+ *              type="integer",
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Catégorie validée avec succès"
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Erreur - Catégorie non trouvée"
+ *      )
+ * )
+ */
+public function validateUnexistCategoryHousing($housing_id, $category_id)
+{
+    $category = Category::find($category_id);
+
+    if (!$category || $category->is_verified) {
+        return response()->json(['error' => 'La catégorie est déjà vérifiée, la validation ne peut pas être effectuée'], 400);
+    }
+
+    $housing = Housing::find($housing_id);
+
+    if (!$housing) {
+        return response()->json(['error' => 'Le logement associé n\'existe pas'], 404);
+    }
+
+    $housingCategoryFiles = Housing_category_file::where('housing_id', $housing_id)
+        ->where('category_id', $category_id)
+        ->get();
+
+    if ($housingCategoryFiles->isEmpty()) {
+        return response()->json(['error' => 'Aucune catégorie trouvée pour la validation'], 404);
+    }
+
+    $user_id = $housingCategoryFiles->first()->housing->user_id;
+
+    foreach ($housingCategoryFiles as $housingCategoryFile) {
+        $housingCategoryFile->update(['is_verified' => true]);
+    }
+    $category->update(['is_verified' => true]);
+
+    $notification = new Notification([
+        'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
+        'user_id' => $user_id,
+    ]);
+    $notification->save();
+
+    return response()->json(['message' => 'Catégories validées avec succès'], 200);
+}
+
+/**
+ * @OA\Get(
+ *      path="/api/logement/category/{housing_id}/{category_id}/detail",
+ *      tags={"Housing Category Photo"},
+ *      security={{"bearerAuth": {}}},
+ *      summary="Obtenir les détails d'une catégorie donné de logement",
+ *      description="Retourne les détails d'une catégorie de logement spécifique, y compris les informations détaillées du logement,les photos de la categorie et de l'utilisateur associé.",
+ *      @OA\Parameter(
+ *          name="housing_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\Parameter(
+ *          name="category_id",
+ *          in="path",
+ *          required=true,
+ *          description="ID de la catégorie",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Détails de la catégorie de logement retournés",
+ *          @OA\JsonContent(
+ *          )
+ *      ),
+
+ * )
+ */
+
+ public function getCategoryDetail($housing_id, $category_id)
+ {
+     $categories = Category::all();
+ 
+     $data = [];
+ 
+     foreach ($categories as $category) {
+         $housingCategoryFiles = Housing_category_file::where('category_id', $category_id)
+             ->where('housing_id', $housing_id)
+             ->with('housing.user')
+             ->get();
+ 
+         foreach ($housingCategoryFiles as $housingCategoryFile) {
+             $housingId = $housingCategoryFile->housing->id;
+ 
+             $existingHousingIndex = null;
+             foreach ($data as $index => $existingHousing) {
+                 if ($existingHousing['housing_id'] === $housingId && $existingHousing['category_id'] === $category_id) {
+                     $existingHousingIndex = $index;
+                     break;
+                 }
+             }
+ 
+             if ($existingHousingIndex === null) {
+                 $housingData = [
+                     'housing_category_file_id' => $housingCategoryFile->id,
+                     'category_id' => $category_id,
+                     'category_name' => $category->name,
+                     'is_verified' => $housingCategoryFile->is_verified,
+                     'housing_id' => $housingId,
+                     'housing_details' => $housingCategoryFile->housing->toArray(),
+                     'photos_category' => [],
+                     'user_id' => $housingCategoryFile->housing->user->id,
+                     'user_details' => $housingCategoryFile->housing->user->toArray(),
+                 ];
+ 
+                 $data[] = $housingData;
+             }
+ 
+             $photos = $housingCategoryFile->file()->select('id', 'path')->get()->toArray();
+             foreach ($photos as $photo) {
+                 if (!isset($data[$existingHousingIndex]['photos_category'][$photo['id']])) {
+                     $data[$existingHousingIndex]['photos_category'][$photo['id']] = $photo;
+                 }
+             }
+         }
+     }
+ 
+     foreach ($data as &$housing) {
+         $housing['photos_category'] = array_values($housing['photos_category']);
+     }
+ 
+     return response()->json(['data' => $data]);
+ }
+ 
+
+
 }

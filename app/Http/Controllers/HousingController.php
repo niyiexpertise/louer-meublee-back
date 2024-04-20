@@ -60,6 +60,8 @@ class HousingController extends Controller
      $housing->surface = $request->input('surface');
      $housing->price = $request->input('price');
      $housing->is_updated=0;
+     $housing->is_actif=1;
+     $housing->is_destroy=0;
      $housing->save();
  
      if ($request->hasFile('photos')) {
@@ -88,20 +90,22 @@ class HousingController extends Controller
      }
     }
      if ($request->has('Hotecharges')) {
-        foreach ($request->input('Hotecharges') as $charge) {
+        foreach ($request->input('Hotecharges') as $index => $charge) {
             $housingCharge = new Housing_charge();
             $housingCharge->housing_id = $housing->id;
             $housingCharge->charge_id = $charge;
             $housingCharge->is_mycharge= true;
+            $housingCharge->valeur=$request->input('Hotechargesvalue')[$index];
             $housingCharge->save();
         }
      }
      if ($request->has('Travelercharges')) {
-        foreach ($request->input('Travelercharges') as $charge) {
+        foreach ($request->input('Travelercharges') as $index => $charge) {
             $housingCharge = new Housing_charge();
             $housingCharge->housing_id = $housing->id;
             $housingCharge->charge_id = $charge;
             $housingCharge->is_mycharge= false;
+            $housingCharge->valeur=$request->input('Travelerchargesvalue')[$index];
             $housingCharge->save();
         }
      }
@@ -122,15 +126,7 @@ class HousingController extends Controller
          $promotion->housing_id = $housing->id;
          $promotion->save();
      }
-     /**foreach ($request->input('price_with_cleaning_fees') as $index => $priceWithCleaningFees) {
-        $housingPrice = new housing_price();
-        $housingPrice->price_with_cleaning_fees = $priceWithCleaningFees;
-        $housingPrice->price_without_cleaning_fees = $request->input('price_without_cleaning_fees')[$index];
-        $housingPrice->type_stay_id = $request->input('type_stay_id')[$index];
-        $housingPrice->housing_id = $housing->id;
-        $housingPrice->save();
-      }
-       */
+
     if ($request->has('equipment_housing')) {
         foreach ($request->equipment_housing as $equipmentId) {
             $equipment = Equipment::find($equipmentId);   
@@ -340,7 +336,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  * @OA\Get(
  *   path="/api/logement/index/ListeDesLogementsAcceuil",
  *   tags={"Housing"},
- *   summary="Liste des logements pour l'accueil",
+ *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
  * security={{"bearerAuth":{}}},
  *   @OA\Response(
@@ -427,6 +423,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->get();
         $data = $this->formatListingsData($listings);
 
@@ -492,7 +490,8 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'housing_id' => $housingCharge->housing_id,
                  'id_charge' => $charge->id,
                  'charge_name' => $charge->name,
-                 'is_mycharge' => $housingCharge->is_mycharge
+                 'is_mycharge' => $housingCharge->is_mycharge,
+                 'valeur_charge' => $housingCharge->valeur
              ];
          }else{
              $travelerCharge_id[] = [
@@ -500,7 +499,8 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'housing_id' => $housingCharge->housing_id,
                  'id_charge' => $charge->id,
                  'charge_name' => $charge->name,
-                 'is_mycharge' => $housingCharge->is_mycharge
+                 'is_mycharge' => $housingCharge->is_mycharge,
+                  'valeur_charge' => $housingCharge->valeur
              ];
          }
      }
@@ -508,8 +508,10 @@ public function ListeDesPhotosLogementAcceuil($id)
          'id_housing' => $listing->id,
          'housing_type_id' => $listing->housing_type_id,
          'housing_type_name' => $listing->housingType->name,
+         'housing_type_icone' => $listing->housingType->icone,
          'property_type_id' => $listing->property_type_id,
          'property_type_name' => $listing->propertyType->name,
+         'property_type_icone' => $listing->propertyType->icone,
          'user_id' => $listing->user_id,
          'name_housing' => $listing->name,
          'description' => $listing->description,
@@ -574,6 +576,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'id' => $housingpreference->id,
                  'preference_id' => $housingpreference->preference_id,
                  'preference_name' => $housingpreference->preference->name,
+                 'icone' => $housingpreference->preference->icone,
             ];
           }),
  
@@ -601,6 +604,7 @@ public function ListeDesPhotosLogementAcceuil($id)
             return [
                 'equipment_id' => $housingEquipment->equipment_id,
                 'name' => $housingEquipment->equipment->name,
+                'icone' => $housingEquipment->equipment->icone,
             ];
         }),
         'charges' => [
@@ -651,6 +655,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_blocked', 0)
         ->where('housing_type_id', $id)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->get();
     
         $data = $this->formatListingsData($listings);
@@ -694,6 +700,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('property_type_id', $id)
         ->get();
 
@@ -727,6 +735,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('is_disponible', 1)
         ->get();
     
@@ -759,6 +769,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('is_disponible', 0)
         ->get();
     
@@ -804,6 +816,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('country', $country)
         ->get();
     
@@ -846,6 +860,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->whereHas('housing_preference', function ($query) use ($preferenceId) {
             $query->where('preference_id', $preferenceId);
         })
@@ -889,6 +905,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('city', $city)
         ->get();
     
@@ -931,6 +949,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('department', $department)
         ->get();
         $data = $this->formatListingsData($listings);
@@ -971,6 +991,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('number_of_traveller', $nbtravaler)
         ->get();
     
@@ -1015,6 +1037,8 @@ public function getListingsByNightPriceMax($price)
     ->where('is_deleted', 0)
     ->where('is_blocked', 0)
     ->where('is_updated', 0)
+    ->where('is_actif', 1)
+        ->where('is_destroy', 0)
     ->get();
 
     $data = $this->formatListingsData($listings);
@@ -1058,6 +1082,8 @@ public function getListingsByNightPriceMin($price)
     ->where('is_deleted', 0)
     ->where('is_blocked', 0)
     ->where('is_updated', 0)
+    ->where('is_actif', 1)
+        ->where('is_destroy', 0)
     ->get();
 
     $data = $this->formatListingsData($listings);
@@ -1100,6 +1126,8 @@ public function getListingsByNightPriceMin($price)
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
         ->where('user_id', $userId)
         ->get();
         $data = $this->formatListingsData($listings);
@@ -1401,6 +1429,219 @@ private function formatListingsData($listings)
                 
             ];
         });
+    }
+
+    /**
+ * @OA\Put(
+ *      path="/api/logement/{housingId}/hote/disable",
+ *      tags={"Housing"},
+ *      security={{"bearerAuth": {}}},
+ *      summary="route par laquelle l'hôte désactive son logement donné",
+ *      description="Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement à désactiver",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Logement désactivé avec succès",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="message", type="string", example="Le logement a été désactivé avec succès")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Erreur - Le logement est en cours de réservation et ne peut pas être désactivé",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Le logement est en cours de réservation et ne peut pas être désactivé")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Erreur - Seul le propriétaire du logement peut le désactiver",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Seul le propriétaire du logement peut le désactiver")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Erreur - Logement non trouvé",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Logement non trouvé")
+ *          )
+ *      )
+ * )
+ */
+
+    public function disableHousing($housingId)
+    {
+        $housing = Housing::find($housingId);
+    
+        if (!$housing) {
+            return response()->json(['error' => 'Logement non trouvé'], 404);
+        }
+    
+        if ($housing->is_disponible != 1) {
+            return response()->json(['error' => 'Le logement est en cours de réservation et ne peut pas être désactivé'], 400);
+        }
+        if ($housing->is_active == 0) {
+            return response()->json(['error' => 'Le logement était déjà desactivé'], 400);
+        }
+    
+        $user = auth()->user();
+    
+        if ($housing->user_id != $user->id) {
+            return response()->json(['error' => 'Seul le propriétaire du logement peut le désactiver'], 403);
+        }
+    
+        $housing->is_actif = 0;
+        $housing->save();
+    
+        return response()->json(['message' => 'Le logement a été désactivé avec succès'], 200);
+    }
+ 
+    /**
+ * @OA\Put(
+ *      path="/api/logement/{housingId}/hote/enable",
+ *      tags={"Housing"},
+ *      security={{"bearerAuth": {}}},
+ *      summary="la route qui permet à l'hôte d'activer un logement",
+ *      description="Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement à activer",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Succès - Logement activé avec succès",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="message", type="string", example="Le logement a été activé avec succès")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Erreur - Seul le propriétaire du logement peut l'activer",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Seul le propriétaire du logement peut l'activer")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Erreur - Logement non trouvé",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Logement non trouvé")
+ *          )
+ *      )
+ * )
+ */
+public function enableHousing($housingId)
+{
+    $housing = Housing::find($housingId);
+    if (!$housing) {
+        return response()->json(['error' => 'Logement non trouvé'], 404);
+    }
+
+    if ($housing->is_active) {
+        return response()->json(['error' => 'Le logement est déjà activé'], 400);
+    }
+
+    $currentUser = auth()->user();
+    if ($housing->user_id !== $currentUser->id) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut l\'activer'], 403);
+    }
+
+    $housing->is_active = 1;
+    $housing->save();
+
+    return response()->json(['message' => 'Le logement a été activé avec succès'], 200);
+}
+/**
+     * @OA\Delete(
+     *     path="/api/logement/destroyHousingHote/{id}",
+     *     summary="Suppression d un logement par l' hote",
+     *     tags={"Housing"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the housing",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="housing deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Housing not found"
+     *     )
+     * )
+     */
+    public function destroyHousingHote($id){
+
+        try{
+            $housing = Housing::find($id);
+            if (!$housing) {
+                return response()->json(['error' => 'Housing not found.'], 404);
+            }
+            if(!(Auth::user()->id == $housing->user_id)){
+                return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement que vous n avez pas ajouté.'],);
+            }
+            if ($housing->is_disponible == true) {
+                return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement disponible.'],);
+            }
+            if ($housing->is_destroy == true) {
+                return response()->json(['error' => 'Logement déjà supprimé.'],);
+            }
+            Housing::whereId($id)->update(['is_destroy' => 1]);
+            return response()->json(['data' => 'Logement supprimé avec succès'], 200);
+        } catch(Exception $e) {
+            return response()->json($e);
+        }
+    }
+    
+    
+      
+    
+       /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingForHote",
+         *     summary="Liste des logements d'un hote connecté",
+         *     description="Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
+         *     tags={"Housing"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+    public function getHousingForHote(){
+       
+    
+        try{
+            $housings = Housing::where('is_destroy',0)
+            ->where('is_deleted',0)
+            ->where('is_blocked',0)
+            ->where('user_id',Auth::user()->id)
+            ->with('user')
+            ->get();
+            return response()->json(['data' => $housings], 200);
+        } catch(Exception $e) {
+            return response()->json($e->getMessage());
+        }
     }
 
 

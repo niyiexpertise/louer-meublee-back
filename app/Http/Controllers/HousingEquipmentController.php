@@ -15,10 +15,13 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Models\Equipment;
 use App\Models\Equipment_category;
+use App\Models\Equipment_equipment;
 use App\Models\Housing_category_file;
+use App\Models\Housing_equipment_file;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Exception;
 
 
 class HousingEquipmentController extends Controller
@@ -169,7 +172,7 @@ public function DeleteEquipementHousing(Request $request)
 }
 
 
-/**
+    /**
          * @OA\Post(
          *     path="/api/logement/equipment/storeUnexist/{housingId}",
          *     summary="Create a new equipment what don't exist ",
@@ -210,6 +213,10 @@ public function DeleteEquipementHousing(Request $request)
                         'name' => 'required|max:255',
                         // 'icone' => 'image|mimes:jpeg,jpg,png,gif'
                     ]);
+                    $existingequipment = Equipment::where('name', $request->name)->first();
+             if ($existingequipment) {
+            return response()->json(['error' => 'Le nom de l\'équipement existe déjà par défaut'], 400);
+              }
                     $equipment  = new Equipment();
                     $equipment->name = $request->name;
                     $equipment->is_verified = false;
@@ -224,28 +231,54 @@ public function DeleteEquipementHousing(Request $request)
                         "message" =>"L'equipement existe déjà et a été affecté à la catégorie indiquée",
                     ],200);
                 }
-                    $equipment_category = new equipment_category();
+                    $equipment_category = new Equipment_category();
                     $equipment_category->equipment_id = $equipment->id;
                     $equipment_category->category_id = $request->category_id;
                     $equipment_category->save();
+                    $existingequipment = Equipment::where('name', $request->name)->first();
+                    $existingAssociation = Housing_equipment::where('equipment_id', $equipment->id)
+                    ->where('housing_id', $housingId)
+                    ->exists();
+                    if ($existingAssociation) {
+                        return response()->json([
+                            "message" =>"L'equipement existe déjà et a été affecté à au logement indiquée",
+                        ],200);
+                    }
                     $housingEquipment = new Housing_equipment();
                     $housingEquipment->equipment_id = $equipment->id;
                     $housingEquipment->housing_id = $housingId;
+                    $housingEquipment->is_verified = false;
                     $housingEquipment->save();
+
+                    $userId = Auth::id();
+                    $notification = new Notification([
+                        'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
+                        'user_id' => $userId,
+                       ]);
+                       $notification->save();
+                     $adminUsers = User::where('is_admin', 1)->get();
+                            foreach ($adminUsers as $adminUser) {
+                                $notification = new Notification();
+                                $notification->user_id = $adminUser->id;
+                                $notification->name = "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider";
+                                $notification->save();
+                            }
+
                     return response()->json([
                         "message" =>"save successfully",
                         "equipment" => $equipment
                     ],200);
             } catch(Exception $e) {
-                return response()->json($e);
+                return response()->json($e->getMessage());
             }
 
         }
 
+
         /**
          * @OA\Post(
          *     path="/api/logement/equipment/addEquipmentToHousing",
-         *     summary="add equipment to housing ",
+         *     summary="ajouter des équipements existants à un logement donné ",
          *     tags={"Housing Equipment"},
          * security={{"bearerAuth": {}}},
  * @OA\RequestBody(
@@ -282,6 +315,9 @@ public function DeleteEquipementHousing(Request $request)
             $e=[];
             $m=[];
              foreach ($request->input('equipmentId') as $equipment) {
+                if (!Equipment::find($equipment)) {
+                    return response()->json(['message' => 'un equipment non trouvé'],404);
+                }
                 $existingAssociation = housing_equipment::where('housing_id',  $request->housingId)
                 ->where('equipment_id', $equipment)
                 ->exists();
@@ -296,18 +332,354 @@ public function DeleteEquipementHousing(Request $request)
                     $housingEquipment = new housing_equipment();
                     $housingEquipment->housing_id = $request->housingId;
                     $housingEquipment->equipment_id = $equipment;
+                    $housingEquipment->is_verified = false;
                     $housingEquipment->save();
                 }
             }
           
+            $userId = Auth::id();
+            $notification = new Notification([
+                'name' => "Votre ajout d'équipement(s) a été pris en compte. l'administrateur validera dans moin de 48h",
+                'user_id' => $userId,
+               ]);
+               $notification->save();
+             $adminUsers = User::where('is_admin', 1)->get();
+                    foreach ($adminUsers as $adminUser) {
+                        $notification = new Notification();
+                        $notification->user_id = $adminUser->id;
+                        $notification->name = "Un hôte  vient de faire un ajout de nouveau(x) équipement(s) .Veuilez vous connecter pour valider";
+                        $notification->save();
+                    }
+            
             return response()->json([
                 "message" =>  empty($m) ? '  error' : $m,
                 'error' => empty($e) ? ' no error' : $e
             ],200);
     } catch(Exception $e) {    
-        return response()->json($e);
+        return response()->json($e->getMessage(),500);
     }
 }
 
 
+/**
+ * @OA\Get(
+ *     path="/api/logement/equipment/ListHousingEquipmentInvalid/{housingId}",
+ *     summary="Liste des associations équipements logement invalides ayant leur équipement qui existe déjà",
+ *     tags={"Housing Equipment"},
+ * security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the housing",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of invalid housing equipment",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer"),
+ *                     @OA\Property(property="name", type="string"),
+ *                     @OA\Property(property="is_deleted", type="boolean"),
+ *                     @OA\Property(property="is_blocked", type="boolean"),
+ *                     @OA\Property(property="is_verified", type="boolean"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time"),
+ *                     @OA\Property(property="icone", type="string")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Housing not found"
+ *     )
+ * )
+ */
+public function ListHousingEquipmentInvalid($housingId){
+    $housingEquipment = Housing_equipment::where('housing_id', $housingId)
+                                        ->where('is_verified', false)
+                                        ->get();
+    $equipmentT = [];
+    foreach ($housingEquipment as $equipment) {
+        if ($equipment->equipment->is_verified == true ) {
+            $equipmentT[] = [
+                'id_housing_equipment' => $equipment->id,
+                'housing_id' => $housingId,
+                'equipment_id' => $equipment->equipment->id,
+                'name' => $equipment->equipment->name,
+                'is_deleted' => $equipment->equipment->is_deleted,
+                'is_blocked' => $equipment->equipment->is_blocked,
+                'is_verified' => $equipment->equipment->is_verified,
+                'updated_at' => $equipment->equipment->updated_at,
+                'created_at' => $equipment->equipment->created_at,
+                'icone' => $equipment->equipment->icone,
+            ];
+        }
+    }
+    return response()->json([
+        "data" => $equipmentT
+    ],200);
+}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/logement/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}",
+ *     summary="Valider une association équipement logement et dont l'équipement existe déjà",
+ *     tags={"Housing Equipment"},
+ * security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="housingEquipmentId",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the housing equipment association",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Housing equipment verified successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="string",
+ *                 example="association equipement logement vérifié avec succès."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Housing equipment not found"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Housing equipment already verified"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error"
+ *     )
+ * )
+ */
+public function makeVerifiedHousingEquipment(string $id)
+{
+    try{
+        $housingEquipment = Housing_equipment::find($id);
+        if (!$housingEquipment) {
+            return response()->json(['error' => 'association equipement logement  non trouvé.'], 404);
+        }
+        if ($housingEquipment->is_verified == true) {
+            return response()->json(['data' => 'association equipement logement déjà vérifié.'], 200);
+        }
+        Housing_equipment::whereId($id)->update(['is_verified' => true]);
+
+           $notification = new Notification([
+               'name' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
+               'user_id' =>$housingEquipment->housing->user_id ,
+              ]);
+              $notification->save();
+
+        return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
+    } catch(Exception $e) {
+        return response()->json($e);
+    }
+
+
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/logement/equipment/ListEquipmentForHousingInvalid/{housingId}",
+ *     summary="Liste des équipements inexistants et invalides pour un logement donné",
+ *     tags={"Housing Equipment"},
+ * security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the housing",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of invalid equipment",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items()
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Housing not found"
+ *     )
+ * )
+ */
+
+
+public function ListEquipmentForHousingInvalid($housingId){
+    $invalidEquipments = Housing::find($housingId)->housing_equipment()->whereHas('equipment', function ($query) {
+        $query->where('is_verified', false);
+    })->get();
+    $equipmentT = [];
+    // return response()->json($invalidEquipments);
+    foreach ($invalidEquipments as $housingEquipment) {
+        $equipment = $housingEquipment->equipment;
+        $equipmentT[] = [
+            'equipment_id' => $equipment->id,
+            'housing_id' => $housingId,
+            'name' => $equipment->name,
+            'user_detail' => $housingEquipment->housing->user,
+            'is_verified' => $equipment->is_verified,
+            'is_deleted' => $equipment->is_deleted,
+            'is_blocked' => $equipment->is_blocked,
+            'created_at' => $equipment->created_at,
+            'updated_at' => $equipment->updated_at,
+           
+        ];
+        // return response()->json($equipment);
+    }
+
+    return response()->json([
+        "data" => $equipmentT
+    ],200);
+}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/logement/equipment/getHousingEquipmentInvalid",
+ *     summary="Liste des associations equipement logement invalides avec les équipements existant par défaut",
+ *     tags={"Housing Equipment"},
+ * security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des associations equipement logement invalides avec les équipements existant par défaut",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items()
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Housing not found"
+ *     )
+ * )
+ */
+public function getHousingEquipmentInvalid(){
+        $equipments = Equipment::where('is_verified', true)->get();
+
+        $data = [];
+        foreach($equipments as $equipment){
+            $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
+            ->whereHas('housing',function($query){
+                $query->where('is_verified',false);
+            })
+            ->with('housing')
+            ->get();
+            foreach ($housingEquipments as $housingEquipment) {
+                $housingId = $housingEquipment->housing->id;
+                $existingHousingIndex = null;
+
+                foreach ($data as $index => $existingHousing) {
+                   if($existingHousing['housing_id'] === $housingId && $existingHousing['equipment_id'] === $equipment->id){
+                       $existingHousingIndex = $index;
+                       break;
+                   }
+                }
+                if($existingHousingIndex === null){
+                    $housingData = [
+                        'housing_equipment_id' => $housingEquipment->id,
+                        'equipment_id' => $equipment->id,
+                        'equipment_name' => $equipment->name,
+                        'housing_id' => $housingId,
+                        'housing_name' => $housingEquipment->housing->name,
+                        'housing_description' => $housingEquipment->housing->description,
+                        'is_verified' => $housingEquipment->equipment->is_verified,
+                        'created_at' => $housingEquipment->equipment->created_at,
+                        'updated_at' => $housingEquipment->equipment->updated_at,
+                        'user_detail' => $housingEquipment->housing->user,
+                        'user_firstname' => $housingEquipment->housing->user->firstname,
+                        'user_lastname' => $housingEquipment->housing->user->lastname
+                    ];
+                    $data[] = $housingData;
+                }
+            }
+        }
+        return response()->json(['data' => $data]);
+    }
+
+
+             /**
+ * @OA\Get(
+ *     path="/api/logement/equipment/getUnexistEquipmentInvalidForHousing",
+ *     summary="Liste des équipements inexistants non valide",
+ *     tags={"Housing Equipment"},
+ * security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des équipements inexistants non valide",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items()
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Housing not found"
+ *     )
+ * )
+ */
+    public function getUnexistEquipmentInvalidForHousing(){
+        $equipments = Equipment::where('is_verified', false)->get();
+
+        $data = [];
+        foreach($equipments as $equipment){
+            $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
+            ->whereHas('housing',function($query){
+                $query->where('is_verified',false);
+            })
+            ->with('housing')
+            ->get();
+            foreach ($housingEquipments as $housingEquipment) {
+                $housingId = $housingEquipment->housing->id;
+                $existingHousingIndex = null;
+
+                foreach ($data as $index => $existingHousing) {
+                   if($existingHousing['housing_id'] === $housingId && $existingHousing['equipment_id'] === $equipment->id){
+                       $existingHousingIndex = $index;
+                       break;
+                   }
+                }
+
+                if($existingHousingIndex === null){
+                    $housingData = [
+                        'housing_equipment_id' => $housingEquipment->id,
+                        'equipment_id' => $equipment->id,
+                        'equipment_name' => $equipment->name,
+                        'housing_id' => $housingId,
+                        'housing_name' => $housingEquipment->housing->name,
+                        'housing_description' => $housingEquipment->housing->description,
+                        'is_verified' => $housingEquipment->is_verified,
+                        'user_detail' => $housingEquipment->housing->user,
+                        
+                    ];
+                    $data[] = $housingData;
+                }
+            }
+        }
+        return response()->json(['data' => $data]);
+    }
 }

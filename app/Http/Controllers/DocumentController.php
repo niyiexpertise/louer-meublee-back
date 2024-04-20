@@ -54,7 +54,7 @@ class DocumentController extends Controller
 *     path="/api/document/store",
 *     summary="Create a new document",
 *     tags={"Document"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
@@ -87,7 +87,7 @@ security={{"bearerAuth": {}}},
             $document->save();
             return response()->json(['data' => 'Document créé avec succès.', 'document' => $document], 201);
     } catch(Exception $e) {    
-        return response()->json($e);
+        return response()->json($e->getMessage());
     }
     }
 

@@ -31,7 +31,6 @@ class Housing extends Model
         'code_pays',
         'status',
         'arrived_independently',
-        'cleaning_fees',
         'is_instant_reservation',
         'maximum_duration',
         'minimum_duration',
@@ -39,7 +38,9 @@ class Housing extends Model
         'cancelation_condition',
         'departure_instruction',
         'is_deleted',
-        'is_blocked'
+        'is_blocked',
+        'is_destroy',
+        'is_actif'
     ];
     
 

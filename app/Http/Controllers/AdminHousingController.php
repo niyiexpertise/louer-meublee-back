@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Housing;
+use App\Models\Charge;
 use App\Models\housing_preference;
 use App\Models\reduction;
+use App\Models\Housing_charge;
 use App\Models\promotion;
 use App\Models\photo;
 use App\Models\housing_price;
@@ -88,6 +90,8 @@ class AdminHousingController extends Controller
                 'departure_instruction' => $listing->departure_instruction,
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
+                'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
     
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
@@ -148,7 +152,9 @@ class AdminHousingController extends Controller
             return [
                 'id_housing' => $listing->id,
                 'housing_type_name' => $listing->housingType->name,
+                'housing_type_icone' => $listing->housingType->icone,
                 'property_type_name' => $listing->propertyType->name,
+                'property_type_icone' => $listing->propertyType->icone,
                 'user_id' => $listing->user_id,
                 'name_housing' => $listing->name,
                 'description' => $listing->description,
@@ -177,6 +183,8 @@ class AdminHousingController extends Controller
                 'departure_instruction' => $listing->departure_instruction,
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
+                'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
     
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
@@ -253,6 +261,38 @@ public function showHousingDetailForValidationForadmin($id)
         'user',
         'housingType'
     ])->find($id);
+    $hoteCharge_id = [];
+    $travelerCharge_id = [];
+    $totalHoteCharge = 0;
+    $totalTravelerCharge = 0;
+
+    $housingCharges = Housing_charge::where('housing_id', $id)->get();
+
+    if ($housingCharges->isEmpty()) {
+        return response()->json(['message' => 'Aucune charge associée à ce logement'], 404);
+    }
+
+    foreach ($housingCharges as $housingCharge) {
+        $charge = Charge::find($housingCharge->charge_id);
+        $chargeData = [
+            'id_housing_charge' => $housingCharge->id,
+            'housing_id' => $housingCharge->housing_id,
+            'id_charge' => $charge->id,
+            'charge_name' => $charge->name,
+            'is_mycharge' => $housingCharge->is_mycharge,
+            'valeur_charge' => $housingCharge->valeur
+        ];
+
+        if ($housingCharge->is_mycharge) {
+            $hoteCharge_id[] = $chargeData;
+            $totalHoteCharge += $housingCharge->valeur;
+        } else {
+            $travelerCharge_id[] = $chargeData;
+            $totalTravelerCharge += $housingCharge->valeur;
+        }
+    }
+
+    $totalCharge = $totalHoteCharge + $totalTravelerCharge;
 
     $data = [
         'id_housing' => $listing->id,
@@ -290,6 +330,8 @@ public function showHousingDetailForValidationForadmin($id)
         'departure_instruction' => $listing->departure_instruction,
         'is_deleted' => $listing->is_deleted,
         'is_blocked' => $listing->is_blocked,
+        'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
 
         'photos_logement' => $listing->photos->map(function ($photo) {
             return [
@@ -325,6 +367,7 @@ public function showHousingDetailForValidationForadmin($id)
                     'id' => $preference->id,
                     'preference_id' => $preference->preference_id,
                     'preference_name' => $preference->preference->name,
+                    'preference_icone' => $preference->preference->icone,
                     'valide' =>$preference->is_verified
                 ];
             }),
@@ -335,6 +378,7 @@ public function showHousingDetailForValidationForadmin($id)
                     'id' => $preference->id,
                     'preference_id' => $preference->preference_id,
                     'preference_name' => $preference->preference->name,
+                    'preference_icone' => $preference->preference->icone,
                     'valide' =>$preference->is_verified
                 ];
             }),
@@ -387,8 +431,11 @@ public function showHousingDetailForValidationForadmin($id)
                 return [
                     'equipment_id' => $housingEquipment->equipment_id,
                     'name' => $housingEquipment->equipment->name,
+                    'icone' => $housingEquipment->equipment->icone,
                     'valide' => $housingEquipment->is_verified,
+                    'id_housing_equipment' =>  $housingEquipment->id
                 ];
+                
             })->values()->toArray(),
 
             'defaut' => $listing->housingEquipments->filter(function ($equipment) {
@@ -397,10 +444,20 @@ public function showHousingDetailForValidationForadmin($id)
                 return [
                     'equipment_id' => $housingEquipment->equipment_id,
                     'name' => $housingEquipment->equipment->name,
+                    'icone' => $housingEquipment->equipment->icone,
                     'valide' => $housingEquipment->is_verified,
+                    'id_housing_equipment' =>  $housingEquipment->id
                 ];
             })->values()->toArray(),
         ],
+        'charges' => [
+            'hote_charges' => $hoteCharge_id,
+            'total_hote_charge' => $totalHoteCharge,
+            'traveler_charges' => $travelerCharge_id,
+            'total_traveler_charge' => $totalTravelerCharge,
+            'total_charge' => $totalCharge
+
+        ]
     ];
 
     return response()->json(['data' => $data]);
@@ -555,12 +612,12 @@ public function showHousingDetailForValidationForadmin($id)
  * @OA\Get(
  *     path="/api/logements/index/ListeDesLogementsValideBloque",
  *     tags={"Housing"},
- *     summary="Liste des logements déjà verifiés mais bloqués",
- *     description="Récupère la liste des logements qui sont déjà verifiés mais bloqués.",
+ *     summary="Liste des logements déjà verifiés mais bloqués par l'administrateur",
+ *     description="Récupère la liste des logements qui sont déjà verifiés mais bloqués  par l'administrateur.",
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
- *         description="Succès - Liste des logements déjà verifiés mais bloqués",
+ *         description="Succès - Liste des logements déjà verifiés mais bloqués  par l'administrateur",
  *         @OA\JsonContent(
  *           
  *         )
@@ -610,6 +667,8 @@ public function showHousingDetailForValidationForadmin($id)
              'departure_instruction' => $listing->departure_instruction,
              'is_deleted' => $listing->is_deleted,
              'is_blocked' => $listing->is_blocked,
+             'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
  
              'photos_logement' => $listing->photos->map(function ($photo) {
                  return [
@@ -643,14 +702,14 @@ public function showHousingDetailForValidationForadmin($id)
  }
 /**
  * @OA\Get(
- *     path="/api/logements/index/ListeDesLogementsValideDelete",
+ *     path="/api/logement/index/ListeDesLogementsValideDelete",
  *     tags={"Housing"},
- *     summary="Liste des logements déjà verifiés mais suprimés",
- *     description="Récupère la liste des logements qui sont déjà verifiés mais supprimés.",
+ *     summary="Liste des logements déjà verifiés mais suprimés par l'administrateur",
+ *     description="Récupère la liste des logements qui sont déjà verifiés mais supprimés par l'administrateur.",
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
- *         description="Succès - Liste des logements déjà verifiés mais supprimés",
+ *         description="Succès - Liste des logements déjà verifiés mais supprimés  par l'administrateur",
  *         @OA\JsonContent(
  *           
  *         )
@@ -699,6 +758,8 @@ public function showHousingDetailForValidationForadmin($id)
              'departure_instruction' => $listing->departure_instruction,
              'is_deleted' => $listing->is_deleted,
              'is_blocked' => $listing->is_blocked,
+             'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
  
              'photos_logement' => $listing->photos->map(function ($photo) {
                  return [
@@ -907,5 +968,167 @@ public function UpdateOneHousing($id)
         return response()->json(['message' => 'Erreur lors de la mise à jour'], 500);
     }
 }
+/**
+ * @OA\Get(
+ *     path="/api/logement/index/ListeDesLogementsValideDisable",
+ *     tags={"Housing"},
+ *     summary="Liste des logements déjà verifiés mais desactivés par l'hôte",
+ *     description="Récupère la liste des logements qui sont déjà verifiés mais desactivés par l'hôte.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Succès - Liste des logements déjà verifiés mais desactivé par l'hôte",
+ *         @OA\JsonContent(
+ *           
+ *         )
+ *     )
+ * )
+ */
+public function ListeDesLogementsValideDisable()
+{
+    $listings = Housing::where('status', 'verified')
+    ->where('is_deleted', 0)
+    ->where('is_blocked', 0)
+    ->where('is_destroy', 0)
+    ->where('is_actif', 0)
+    ->get();
+
+    $data = $listings->map(function ($listing) {
+        return [
+            'id_housing' => $listing->id,
+            'housing_type_name' => $listing->housingType->name,
+            'property_type_name' => $listing->propertyType->name,
+            'user_id' => $listing->user_id,
+            'name_housing' => $listing->name,
+            'description' => $listing->description,
+            'number_of_bed' => $listing->number_of_bed,
+            'number_of_traveller' => $listing->number_of_traveller,
+            'sit_geo_lat' => $listing->sit_geo_lat,
+            'sit_geo_lng' => $listing->sit_geo_lng,
+            'country' => $listing->country,
+            'address' => $listing->address,
+            'city' => $listing->city,
+            'department' => $listing->department,
+            'is_camera' => $listing->is_camera,
+            'is_accepted_animal' => $listing->is_accepted_animal,
+            'is_animal_exist' => $listing->is_animal_exist,
+            'is_disponible' => $listing->is_disponible,
+            'interior_regulation' => $listing->interior_regulation,
+            'telephone' => $listing->telephone,
+            'code_pays' => $listing->code_pays,
+            'price' => $listing->price,
+            'status' => $listing->status,
+            'surface' => $listing->surface,
+            'arrived_independently' => $listing->arrived_independently,
+            'is_instant_reservation' => $listing->is_instant_reservation,
+            'maximum_duration' => $listing->maximum_duration,
+            'minimum_duration' => $listing->minimum_duration,
+            'time_before_reservation' => $listing->time_before_reservation,
+            'cancelation_condition' => $listing->cancelation_condition,
+            'departure_instruction' => $listing->departure_instruction,
+            'is_deleted' => $listing->is_deleted,
+            'is_blocked' => $listing->is_blocked,
+            'is_actif' => $listing->is_actif,
+            'is_destroy' => $listing->is_destroy,
+
+            'photos_logement' => $listing->photos->map(function ($photo) {
+                return [
+                    'id_photo' => $photo->id,
+                    'path' => $photo->path,
+                    'extension' => $photo->extension,
+                    'is_couverture' => $photo->is_couverture,
+                ];
+            }),
+            'user' => [
+                'id' => $listing->user->id,
+                'lastname' => $listing->user->lastname,
+                'firstname' => $listing->user->firstname,
+                'telephone' => $listing->user->telephone,
+                'code_pays' => $listing->user->code_pays,
+                'email' => $listing->user->email,
+                'country' => $listing->user->country,
+                'file_profil' => $listing->user->file_profil,
+                'city' => $listing->user->city,
+                'address' => $listing->user->address,
+                'sexe' => $listing->user->sexe,
+                'postal_code' => $listing->user->postal_code,
+                'is_admin' => $listing->user->is_admin,
+                'is_traveller' => $listing->user->is_traveller,
+                'is_hote' => $listing->user->is_hote,
+            ],
+
+        ];
+    });
+    return response()->json(['data' => $data],200);
+}
+
+ /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingDestroyedByHote",
+         *     summary="Liste des logements supprimés par les hotes",
+         *     tags={"Housing"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+        public function getHousingDestroyedByHote(){
+            try{
+                $listings = Housing::where('is_destroy',true)->get();
+                $data = [];
+                foreach($listings as $listing){
+                    $data[] = [
+                        'id_housing' => $listing->id,
+                        'housing_type_name' => $listing->housingType->name,
+                        'property_type_name' => $listing->propertyType->name,
+                        'user_id' => $listing->user_id,
+                        'name_housing' => $listing->name,
+                        'description' => $listing->description,
+                        'number_of_bed' => $listing->number_of_bed,
+                        'number_of_traveller' => $listing->number_of_traveller,
+                        'sit_geo_lat' => $listing->sit_geo_lat,
+                        'sit_geo_lng' => $listing->sit_geo_lng,
+                        'country' => $listing->country,
+                        'address' => $listing->address,
+                        'city' => $listing->city,
+                        'department' => $listing->department,
+                        'is_camera' => $listing->is_camera,
+                        'is_accepted_animal' => $listing->is_accepted_animal,
+                        'is_animal_exist' => $listing->is_animal_exist,
+                        'is_disponible' => $listing->is_disponible,
+                        'interior_regulation' => $listing->interior_regulation,
+                        'telephone' => $listing->telephone,
+                        'code_pays' => $listing->code_pays,
+                        'price' => $listing->price,
+                        'status' => $listing->status,
+                        'surface' => $listing->surface,
+                        'arrived_independently' => $listing->arrived_independently,
+                        'is_instant_reservation' => $listing->is_instant_reservation,
+                        'maximum_duration' => $listing->maximum_duration,
+                        'minimum_duration' => $listing->minimum_duration,
+                        'time_before_reservation' => $listing->time_before_reservation,
+                        'cancelation_condition' => $listing->cancelation_condition,
+                        'departure_instruction' => $listing->departure_instruction,
+                        'is_deleted' => $listing->is_deleted,
+                        'is_blocked' => $listing->is_blocked,
+                        'is_actif' => $listing->is_actif,
+                        'is_destroy' => $listing->is_destroy,
+                        
+                        'user_detail' =>$listing->user,
+                        
+                        
+                    ];
+                }
+                return response()->json(['data' => $data], 200);
+            } catch(Exception $e) {
+                return response()->json($e->getMessage());
+            }
+          
+        }
+    
+        
 
 }

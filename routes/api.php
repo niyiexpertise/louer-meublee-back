@@ -28,6 +28,7 @@ use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\HousingCategoryFileController;
 use App\Http\Controllers\HousingEquipmentController;
 use App\Http\Controllers\HousingPreferenceController;
+use App\Http\Controllers\HousingChargeController;
 use App\Http\Controllers\ReviewReservationController;
 /*
 |--------------------------------------------------------------------------
@@ -254,7 +255,6 @@ Route::group(['middleware' => ['role:traveler']], function () {
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('preference')->group(function () {
             Route::post('/store', [PreferenceController::class, 'store']);
-            Route::post('/addPreferenceToHousing', [PreferenceController::class, 'addPreferenceToHousing']);
             Route::get('/indexUnverified', [PreferenceController::class, 'indexUnverified']);
             Route::post('/storeUnexist/{housingId}', [PreferenceController::class, 'storeUnexist']);
             Route::get('/show/{id}', [PreferenceController::class, 'show']);
@@ -380,6 +380,10 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::post('/store', [HousingController::class, 'addHousing']);
             Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing']);
             Route::put('/update/insensible{housingid}', [HousingController::class, 'updateInsensibleHousing']);
+            Route::put('/{housingId}/hote/disable', [HousingController::class, 'disableHousing']);
+            Route::put('/{housingId}/hote/enable', [HousingController::class, 'enableHousing']);
+            Route::delete('/destroyHousingHote/{id}', [HousingController::class, 'destroyHousingHote']);
+            Route::get('/getHousingForHote', [HousingController::class, 'getHousingForHote']);
             //Gestion des photos logement
             Route::post('/updatephoto/{photo_id}', [PhotoController::class, 'updatePhotoHousing']);
             Route::post('/{housingId}/setcoverphoto/{photoId}', [PhotoController::class, 'setCoverPhoto']);
@@ -389,14 +393,21 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::get('/{housingEquipmentId}/equipements', [HousingEquipmentController::class, 'equipementsHousing']);
             Route::delete('/equipement', [HousingEquipmentController::class, 'DeleteEquipementHousing']);
             Route::post('/equipment/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing']);
+            Route::post('/equipment/storeUnexist', [HousingEquipmentController::class, 'storeUnexist']);
             //Gestion des preferences du logement
             Route::get('/{housingPreferenceId}/preferences', [HousingPreferenceController::class, 'housingPreference']);
             Route::delete('/preference', [HousingPreferenceController::class, 'deletePreferenceHousing']);
+            Route::post('/preference/addPreferenceToHousing', [HousingPreferenceController::class, 'addPreferenceToHousing']);
+            Route::post('/preference/storeUnexist/{housingId}', [HousingPreferenceController::class, 'storeUnexist']);
+
             //Gestion des catégories pour un hote qui ajoute déjà un logement
-            Route::delete('category//photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory']);
+            Route::delete('category/photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory']);
             Route::post('category/default/add', [HousingCategoryFileController::class, 'addHousingCategory']);
             Route::post('category/default/addNew', [HousingCategoryFileController::class, 'addHousingCategoryNew']);
-            
+
+            //Gestion des charges
+            Route::post('/charge/addChargeToHousing', [HousingChargeController::class, 'addChargeToHousing']);
+            Route::get('/charge/listelogementcharge/{housingId}', [HousingChargeController::class, 'listelogementcharge']);
 
         });
     });
@@ -418,6 +429,30 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::delete('/destroy/{id}', [HousingController::class, 'destroy']);
             Route::put('/block/{id}', [HousingController::class, 'block']);
             Route::put('/unblock/{id}', [HousingController::class, 'unblock']);
+            Route::get('/index/ListeDesLogementsValideDisable', [AdminHousingController::class, 'ListeDesLogementsValideDisable']);
+            Route::get('/getHousingDestroyedByHote', [AdminHousingController::class, 'getHousingDestroyedByHote']);
+             //Gestion des categories côté admin
+            Route::get('/category/default/invalid', [HousingCategoryFileController::class, 'getCategoryDefaultInvalidHousings']);
+            Route::put('/category/default/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateDefaultCategoryHousing']);
+            Route::get('/category/unexist/invalid', [HousingCategoryFileController::class, 'getCategoryUnexistInvalidHousings']);
+            Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing']);
+            Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail']);
+            //Gestion des équipements côté admin
+            Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid']);
+            Route::post('/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment']);
+            Route::get('/equipment/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid']);
+            Route::get('/equipment/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid']);
+            Route::get('/equipment/getUnexistEquipmentInvalidForHousing', [HousingEquipmentController::class, 'getUnexistEquipmentInvalidForHousing']);
+            //Gestion des preference côté admin
+            Route::get('/preference/getHousingPreferenceInvalid', [HousingPreferenceController::class, 'getHousingPreferenceInvalid']);
+            Route::get('/preference/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing']);
+            Route::get('/preference/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid']);
+            Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid']);
+            Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference']);
+                    
+
+            
+             
 
         });
         Route::get('/admin/statistique', [AdminHousingController::class, 'getAdminStatistics']);

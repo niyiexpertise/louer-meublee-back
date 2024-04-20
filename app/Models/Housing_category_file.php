@@ -9,6 +9,9 @@ class Housing_category_file extends Model
 {
     use HasFactory;
 
+   protected $fillable = [
+        'is_verified',
+    ];
     public function housing()
     {
         return $this->belongsTo(Housing::class);

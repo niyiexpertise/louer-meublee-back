@@ -297,12 +297,12 @@
                 "tags": [
                     "Housing"
                 ],
-                "summary": "Liste des logements déjà verifiés mais bloqués",
-                "description": "Récupère la liste des logements qui sont déjà verifiés mais bloqués.",
+                "summary": "Liste des logements déjà verifiés mais bloqués par l'administrateur",
+                "description": "Récupère la liste des logements qui sont déjà verifiés mais bloqués  par l'administrateur.",
                 "operationId": "b0d6f0e23d6a83e9a91b749f2695fdb6",
                 "responses": {
                     "200": {
-                        "description": "Succès - Liste des logements déjà verifiés mais bloqués",
+                        "description": "Succès - Liste des logements déjà verifiés mais bloqués  par l'administrateur",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -317,17 +317,17 @@
                 ]
             }
         },
-        "/api/logements/index/ListeDesLogementsValideDelete": {
+        "/api/logement/index/ListeDesLogementsValideDelete": {
             "get": {
                 "tags": [
                     "Housing"
                 ],
-                "summary": "Liste des logements déjà verifiés mais suprimés",
-                "description": "Récupère la liste des logements qui sont déjà verifiés mais supprimés.",
-                "operationId": "21ae66f4cd260dcb8e80204a9e1ade8e",
+                "summary": "Liste des logements déjà verifiés mais suprimés par l'administrateur",
+                "description": "Récupère la liste des logements qui sont déjà verifiés mais supprimés par l'administrateur.",
+                "operationId": "bcb318994546ff214f133fc20c50d5ee",
                 "responses": {
                     "200": {
-                        "description": "Succès - Liste des logements déjà verifiés mais supprimés",
+                        "description": "Succès - Liste des logements déjà verifiés mais supprimés  par l'administrateur",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -451,6 +451,50 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/index/ListeDesLogementsValideDisable": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements déjà verifiés mais desactivés par l'hôte",
+                "description": "Récupère la liste des logements qui sont déjà verifiés mais desactivés par l'hôte.",
+                "operationId": "cdaf1adedd49493c339254bcb959b641",
+                "responses": {
+                    "200": {
+                        "description": "Succès - Liste des logements déjà verifiés mais desactivé par l'hôte",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/getHousingDestroyedByHote": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements supprimés par les hotes",
+                "operationId": "7f66a3d2492a898a3b6fa590af152da3",
+                "responses": {
+                    "200": {
+                        "description": "List of housing what be retrieve by hote"
                     }
                 },
                 "security": [
@@ -4522,49 +4566,22 @@
                 ]
             }
         },
-        "/api/logement/charge/addChargeToHousing": {
-            "post": {
+        "/api/logement/category/default/invalid": {
+            "get": {
                 "tags": [
-                    "Housing Charge"
+                    "Housing Category Photo"
                 ],
-                "summary": "add charge of hote to housing ",
-                "operationId": "3886aeec633676358bff62cb5f57f93b",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "housingId": {
-                                        "type": "string",
-                                        "example": "1"
-                                    },
-                                    "hote": {
-                                        "description": "Tableau contenant les IDs des charge du logement à supprimer",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "traveler": {
-                                        "description": "Tableau contenant les IDs des charge du logement à supprimer",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
+                "summary": "Récupérer les catégories existantes par défaut des logement en attente de validation",
+                "description": "Retourne une liste des catégories existantes par défaut des logement en attente de validation et les photos des catégories associées.",
+                "operationId": "275fb5e3036d6f615eb3dcde726593dd",
                 "responses": {
                     "200": {
-                        "description": "Charge  created successfully"
-                    },
-                    "401": {
-                        "description": "Invalid credentials"
+                        "description": "Succès - Liste des logements par catégorie",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4574,13 +4591,243 @@
                 ]
             }
         },
-        "/api/charge/listelogementcharge/{housingId}": {
+        "/api/logement/category/default/{housing_id}/{category_id}/validate": {
+            "put": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Valider une catégorie existante par défaut en attente de validation",
+                "description": "Valide une catégorie existante par défaut en attente de validation en mettant à jour le statut is_verified de housing_category_file à true.",
+                "operationId": "12a2332f85ef2bbc75f7d5294f64136a",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement associé à la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "description": "ID de la catégorie à valider",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Catégorie validée avec succès"
+                    },
+                    "404": {
+                        "description": "Erreur - Catégorie non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/unexist/invalid": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les catégories inexistantes par défaut des logement en attente de validation",
+                "description": "Retourne une liste des catégories inexistantes par défaut des logement en attente de validation et les photos des catégories associées.",
+                "operationId": "2a3edc07db8bb2f383030930c6d915cf",
+                "responses": {
+                    "200": {
+                        "description": "Succès - Liste des logements par catégorie",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/unexist/{housing_id}/{category_id}/validate": {
+            "put": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Valider une catégorie inexistante par défaut en attente de validation",
+                "description": "Valide une catégorie inexistante par défaut en attente de validation en mettant à jour le statut is_verified de housing_category_file à true.",
+                "operationId": "13afdc480be92918b85ffcd9d61f5802",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement associé à la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "description": "ID de la catégorie à valider",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Catégorie validée avec succès"
+                    },
+                    "404": {
+                        "description": "Erreur - Catégorie non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/{housing_id}/{category_id}/detail": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Obtenir les détails d'une catégorie donné de logement",
+                "description": "Retourne les détails d'une catégorie de logement spécifique, y compris les informations détaillées du logement,les photos de la categorie et de l'utilisateur associé.",
+                "operationId": "c94d37709cbb3459783127d37eaf0605",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "description": "ID de la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Détails de la catégorie de logement retournés",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/charge/addChargeToHousing": {
+            "post": {
+                "tags": [
+                    "Housing Charge"
+                ],
+                "summary": "Ajouter une charge au logement",
+                "operationId": "3886aeec633676358bff62cb5f57f93b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "housingId": {
+                                        "type": "integer",
+                                        "example": "1"
+                                    },
+                                    "hote": {
+                                        "description": "Informations sur les charges de l'hôte",
+                                        "properties": {
+                                            "idCharge": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "valeurCharge": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "traveler": {
+                                        "description": "Informations sur les charges du voyageur",
+                                        "properties": {
+                                            "idCharge": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "valeurCharge": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Charge ajoutée avec succès au logement"
+                    },
+                    "401": {
+                        "description": "Credentials invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/charge/listelogementcharge/{housingId}": {
             "get": {
                 "tags": [
                     "Housing Charge"
                 ],
                 "summary": "Get all charges for a specific housing",
-                "operationId": "4680ccce021a7019a48756a1901c7dd6",
+                "operationId": "c5220515de93d562aa65f27cca76c164",
                 "parameters": [
                     {
                         "name": "housingId",
@@ -4731,7 +4978,7 @@
                 "tags": [
                     "Housing"
                 ],
-                "summary": "Liste des logements pour l'accueil",
+                "summary": "Liste des logements pour l'accueil et pour l'admin en même temps.",
                 "description": "Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
                 "operationId": "f6da0a74c98a222da98c79fd7d3ef60f",
                 "responses": {
@@ -5706,6 +5953,227 @@
                 ]
             }
         },
+        "/api/logement/{housingId}/hote/disable": {
+            "put": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "route par laquelle l'hôte désactive son logement donné",
+                "description": "Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
+                "operationId": "b8a3bfdd8469db8bb461f4c84884bdbe",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Logement désactivé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement a été désactivé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur - Le logement est en cours de réservation et ne peut pas être désactivé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Le logement est en cours de réservation et ne peut pas être désactivé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Erreur - Seul le propriétaire du logement peut le désactiver",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Seul le propriétaire du logement peut le désactiver"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Erreur - Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housingId}/hote/enable": {
+            "put": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "la route qui permet à l'hôte d'activer un logement",
+                "description": "Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
+                "operationId": "7779ead7e4582ca27330f7086364d23a",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Logement activé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement a été activé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Erreur - Seul le propriétaire du logement peut l'activer",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Seul le propriétaire du logement peut l'activer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Erreur - Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/destroyHousingHote/{id}": {
+            "delete": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Suppression d un logement par l' hote",
+                "operationId": "eeaad0fda9213e9a8afa4b2d4244922a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the housing",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "housing deleted successfully"
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/getHousingForHote": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements d'un hote connecté",
+                "description": "Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
+                "operationId": "4cbe5e5e522f356573750af179f37161",
+                "responses": {
+                    "200": {
+                        "description": "List of housing what be retrieve by hote"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/{housingEquipmentId}/equipements": {
             "get": {
                 "tags": [
@@ -5894,7 +6362,7 @@
                 "tags": [
                     "Housing Equipment"
                 ],
-                "summary": "add equipment to housing ",
+                "summary": "ajouter des équipements existants à un logement donné ",
                 "operationId": "fd7641ca9accf1fa3af2624dfa34d2a5",
                 "requestBody": {
                     "required": true,
@@ -5925,6 +6393,235 @@
                     },
                     "401": {
                         "description": "Invalid credentials"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/ListHousingEquipmentInvalid/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Liste des associations équipements logement invalides ayant leur équipement qui existe déjà",
+                "operationId": "283f86c2dbe38d83f867da11b0e18280",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID of the housing",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invalid housing equipment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_deleted": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_blocked": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_verified": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "icone": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}": {
+            "post": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Valider une association équipement logement et dont l'équipement existe déjà",
+                "operationId": "eb8fc015392ef72ae03d0e1ce47b562e",
+                "parameters": [
+                    {
+                        "name": "housingEquipmentId",
+                        "in": "path",
+                        "description": "ID of the housing equipment association",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Housing equipment verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "association equipement logement vérifié avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing equipment not found"
+                    },
+                    "400": {
+                        "description": "Housing equipment already verified"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/ListEquipmentForHousingInvalid/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Liste des équipements inexistants et invalides pour un logement donné",
+                "operationId": "56c357e6222fd87be2e9ba96eef5a849",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID of the housing",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invalid equipment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/getHousingEquipmentInvalid": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Liste des associations equipement logement invalides avec les équipements existant par défaut",
+                "operationId": "961c6cdede3cdd8200d53fe66c97f06b",
+                "responses": {
+                    "200": {
+                        "description": "Liste des associations equipement logement invalides avec les équipements existant par défaut",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/getUnexistEquipmentInvalidForHousing": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Liste des équipements inexistants non valide",
+                "operationId": "26f94b748273b980c8b0698708bab446",
+                "responses": {
+                    "200": {
+                        "description": "Liste des équipements inexistants non valide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
                     }
                 },
                 "security": [
@@ -6072,13 +6769,13 @@
                 ]
             }
         },
-        "/api/preference/storeUnexist/{housingId}": {
+        "/api/logement/preference/storeUnexist/{housingId}": {
             "post": {
                 "tags": [
                     "Housing Preference"
                 ],
-                "summary": "Create a new preference",
-                "operationId": "4dc575867cecedc0d76e29a50904bcc2",
+                "summary": "Create a new preference unexist",
+                "operationId": "0f2d6dd1309cc73b87df8402052664ab",
                 "parameters": [
                     {
                         "name": "housingId",
@@ -6113,6 +6810,9 @@
                     "201": {
                         "description": "Preference created successfully"
                     },
+                    "404": {
+                        "description": "Preference not found"
+                    },
                     "401": {
                         "description": "Invalid credentials"
                     }
@@ -6124,13 +6824,89 @@
                 ]
             }
         },
-        "/api/preference/addPreferenceToHousing": {
+        "/api/logement/preference/ListHousingPreferenceInvalid/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": " Liste des associations  logement preference  invalide ayant leur préférence déjà existante",
+                "operationId": "7a4feba63a3843661e5f78ce5bec68a6",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID of the housing",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invalid housing preference",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_deleted": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_blocked": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_verified": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "icone": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/addPreferenceToHousing": {
             "post": {
                 "tags": [
                     "Housing Preference"
                 ],
-                "summary": "add preference to housing ",
-                "operationId": "167da05343881b297f7e0c2fa838bd49",
+                "summary": "ajouter des préférences existantes à des logements",
+                "operationId": "e13214300632a94015feef2d17617a53",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -6160,6 +6936,159 @@
                     },
                     "401": {
                         "description": "Invalid credentials"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/makeVerifiedHousingPreference/{housingPreferenceId}": {
+            "post": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Valider les associations logement préférence invalide  et ayant leur préférence qui existe déjà",
+                "operationId": "a1218a7edfa62686770cec3dcbb3b575",
+                "parameters": [
+                    {
+                        "name": "housingPreferenceId",
+                        "in": "path",
+                        "description": "ID of the housingPreference",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Housing preference verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "association equipement logement vérifié avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing preference not found"
+                    },
+                    "400": {
+                        "description": "Housing preference already verified"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/ListPreferenceForHousingInvalid/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Liste des preferences inexistantes et  invalide pour un logement",
+                "operationId": "6483adb7452df8a5e05a7a0d70d1b05c",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID of the housing",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invalid preferences",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/getHousingPreferenceInvalid": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Liste des association préférence logement invalides ayant leur préférence qui existe déjà",
+                "operationId": "4d6cdff7981bac8d9e792028843fbd21",
+                "responses": {
+                    "200": {
+                        "description": "Liste des préférences logement invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/getUnexistPreferenceInvalidForHousing": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Liste des préférences inexistants non valide",
+                "operationId": "43e5956354d11f3153fb30686e015cb7",
+                "responses": {
+                    "200": {
+                        "description": "Liste des préférences inexistants non valide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Housing not found"
                     }
                 },
                 "security": [

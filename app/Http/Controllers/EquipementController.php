@@ -272,6 +272,10 @@ class EquipementController extends Controller
                     'name' => 'required|max:255',
                     // 'icone' => 'image|mimes:jpeg,jpg,png,gif'
                 ]);
+                $existingequipment = Equipment::where('name', $request->name)->first();
+          if ($existingequipment) {
+            return response()->json(['error' => 'Le nom de l\'équipement existe déjà par défaut'], 400);
+            }
 
                 $equipment  = new Equipment();
                 if ($request->hasFile('icone')) {

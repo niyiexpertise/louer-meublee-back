@@ -504,6 +504,239 @@
                 ]
             }
         },
+        "/api/logement/country_with_many_housing": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
+                "description": "Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
+                "operationId": "965ef3ce346043c59641fa0b093c100f",
+                "responses": {
+                    "200": {
+                        "description": "Top 10 des pays avec le plus grand nombre de logement sur la plateforme"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/hote_with_many_housing": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
+                "description": "Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
+                "operationId": "dd8a7c0bf77b664fe4fca56f9c42323d",
+                "responses": {
+                    "200": {
+                        "description": "Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/housing_with_many_reservation": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Top 10 des logements avec le plus grand nombre de reservation",
+                "description": "Top 10 des logements avec le plus grand nombre de reservation",
+                "operationId": "f4ec0de5e414d9503e836cb80ad6c9ef",
+                "responses": {
+                    "200": {
+                        "description": "List of housing"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/country_with_many_reservation": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
+                "description": "Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
+                "operationId": "db0af50e40c77ff50f9c6aab594eead5",
+                "responses": {
+                    "200": {
+                        "description": "List of countries"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/housing_without_reservation": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des logements avec 0 réservations",
+                "description": "Liste des logements avec 0 réservations",
+                "operationId": "e330db7413d17595f54432b95d368e3a",
+                "responses": {
+                    "200": {
+                        "description": "List of housing"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getReservationsCountByYear": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Evolution du Nombre total de réservation au fil des années",
+                "description": "Evolution du Nombre total de réservation au fil des années",
+                "operationId": "9c2969b408c03841366f2f18d9655422",
+                "responses": {
+                    "200": {
+                        "description": "number of reservation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getReservationsByHousingId/{housingId}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste et nombres des réservations pour un logement donné",
+                "description": "Liste et nombres des réservations pour un logement doinné",
+                "operationId": "980e1e3ebe5ac64d3c16c48fbfa30488",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "Get housing ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste et nombres des réservations pour un logement doinné"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getAllReservation": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste de toutes les réservations de la plateforme",
+                "description": "Liste de toutes les réservations de la plateforme",
+                "operationId": "de59530e8b44d094c54ef598cb4d289f",
+                "responses": {
+                    "200": {
+                        "description": "List of reservation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getUserReservations/{user}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste et nombres des réservations d'un voyageur",
+                "description": "Liste et nombres des réservations d'un voyageur",
+                "operationId": "d70e23ddd1d63e359ea1759ade512d09",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "Get user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste et nombres des réservations d'un voyageur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/showDetailOfReservation/{idReservation}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Détail d'une réservation donnée coté admin",
+                "description": "Détail d'une réservation donée admin",
+                "operationId": "1444459e5a77c43c8aa7d28e29b23d9a",
+                "parameters": [
+                    {
+                        "name": "idReservation",
+                        "in": "path",
+                        "description": "Get reservation ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail d'une réservation côté Admin"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/assignPermToRole/{role}/{permission}": {
             "post": {
                 "tags": [
@@ -5379,62 +5612,6 @@
                 ]
             }
         },
-        "/api/logement/Disponible": {
-            "get": {
-                "tags": [
-                    "Housing"
-                ],
-                "summary": "Liste des logements disponibles",
-                "description": "Récupère la liste des logements disponibles à la location.",
-                "operationId": "ee841d1fb816a1e16550f27eb947ef89",
-                "responses": {
-                    "200": {
-                        "description": "Liste des logements disponibles",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Aucun logement disponible trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/logement/NonDisponible": {
-            "get": {
-                "tags": [
-                    "Housing"
-                ],
-                "summary": "Liste des logements non disponibles",
-                "description": "Récupère la liste des logements non disponibles .",
-                "operationId": "1763d12baae104760bb83a541712ba17",
-                "responses": {
-                    "200": {
-                        "description": "Liste des logements non disponibles",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Aucun logement non disponible trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/logement/filterby/country/{country}": {
             "get": {
                 "tags": [
@@ -9313,6 +9490,372 @@
                 ]
             }
         },
+        "/api/reservation/store": {
+            "post": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Créer une réservation avec paiement",
+                "description": "Crée une réservation pour un logement avec un paiement associé. Accepte un fichier image pour la photo des voyageurs voulant réserver la réservation.",
+                "operationId": "7913894d1c843eec5c22b1bd10d13a5c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "housing_id",
+                                    "date_of_starting",
+                                    "date_of_end",
+                                    "number_of_adult",
+                                    "code_pays",
+                                    "telephone_traveler",
+                                    "photo",
+                                    "heure_arrivee_max",
+                                    "heure_arrivee_min",
+                                    "is_tranche_paiement",
+                                    "montant_total",
+                                    "valeur_payee",
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement"
+                                ],
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date_of_starting": {
+                                        "description": "Date de début de la réservation",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-05-01"
+                                    },
+                                    "date_of_end": {
+                                        "description": "Date de fin de la réservation",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-05-07"
+                                    },
+                                    "number_of_adult": {
+                                        "description": "Nombre d'adultes",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "number_of_child": {
+                                        "description": "Nombre d'enfants",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "number_of_domestical_animal": {
+                                        "description": "Nombre d'animaux domestiques",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "number_of_baby": {
+                                        "description": "Nombre de bébés",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "message_to_hote": {
+                                        "description": "Message à l'hôte",
+                                        "type": "string",
+                                        "example": "Nous avons hâte de visiter votre logement!"
+                                    },
+                                    "code_pays": {
+                                        "description": "Code du pays",
+                                        "type": "string",
+                                        "example": "FRA"
+                                    },
+                                    "telephone_traveler": {
+                                        "description": "Numéro de téléphone du voyageur",
+                                        "type": "integer",
+                                        "example": 123456789
+                                    },
+                                    "photo": {
+                                        "description": "Photo de la réservation",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "heure_arrivee_max": {
+                                        "description": "Heure d'arrivée maximale",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "18:00"
+                                    },
+                                    "heure_arrivee_min": {
+                                        "description": "Heure d'arrivée minimale",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "14:00"
+                                    },
+                                    "is_tranche_paiement": {
+                                        "description": "Paiement en plusieurs tranches",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "montant_total": {
+                                        "description": "Montant total",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500
+                                    },
+                                    "valeur_payee": {
+                                        "description": "Montant déjà payé",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 250
+                                    },
+                                    "payment_method": {
+                                        "description": "Méthode de paiement",
+                                        "type": "string",
+                                        "example": "Credit Card"
+                                    },
+                                    "id_transaction": {
+                                        "description": "Identifiant de la transaction",
+                                        "type": "string",
+                                        "example": "TX123456789"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Réservation et paiement créés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation et paiement créés avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflit de réservation ou problème de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Les dates de la réservation chevauchent celles d'une réservation existante"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou indisponible",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé ou indisponible"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/hote_confirm_reservation/{idReservation}": {
+            "put": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Confirmer la reservation d un voyageur sur un de ses biens",
+                "description": "Confirmer la reservation d un voyageur sur un de ses biens",
+                "operationId": "d08262ea66d004a3d51bb2431460cf35",
+                "parameters": [
+                    {
+                        "name": "idReservation",
+                        "in": "path",
+                        "description": "ID of the reservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "reservation confirmed successfully"
+                    },
+                    "404": {
+                        "description": "reservation not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/hote_reject_reservation/{idReservation}": {
+            "put": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
+                "description": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
+                "operationId": "c4a98456912659edaf3d81e5ddc80a22",
+                "parameters": [
+                    {
+                        "name": "idReservation",
+                        "in": "path",
+                        "description": "ID of the reservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "motif_rejet_hote"
+                                ],
+                                "properties": {
+                                    "motif_rejet_hote": {
+                                        "type": "string",
+                                        "example": "motif"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "reservation rejected successfully"
+                    },
+                    "404": {
+                        "description": "reservation not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/traveler_reject_reservation/{idReservation}": {
+            "put": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Annulation d une reservation par un voyageur avec le motif à l'appui",
+                "description": "Annulation d une reservation par un voyageur avec le motif à l'appui",
+                "operationId": "ad2f15c0cd5162fb3fe8c93c2c27ad03",
+                "parameters": [
+                    {
+                        "name": "idReservation",
+                        "in": "path",
+                        "description": "ID of the reservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "motif_rejet_traveler"
+                                ],
+                                "properties": {
+                                    "motif_rejet_traveler": {
+                                        "type": "string",
+                                        "example": "motif"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "reservation canceled successfully"
+                    },
+                    "404": {
+                        "description": "reservation not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/HousingAvailableAtDate/{date}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des logements disponible à une date donnée",
+                "description": "Liste des logements disponible à une date donnée",
+                "operationId": "81ff77759993c744c6149df9a0fbc8fb",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "path",
+                        "description": "date ",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements disponible à une date donnée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/review/index": {
             "get": {
                 "tags": [
@@ -9631,7 +10174,7 @@
         "/api/reservation/reviews/note/add": {
             "post": {
                 "tags": [
-                    "Reviews and Note"
+                    "Note et Commentaire sur les reservation (Logement)"
                 ],
                 "summary": "Stocke les notes pour chaque critère ainsi que le commentaire général de la réservation",
                 "description": "Stocke les notes pour chaque critère ainsi que le commentaire général de la réservation.",
@@ -9706,6 +10249,129 @@
                                             "additionalProperties": {
                                                 "type": "string"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/reviews/note/get": {
+            "get": {
+                "tags": [
+                    "Note et Commentaire sur les reservation (Logement)"
+                ],
+                "summary": "retourne les notes et commentaires des utilisateurs pour chaque logement . on retourne aussi la moyenne des notes pour chaque utilisateur sur un logement donné et la moyenne des notes sur un logement donné. ",
+                "operationId": "99aef618e145152ff88a8b38b7d37573",
+                "responses": {
+                    "200": {
+                        "description": "Succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Paramètre manquant ou invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/{housingId}/reviews/note/get": {
+            "get": {
+                "tags": [
+                    "Note et Commentaire sur les reservation (Logement)"
+                ],
+                "summary": "Récupérer les notes des utilisateurs et les commentaires associés à un logement spécifique",
+                "operationId": "7077ae5009ba2ea49a244f86e1793a8b",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "Identifiant du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails des réservations, des notes des utilisateurs et des commentaires associés",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou réservations non trouvés",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"

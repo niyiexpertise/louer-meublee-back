@@ -30,6 +30,8 @@ use App\Http\Controllers\HousingEquipmentController;
 use App\Http\Controllers\HousingPreferenceController;
 use App\Http\Controllers\HousingChargeController;
 use App\Http\Controllers\ReviewReservationController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\AdminReservationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -351,8 +353,6 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::get('/ShowDetailLogementAcceuil/{housing_id}', [HousingController::class, 'ShowDetailLogementAcceuil']);
             Route::get('/filterby/typehousing/{id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByTypehousing']);
             Route::get('/filterby/typeproperty/{id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByTypeproperty']);
-            Route::get('NonDisponible', [HousingController::class, 'ListeDesLogementsNonDisponible']);
-            Route::get('Disponible', [HousingController::class, 'ListeDesLogementsDisponible']);
             Route::get('/filterby/country/{country}', [HousingController::class, 'ListeDesLogementsFilterByCountry']);
             Route::get('/filterby/department/{department}', [HousingController::class, 'ListeDesLogementsFilterByDepartement']);
             Route::get('/filterby/city/{city}', [HousingController::class, 'ListeDesLogementsFilterByCity']);
@@ -430,6 +430,8 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::put('/block/{id}', [HousingController::class, 'block']);
             Route::put('/unblock/{id}', [HousingController::class, 'unblock']);
             Route::get('/index/ListeDesLogementsValideDisable', [AdminHousingController::class, 'ListeDesLogementsValideDisable']);
+            Route::get('/hote_with_many_housing', [AdminHousingController::class, 'hote_with_many_housing']);
+            Route::get('/country_with_many_housing', [AdminHousingController::class, 'country_with_many_housing']);
             Route::get('/getHousingDestroyedByHote', [AdminHousingController::class, 'getHousingDestroyedByHote']);
              //Gestion des categories côté admin
             Route::get('/category/default/invalid', [HousingCategoryFileController::class, 'getCategoryDefaultInvalidHousings']);
@@ -460,10 +462,29 @@ Route::group(['middleware' => ['role:traveler']], function () {
     //Gestion des reservation
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('reservation')->group(function () {
-            //Gestion des reservations côté hôte
-            Route::post('/reviews/note/add', [ReviewReservationController::class, 'AddReviewNote']);
-
             
+            Route::post('/reviews/note/add', [ReviewReservationController::class, 'AddReviewNote']);
+            Route::get('/reviews/note/get', [ReviewReservationController::class, 'ListeDesLogementsAvecNoteCommentaire']);
+            Route::get('/{housingId}/reviews/note/get', [ReviewReservationController::class, 'LogementAvecNotesEtCommentaires']);
+            Route::post('/store', [ReservationController::class, 'storeReservationWithPayment']);
+                    //hote
+                    Route::put('/hote_confirm_reservation/{idReservation}', [ReservationController::class, 'hote_confirm_reservation']);
+                    Route::put('/hote_reject_reservation/{idReservation}', [ReservationController::class, 'hote_reject_reservation']);
+                    //traveler
+                    Route::put('/traveler_reject_reservation/{idReservation}', [ReservationController::class, 'traveler_reject_reservation']);
+                    Route::get('/HousingAvailableAtDate/{date}', [ReservationController::class, 'HousingAvailableAtDate']);
+                    Route::get('/HousingAvailableBetweenDates/{dateDebut}/{dateFin}', [ReservationController::class, 'HousingAvailableBetweenDates']);
+
+                    //admin
+                    Route::get('/housing_with_many_reservation', [AdminReservationController::class, 'housing_with_many_reservation']);
+                    Route::get('/country_with_many_reservation', [AdminReservationController::class, 'country_with_many_reservation']);
+                    Route::get('/housing_without_reservation', [AdminReservationController::class, 'housing_without_reservation']);
+                    Route::get('/getReservationsCountByYear', [AdminReservationController::class, 'getReservationsCountByYear']);
+                    Route::get('/getReservationsByHousingId/{housingId}', [AdminReservationController::class, 'getReservationsByHousingIdForAdmin']);
+                    Route::get('/getAllReservation', [AdminReservationController::class, 'getAllReservation']);
+                    Route::get('/getUserReservations/{user}', [AdminReservationController::class, 'getUserReservationsForAdmin']);
+                    Route::get('/showDetailOfReservation/{idReservation}', [AdminReservationController::class, 'showDetailOfReservationForAdmin']);
+                
         });
         
     });

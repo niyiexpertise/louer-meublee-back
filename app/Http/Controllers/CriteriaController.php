@@ -47,7 +47,7 @@ class CriteriaController extends Controller
 *     path="/api/criteria/store",
 *     summary="Create a new criteria",
 *     tags={"Criteria"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
@@ -221,7 +221,7 @@ security={{"bearerAuth": {}}},
 *     path="/api/criteria/block/{id}",
 *     summary="Block a criteria",
 *     tags={"Criteria"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -272,7 +272,7 @@ security={{"bearerAuth": {}}},
 *     path="/api/criteria/unblock/{id}",
 *     summary="Unblock a criteria",
 *     tags={"Criteria"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",

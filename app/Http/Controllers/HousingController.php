@@ -109,23 +109,22 @@ class HousingController extends Controller
             $housingCharge->save();
         }
      }
-     if ($request->has('night_number')) {
-        foreach ($request->input('night_number') as $index => $nightNumber) {
+     if ($request->has('reduction_night_number')) {
+        foreach ($request->input('reduction_night_number') as $index => $nightNumber) {
             $reduction = new reduction();
             $reduction->night_number = $nightNumber;
-            $reduction->value = $request->input('value_night_number')[$index];
+            $reduction->value = $request->input('reduction_value_night_number')[$index];
             $reduction->housing_id = $housing->id;
             $reduction->save();
         }
     }    
- 
-     foreach ($request->input('number_of_reservation') as $index => $numberOfReservation) {
-         $promotion = new promotion();
-         $promotion->number_of_reservation = $numberOfReservation;
-         $promotion->value = $request->input('value_number_of_reservation')[$index];
-         $promotion->housing_id = $housing->id;
-         $promotion->save();
-     }
+    if ($request->has('number_of_reservation')) {
+        $promotion = new promotion();
+        $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
+        $promotion->value = $request->input('promotion_value');
+        $promotion->housing_id = $housing->id;
+        $promotion->save();
+    }
 
     if ($request->has('equipment_housing')) {
         foreach ($request->equipment_housing as $equipmentId) {
@@ -233,8 +232,8 @@ class HousingController extends Controller
             foreach ($adminUsers as $adminUser) {
                 $notification = new Notification();
                 $notification->user_id = $adminUser->id;
-                $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
-                $notification->save();
+                    $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
+                          $notification->save();
             }
  
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
@@ -709,76 +708,6 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         return response()->json(['data' => $data],200);
     }
-/**
- * @OA\Get(
- *     path="/api/logement/Disponible",
- *     tags={"Housing"},
- *     summary="Liste des logements disponibles",
- *     description="Récupère la liste des logements disponibles à la location.",
- *     security={{"bearerAuth":{}}},
- *     @OA\Response(
- *         response=200,
- *         description="Liste des logements disponibles",
- *         @OA\JsonContent(
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Aucun logement disponible trouvé"
- *     )
- * )
- */
-
-    public function  ListeDesLogementsDisponible()
-    {
-        $listings = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_disponible', 1)
-        ->get();
-    
-        $data = $this->formatListingsData($listings);
-
-        return response()->json(['data' => $data],200);
-    }
-/**
- * @OA\Get(
- *     path="/api/logement/NonDisponible",
- *     tags={"Housing"},
- *     summary="Liste des logements non disponibles",
- *     description="Récupère la liste des logements non disponibles .",
- *     security={{"bearerAuth":{}}},
- *     @OA\Response(
- *         response=200,
- *         description="Liste des logements non disponibles",
- *         @OA\JsonContent(
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Aucun logement non disponible trouvé"
- *     )
- * )
- */
-    public function  ListeDesLogementsNonDisponible()
-    {
-        $listings = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_disponible', 0)
-        ->get();
-    
-        $data = $this->formatListingsData($listings);
-        
-        return response()->json(['data' => $data],200);
-    }
-
 
  
  /**

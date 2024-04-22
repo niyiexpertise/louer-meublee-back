@@ -1,0 +1,653 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Charge;
+use App\Models\Housing;
+use App\Models\housing_preference;
+use App\Models\reduction;
+use App\Models\promotion;
+use App\Models\photo;
+use App\Models\housing_price;
+use App\Models\File;
+use App\Models\Notification;
+use App\Models\User;
+use App\Models\Equipment;
+use App\Models\Equipment_category;
+use App\Models\Housing_equipment;
+use App\Models\Housing_category_file;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File as F;
+use App\Models\Category;
+use App\Models\Housing_charge;
+use App\Models\Reservation;
+use App\Models\Payement;
+use Carbon\Carbon;
+
+class ReservationController extends Controller
+{
+
+    private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal, $valeur_paye, $montant_total, $id_transaction, $is_tranche_paiement) {
+        $housing = Housing::where('id', $housing_id)
+            ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+            ->where('is_updated', 0)
+            ->where('is_actif', 1)
+            ->where('is_destroy', 0)
+            ->first();
+    
+        if (!$housing) {
+            return ['is_allowed' => false, 'message' => 'Logement non trouvé ou a été supprimé ou désactivé par l\'hôte'];
+        }
+    
+        if (!$housing->is_accepted_animal && $number_of_domestical_animal > 0) {
+            return ['is_allowed' => false, 'message' => 'Le logement n\'accepte pas les animaux domestiques'];
+        }
+        $new_start = Carbon::parse($new_start_date);
+        $new_end = Carbon::parse($new_end_date);
+        if ($new_start >= $new_end) {
+            return ['is_allowed' => false, 'message' => 'La date de fin doit être postérieure à la date de début'];
+        }
+    
+    
+        $stay_duration = $new_end->diffInDays($new_start);
+    
+        if ($stay_duration < $housing->minimum_duration) {
+            return ['is_allowed' => false, 'message' => "La durée minimale de séjour est de {$housing->minimum_duration} jours"];
+        }
+    
+        if ($housing->maximum_duration && $stay_duration > $housing->maximum_duration) {
+            return ['is_allowed' => false, 'message' => "La durée maximale de séjour est de {$housing->maximum_duration} jours"];
+        }
+        if ($valeur_paye > $montant_total) {
+
+            return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
+        }
+        if (Payement::where('id_transaction', $id_transaction)->exists()) {
+            return ['is_allowed' => false, 'message' => 'L\'ID de transaction doit être unique. Cette transaction existe déjà.'];
+
+        }
+        if ($is_tranche_paiement == 1) {
+            $required_paid_value = $montant_total / 2;
+            
+            if ($valeur_paye < $required_paid_value) {
+                return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant total"];
+            }
+        } else {
+            if ($valeur_paye < $montant_total) {
+                return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant total"];
+            }
+        }
+        $existing_reservations = Reservation::where('housing_id', $housing_id)->get();
+    
+        foreach ($existing_reservations as $reservation) {
+            $time_before_reservation = $housing->time_before_reservation;
+    
+            $existing_end = Carbon::parse($reservation->date_of_end);
+    
+            $minimum_start_date = $existing_end->copy()->addDays($time_before_reservation);
+            $existing_start = Carbon::parse($reservation->date_of_starting);
+            if ($new_start <= $existing_end && $new_end >= $existing_start) {
+                return ['is_allowed' => false, 'message' => 'La nouvelle réservation chevauche une réservation existante'];
+            }
+            if ($new_start < $minimum_start_date && $new_end >= $minimum_start_date) {
+                return ['is_allowed' => false, 'message' => 'La nouvelle réservation commence trop tôt par rapport au délai requis'];
+            }    
+            
+            
+        }
+    
+        return ['is_allowed' => true, 'message' => 'Réservation autorisée'];
+    }
+    
+/**
+ * @OA\Post(
+ *     path="/api/reservation/store",
+ *     summary="Créer une réservation avec paiement",
+ *     description="Crée une réservation pour un logement avec un paiement associé. Accepte un fichier image pour la photo des voyageurs voulant réserver la réservation.",
+ *     tags={"Reservation"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"housing_id", "date_of_starting", "date_of_end", "number_of_adult", "code_pays", "telephone_traveler", "photo", "heure_arrivee_max", "heure_arrivee_min", "is_tranche_paiement", "montant_total", "valeur_payee", "payment_method", "id_transaction", "statut_paiement"},
+ *                 @OA\Property(
+ *                     property="housing_id",
+ *                     type="integer",
+ *                     example=1,
+ *                     description="ID du logement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="date_of_starting",
+ *                     type="string",
+ *                     format="date",
+ *                     example="2024-05-01",
+ *                     description="Date de début de la réservation"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="date_of_end",
+ *                     type="string",
+ *                     format="date",
+ *                     example="2024-05-07",
+ *                     description="Date de fin de la réservation"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_adult",
+ *                     type="integer",
+ *                     example=2,
+ *                     description="Nombre d'adultes"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_child",
+ *                     type="integer",
+ *                     example=1,
+ *                     description="Nombre d'enfants"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_domestical_animal",
+ *                     type="integer",
+ *                     example=0,
+ *                     description="Nombre d'animaux domestiques"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_baby",
+ *                     type="integer",
+ *                     example=2,
+ *                     description="Nombre de bébés"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="message_to_hote",
+ *                     type="string",
+ *                     example="Nous avons hâte de visiter votre logement!",
+ *                     description="Message à l'hôte"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="code_pays",
+ *                     type="string",
+ *                     example="FRA",
+ *                     description="Code du pays"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="telephone_traveler",
+ *                     type="integer",
+ *                     example=123456789,
+ *                     description="Numéro de téléphone du voyageur"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="photo",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Photo de la réservation"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="heure_arrivee_max",
+ *                     type="string",
+ *                     format="date-time",
+ *                     example="18:00",
+ *                     description="Heure d'arrivée maximale"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="heure_arrivee_min",
+ *                     type="string",
+ *                     format="date-time",
+ *                     example="14:00",
+ *                     description="Heure d'arrivée minimale"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_tranche_paiement",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="Paiement en plusieurs tranches"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="montant_total",
+ *                     type="number",
+ *                     format="float",
+ *                     example=500,
+ *                     description="Montant total"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="valeur_payee",
+ *                     type="number",
+ *                     format="float",
+ *                     example=250,
+ *                     description="Montant déjà payé"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="payment_method",
+ *                     type="string",
+ *                     example="Credit Card",
+ *                     description="Méthode de paiement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="id_transaction",
+ *                     type="string",
+ *                     example="TX123456789",
+ *                     description="Identifiant de la transaction"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="statut_paiement",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="Statut du paiement"
+ *                 ),
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Réservation et paiement créés avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Réservation et paiement créés avec succès"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=409,
+ *         description="Conflit de réservation ou problème de paiement",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Les dates de la réservation chevauchent celles d'une réservation existante"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé ou indisponible",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Logement non trouvé ou indisponible"),
+ *         )
+ *     )
+ * )
+*/
+
+    public function storeReservationWithPayment(Request $request)
+    {
+        $validatedData = $request->validate([
+            'housing_id' => 'required',
+            'date_of_starting' => 'required|date',
+            'date_of_end' => 'required|date',
+            'number_of_adult' => 'required|integer',
+            'number_of_child' => 'required|integer',
+            'number_of_domestical_animal' => 'required|integer',
+            'number_of_baby' => 'required|integer',
+            'message_to_hote' => 'nullable|string',
+            'code_pays' => 'required|string',
+            'telephone_traveler' => 'required|integer',
+            'photo' => 'required|file|mimes:jpg,jpeg,png',
+            'heure_arrivee_max' => 'required|date_format:H:i',
+            'heure_arrivee_min' => 'required|date_format:H:i',
+            'is_tranche_paiement' => 'required',
+            'montant_total' => 'required|numeric',
+            'valeur_payee' => 'required|numeric',
+            'payment_method' => 'required|string',
+            'id_transaction' => 'required|string',
+            'statut_paiement' =>'required',
+            'photo' => 'file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+        $user_id=Auth::id();
+    
+    $validation_result =$this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'],$validatedData['date_of_end'], $validatedData['number_of_domestical_animal'],$validatedData['valeur_payee'],$validatedData['montant_total'],$validatedData['id_transaction'],$validatedData['is_tranche_paiement'] );
+    if (!$validation_result['is_allowed']) {
+        return response()->json(['message' => $validation_result['message']], 409);
+    }    
+    
+
+        $reservation = Reservation::create([
+            'housing_id' => $validatedData['housing_id'],
+            'date_of_reservation' => now(),
+            'date_of_starting' => $validatedData['date_of_starting'],
+            'date_of_end' => $validatedData['date_of_end'],
+            'number_of_adult' => $validatedData['number_of_adult'],
+            'number_of_child' => $validatedData['number_of_child'],
+            'number_of_domestical_animal' => $validatedData['number_of_domestical_animal'],
+            'number_of_baby' => $validatedData['number_of_baby'],
+            'message_to_hote' => $validatedData['message_to_hote'] ?? null,
+            'code_pays' => $validatedData['code_pays'],
+            'telephone_traveler' => $validatedData['telephone_traveler'],
+            'heure_arrivee_max' => $validatedData['heure_arrivee_max'],
+            'heure_arrivee_min' => $validatedData['heure_arrivee_min'],
+            'is_tranche_paiement' => $validatedData['is_tranche_paiement'],
+            'montant_total' => $validatedData['montant_total'],
+            'valeur_payee' => $validatedData['valeur_payee'],
+            'is_confirmed_hote' => false,
+            'is_integration' => false,
+            'is_rejected_traveler' => false,
+            'is_rejected_hote' => false,
+            'user_id'=> $user_id,
+            'photo'=> 'defaut',
+        ]);
+    
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
+            $photoPath = $photo->move(public_path('image/photo_reservation'), $photoName);
+            $photoUrl = url('/image/photo_reservation/' . $photoName);
+    
+            $reservation->photo = $photoUrl;
+            $reservation->save();
+        }
+    
+        $paymentData = [
+            'reservation_id' => $reservation->id,
+            'amount' => $validatedData['valeur_payee'],
+            'payment_method' => $validatedData['payment_method'],
+            'id_transaction' => $validatedData['id_transaction'],
+            'statut' => $validatedData['statut_paiement'],
+            'is_confirmed' => false,
+            'is_canceled' => false,
+        ];
+    
+        if ($request->has('country')) {
+            $paymentData['country'] = $request->input('country');
+        }
+    
+        $payment = Payement::create($paymentData);
+        $notificationName="Félicitation!Vous venez de faire une reservation.D'ici 24h,elle sera confirmée ou rejeté par l'hôte";
+        $housing = Housing::where('id', $validatedData['housing_id'])
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->first();
+        $notification = new Notification([
+           'name' => $notificationName,
+           'user_id' => $user_id,
+          ]);
+          $notificationName = "Bonne nouvelle! Votre logement a été reservé par un utilisateur.Accéder à la section de reservation pour confirmer la reservation";
+             $notification = new Notification([
+           'name' => $notificationName,
+           'user_id' => $housing->user_id,
+             ]);
+
+        return response()->json([
+            'message' => 'Réservation et paiement créés avec succès',
+            'reservation' => $reservation,
+            'payment' => $payment,
+        ], 201);
+    }
+   
+    
+    /**
+     * @OA\Put(
+     *     path="/api/reservation/hote_confirm_reservation/{idReservation}",
+     *     summary="Confirmer la reservation d un voyageur sur un de ses biens",
+     * description="Confirmer la reservation d un voyageur sur un de ses biens",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="idReservation",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the reservation",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="reservation confirmed successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="reservation not found"
+     *     )
+     * )
+     */
+    public function hote_confirm_reservation($idReservation){
+        try{
+          $reservation = Reservation::find($idReservation);
+          if(!$reservation){
+            return response()->json([
+                'message' => 'Reservation not found'
+            ], 404);
+          }
+          if (!($reservation->housing->user_id == Auth::user()->id)) {
+            return response()->json([
+                'message' => 'Impossible de confirmer la réservation d un logement qui ne vous appartient pas'
+            ]);
+          }
+          if ($reservation->is_rejected_hote) {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas confirmer une réservation déjà rejeter'
+            ]);
+          }
+          if ($reservation->is_confirmed_hote) {
+            return response()->json([
+                'message' => 'Reservation already confirmed'
+            ]);
+          }
+          Reservation::whereId($idReservation)->update(['is_confirmed_hote'=>1]);
+          $notification = new Notification();
+          $notification->user_id = $reservation->user_id;
+          $notification->name = 'Votre reservation vient d\être confirmée par l\'hôte';
+          $notification->save();
+          return response()->json([
+            'message' => 'Reservation confirmed successfully'
+        ]);
+        } catch(Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+
+     }
+
+               /**
+     * @OA\Put(
+     *     path="/api/reservation/hote_reject_reservation/{idReservation}",
+     *     summary="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
+     * description="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="idReservation",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the reservation",
+     *         @OA\Schema(type="integer")
+     *     ),
+  *@OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"motif_rejet_hote"},
+     *             @OA\Property(property="motif_rejet_hote", type="string", example="motif")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="reservation rejected successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="reservation not found"
+     *     )
+     * )
+     */
+     public function hote_reject_reservation($idReservation, Request $request){
+        try{
+            $request->validate([
+                'motif_rejet_hote' =>'required | string',
+            ]);
+            $reservation = Reservation::find($idReservation);
+          if(!$reservation){
+            return response()->json([
+                'message' => 'Reservation not found'
+            ], 404);
+          }
+          if (!($reservation->housing->user_id == Auth::user()->id)) {
+            return response()->json([
+                'message' => 'Impossible de rejeter la réservation d un logement qui ne vous appartient pas'
+            ]);
+          }
+          if ($reservation->is_confirmed_hote) {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas rejeter une réservation déjà confirmer'
+            ]);
+          }
+
+          if ($reservation->is_rejected_hote) {
+            return response()->json([
+                'message' => 'Reservation déjà rejeté'
+            ]);
+          }
+          Reservation::whereId($idReservation)->update([
+            'is_rejected_hote'=>1,
+            'motif_rejet_hote'=>$request->motif_rejet_hote
+          ]);
+          $notification = new Notification();
+          $notification->user_id = $reservation->user_id;
+          $notification->name = 'Votre reservation concernant '.$reservation->housing->name.'  vient d\être rejetée  par l\'hôte pour le motif suivant << '.$request->motif_rejet_hote. ">>";
+          $notification->save();
+          $adminUsers = User::where('is_admin', 1)->get();
+          foreach ($adminUsers as $adminUser) {
+              $notification = new Notification();
+              $notification->user_id = $adminUser->id;
+              $notification->name = 'Une reservation vient d\être annulé  par l hote pour le motif suivant << '.$request->motif_rejet_hote. ">>  et le logement appartient à ".$reservation->housing->user->firstname." ".$reservation->housing->user->lastname." il a pour identifiant ".$reservation->housing->user->id;
+              $notification->save();
+          }
+          return response()->json([
+            'message' => 'Reservation rejected successfully'
+        ]);
+
+
+          } catch(Exception $e) {
+              return response()->json([
+                  'error' => 'An error occurred',
+                  'message' => $e->getMessage()
+              ], 500);
+          }
+     }
+
+
+              /**
+     * @OA\Put(
+     *     path="/api/reservation/traveler_reject_reservation/{idReservation}",
+     *     summary="Annulation d une reservation par un voyageur avec le motif à l'appui",
+     * description="Annulation d une reservation par un voyageur avec le motif à l'appui",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="idReservation",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the reservation",
+     *         @OA\Schema(type="integer")
+     *     ),
+  *@OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"motif_rejet_traveler"},
+     *             @OA\Property(property="motif_rejet_traveler", type="string", example="motif")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="reservation canceled successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="reservation not found"
+     *     )
+     * )
+     */
+
+     public function traveler_reject_reservation($idReservation, Request $request){
+        try{
+            $request->validate([
+                'motif_rejet_traveler' =>'required | string',
+            ]);
+            $reservation = Reservation::find($idReservation);
+          if(!$reservation){
+            return response()->json([
+                'message' => 'Reservation not found'
+            ], 404);
+          }
+          if (!($reservation->user_id == Auth::user()->id)) {
+            return response()->json([
+                'message' => 'Impossible d annuler la réservation d un logement dont vous n avez pas fait la réservation'
+            ]);
+          }
+          if(!($reservation->is_confirmed_hote)) {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas annuler une réservation qui n est pas confirmer par l hote'
+            ]);
+          }
+
+          if ($reservation->is_rejected_hote) {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas confirmer un reservation déjà rejeté'
+            ]);
+          }
+          Reservation::whereId($idReservation)->update([
+            'is_rejected_traveler'=>1,
+            'motif_rejet_traveler'=>$request->motif_rejet_traveler
+          ]);
+          $notification = new Notification();
+          $notification->user_id = $reservation->housing->user_id;
+          $notification->name = 'Une reservation vient d\être annulé  par le client pour le motif suivant << '.$request->motif_rejet_traveler. ">>";
+          $notification->save();
+          $adminUsers = User::where('is_admin', 1)->get();
+                    foreach ($adminUsers as $adminUser) {
+                        $notification = new Notification();
+                        $notification->user_id = $adminUser->id;
+                        $notification->name = 'Une reservation vient d\être annulé  par un client ayant pour id '.$reservation->user->id.'  pour le motif suivant << '.$request->motif_rejet_traveler. ">>  et le logement appartient à ".$reservation->housing->user->firstname." ".$reservation->housing->user->lastname." il a pour identifiant ".$reservation->housing->user->id;
+                        $notification->save();
+                    }
+          return response()->json([
+            'message' => 'Reservation canceled successfully'
+        ]);
+
+
+          } catch(Exception $e) {
+              return response()->json([
+                  'error' => 'An error occurred',
+                  'message' => $e->getMessage()
+              ], 500);
+          }
+     }
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/reservation/HousingAvailableAtDate/{date}",
+     *     summary="Liste des logements disponible à une date donnée",
+     * description="Liste des logements disponible à une date donnée",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *   @OA\Parameter(
+     *         name="date",
+     *         in="path",
+     *         required=true,
+     *         description="date ",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des logements disponible à une date donnée"
+     *
+     *     )
+     * )
+     */
+public function HousingAvailableAtDate($date)
+{
+
+    $availableHousings = Housing::whereDoesntHave('reservation', function ($query) use ($date) {
+        $query->where('date_of_starting', '<=', $date)
+              ->where('date_of_end', '>=', $date);
+    })->with('reservation')
+    ->where('status', 'verified')
+    ->where('is_deleted', 0)
+    ->where('is_updated', 0)
+    ->where('is_blocked', 0)
+    ->where('is_actif', 1)
+    ->get();
+
+    return response()->json(['data' => $availableHousings]);
+}
+
+}

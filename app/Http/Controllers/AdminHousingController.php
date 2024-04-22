@@ -1129,6 +1129,56 @@ public function ListeDesLogementsValideDisable()
           
         }
     
-        
+  /**
+     * @OA\Get(
+     *     path="/api/logement/country_with_many_housing",
+     *     summary="Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
+     * description="Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
+     *     tags={"Housing"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Top 10 des pays avec le plus grand nombre de logement sur la plateforme"
+     *
+     *     )
+     * )
+     */
+    public function country_with_many_housing(){
+        $topCountries = Housing::select('country', DB::raw('COUNT(id) as housing_count'))
+        ->groupBy('country')
+        ->orderByDesc('housing_count')
+        ->limit(10)
+        ->get();
+        return response()->json([
+            'message' => $topCountries
+        ]);
+     }
+   
+     
+           /**
+     * @OA\Get(
+     *     path="/api/logement/hote_with_many_housing",
+     *     summary="Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
+     * description="Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
+     *     tags={"Housing"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement"
+     *
+     *     )
+     * )
+     */
+    public function hote_with_many_housing(){
+        $topHotes = User::select('users.id', 'users.firstname', 'users.lastname', DB::raw('COUNT(housings.id) as housing_count'))
+    ->leftJoin('housings', 'users.id', '=', 'housings.user_id')
+    ->groupBy('users.id', 'users.firstname', 'users.lastname')
+    ->orderByDesc('housing_count')
+    ->limit(10)
+    ->get();
+    return response()->json([
+        'message' => $topHotes
+    ]);
+     }
 
 }

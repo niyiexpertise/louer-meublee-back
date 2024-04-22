@@ -7,13 +7,15 @@ use App\Models\Category;
 use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Housing;
+use App\Models\Reservation;
 class ReviewReservationController extends Controller
 {
 
  /**
  * @OA\Post(
  *     path="/api/reservation/reviews/note/add",
- *     tags={"Reviews and Note"},
+ *   tags={"Note et Commentaire sur les reservation (Logement)"},
  *     summary="Stocke les notes pour chaque critère ainsi que le commentaire général de la réservation",
  *     description="Stocke les notes pour chaque critère ainsi que le commentaire général de la réservation.",
  *     security={{"bearerAuth": {}}},
@@ -84,4 +86,208 @@ class ReviewReservationController extends Controller
 
     return response()->json(['message' => 'Notes et commentaire ajoutés avec succès']);
 }
+
+/**
+ * @OA\Get(
+ *   path="/api/reservation/reviews/note/get",
+ *   summary="retourne les notes et commentaires des utilisateurs pour chaque logement . on retourne aussi la moyenne des notes pour chaque utilisateur sur un logement donné et la moyenne des notes sur un logement donné. ",
+ *   tags={"Note et Commentaire sur les reservation (Logement)"},
+ *   security={{"bearerAuth": {}}},
+ *   @OA\Response(
+ *     response=200,
+ *     description="Succès",
+ *     @OA\JsonContent(
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=404,
+ *     description="Réservation non trouvée",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", description="Message d'erreur")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=400,
+ *     description="Paramètre manquant ou invalide",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="error", type="string", description="Message d'erreur")
+ *     )
+ *   )
+ * )
+ */
+public function ListeDesLogementsAvecNoteCommentaire() {
+    $housings = Housing::all();
+
+    if ($housings->isEmpty()) {
+        return response()->json(['message' => 'Aucun logement trouvé'], 404);
+    }
+
+    $housingSummary = [];
+
+    foreach ($housings as $housing) {
+        $reservations = Reservation::where('housing_id', $housing->id)->get();
+
+        if ($reservations->isEmpty()) {
+            continue; 
+        }
+
+        $reservationSummaries = [];
+        $totalAverage = 0;
+        $reservationCount = 0;
+
+        foreach ($reservations as $reservation) {
+            $notes = Note::where('reservation_id', $reservation->id)
+                ->with(['user', 'criteria'])
+                ->get();
+
+            $review = Review_reservation::where('reservation_id', $reservation->id)->first();
+            $reservationComment = $review ? $review->content : null;
+
+            if ($notes->isEmpty()) {
+                continue; 
+            }
+
+            $userNote = $notes->first();
+            $user = $userNote->user;
+
+            $criteriaNotes = $notes->map(function($note) {
+                return [
+                    'criteria_id' => $note->criteria_id,
+                    'criteria_name' => $note->criteria->name,
+                    'note' => $note->note,
+                ];
+            });
+
+            $userAverageScore = $criteriaNotes->avg('note');
+
+            $totalAverage += $userAverageScore;
+            $reservationCount++;
+
+            $reservationSummaries[] = [
+                'reservation_id' => $reservation->id,
+                'user_note_review' => [
+                    'user_detil' => $user,
+                    'notes' => $criteriaNotes,
+                    'average_score' => $userAverageScore,
+                    'reservation_comment' => $reservationComment,
+                    
+                ],
+            ];
+        }
+
+        $housingAverage = $reservationCount > 0 ? ($totalAverage / $reservationCount) : 0;
+
+        $housingSummary[] = [
+            'housing_id' => $housing->id,
+            'housing_name' => $housing->name,
+            'reservations' => $reservationSummaries,
+            'housing_average' => $housingAverage,
+        ];
+    }
+
+    return response()->json(['housing_summary' => $housingSummary], 200);
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/reservation/{housingId}/reviews/note/get",
+ *     summary="Récupérer les notes des utilisateurs et les commentaires associés à un logement spécifique",
+ *     tags={"Note et Commentaire sur les reservation (Logement)"},
+ *   security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="Identifiant du logement",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Détails des réservations, des notes des utilisateurs et des commentaires associés",
+ *         @OA\JsonContent(
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement ou réservations non trouvés",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", description="Message d'erreur")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", description="Message d'erreur")
+ *         )
+ *     )
+ * )
+ */
+public function LogementAvecNotesEtCommentaires($housingId) {
+    $housing = Housing::find($housingId);
+
+    if (!$housing) {
+        return response()->json(['message' => 'Logement non trouvé'], 404);
+    }
+
+    $reservations = Reservation::where('housing_id', $housingId)->get();
+
+    if ($reservations->isEmpty()) {
+        return response()->json(['message' => 'Aucune réservation associée à ce logement'], 404);
+    }
+
+    $reservationSummaries = [];
+    $totalAverage = 0;
+    $reservationCount = 0;
+
+    foreach ($reservations as $reservation) {
+        $notes = Note::where('reservation_id', $reservation->id)
+            ->with(['user', 'criteria'])
+            ->get();
+
+        $review = Review_reservation::where('reservation_id', $reservation->id)->first();
+        $reservationComment = $review ? $review->content : null;
+
+        if ($notes->isEmpty()) {
+            continue; 
+        }
+
+        $userAverageScore = $notes->avg('note');
+
+        $user = $notes->first()->user; 
+        $criteriaNotes = $notes->map(function($note) {
+            return [
+                'criteria_id' => $note->criteria_id,
+                'criteria_name' => $note->criteria->name,
+                'note' => $note->note,
+                'content' => $note->content,
+            ];
+        });
+
+        $totalAverage += $userAverageScore;
+        $reservationCount++;
+
+        $reservationSummaries[] = [
+            'reservation_id' => $reservation->id,
+            'user_note_review' => [
+                'user_detil' => $user,
+                'notes' => $criteriaNotes,
+                'average_score' => $userAverageScore,
+                'reservation_comment' => $reservationComment,
+                
+            ],
+        ];
+    }
+
+    $housingAverage = $reservationCount > 0 ? ($totalAverage / $reservationCount) : 0;
+
+    return response()->json([
+        'housing_id' => $housingId,
+        'housing_name' => $housing->name,
+        'reservations' => $reservationSummaries,
+        'housing_average' => $housingAverage,
+    ], 200);
+}
+
+
 }

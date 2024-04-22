@@ -242,7 +242,7 @@ public function store(Request $request)
         *     path="/api/review/block/{id}",
         *     summary="Block a review",
         *     tags={"Review"},
-        security={{"bearerAuth": {}}},
+        *security={{"bearerAuth": {}}},
         *     @OA\Parameter(
         *         name="id",
         *         in="path",

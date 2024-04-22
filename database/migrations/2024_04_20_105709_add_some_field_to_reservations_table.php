@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reservations', function (Blueprint $table) {
-            $table->text('message_to_hote');
             $table->string('code_pays');
             $table->integer('telephone_traveler');
             $table->string('photo');

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('payment_method')->nullable();
             $table->string('id_transaction');
             $table->boolean('statut');
+            $table->string('country')->nullable();
+            $table->boolean('is_confirmed');
+            $table->boolean('is_canceled');
             $table->timestamps();
         });
     }

@@ -93,47 +93,98 @@ public function index()
 
 }
 
+    /**
+     * @OA\Post(
+     *   path="/api/verificationdocument/store",
+     *   summary="Ajouter des Documents de Vérification",
+     *   description="Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
+     *   tags={"verification_document"},
+    *  security={{"bearerAuth": {}}},
+     *   @OA\RequestBody(
+     *     required=true,
+     *     description="Requête avec des fichiers à uploader",
+     *     @OA\MediaType(
+     *       mediaType="multipart/form-data",
+     *       @OA\Schema(
+     *         type="object",
+     *         required={"id_document", "image_piece"},
+     *         properties={
+     *           @OA\Property(
+     *             property="id_document",
+     *             type="array",
+     *             description="Liste des IDs des documents",
+     *             @OA\Items(type="integer")
+     *           ),
+     *           @OA\Property(
+     *             property="image_piece",
+     *             type="array",
+     *             description="Liste des fichiers image",
+     *             @OA\Items(type="string", format="binary")
+     *           ),
+     *         }
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Documents créés avec succès",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="data",
+     *           type="string",
+     *           example="Verification documents créés avec succès."
+     *         ),
+     *         @OA\Property(
+     *           property="verification_documents",
+     *           type="array",
+     *           description="Documents de vérification créés",
+     *           @OA\Items(
+     *             type="object",
+     *             properties={
+     *               @OA\Property(property="user_id", type="integer"),
+     *               @OA\Property(property="document_id", type="integer"),
+     *               @OA\Property(property="path", type="string", format="uri"),
+     *             }
+     *           )
+     *         ),
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=400,
+     *     description="Mauvaise requête",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="error",
+     *           type="string",
+     *           example="Les tableaux id_document et image_piece doivent avoir la même longueur."
+     *         ),
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erreur du serveur",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="error",
+     *           type="string",
+     *           example="Erreur interne du serveur."
+     *         ),
+     *       }
+     *     )
+     *   )
+     * )
+     */
 
 
 
-/**
- * @OA\Post(
- *     path="/api/verificationdocument/store",
- *     summary="Enregistrer des documents de vérification avec des images",
- *     tags={"verification_document"},
- * security={{"bearerAuth": {}}},
- *     @OA\RequestBody(
- *         required=true,
- *         description="Données pour enregistrer les documents de vérification",
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 @OA\Property(
- *                     property="id_document[]",
- *                     description="ID du document",
- *                     type="array",
- *                     @OA\Items(type="integer"),
- *                 ),
- *                 @OA\Property(
- *                     property="image_piece[]",
- *                     description="Image de la pièce",
- *                     type="array",
- *                     @OA\Items(type="string", format="binary"),
- *                 ),
- *                 required={"id_document", "image_piece"}
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Documents de vérification créés avec succès"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Erreur de validation"
- *     )
- * )
- */
 public function store(Request $request)
 {
     try {
@@ -268,6 +319,7 @@ public function store(Request $request)
      *     summary="Valider les documents en un coup ,bref valider tout en un clic",
      *     description="Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.",
      *     tags={"Validation documents pour etre hôte"},
+      * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         description="Données requises pour la validation des documents",
@@ -347,6 +399,7 @@ public function validateDocuments(Request $request)
  *     path="/api/verificationdocument/hote/valider/one",
  *     summary="Valider un document de vérification pour devenir hôte(ici on valide document par document)",
  *     tags={"Validation documents pour etre hôte"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         description="Données pour valider un document de vérification",
@@ -564,7 +617,7 @@ public function changeDocument(Request $request)
 
             $verificationDocument->path = $path_url;
             $verificationDocument->save();
-
+                     
             return response()->json(['message' => 'Document changé avec succès.'], 200);
         } else {
             return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);

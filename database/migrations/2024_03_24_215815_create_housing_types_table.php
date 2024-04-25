@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description');
+            $table->string('icone')->nullable();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

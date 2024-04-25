@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('icone')->nullable();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
+            $table->boolean('is_verified')->comment('Indique si la catégorie est vérifiée');
+
             $table->timestamps();
         });
 

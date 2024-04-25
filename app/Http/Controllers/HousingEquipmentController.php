@@ -8,6 +8,7 @@ use App\Models\Housing;
 use App\Models\housing_preference;
 use App\Models\reduction;
 use App\Models\promotion;
+use App\Models\Category;
 use App\Models\photo;
 use App\Models\housing_price;
 use App\Models\File;
@@ -29,15 +30,15 @@ class HousingEquipmentController extends Controller
 
 /**
  * @OA\Get(
- *     path="/api/logement/{housingEquipmentId}/equipements",
+ *     path="/api/logement/{housingId}/equipements",
  *     tags={"Housing Equipment"},
  *     summary="Récupérer les équipements associés à un logement donné",
- *     description="Récupère les équipements associés à un logement spécifié en fonction de Id housing_equipment.",
+ *     description="Récupère les équipements associés à un logement spécifié en fonction de housing_id.",
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
- *         name="housingEquipmentId",
+ *         name="housingId",
  *         in="path",
- *         description="L'ID du HousingEquipment pour lequel récupérer les équipements",
+ *         description="L'ID du Housingpour lequel récupérer les équipements",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
@@ -105,22 +106,29 @@ public function equipementsHousing($housingId)
         return response()->json(['message' => 'Aucun équipement associé à ce logement'], 404);
     }
 
-    $equipments = [];
-    
-    foreach ($housingEquipments as $housingEquipment) {
-        $equipment = Equipment::find($housingEquipment->equipment_id);
-        
-        $equipments[] = [
-            'id_housing' => $housingEquipment->housing_id,
-            'id_housing_equipment' => $housingEquipment->id,
-            'id_equipment' => $equipment->id,
-            'name' => $equipment->name,
-            'is_verified' => $equipment->is_verified,
-        ];
-    }
+    $equipments_by_category = $housingEquipments
+        ->groupBy('category_id')
+        ->map(function ($equipments_in_category, $category_id) {
+            $category = Category::find($category_id);
+            return [
+                'category_id' => $category_id,
+                'category_name' => $category ? $category->name : 'Sans catégorie',
+                'equipments' => $equipments_in_category->map(function ($housingEquipment) {
+                    $equipment = Equipment::find($housingEquipment->equipment_id);
+                    return [
+                        'id_housing' => $housingEquipment->housing_id,
+                        'id_housing_equipment' => $housingEquipment->id,
+                        'id_equipment' => $equipment->id,
+                        'name' => $equipment ? $equipment->name : 'Inconnu',
+                        'is_verified' => $equipment ? $equipment->is_verified : false,
+                    ];
+                })->toArray(),
+            ];
+        });
 
-    return response()->json(['data' => $equipments], 200);
+    return response()->json(['data' => $equipments_by_category->values()->toArray()], 200);
 }
+
 /**
  * @OA\Delete(
  *     path="/api/logement/equipement",
@@ -246,6 +254,7 @@ public function DeleteEquipementHousing(Request $request)
                     }
                     $housingEquipment = new Housing_equipment();
                     $housingEquipment->equipment_id = $equipment->id;
+                    $housingEquipment->category_id = $request->category_id;
                     $housingEquipment->housing_id = $housingId;
                     $housingEquipment->is_verified = false;
                     $housingEquipment->save();
@@ -293,8 +302,13 @@ public function DeleteEquipementHousing(Request $request)
  *                     type="array",
  *                     @OA\Items(type="integer"),
  *                     description="Tableau contenant les IDs des équipements du logement à supprimer"
- *                 )
-
+ *                 ),
+ * *         @OA\Property(
+ *                     property="categoryId",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     description="Tableau contenant les IDs des categories des équipements du logement à supprimer"
+ *                 ),
  *       )
  *     )
  *   ),
@@ -308,57 +322,71 @@ public function DeleteEquipementHousing(Request $request)
          *     )
          * )
          */
-    public function addEquipmentToHousing(Request $request){
-        try{
+        public function addEquipmentToHousing(Request $request)
+        {
+            try {
 
-            
-            $e=[];
-            $m=[];
-             foreach ($request->input('equipmentId') as $equipment) {
-                if (!Equipment::find($equipment)) {
-                    return response()->json(['message' => 'un equipment non trouvé'],404);
+                if (count($request->input('equipmentId')) !== count($request->input('categoryId'))) {
+                    return response()->json(['message' => 'Les équipements et les catégories doivent avoir le même nombre d\'éléments.'], 400);
                 }
-                $existingAssociation = housing_equipment::where('housing_id',  $request->housingId)
-                ->where('equipment_id', $equipment)
-                ->exists();
-                if ($existingAssociation) {
-                    $e[] = [
-                        Equipment::find($equipment)->name . ' existe déjà dans le logement',
-                    ];
-                }else{
-                    $m[] = [
-                        Equipment::find($equipment)->name . ' a ete avec succes au logement',
-                    ];
-                    $housingEquipment = new housing_equipment();
-                    $housingEquipment->housing_id = $request->housingId;
-                    $housingEquipment->equipment_id = $equipment;
-                    $housingEquipment->is_verified = false;
-                    $housingEquipment->save();
-                }
-            }
-          
-            $userId = Auth::id();
-            $notification = new Notification([
-                'name' => "Votre ajout d'équipement(s) a été pris en compte. l'administrateur validera dans moin de 48h",
-                'user_id' => $userId,
-               ]);
-               $notification->save();
-             $adminUsers = User::where('is_admin', 1)->get();
-                    foreach ($adminUsers as $adminUser) {
-                        $notification = new Notification();
-                        $notification->user_id = $adminUser->id;
-                        $notification->name = "Un hôte  vient de faire un ajout de nouveau(x) équipement(s) .Veuilez vous connecter pour valider";
-                        $notification->save();
+        
+                $equipmentIds = $request->input('equipmentId');
+                $categoryIds = $request->input('categoryId');
+                
+                $m = [];
+                $e = [];
+        
+                foreach ($equipmentIds as $index => $equipmentId) {
+                    $categoryId = $categoryIds[$index];
+        
+                    if (!Equipment::find($equipmentId)) {
+                        return response()->json(['message' => 'L\'équipement avec ID ' . $equipmentId . ' n\'a pas été trouvé.'], 404);
                     }
-            
-            return response()->json([
-                "message" =>  empty($m) ? '  error' : $m,
-                'error' => empty($e) ? ' no error' : $e
-            ],200);
-    } catch(Exception $e) {    
-        return response()->json($e->getMessage(),500);
-    }
-}
+        
+                    $existingAssociation = housing_equipment::where('housing_id', $request->housingId)
+                        ->where('equipment_id', $equipmentId)
+                        ->where('category_id', $categoryId)
+                        ->exists();
+                    
+                    if ($existingAssociation) {
+                        $e[] = Equipment::find($equipmentId)->name . ' existe déjà dans la catégorie ' . Category::find($categoryId)->name;
+                    } else {
+                        $m[] = Equipment::find($equipmentId)->name . ' a été ajouté avec succès au logement.';
+        
+                        $housingEquipment = new housing_equipment();
+                        $housingEquipment->housing_id = $request->housingId;
+                        $housingEquipment->equipment_id = $equipmentId;
+                        $housingEquipment->category_id = $categoryId;
+                        $housingEquipment->is_verified = false;
+                        $housingEquipment->save();
+                    }
+                }
+        
+                $userId = Auth::id();
+                $userNotification = new Notification([
+                    'name' => "Votre ajout d'équipement(s) a été pris en compte. L'administrateur validera dans moins de 48 heures.",
+                    'user_id' => $userId,
+                ]);
+                $userNotification->save();
+        
+                $adminUsers = User::where('is_admin', 1)->get();
+                foreach ($adminUsers as $adminUser) {
+                    $adminNotification = new Notification();
+                    $adminNotification->user_id = $adminUser->id;
+                    $adminNotification->name = "Un hôte vient de faire un ajout de nouveaux équipements. Veuillez vous connecter pour valider.";
+                    $adminNotification->save();
+                }
+        
+                return response()->json([
+                    'message' => empty($m) ? 'Erreur' : $m,
+                    'error' => empty($e) ? 'Pas d\'erreur' : $e,
+                ], 200);
+                
+            } catch (Exception $ex) {
+                return response()->json(['message' => 'Erreur interne du serveur'], 500);
+            }
+        }
+        
 
 
 /**
@@ -404,31 +432,42 @@ public function DeleteEquipementHousing(Request $request)
  *     )
  * )
  */
-public function ListHousingEquipmentInvalid($housingId){
-    $housingEquipment = Housing_equipment::where('housing_id', $housingId)
-                                        ->where('is_verified', false)
-                                        ->get();
+public function ListHousingEquipmentInvalid($housingId)
+{
+    // Récupérer tous les équipements qui ne sont pas vérifiés pour un logement donné
+    $housingEquipments = Housing_equipment::where('housing_id', $housingId)
+                                          ->where('is_verified', false)
+                                          ->get();
     $equipmentT = [];
-    foreach ($housingEquipment as $equipment) {
-        if ($equipment->equipment->is_verified == true ) {
+    foreach ($housingEquipments as $housingEquipment) {
+
+        $equipment = $housingEquipment->equipment;
+
+        if ($equipment->is_verified == true) {
+            $category = Category::find($housingEquipment->category_id);
+
             $equipmentT[] = [
-                'id_housing_equipment' => $equipment->id,
+                'id_housing_equipment' => $housingEquipment->id,
                 'housing_id' => $housingId,
-                'equipment_id' => $equipment->equipment->id,
-                'name' => $equipment->equipment->name,
-                'is_deleted' => $equipment->equipment->is_deleted,
-                'is_blocked' => $equipment->equipment->is_blocked,
-                'is_verified' => $equipment->equipment->is_verified,
-                'updated_at' => $equipment->equipment->updated_at,
-                'created_at' => $equipment->equipment->created_at,
-                'icone' => $equipment->equipment->icone,
+                'equipment_id' => $equipment->id,
+                'name' => $equipment->name,
+                'category_id' => $category->id,
+                'category_name' => $category->name,
+                'is_deleted' => $equipment->is_deleted,
+                'is_blocked' => $equipment->is_blocked,
+                'is_verified' => $equipment->is_verified,
+                'updated_at' => $equipment->updated_at,
+                'created_at' => $equipment->created_at,
+                'icone' => $equipment->icone,
             ];
         }
     }
+
     return response()->json([
-        "data" => $equipmentT
-    ],200);
+        'data' => $equipmentT,
+    ], 200);
 }
+
 
 
 /**
@@ -529,33 +568,43 @@ public function makeVerifiedHousingEquipment(string $id)
  */
 
 
-public function ListEquipmentForHousingInvalid($housingId){
-    $invalidEquipments = Housing::find($housingId)->housing_equipment()->whereHas('equipment', function ($query) {
-        $query->where('is_verified', false);
-    })->get();
-    $equipmentT = [];
-    // return response()->json($invalidEquipments);
-    foreach ($invalidEquipments as $housingEquipment) {
-        $equipment = $housingEquipment->equipment;
-        $equipmentT[] = [
-            'equipment_id' => $equipment->id,
-            'housing_id' => $housingId,
-            'name' => $equipment->name,
-            'user_detail' => $housingEquipment->housing->user,
-            'is_verified' => $equipment->is_verified,
-            'is_deleted' => $equipment->is_deleted,
-            'is_blocked' => $equipment->is_blocked,
-            'created_at' => $equipment->created_at,
-            'updated_at' => $equipment->updated_at,
-           
-        ];
-        // return response()->json($equipment);
-    }
+ public function ListEquipmentForHousingInvalid($housingId)
+ {
+     // Récupérer les équipements non vérifiés associés à un logement
+     $invalidEquipments = Housing::find($housingId)
+                ->housing_equipment()
+                ->whereHas('equipment', function ($query) {
+                    $query->where('is_verified', false);
+                                 })
+                ->get();
+ 
+     $equipmentT = [];
+     foreach ($invalidEquipments as $housingEquipment) {
 
-    return response()->json([
-        "data" => $equipmentT
-    ],200);
-}
+         $equipment = $housingEquipment->equipment;
+         
+         $category = Category::find($housingEquipment->category_id);
+         
+         $equipmentT[] = [
+             'equipment_id' => $equipment->id,
+             'housing_id' => $housingId,
+             'name' => $equipment->name,
+             'user_detail' => $housingEquipment->housing->user,
+             'is_verified' => $equipment->is_verified,
+             'is_deleted' => $equipment->is_deleted,
+             'is_blocked' => $equipment->is_blocked,
+             'created_at' => $equipment->created_at,
+             'updated_at' => $equipment->updated_at,
+             'category_id' =>$category->id,
+             'category_name' => $category->name
+         ];
+     }
+ 
+     return response()->json([
+         "data" => $equipmentT,
+     ], 200);
+ }
+ 
 
 
 /**
@@ -578,48 +627,62 @@ public function ListEquipmentForHousingInvalid($housingId){
  *     )
  * )
  */
-public function getHousingEquipmentInvalid(){
-        $equipments = Equipment::where('is_verified', true)->get();
+public function getHousingEquipmentInvalid()
+{
 
-        $data = [];
-        foreach($equipments as $equipment){
-            $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
-            ->whereHas('housing',function($query){
-                $query->where('is_verified',false);
+    $equipments = Equipment::where('is_verified', true)->get();
+
+    $data = [];
+
+    foreach ($equipments as $equipment) {
+
+        $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
+            ->whereHas('housing', function ($query) {
+                $query->where('is_verified', false);
             })
-            ->with('housing')
+            ->with(['housing', 'category']) 
             ->get();
-            foreach ($housingEquipments as $housingEquipment) {
-                $housingId = $housingEquipment->housing->id;
-                $existingHousingIndex = null;
 
-                foreach ($data as $index => $existingHousing) {
-                   if($existingHousing['housing_id'] === $housingId && $existingHousing['equipment_id'] === $equipment->id){
-                       $existingHousingIndex = $index;
-                       break;
-                   }
-                }
-                if($existingHousingIndex === null){
-                    $housingData = [
-                        'housing_equipment_id' => $housingEquipment->id,
-                        'equipment_id' => $equipment->id,
-                        'equipment_name' => $equipment->name,
-                        'housing_id' => $housingId,
-                        'housing_name' => $housingEquipment->housing->name,
-                        'housing_description' => $housingEquipment->housing->description,
-                        'is_verified' => $housingEquipment->equipment->is_verified,
-                        'created_at' => $housingEquipment->equipment->created_at,
-                        'updated_at' => $housingEquipment->equipment->updated_at,
-                        'user_detail' => $housingEquipment->housing->user,
-                        'user_firstname' => $housingEquipment->housing->user->firstname,
-                        'user_lastname' => $housingEquipment->housing->user->lastname
-                    ];
-                    $data[] = $housingData;
+        foreach ($housingEquipments as $housingEquipment) {
+
+            $housingId = $housingEquipment->housing->id;
+            $existingHousingIndex = null;
+
+            foreach ($data as $index => $existingHousing) {
+                if ($existingHousing['housing_id'] === $housingId &&
+                    $existingHousing['equipment_id'] === $equipment->id) {
+                    $existingHousingIndex = $index;
+                    break;
                 }
             }
+
+            if ($existingHousingIndex === null) {
+                $category = Category::find($housingEquipment->category_id);
+                
+                $housingData = [
+                    'housing_equipment_id' => $housingEquipment->id,
+                    'equipment_id' => $equipment->id,
+                    'equipment_name' => $equipment->name,
+                    'housing_id' => $housingId,
+                    'housing_name' => $housingEquipment->housing->name,
+                    'housing_description' => $housingEquipment->housing->description,
+                    'is_verified' => $housingEquipment->equipment->is_verified,
+                    'created_at' => $housingEquipment->equipment->created_at,
+                    'updated_at' => $housingEquipment->equipment->updated_at,
+                    'user_detail' => $housingEquipment->housing->user,
+                    'user_firstname' => $housingEquipment->housing->user->firstname,
+                    'user_lastname' => $housingEquipment->housing->user->lastname,
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                ];
+                $data[] = $housingData;
+            }
         }
-        return response()->json(['data' => $data]);
     }
+
+    return response()->json(['data' => $data]);
+}
+
 
 
              /**
@@ -642,44 +705,53 @@ public function getHousingEquipmentInvalid(){
  *     )
  * )
  */
-    public function getUnexistEquipmentInvalidForHousing(){
-        $equipments = Equipment::where('is_verified', false)->get();
+public function getUnexistEquipmentInvalidForHousing()
+{
+    $equipments = Equipment::where('is_verified', false)->get();
 
-        $data = [];
-        foreach($equipments as $equipment){
-            $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
-            ->whereHas('housing',function($query){
-                $query->where('is_verified',false);
+    $data = [];
+
+    foreach ($equipments as $equipment) {
+        $housingEquipments = Housing_equipment::where('equipment_id', $equipment->id)
+            ->whereHas('housing', function ($query) {
+                $query->where('is_verified', false);
             })
-            ->with('housing')
+            ->with(['housing', 'category'])
             ->get();
-            foreach ($housingEquipments as $housingEquipment) {
-                $housingId = $housingEquipment->housing->id;
-                $existingHousingIndex = null;
 
-                foreach ($data as $index => $existingHousing) {
-                   if($existingHousing['housing_id'] === $housingId && $existingHousing['equipment_id'] === $equipment->id){
-                       $existingHousingIndex = $index;
-                       break;
-                   }
-                }
+        foreach ($housingEquipments as $housingEquipment) {
+            $housingId = $housingEquipment->housing->id;
+            $existingHousingIndex = null;
 
-                if($existingHousingIndex === null){
-                    $housingData = [
-                        'housing_equipment_id' => $housingEquipment->id,
-                        'equipment_id' => $equipment->id,
-                        'equipment_name' => $equipment->name,
-                        'housing_id' => $housingId,
-                        'housing_name' => $housingEquipment->housing->name,
-                        'housing_description' => $housingEquipment->housing->description,
-                        'is_verified' => $housingEquipment->is_verified,
-                        'user_detail' => $housingEquipment->housing->user,
-                        
-                    ];
-                    $data[] = $housingData;
+            foreach ($data as $index => $existingHousing) {
+                if ($existingHousing['housing_id'] === $housingId &&
+                    $existingHousing['equipment_id'] === $equipment->id) {
+                    $existingHousingIndex = $index;
+                    break;
                 }
             }
+
+            if ($existingHousingIndex === null) {
+                $category = Category::find($housingEquipment->category_id);
+                
+                $housingData = [
+                    'housing_equipment_id' => $housingEquipment->id,
+                    'equipment_id' => $equipment->id,
+                    'equipment_name' => $equipment->name,
+                    'housing_id' => $housingId,
+                    'housing_name' => $housingEquipment->housing->name,
+                    'housing_description' => $housingEquipment->housing->description,
+                    'is_verified' => $housingEquipment->is_verified,
+                    'user_detail' =>$housing->user,
+                    'category_id' => $category->id,
+                    'category_name' =>$category->name, 
+                ];
+                $data[] = $housingData;
+            }
         }
-        return response()->json(['data' => $data]);
     }
+
+    return response()->json(['data' => $data]);
+}
+
 }

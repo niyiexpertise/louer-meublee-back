@@ -62,16 +62,16 @@ public function AddUserPreferences(Request $request)
     $request->validate([
         'preferences' => 'required|array',
     ]);
-     //$user = auth()->user()->id;
-    $user_id = 2;
+
+    $user_id = auth()->user()->id;
+    $preferencesAlreadyExist = [];
+    $preferencesAdded = [];
 
     try {
         foreach ($request->preferences as $preferenceId) {
-           
             $preferenceExists = Preference::where('id', $preferenceId)->exists();
 
             if ($preferenceExists) {
-                
                 $existingPreference = User_preference::where('user_id', $user_id)
                     ->where('preference_id', $preferenceId)
                     ->exists();
@@ -81,15 +81,31 @@ public function AddUserPreferences(Request $request)
                     $userPreference->user_id = $user_id;
                     $userPreference->preference_id = $preferenceId;
                     $userPreference->save();
+                    $preferencesAdded[] = $preferenceId;
+                } else {
+                    $preferencesAlreadyExist[] = $preferenceId;
                 }
             }
         }
 
-        return response()->json(['message' => 'User preferences updated successfully'], 200);
+        if (empty($preferencesAdded)) {
+            return response()->json(['message' => 'Aucune préférence ajoutée. Toutes les préférences avaient été déjà ajoutée.'], 200);
+        }
+
+        if (!empty($preferencesAlreadyExist)) {
+            $preferenceNames = Preference::whereIn('id', $preferencesAlreadyExist)->pluck('name')->toArray();
+            $message = 'Préférences ajoutées avec succès, mais les suivantes existent déjà et n\'ont plus été ajouté: ' . implode(", ", $preferenceNames);
+            return response()->json(['message' => $message], 200);
+        }
+
+        return response()->json(['message' => 'Préférences ajoutées avec succès.'], 200);
+
     } catch (QueryException $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
+
+
 }

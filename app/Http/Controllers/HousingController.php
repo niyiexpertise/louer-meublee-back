@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\App;
 use Illuminate\Http\Request;
 use App\Models\Charge;
 use App\Models\Housing;
@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File as F;
 use App\Models\Category;
 use App\Models\Housing_charge;
+use App\Models\Review_reservation;
+use Carbon\Carbon;
 class HousingController extends Controller
 {
 
@@ -44,14 +46,12 @@ class HousingController extends Controller
      $housing->is_camera = $request->input('is_camera');
      $housing->is_accepted_animal = $request->input('is_accepted_animal');
      $housing->is_animal_exist = $request->input('is_animal_exist');
-     $housing->is_disponible = 1;
      $housing->interior_regulation = $request->input('interior_regulation');
      $housing->telephone = $request->input('telephone');
      $housing->code_pays = $request->input('code_pays');
      $housing->status ="Unverified";
      $housing->arrived_independently = $request->input('arrived_independently');
      $housing->is_instant_reservation = $request->input('is_instant_reservation');
-     $housing->maximum_duration = $request->input('maximum_duration');
      $housing->minimum_duration = $request->input('minimum_duration');
      $housing->time_before_reservation = $request->input('time_before_reservation');
      $housing->cancelation_condition = $request->input('cancelation_condition');
@@ -62,6 +62,12 @@ class HousingController extends Controller
      $housing->is_updated=0;
      $housing->is_actif=1;
      $housing->is_destroy=0;
+     $housing->is_accept_arm= $request->input('is_accept_arm');
+     $housing->is_accept_smoking= $request->input('is_accept_smoking');
+     $housing->is_accept_chill= $request->input('is_accept_chill');
+     $housing->is_accept_noise= $request->input('is_accept_noise');
+     $housing->is_accept_alcool= $request->input('is_accept_alcool');
+     
      $housing->save();
  
      if ($request->hasFile('photos')) {
@@ -118,7 +124,7 @@ class HousingController extends Controller
             $reduction->save();
         }
     }    
-    if ($request->has('number_of_reservation')) {
+    if ($request->has('promotion_number_of_reservation')) {
         $promotion = new promotion();
         $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
         $promotion->value = $request->input('promotion_value');
@@ -127,11 +133,12 @@ class HousingController extends Controller
     }
 
     if ($request->has('equipment_housing')) {
-        foreach ($request->equipment_housing as $equipmentId) {
+        foreach ($request->equipment_housing as $index => $equipmentId ) {
             $equipment = Equipment::find($equipmentId);   
             if ($equipment) {
                 $housingEquipment = new Housing_equipment();
                 $housingEquipment->equipment_id = $equipmentId;
+                $housingEquipment->category_id =  $request->input('category_equipment_housing')[$index];
                 $housingEquipment->housing_id = $housing->id;
                 $housingEquipment->is_verified = true;
                 $housingEquipment->save();
@@ -159,6 +166,7 @@ class HousingController extends Controller
 
             $housingEquipment = new Housing_equipment();
             $housingEquipment->equipment_id = $equipment->id;
+            $housingEquipment->category_id =$newEquipmentCategories[$index];
             $housingEquipment->housing_id = $housing->id;
             $housingEquipment->is_verified = false;
             $housingEquipment->save();
@@ -172,7 +180,7 @@ class HousingController extends Controller
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
             $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+            $photoPath = $fileId->move(public_path('image/photo   b_category'), $photoName);
             $photoUrl = url('/image/photo_category/' . $photoName);
         
             $photoModel->path = $photoUrl;
@@ -196,7 +204,6 @@ class HousingController extends Controller
         $categoryNumber = $newCategoriesNumbers[$index];
         $photoCategoryKey = 'new_category_photos_' . $categoryName;
         $categoryPhotos = $request->file($photoCategoryKey) ?? [];
-
         $category = new Category();
         $category->name = $categoryName;
         $category->is_verified = false;
@@ -245,7 +252,6 @@ class HousingController extends Controller
  *   tags={"Housing"},
  *   summary="Liste des photos d'un logement",
  *   description="Récupère la liste des photos associées à un logement spécifié par son ID.",
- * security={{"bearerAuth":{}}},
  *   @OA\Parameter(
  *     name="id",
  *     in="path",
@@ -293,38 +299,60 @@ class HousingController extends Controller
  */
 public function ListeDesPhotosLogementAcceuil($id)
 {
-    $listing = Housing::with([
-        'photos',
-        'housingCategoryFiles.category',
-    ])->find($id);
-
-    $data = [
-        'id_housing' => $listing->id,
-        'photos_logement' => $listing->photos->map(function ($photo) {
-            return [
-                'id_photo' => $photo->id,
-                'path' => $photo->path,
-                'extension' => $photo->extension,
-                'is_couverture' => $photo->is_couverture,
-            ];
-        }),
-        'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
-            return [
-                'category_id' => $categoryFiles->first()->category_id,
-                'category_name' => $categoryFiles->first()->category->name,
-                'number' => $categoryFiles->first()->number,
-                'photos_category' => $categoryFiles->map(function ($categoryFile) {
+        
+        $listing = Housing::with([
+            'photos',
+            'housingCategoryFiles.category',
+            'housingEquipments.equipment',
+        ])->find($id);
+    
+        $data = [
+            'id_housing' => $listing->id,
+            'photos_logement' => $listing->photos->map(function ($photo) {
+                return [
+                    'id_photo' => $photo->id,
+                    'path' => url($photo->path), 
+                    'extension' => $photo->extension,
+                    'is_couverture' => $photo->is_couverture,
+                ];
+            }),
+            'categories' => $listing->housingCategoryFiles
+                ->where('is_verified', 1)
+                ->groupBy('category.name')
+                ->map(function ($categoryFiles, $categoryName) use ($listing) {
+                    $equipments = $listing->housingEquipments
+                        ->where('category_id', $categoryFiles->first()->category_id)
+                        ->where('is_verified', 1)
+                        ->map(function ($housingEquipment) {
+                            return [
+                                'equipment_id' => $housingEquipment->equipment->id,
+                                'equipment_name' => $housingEquipment->equipment->name,
+                                'equipment_icone' => $housingEquipment->equipment->icone,
+                            ];
+                        });
+    
+                    $photos_category = $categoryFiles->map(function ($categoryFile) {
+                        return [
+                            'file_id' => $categoryFile->file->id,
+                            'path' => url($categoryFile->file->path),
+                        ];
+                    });
+    
                     return [
-                        'file_id' => $categoryFile->file->id,
-                        'path' => $categoryFile->file->path,
+                        'category_id' => $categoryFiles->first()->category_id,
+                        'category_name' => $categoryFiles->first()->category->name,
+                        'number' => $categoryFiles->first()->number,
+                        'photos_category' => $photos_category,
+                        'equipments' => $equipments,
                     ];
-                }),
-            ];
-        })->values(),
-    ];
+                })->values(),
+        ];
+    
+        return response()->json(['data' => $data], 200);
+    }
+    
 
-    return response()->json(['data' => $data],200);
-}
+
 
  
      
@@ -337,7 +365,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *   tags={"Housing"},
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
- * security={{"bearerAuth":{}}},
  *   @OA\Response(
  *     response=200,
  *     description="Liste des logements récupérée avec succès",
@@ -436,7 +463,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     tags={"Housing"},
  *     summary="Liste des détails possibles d'un logement donné côté acceuil",
  *     description="Récupère les détails d'un logement spécifié par son ID, y compris les informations sur le propriétaire, les photos, les équipements, les préférences, les réductions, les promotions, les catégories et les prix.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="housing_id",
  *         in="path",
@@ -470,10 +496,27 @@ public function ListeDesPhotosLogementAcceuil($id)
          'reductions',
          'promotions',
          'housingCategoryFiles.category',
-         'housingPrice.typeStay',
          'user',
          'housingType'
      ])->find($id);
+
+     $equipments_by_category = $listing->housingEquipments
+     ->where('is_verified', 1)
+     ->groupBy('category.name')
+     ->map(function ($categoryEquipment, $categoryName) {
+         return [
+             'category_id' => $categoryEquipment->first()->category_id,
+             'category_name' => $categoryName,
+             'equipments' => $categoryEquipment->map(function ($equipment) {
+                 return [
+                     'equipment_id' => $equipment->equipment_id,
+                     'name' => $equipment->equipment->name,
+                     'icone' => $equipment->equipment->icone,
+                 ];
+             }),
+         ];
+     })
+     ->values();
      $hoteCharge_id = [];
      $travelerCharge_id = [];
      $housingCharges = Housing_charge::where('housing_id', $id)->get();
@@ -503,6 +546,10 @@ public function ListeDesPhotosLogementAcceuil($id)
              ];
          }
      }
+     $userStatistique=$this->getHousingStatisticAcceuil($id);
+     $controllerreviewreservation = App::make('App\Http\Controllers\ReviewReservationController');
+      $note_commentaire= $controllerreviewreservation->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($id);
+
      $data = [
          'id_housing' => $listing->id,
          'housing_type_id' => $listing->housing_type_id,
@@ -534,11 +581,15 @@ public function ListeDesPhotosLogementAcceuil($id)
          'status' => $listing->status,
          'arrived_independently' => $listing->arrived_independently,
          'is_instant_reservation' => $listing->is_instant_reservation,
-         'maximum_duration' => $listing->maximum_duration,
          'minimum_duration' => $listing->minimum_duration,
          'time_before_reservation' => $listing->time_before_reservation,
          'cancelation_condition' => $listing->cancelation_condition,
          'departure_instruction' => $listing->departure_instruction,
+         'is_accept_arm' => $listing->is_accept_arm,
+         'is_accept_noise' => $listing->is_accept_noise,
+         'is_accept_smoking' => $listing->is_accept_smoking,
+         'is_accept_chill' => $listing->is_accept_smoking,
+         'is_accept_alcool' => $listing->is_accept_alcool,
          'is_deleted' => $listing->is_deleted,
          'is_blocked' => $listing->is_blocked,
  
@@ -597,19 +648,14 @@ public function ListeDesPhotosLogementAcceuil($id)
             ];
         })->values(),
  
-         'equipments' => $listing->housingEquipments->filter(function ($equipment) {
-            return  $equipment->is_verified;
-            })->map(function ($housingEquipment) {
-            return [
-                'equipment_id' => $housingEquipment->equipment_id,
-                'name' => $housingEquipment->equipment->name,
-                'icone' => $housingEquipment->equipment->icone,
-            ];
-        }),
+        'equipments_by_category' => $equipments_by_category, 
         'charges' => [
             'charge_hote' => $hoteCharge_id,
             'charge_traveler' => $travelerCharge_id
-        ]
+        ],
+
+        'User_statistique' => $userStatistique->original,
+        'note_commentaire'=> $note_commentaire->original['data']
         
      ];
  
@@ -623,7 +669,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de logement",
  *     description="Récupère la liste des logements filtrée par le type de logement spécifié.",
  *     operationId="listingsFilteredByHousingType",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="housingTypeId",
  *         in="path",
@@ -670,7 +715,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de proprieté",
  *     description="Récupère la liste des logements filtrée par le type de propriété spécifié.",
  *     operationId="listingsFilteredByPropertyType",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="PropertyTypeId",
  *         in="path",
@@ -716,7 +760,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par Pays",
  *     description="Récupère la liste des logements filtrée par le paysspécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="country",
  *         in="path",
@@ -760,7 +803,6 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par preference",
  *     description="Récupère la liste des logements filtrée par le id preference spécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="preference_id",
  *         in="path",
@@ -805,7 +847,6 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par ville",
  *     description="Récupère la liste des logements filtrée par villespécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="city",
  *         in="path",
@@ -849,7 +890,6 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par departement",
  *     description="Récupère la liste des logements filtrée par departement spécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="departement",
  *         in="path",
@@ -891,7 +931,6 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par nbtraveler",
  *     description="Récupère la liste des logements filtrée par nbtraveler spécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="nbtraveler",
  *         in="path",
@@ -936,7 +975,6 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit(Maximum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit inférieur au montant spécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -981,7 +1019,6 @@ public function getListingsByNightPriceMax($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit (Minimum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit supérieur au montant spécifié.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -1026,7 +1063,6 @@ public function getListingsByNightPriceMin($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par user",
  *     description="Récupère la liste des logements pour un User donné.",
- *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="UserID",
  *         in="path",
@@ -1301,7 +1337,6 @@ private function formatListingsData($listings)
                 'is_camera' => $listing->is_camera,
                 'is_accepted_animal' => $listing->is_accepted_animal,
                 'is_animal_exist' => $listing->is_animal_exist,
-                'is_disponible' => $listing->is_disponible,
                 'interior_regulation' => $listing->interior_regulation,
                 'telephone' => $listing->telephone,
                 'code_pays' => $listing->code_pays,
@@ -1310,11 +1345,15 @@ private function formatListingsData($listings)
                 'status' => $listing->status,
                 'arrived_independently' => $listing->arrived_independently,
                 'is_instant_reservation' => $listing->is_instant_reservation,
-                'maximum_duration' => $listing->maximum_duration,
                 'minimum_duration' => $listing->minimum_duration,
                 'time_before_reservation' => $listing->time_before_reservation,
                 'cancelation_condition' => $listing->cancelation_condition,
                 'departure_instruction' => $listing->departure_instruction,
+                'is_accept_arm' => $listing->is_accept_arm,
+                'is_accept_noise' => $listing->is_accept_noise,
+                'is_accept_smoking' => $listing->is_accept_smoking,
+                'is_accept_chill' => $listing->is_accept_smoking,
+                'is_accept_alcool' => $listing->is_accept_alcool,
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
                 'photos_logement' => $listing->photos->map(function ($photo) {
@@ -1573,5 +1612,72 @@ public function enableHousing($housingId)
         }
     }
 
+/**
+ * @OA\Get(
+ *     path="/api/logement/detail/getHousingStatisticAcceuil/{housing_id}",
+ *     tags={"Housing"},
+ *     summary="Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+ *     description="Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+ *     @OA\Parameter(
+ *         name="housing_id",
+ *         in="path",
+ *         description="ID du logement à afficher",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+ *         @OA\JsonContent(
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Le logement spécifié n'existe pas",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+ *         )
+ *     )
+ * )
+ */
+    public function getHousingStatisticAcceuil($housingId) {
+        $housing = Housing::with('user')->find($housingId);
+    
+        if (!$housing) {
+            return response()->json([
+                'message' => 'Logement non trouvé'
+            ], 404);
+        }
+    
+        $owner = $housing->user;
+
+        $totalHousingPublished = Housing::where('user_id', $owner->id)->count();
+    
+        $totalCommentsForHousing = Review_reservation::whereIn('reservation_id', function($query) use ($housingId) {
+            $query->select('id')
+                  ->from('reservations')
+                  ->where('housing_id', $housingId);
+        })->count();
+    
+        $allNotesForOwner = Housing::with('reservation.notes')
+            ->where('user_id', $owner->id)
+            ->get()
+            ->flatMap(function ($housing) {
+                return $housing->reservation->flatMap(function ($reservation) {
+                    return $reservation->notes->pluck('note');
+                });
+            });
+    
+        $globalAverageForOwner = $allNotesForOwner->isEmpty() ? 0 : $allNotesForOwner->avg();
+    
+        return response()->json([
+            'total_housing_published' => $totalHousingPublished,
+            'total_avis_for_housing' => $totalCommentsForHousing,
+            'global_average_for_user' => $globalAverageForOwner,
+            'user' => $housing->user
+        ]);
+    }    
 
 }

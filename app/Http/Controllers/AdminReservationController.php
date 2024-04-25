@@ -174,43 +174,6 @@ class AdminReservationController extends Controller
 }
 
 
-                              /**
-     * @OA\Get(
-     *     path="/api/reservation/getReservationsByHousingId/{housingId}",
-     *     summary="Liste et nombres des réservations pour un logement donné",
-     * description="Liste et nombres des réservations pour un logement doinné",
-     *     tags={"Reservation"},
-     * security={{"bearerAuth": {}}},
-     *   @OA\Parameter(
-     *         name="housingId",
-     *         in="path",
-     *         required=true,
-     *         description="Get housing ID",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste et nombres des réservations pour un logement doinné"
-     *
-     *     )
-     * )
-     */
-public function getReservationsByHousingIdForAdmin($housingId)
-{
-
-    $housing = Housing::findOrFail($housingId);
-
-    $reservations = Reservation::where('housing_id', $housingId)->get();
-
-    $reservationCount = $reservations->count();
-
-    return response()->json( [
-        'housing' => $housing,
-        'reservations' => $reservations,
-        'reservation_count' => $reservationCount,
-    ]);
-}
-
 
                          /**
      * @OA\Get(
@@ -314,5 +277,275 @@ function showDetailOfReservationForAdmin($idReservation){
         ]
     ]);
 }
+
+/**
+     * @OA\Get(
+     *     path="/api/reservation/topTravelersWithMostReservations",
+     *     summary="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
+     * description="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="op 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations"
+     *
+     *     )
+     * )
+     */
+
+     public function topTravelersWithMostReservations()
+     {
+         $topTravelers = User::select('users.id', 'users.firstname', 'users.lastname', DB::raw('COUNT(reservations.id) as reservation_count'))
+                             ->whereHas('reservation')
+                             ->leftJoin('reservations', 'users.id', '=', 'reservations.user_id')
+                             ->groupBy('users.id', 'users.firstname', 'users.lastname')
+                             ->orderByDesc('reservation_count')
+                             ->limit(10)
+                             ->get();
+     
+         // Retourner le top 10 des voyageurs avec le plus grand nombre de réservations
+         return response()->json(['data' => $topTravelers]);
+     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/reservation/getAllReservationConfirmedForAdmin",
+     *     summary="Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)",
+     * description="Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)"
+     *
+     *     )
+     * )
+     */
+public function getAllReservationConfirmedForAdmin(){
+
+    $reservations = Reservation::where('is_deleted', false)
+    ->where('is_blocked',0)
+    ->where('is_confirmed_hote',1)
+    ->where('is_rejected_traveler',0)
+    ->where('is_rejected_hote',0)
+    ->get();
+    $formattedReservations = $reservations->map(function ($reservation) {
+        return [
+            'reservation' => $reservation->toArray(),
+            'voyageur' => $reservation->user->toArray(),
+            'housing' =>$reservation->housing->toArray(),
+            'hote' => $reservation->housing->user->toArray(),
+        ];
+    });
+
+    return response()->json([
+        'message' => $formattedReservations
+    ]);
+}
+
+
+                         /**
+     * @OA\Get(
+     *     path="/api/reservation/getAllReservationRejectedForAdmin",
+     *     summary="Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)",
+     * description="Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)"
+     *
+     *     )
+     * )
+     */
+    public function getAllReservationRejectedForAdmin(){
+
+        $reservations = Reservation::where('is_deleted', false)
+        ->where('is_blocked',0)
+        ->where('is_confirmed_hote',0)
+        ->where('is_rejected_traveler',0)
+        ->where('is_rejected_hote',1)
+        ->get();
+        $formattedReservations = $reservations->map(function ($reservation) {
+            return [
+                'reservation' => $reservation->toArray(),
+                'voyageur' => $reservation->user->toArray(),
+                'housing' =>$reservation->housing->toArray(),
+                'hote' => $reservation->housing->user->toArray(),
+            ];
+        });
+
+        return response()->json([
+            'message' => $formattedReservations
+        ]);
+    }
+
+    
+                         /**
+     * @OA\Get(
+     *     path="/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)",
+     *     summary="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
+     * description="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
+     *     tags={"Reservation"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)"
+     *     )
+     * )
+     */
+public function getAllReservationCanceledByTravelerForAdmin(){
+
+    $reservations = Reservation::where('is_deleted', false)
+    ->where('is_blocked', 0)
+    ->where('is_confirmed_hote', 0)
+    ->where('is_rejected_traveler', 1)
+    ->where('is_rejected_hote', 0)
+    ->get();
+
+        $formattedReservations = $reservations->map(function ($reservation) {
+            return [
+                'reservation' => $reservation->toArray(),
+                'voyageur' => $reservation->user->toArray(),
+                'housing' =>$reservation->housing->toArray(),
+                'hote' => $reservation->housing->user->toArray(),
+            ];
+        });
+
+        return response()->json([
+            'message' => $formattedReservations
+        ]);
+
+
+    }
+
+/**
+ * @OA\Get(
+ *     path="/api/reservation/getReservationsCountByYearAndMonth",
+ *     summary="Obtenir le nombre de réservations par année et par mois",
+ *     description="Récupère le nombre de réservations par année et par mois. Fournit le total annuel et le détail mensuel pour chaque année.",
+ *     tags={"Reservation"},
+ *  security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Données récupérées avec succès.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 description="Message de retour"
+ *             ),
+ *             @OA\Property(
+ *                 property="reservations_by_year_and_month",
+ *                 type="array",
+ *                 description="Détails des réservations par année et par mois",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(
+ *                         property="year",
+ *                         type="integer",
+ *                         description="Année"
+ *                     ),
+ *                     @OA\Property(
+ *                         property="reservations_per_month",
+ *                         type="array",
+ *                         description="Nombre de réservations par mois",
+ *                         @OA\Items(
+ *                             type="integer",
+ *                             description="Nombre de réservations"
+ *                         )
+ *                     ),
+ *                     @OA\Property(
+ *                         property="total_reservations",
+ *                         type="integer",
+ *                         description="Nombre total de réservations pour l'année"
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune réservation trouvée.",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 description="Message d'erreur"
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function getReservationsCountByYearAndMonth()
+{
+ 
+    $monthNames = [
+        1 => 'janvier',
+        2 => 'février',
+        3 => 'mars',
+        4 => 'avril',
+        5 => 'mai',
+        6 => 'juin',
+        7 => 'juillet',
+        8 => 'août',
+        9 => 'septembre',
+        10 => 'octobre',
+        11 => 'novembre',
+        12 => 'décembre',
+    ];
+
+    $earliestYear = Reservation::orderBy('date_of_reservation')->value(DB::raw('YEAR(date_of_reservation)'));
+
+    if (!$earliestYear) {
+        return response()->json([
+            'message' => 'Aucune réservation trouvée.',
+        ], 404);
+    }
+
+    $currentYear = Carbon::now()->year;
+
+    // Récupérer les données de réservation par année et mois
+    $reservationsByYearAndMonth = Reservation::select(
+        DB::raw('YEAR(date_of_reservation) as year'),
+        DB::raw('MONTH(date_of_reservation) as month'),
+        DB::raw('COUNT(*) as reservation_count')
+    )
+    ->whereYear('date_of_reservation', '>=', $earliestYear)
+    ->whereYear('date_of_reservation', '<=', $currentYear)
+    ->groupBy(DB::raw('YEAR(date_of_reservation)'), DB::raw('MONTH(date_of_reservation)'))
+    ->orderBy(DB::raw('YEAR(date_of_reservation)'))
+    ->orderBy(DB::raw('MONTH(date_of_reservation)'))
+    ->get();
+
+    $result = [];
+    foreach (range($earliestYear, $currentYear) as $year) {
+        $monthlyCounts = [];
+        foreach ($monthNames as $num => $name) {
+            $monthlyCounts[$name] = 0;
+        }
+
+        foreach ($reservationsByYearAndMonth as $reservation) {
+            if ($reservation->year == $year) {
+                $monthName = $monthNames[$reservation->month];
+                $monthlyCounts[$monthName] = $reservation->reservation_count;
+            }
+        }
+
+        $result[] = [
+            'year' => $year,
+            'reservations_per_month' => $monthlyCounts,
+            'total_reservations' => array_sum($monthlyCounts),
+        ];
+    }
+
+    return response()->json([
+        'message' => 'Données récupérées avec succès.',
+        'reservations_by_year_and_month' => $result,
+    ], 200);
+}
+
 
 }

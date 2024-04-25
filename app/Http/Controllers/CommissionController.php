@@ -14,7 +14,7 @@ class CommissionController extends Controller
 *     path="/api/commission/updateCommissionValueByAnother",
 *     summary="Remplacer la valeur d'une commission par défaut par une autre valeur",
 *     tags={"Commission"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\RequestBody(
 *         required=true,
 *         @OA\JsonContent(

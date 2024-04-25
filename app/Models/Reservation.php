@@ -50,4 +50,9 @@ class Reservation extends Model
     {
         return $this->hasOne(Review_reservation::class);
     }
+
+    public function portfeuille_transaction()
+    {
+      return $this->hasMany(Portfeuille_transaction::class);
+    }
 }

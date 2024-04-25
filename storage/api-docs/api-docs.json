@@ -544,6 +544,26 @@
                 ]
             }
         },
+        "/api/logement/getTop10HousingByAverageNotes": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+                "description": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+                "operationId": "9e333acddb9fe6c6d25e0ff2d7291ee5",
+                "responses": {
+                    "200": {
+                        "description": "To 10 des logements avec le plus grand nombre de note de manière générale"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/reservation/housing_with_many_reservation": {
             "get": {
                 "tags": [
@@ -615,37 +635,6 @@
                 "responses": {
                     "200": {
                         "description": "number of reservation"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/reservation/getReservationsByHousingId/{housingId}": {
-            "get": {
-                "tags": [
-                    "Reservation"
-                ],
-                "summary": "Liste et nombres des réservations pour un logement donné",
-                "description": "Liste et nombres des réservations pour un logement doinné",
-                "operationId": "980e1e3ebe5ac64d3c16c48fbfa30488",
-                "parameters": [
-                    {
-                        "name": "housingId",
-                        "in": "path",
-                        "description": "Get housing ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Liste et nombres des réservations pour un logement doinné"
                     }
                 },
                 "security": [
@@ -728,6 +717,160 @@
                 "responses": {
                     "200": {
                         "description": "Détail d'une réservation côté Admin"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/topTravelersWithMostReservations": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
+                "description": "Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
+                "operationId": "7babf9e4cc79e1f09e0c172629adbbb2",
+                "responses": {
+                    "200": {
+                        "description": "op 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getAllReservationConfirmedForAdmin": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)",
+                "description": "Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)",
+                "operationId": "c51f1d53eeedcf57a16d79ed415a8d2c",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les réservations confirmées par les hotes de la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getAllReservationRejectedForAdmin": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)",
+                "description": "Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)",
+                "operationId": "d7c65d5d9d76e821f72b8b7344c6fc8f",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les réservations rejetées par les hotes de la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
+                "description": "Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
+                "operationId": "08dc8a814edbe2125bb86dc55759ea10",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getReservationsCountByYearAndMonth": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Obtenir le nombre de réservations par année et par mois",
+                "description": "Récupère le nombre de réservations par année et par mois. Fournit le total annuel et le détail mensuel pour chaque année.",
+                "operationId": "6001c675f0668e281fb3e796f3d0b99a",
+                "responses": {
+                    "200": {
+                        "description": "Données récupérées avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de retour",
+                                            "type": "string"
+                                        },
+                                        "reservations_by_year_and_month": {
+                                            "description": "Détails des réservations par année et par mois",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "year": {
+                                                        "description": "Année",
+                                                        "type": "integer"
+                                                    },
+                                                    "reservations_per_month": {
+                                                        "description": "Nombre de réservations par mois",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "description": "Nombre de réservations",
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "total_reservations": {
+                                                        "description": "Nombre total de réservations pour l'année",
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune réservation trouvée.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2822,20 +2965,22 @@
                 "tags": [
                     "Criteria"
                 ],
-                "summary": "Create a new criteria",
+                "summary": "Create a new criteria ",
                 "operationId": "194536cd1f7b2b768f157ed81dd24f4f",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "communication,sociabilité,etc"
+                                        "example": "communication , sociabilité"
+                                    },
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -2844,8 +2989,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Criteria created successfully"
+                    "200": {
+                        "description": "Criteria  created successfully"
                     },
                     "401": {
                         "description": "Invalid credentials"
@@ -2891,13 +3036,13 @@
                 ]
             }
         },
-        "/api/criteria/update/{id}": {
+        "/api/criteria/updateName/{id}": {
             "put": {
                 "tags": [
                     "Criteria"
                 ],
-                "summary": "Update a criteria by ID",
-                "operationId": "2851519bd014e63844bff6b9120def7c",
+                "summary": "Update a criteria name by ID",
+                "operationId": "8b1516d0c52538c647b8079b5525b4c1",
                 "parameters": [
                     {
                         "name": "id",
@@ -2937,6 +3082,98 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/criteria/updateIcone/{id}": {
+            "post": {
+                "tags": [
+                    "Criteria"
+                ],
+                "summary": "Update a criteria icone by ID",
+                "operationId": "12316cd0d39127c5b9849a07f0c7a1fc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the criteria to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Criteria updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Criteria updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Criteria not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Criteria not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4506,6 +4743,66 @@
                 ]
             }
         },
+        "/api/reservation/reservationsConfirmedByHost": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des réservations confirmées par l'hote connecté",
+                "description": "Liste des réservations confirmées par l'hote connecté",
+                "operationId": "86707da74d9435c67277d6917a557212",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations confirmées par l'hote connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/reservationsRejectedByHost": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des réservations rejetées par l'hote connecté",
+                "description": "Liste des réservations rejetées par l'hote connecté",
+                "operationId": "4196c0c82f9ebc4068298e9139ffc331",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations rejetées par l'hote connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/reservationsCanceledByTravelerForHost": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
+                "description": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
+                "operationId": "77f20494517f2ae781c94ce5387d3e59",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/category/photo/{photoid}": {
             "delete": {
                 "tags": [
@@ -5198,12 +5495,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/index/ListeDesLogementsAcceuil": {
@@ -5472,12 +5764,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/ShowDetailLogementAcceuil/{housing_id}": {
@@ -5524,12 +5811,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/typehousing/{housingTypeId}": {
@@ -5564,12 +5846,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/typeproperty/{PropertyTypeId}": {
@@ -5604,12 +5881,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/country/{country}": {
@@ -5644,12 +5916,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/preference/{preference_id}": {
@@ -5684,12 +5951,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/city/{city}": {
@@ -5724,12 +5986,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/departement/{departement}": {
@@ -5764,12 +6021,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/nbtraveler/{nbtraveler}": {
@@ -5804,12 +6056,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/nightpricemax/{price}": {
@@ -5844,12 +6091,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le prix spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/nightpricemin/{price}": {
@@ -5884,12 +6126,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le prix spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/filterby/hote/{UserID}": {
@@ -5924,12 +6161,7 @@
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/logement/update/sensible/{id}": {
@@ -6351,19 +6583,66 @@
                 ]
             }
         },
-        "/api/logement/{housingEquipmentId}/equipements": {
+        "/api/logement/detail/getHousingStatisticAcceuil/{housing_id}": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+                "description": "Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+                "operationId": "cb4fb273476bf985ef97b122b663c20e",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement à afficher",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste de quelques statistiques utiles pour le proprietaire d'un logement donné au niveau de detail logement sur le site",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement spécifié n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
                     "Housing Equipment"
                 ],
                 "summary": "Récupérer les équipements associés à un logement donné",
-                "description": "Récupère les équipements associés à un logement spécifié en fonction de Id housing_equipment.",
-                "operationId": "65c42a64b373b156c5af608b64b4d15a",
+                "description": "Récupère les équipements associés à un logement spécifié en fonction de housing_id.",
+                "operationId": "d5b7230065ba0313bf7edda6ad8cf94d",
                 "parameters": [
                     {
-                        "name": "housingEquipmentId",
+                        "name": "housingId",
                         "in": "path",
-                        "description": "L'ID du HousingEquipment pour lequel récupérer les équipements",
+                        "description": "L'ID du Housingpour lequel récupérer les équipements",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -6553,6 +6832,13 @@
                                     },
                                     "equipmentId": {
                                         "description": "Tableau contenant les IDs des équipements du logement à supprimer",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "categoryId": {
+                                        "description": "Tableau contenant les IDs des categories des équipements du logement à supprimer",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
@@ -8012,6 +8298,974 @@
                 ]
             }
         },
+        "/api/methodPayement/index": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Get all methodPayements",
+                "operationId": "141c9b0353861998c05b273b9b45f5c2",
+                "responses": {
+                    "200": {
+                        "description": "List of methodPayements"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/store": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Create a new methodPayement ",
+                "operationId": "341e71deff68429d8da69e85959c3eeb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "flooz , momo"
+                                    },
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "MethodPayement  created successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/show/{id}": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Get a specific methodPayement by ID",
+                "operationId": "1e280076ef509323ae68af9ceb0d6c0c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the methodPayement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "MethodPayement details"
+                    },
+                    "404": {
+                        "description": "MethodPayement not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/updateName/{id}": {
+            "put": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Update a methodPayement name by ID",
+                "operationId": "5438932189853426632912b9e0823c4c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the methodPayement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "français,anglais,etc"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "MethodPayement updated successfully"
+                    },
+                    "404": {
+                        "description": "MethodPayement not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/updateIcone/{id}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Update a methodPayement icone by ID",
+                "operationId": "b355f65e68bc5a4779088b3fade13ae7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the methodPayement to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "MethodPayement updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "MethodPayement updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "MethodPayement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "MethodPayement not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Delete a methodPayement by ID",
+                "operationId": "3145dd9b619184359319b6eda81e807e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the methodPayement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "MethodPayement deleted successfully"
+                    },
+                    "404": {
+                        "description": "MethodPayement not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/ListeMoyenPayement": {
+            "get": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "liste de de tous les moyens de payements non bloqué et non supprimé",
+                "operationId": "58333b95af0b05e85bc05b77d188f23a",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/ListeMoyenPayementUserAuth": {
+            "get": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Liste des moyens de paiement de l'utilisateur authentifié",
+                "description": "Cette fonction permet de récupérer la liste des moyens de paiement de l'utilisateur authentifié.",
+                "operationId": "bd61b29ab2eb97dba1d31db7040778ce",
+                "responses": {
+                    "200": {
+                        "description": "Liste des moyens de paiement récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/ListeMoyenPayementBlocked": {
+            "get": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Liste des moyens de payements bloqué",
+                "operationId": "4be2dba061b45534fc2d250832ed5028",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/ListeMoyenPayementDeleted": {
+            "get": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Liste des moyens de paiement supprimés",
+                "description": "Récupère la liste des moyens de paiement qui ont été supprimés mais non bloqués.",
+                "operationId": "ListeMoyenPayementDeleted",
+                "responses": {
+                    "200": {
+                        "description": "Liste des moyens de paiement supprimés récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/store": {
+            "post": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Enregistrer un nouveau moyen de paiement",
+                "description": "Cette fonction permet à un utilisateur d'enregistrer un nouveau moyen de paiement.",
+                "operationId": "storeMoyenPayement",
+                "requestBody": {
+                    "description": "Données du nouveau moyen de paiement",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "method_payement_id",
+                                    "valeur_method_payement"
+                                ],
+                                "properties": {
+                                    "method_payement_id": {
+                                        "description": "ID du moyen de paiement",
+                                        "type": "integer"
+                                    },
+                                    "valeur_method_payement": {
+                                        "description": "Valeur du moyen de paiement",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nouveau moyen de paiement enregistré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement enregistré avec succès"
+                                        },
+                                        "moyen_paiement": {}
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/show/{idMoyenPayement}": {
+            "get": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Afficher les détails d'un moyen de paiement",
+                "description": "Cette fonction permet à un utilisateur d'afficher les détails d'un moyen de paiement spécifique.",
+                "operationId": "showMoyenPayement",
+                "parameters": [
+                    {
+                        "name": "idMoyenPayement",
+                        "in": "path",
+                        "description": "ID du moyen de paiement à afficher",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du moyen de paiement récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {}
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Moyen de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/update/{idMoyenPayement}": {
+            "put": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Modification des moyens de payement",
+                "description": "Mettre à jour un moyen de paiement existant.",
+                "operationId": "f64c1939d649e2b707546acd60c572c2",
+                "parameters": [
+                    {
+                        "name": "idMoyenPayement",
+                        "in": "path",
+                        "description": "ID du moyen de paiement à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Nouvelles données du moyen de paiement",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "method_payement_id",
+                                    "valeur_method_payement"
+                                ],
+                                "properties": {
+                                    "method_payement_id": {
+                                        "description": "ID de la méthode de paiement",
+                                        "type": "integer"
+                                    },
+                                    "valeur_method_payement": {
+                                        "description": "Valeur du moyen de paiement",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Moyen de paiement mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement mis à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Moyen de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/destroy/{idMoyenPayement}": {
+            "delete": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Supprimer un moyen de paiement",
+                "description": "Cette fonction permet à un utilisateur de supprimer un moyen de paiement spécifique.",
+                "operationId": "deleteMoyenPayement",
+                "parameters": [
+                    {
+                        "name": "idMoyenPayement",
+                        "in": "path",
+                        "description": "ID du moyen de paiement à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Moyen de paiement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Moyen de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/block/{idMoyenPayement}": {
+            "put": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Bloquer un moyen de paiement",
+                "description": "Cette fonction permet de bloquer un moyen de paiement.",
+                "operationId": "8d194e3f2b0b6c8f6b9269f1b8e0dd96",
+                "parameters": [
+                    {
+                        "name": "idMoyenPayement",
+                        "in": "path",
+                        "description": "ID du moyen de paiement à bloquer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Moyen de paiement bloqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement bloqué avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Moyen de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/moyenPayement/unblock/{idMoyenPayement}": {
+            "put": {
+                "tags": [
+                    "MoyenPayement"
+                ],
+                "summary": "Débloquer un moyen de paiement",
+                "description": "Cette fonction permet de débloquer un moyen de paiement.",
+                "operationId": "155ae73396969a723cd3bd99a7a850bf",
+                "parameters": [
+                    {
+                        "name": "idMoyenPayement",
+                        "in": "path",
+                        "description": "ID du moyen de paiement à débloquer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Moyen de paiement débloqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement débloqué avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Moyen de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Moyen de paiement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur spécifique"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/notifications/index": {
             "get": {
                 "tags": [
@@ -8556,6 +9810,232 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/credit": {
+            "post": {
+                "tags": [
+                    "Portefeuille"
+                ],
+                "summary": "Créditer le portefeuille d'un utilisateur",
+                "description": "Crédite le portefeuille d'un utilisateur avec un certain montant et enregistre la transaction. Un utilisateur doit être authentifié pour utiliser cet endpoint.",
+                "operationId": "0845092f347e1a6ea051568b61a1796f",
+                "requestBody": {
+                    "description": "Données nécessaires pour créditer le portefeuille",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount",
+                                    "paiement_methode",
+                                    "transaction_id"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "description": "Le montant à créditer",
+                                        "type": "number",
+                                        "format": "double",
+                                        "example": 100
+                                    },
+                                    "paiement_methode": {
+                                        "description": "Méthode de paiement utilisée",
+                                        "type": "string",
+                                        "example": "carte"
+                                    },
+                                    "transaction_id": {
+                                        "description": "ID de transaction unique",
+                                        "type": "string",
+                                        "example": "12345-abcde"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Le portefeuille a été crédité avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de succès",
+                                            "type": "string",
+                                            "example": "Le portefeuille a été crédité avec succès."
+                                        },
+                                        "solde": {
+                                            "description": "Solde actuel du portefeuille",
+                                            "type": "number",
+                                            "format": "double"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Données de requête invalides.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string",
+                                            "example": "Données de requête invalides."
+                                        },
+                                        "errors": {
+                                            "description": "Détails des erreurs",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Portefeuille non trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string",
+                                            "example": "Portefeuille non trouvé pour cet utilisateur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Utilisateur non authentifié.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string",
+                                            "example": "Utilisateur non authentifié."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/user/transaction": {
+            "get": {
+                "tags": [
+                    "Portefeuille"
+                ],
+                "summary": "Obtenir les détails du portefeuille d'un utilisateur(Liste des transactions éffectuées par l'utilisateur sur le site)",
+                "description": "Retourne le solde du portefeuille de l'utilisateur connecté et la liste des transactions associées.",
+                "operationId": "e984afd337a349cedbae8baec60bae14",
+                "responses": {
+                    "200": {
+                        "description": "Détails du portefeuille retournés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "solde": {
+                                            "description": "Solde actuel du portefeuille",
+                                            "type": "number"
+                                        },
+                                        "transactions": {
+                                            "description": "Liste des transactions associées au portefeuille",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "debit": {
+                                                        "description": "Indique si la transaction est un débit",
+                                                        "type": "boolean"
+                                                    },
+                                                    "credit": {
+                                                        "description": "Indique si la transaction est un crédit",
+                                                        "type": "boolean"
+                                                    },
+                                                    "amount": {
+                                                        "description": "Montant de la transaction",
+                                                        "type": "number"
+                                                    },
+                                                    "motif": {
+                                                        "description": "Motif de la transaction",
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "description": "Date de création de la transaction",
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Portefeuille non trouvé pour cet utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/transaction/all": {
+            "get": {
+                "tags": [
+                    "Portefeuille"
+                ],
+                "summary": "Voir toutes les transactions éffectué sur le site (Admin)",
+                "operationId": "a834e8ec09f88df3112d746515bc3b37",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les transactions éffectuées sur le site"
                     }
                 },
                 "security": [
@@ -9825,28 +11305,605 @@
                 ]
             }
         },
-        "/api/reservation/HousingAvailableAtDate/{date}": {
+        "/api/reservation/getReservationsByHousingId/{housingId}": {
             "get": {
                 "tags": [
                     "Reservation"
                 ],
-                "summary": "Liste des logements disponible à une date donnée",
-                "description": "Liste des logements disponible à une date donnée",
-                "operationId": "81ff77759993c744c6149df9a0fbc8fb",
+                "summary": "Liste et nombres des réservations par logement",
+                "description": "Liste et nombres des réservations par logement",
+                "operationId": "f1e84997017dae28d368e4c54846829c",
                 "parameters": [
                     {
-                        "name": "date",
+                        "name": "housingId",
                         "in": "path",
-                        "description": "date ",
+                        "description": "Get housing ID",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Liste des logements disponible à une date donnée"
+                        "description": "number of reservation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Détail d'une réservation côté hote",
+                "description": "Détail d'une réservation côté hote",
+                "operationId": "602c09f1476456aac2ad961876cbbe1a",
+                "parameters": [
+                    {
+                        "name": "idReservation",
+                        "in": "path",
+                        "description": "Get user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail d'une réservation côté hote"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/confirmIntegration": {
+            "post": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Confirmer l'intégration après une réservation(c'est le voyageur qui confirme)",
+                "description": "Confirme l'intégration d'une réservation après vérification des conditions nécessaires.",
+                "operationId": "4ac728ae10c93ccc846b743e8cc565d8",
+                "requestBody": {
+                    "description": "Informations pour confirmer l'intégration",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reservation_id": {
+                                        "description": "L'ID de la réservation à intégrer",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Intégration confirmée et montant crédité",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Intégration confirmée et montant crédité"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Problème avec la confirmation d'intégration",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La réservation doit être confirmée par l'hôte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation ou autre élément non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation non trouvée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitRejectForAdmin": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits rejetés sur la  plateforme(admin)",
+                "description": "Liste des retraits rejetés sur la  plateforme(admin)",
+                "operationId": "5b27d54fe1220270164c3cb650c6a540",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits rejetés sur la  plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitWaitingConfirmationByAdmin": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retrait en attente de validation sur la plateforme(admin)",
+                "description": "Liste des retrait en attente de validation sur la plateforme(admin)",
+                "operationId": "2777e6fd155400387015a9ba819d0483",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retrait en attente de validation sur la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitConfirmedByAdmin": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits déjà confirmé par l'admin la plateforme(admin)",
+                "description": "Liste des retraits déjà confirmé par l'admin la plateforme(admin)",
+                "operationId": "b0125f99ad1ce4721f307722c5322b41",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits déjà confirmé par l'admin la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitOfUserAuth": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits effectué par un utilisateur connecté",
+                "description": "Liste des retraits effectué par un utilisateur connecté",
+                "operationId": "cc9fe95e12f66cf8245f271dc49f98c4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits effectué par un utilisateur connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitRejectOfUserAuth": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits effectué par un utilisateur connecté mais rejeté par l'administrateur",
+                "description": "Liste des retraits effectué par un utilisateur connecté mais rejeté par l'administrateur",
+                "operationId": "8432efbab0904a781d2fea3982739a73",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits effectué par un utilisateur connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/validateRetraitByAdmin/{retraitId}": {
+            "put": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Validation d'une demande de retrait par l'admin",
+                "operationId": "2069783fd19ad5630cd4c1a7f1f20236",
+                "parameters": [
+                    {
+                        "name": "retraitId",
+                        "in": "path",
+                        "description": "ID du retrait à valider",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "montant_valid": {
+                                        "description": "Montant validé pour le retrait",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful validation of withdrawal",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Retraits successfully validated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Withdrawal not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/rejectRetraitByAdmin/{retraitId}": {
+            "put": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Rejet d'un retrait par un administrateur",
+                "description": "Cette fonction permet à un administrateur de rejeter un retrait en spécifiant un motif de blocage.",
+                "operationId": "40d081beaef4f20ea493d72d5cf3289c",
+                "parameters": [
+                    {
+                        "name": "retraitId",
+                        "in": "path",
+                        "description": "L'identifiant du retrait à rejeter",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Données de la requête",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "motif"
+                                ],
+                                "properties": {
+                                    "motif": {
+                                        "description": "Le motif du blocage",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Le retrait a été rejeté avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Retrait successfully rejected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Retrait non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Retrait not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Retrait déjà validé ou déjà rejeté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Retrait already validated or already rejected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/store": {
+            "post": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Enregistrer une demande de retrait",
+                "description": "Cette fonction permet à un utilisateur d'enregistrer une demande de retrait.",
+                "operationId": "storeRetrait",
+                "requestBody": {
+                    "description": "Données de la demande de retrait",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payment_method",
+                                    "montant_reel",
+                                    "identifiant_payement_method"
+                                ],
+                                "properties": {
+                                    "payment_method": {
+                                        "description": "Méthode de paiement utilisée pour le retrait",
+                                        "type": "string",
+                                        "example": "momo"
+                                    },
+                                    "montant_reel": {
+                                        "description": "Montant réel à retirer",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100
+                                    },
+                                    "identifiant_payement_method": {
+                                        "description": "Identifiant de la méthode de paiement",
+                                        "type": "string",
+                                        "example": "742876298"
+                                    },
+                                    "libelle": {
+                                        "description": "Libellé de la demande de retrait",
+                                        "type": "string",
+                                        "example": "Demande de retrait de fonds"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de retrait enregistrée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de retrait enregistrée avec succès"
+                                        },
+                                        "date": {
+                                            "$ref": ""
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Solde insuffisant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Solde insuffisant"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitOfTravelerWaitingConfirmationByAdmin": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des demandes retrait des voyageurs en attente de validation sur la plateforme(admin)",
+                "description": "Liste des demandes retrait des voyageurs en attente de validation sur la plateforme(admin)",
+                "operationId": "c7f284d228aded06e04e7e08ba726bf1",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes retrait des voyageurs en attente de validation sur la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitOfHoteWaitingConfirmationByAdmin": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des demandes retrait des hotes en attente de validation sur la plateforme(admin)",
+                "description": "Liste des demandes retrait des hotes en attente de validation sur la plateforme(admin)",
+                "operationId": "d67cf9f17a44ecb309d4753e7ddb6199",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes retrait des hotes en attente de validation sur la plateforme(admin)"
                     }
                 },
                 "security": [
@@ -10264,69 +12321,13 @@
                 ]
             }
         },
-        "/api/reservation/reviews/note/get": {
-            "get": {
-                "tags": [
-                    "Note et Commentaire sur les reservation (Logement)"
-                ],
-                "summary": "retourne les notes et commentaires des utilisateurs pour chaque logement . on retourne aussi la moyenne des notes pour chaque utilisateur sur un logement donné et la moyenne des notes sur un logement donné. ",
-                "operationId": "99aef618e145152ff88a8b38b7d37573",
-                "responses": {
-                    "200": {
-                        "description": "Succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Réservation non trouvée",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "description": "Message d'erreur",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Paramètre manquant ou invalide",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "description": "Message d'erreur",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/reservation/{housingId}/reviews/note/get": {
             "get": {
                 "tags": [
                     "Note et Commentaire sur les reservation (Logement)"
                 ],
-                "summary": "Récupérer les notes des utilisateurs et les commentaires associés à un logement spécifique",
-                "operationId": "7077ae5009ba2ea49a244f86e1793a8b",
+                "summary": "Lister pour un logement donné la moyenne des notes par critère ,la moyenne globale,les commentaires des utilisateurs.",
+                "operationId": "58a0dbf89298760cb0d6855ce15ddd56",
                 "parameters": [
                     {
                         "name": "housingId",
@@ -10340,7 +12341,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Détails des réservations, des notes des utilisateurs et des commentaires associés",
+                        "description": "Détails des réservations pour un logement donné, des notes des utilisateurs et des commentaires associés",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -11114,12 +13115,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/users/destroy/{id}": {
@@ -11797,12 +13793,7 @@
                     "401": {
                         "description": "Invalid credentials"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/user": {
@@ -11977,10 +13968,11 @@
                 "tags": [
                     "verification_document"
                 ],
-                "summary": "Enregistrer des documents de vérification avec des images",
+                "summary": "Ajouter des Documents de Vérification",
+                "description": "Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
                 "operationId": "e6999abc11a25c6d95936d686a0563a2",
                 "requestBody": {
-                    "description": "Données pour enregistrer les documents de vérification",
+                    "description": "Requête avec des fichiers à uploader",
                     "required": true,
                     "content": {
                         "multipart/form-data": {
@@ -11990,15 +13982,15 @@
                                     "image_piece"
                                 ],
                                 "properties": {
-                                    "id_document[]": {
-                                        "description": "ID du document",
+                                    "id_document": {
+                                        "description": "Liste des IDs des documents",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
                                         }
                                     },
-                                    "image_piece[]": {
-                                        "description": "Image de la pièce",
+                                    "image_piece": {
+                                        "description": "Liste des fichiers image",
                                         "type": "array",
                                         "items": {
                                             "type": "string",
@@ -12013,10 +14005,71 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Documents de vérification créés avec succès"
+                        "description": "Documents créés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Verification documents créés avec succès."
+                                        },
+                                        "verification_documents": {
+                                            "description": "Documents de vérification créés",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "document_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "path": {
+                                                        "type": "string",
+                                                        "format": "uri"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
-                        "description": "Erreur de validation"
+                        "description": "Mauvaise requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Les tableaux id_document et image_piece doivent avoir la même longueur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -12144,7 +14197,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/verificationdocument/hote/valider/one": {
@@ -12192,7 +14250,12 @@
                     "500": {
                         "description": "Erreur interne du serveur"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/result/demande": {

@@ -76,8 +76,7 @@ public function store(Request $request)
 {
     try {
         $review = new Review();
-        // $review->user_id = Auth::user()->id; // Pour l'utilisateur authentifié
-        $review->user_id = 2;
+        $review->user_id = Auth::user()->id;
         $review->content = $request->content;
         $review->save();
 

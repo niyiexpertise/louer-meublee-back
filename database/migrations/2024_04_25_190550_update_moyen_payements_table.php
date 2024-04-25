@@ -11,15 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('housing_preferences', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
-            $table->foreignId('preference_id')->references('id')->on('preferences')->onDelete('cascade');
+        Schema::table('moyen_payements', function (Blueprint $table) {
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
-            $table->boolean('is_verified');
-            $table->timestamps();
-            
         });
     }
 
@@ -28,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housing_preferences');
+        Schema::table('moyen_payements', function (Blueprint $table) {
+            //
+        });
     }
 };

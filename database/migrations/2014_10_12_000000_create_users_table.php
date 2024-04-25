@@ -19,12 +19,15 @@ return new class extends Migration
             $table->string('code_pays');
             $table->string('telephone');
             $table->string('country');
-            $table->string('file_profil')->nullable(); // Chemin vers l'image de profil
-            $table->string('piece_of_identity')->nullable(); // Chemin vers la pièce d'identité
+            $table->string('file_profil')->nullable(); 
+            $table->string('piece_of_identity')->nullable();
             $table->string('city');
             $table->text('address');
             $table->string('sexe');
             $table->string('postal_code')->nullable();
+            $table->boolean('is_hote');
+            $table->boolean('is_traveller');
+            $table->boolean('is_admin');
             $table->string('icone')->nullable();
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);

@@ -13,6 +13,10 @@ class Housing_equipment extends Model
     {
         return $this->belongsTo(Equipment::class);
     }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     public function housing()
     {

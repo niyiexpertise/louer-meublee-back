@@ -29,7 +29,6 @@ return new class extends Migration
             $table->boolean('is_camera')->nullable();
             $table->boolean('is_accepted_animal')->nullable();
             $table->boolean('is_animal_exist');
-            $table->boolean('is_disponible');
             $table->text('interior_regulation')->nullable();
             $table->string('telephone');
             $table->string('code_pays');
@@ -37,11 +36,15 @@ return new class extends Migration
             $table->string('arrived_independently');
             $table->string('icone')->nullable();
             $table->boolean('is_instant_reservation');
-            $table->integer('maximum_duration');
             $table->integer('minimum_duration');
             $table->integer('time_before_reservation')->nullable();
             $table->text('cancelation_condition')->nullable();
             $table->text('departure_instruction')->nullable();
+            $table->boolean('is_accept_arm');
+            $table->boolean('is_accept_smoking');
+            $table->boolean('is_accept_chill');
+            $table->boolean('is_accept_noise');
+            $table->boolean('is_updated');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

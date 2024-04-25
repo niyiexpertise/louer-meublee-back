@@ -99,4 +99,13 @@ class User extends Authenticatable
     return $this->hasMany(Favoris::class);
    }
 
+   public function portfeuille()
+    {
+        return $this->hasOne(Portfeuille::class);
+    }
+    public function MoyenPayement()
+    {
+        return $this->hasMany(MoyenPayement::class);
+    }
+
 }

@@ -10,10 +10,13 @@ use App\Models\Review;
 use App\Models\Language;
 use App\Models\Notification;
 use App\Models\Commission;
+use App\Models\Portfeuille;
 use Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
+
 use Carbon\Carbon;
 
 class UserController extends Controller
@@ -116,9 +119,11 @@ class UserController extends Controller
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
+            'solde_portfeuille' => $user->portfeuille->solde,
             'user_role' => User::find($user->id)->getRoleNames(),
             'user_language' => [],
             'user_preference' => [], 
+            
         ];
 
         foreach ($user->user_language as $userLanguage) {
@@ -151,7 +156,6 @@ class UserController extends Controller
  *     tags={"User"},
  *     summary="Enregistrer un nouvel utilisateur",
  *     description="Enregistre un nouvel utilisateur avec les informations fournies",
- *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\MediaType(
@@ -262,7 +266,7 @@ class UserController extends Controller
 
         $user->save();
         $user->assignRole('traveler');
-        $userLanguages = is_array($request->language_id) ? $request->language_id : explode(',', $request->language_id);
+        $userLanguages =$request->language_id;
 
         foreach ($userLanguages as $language_id) {
             $userLanguage = new User_language([
@@ -284,7 +288,13 @@ class UserController extends Controller
         ]);
         $notification->save();
 
-        $user->save();
+        $portfeuille= new Portfeuille([
+            'solde' =>0,
+            'user_id' =>$user->id,
+            
+        ]);
+        $portfeuille->save();
+
         return response()->json(['message' => 'User registered successfully','users'=>$user], 201);
     }
 
@@ -357,7 +367,7 @@ class UserController extends Controller
 public function userReviews()
 {
 
-    $userId = Auth::id();
+    $user_Id = Auth::id();
     $reviews = Review::where('user_id', $user_Id)->get();
 
     return response()->json([
@@ -369,7 +379,6 @@ public function userReviews()
  * @OA\Get(
  *     path="/api/users/userLanguages",
  *     tags={"User"},
- * security={{"bearerAuth": {}}},
  *     summary="Obtenir les langues de l'utilisateur connecté",
  *     description="Récupère les langues associées à l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -389,7 +398,7 @@ public function userReviews()
  */
 public function userLanguages()
 {
-    $userId = Auth::id();
+    $user_Id = Auth::id();
     $user = User::with('user_language.language')->find($user_Id);
 
     if (!$user) {
@@ -676,6 +685,7 @@ public function unblock($id)
              'email_verified_at' => $user->email_verified_at,
              'created_at' => $user->created_at,
              'updated_at' => $user->updated_at,
+             'solde_portfeuille' => $user->portfeuille->solde,
              'user_role' => User::find($user->id)->getRoleNames(),
              'user_language' => [],
              'user_preference' => [], 
@@ -822,6 +832,7 @@ public function getUsersWithRoletraveler()
             'is_hote' => $user->is_hote,
             'is_traveller' => $user->is_traveller,
             'is_admin' => $user->is_admin,
+            'solde_portfeuille' => $user->portfeuille->solde,
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -976,6 +987,7 @@ public function getUsersWithRoleHost()
             'is_traveller' => $user->is_traveller,
             'is_admin' => $user->is_admin,
             'commission' =>$user->commission_value,
+            'solde_portfeuille' => $user->portfeuille->solde,
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -1049,6 +1061,7 @@ public function getUsersWithRoleAdmin()
             'is_hote' => $user->is_hote,
             'is_traveller' => $user->is_traveller,
             'is_admin' => $user->is_admin,
+            'solde_portfeuille' => $user->portfeuille->solde,
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -1108,7 +1121,6 @@ public function getUsersWithRoleAdmin()
 *     path="/api/users/login",
 *     summary="make authentification",
 *     tags={"User"},
-*security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(

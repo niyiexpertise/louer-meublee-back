@@ -43,6 +43,7 @@ class CategorieController extends Controller
                         foreach ($b as $e) {
                             $a[] = [
                                 'id' => $e->id,
+                                'id_equipement_category' => $k->id,
                                 'name' => $e->name,
                                 'icone' => $e->icone,
                                 'is_deleted' => $e->is_deleted,
@@ -60,7 +61,8 @@ class CategorieController extends Controller
                     'is_blocked' =>$category->is_blocked,
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
-                    'equipments'  => $a
+                    'equipments'  => $a,
+                    
                 ];
 
             }

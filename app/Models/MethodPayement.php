@@ -5,15 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Criteria extends Model
+class MethodPayement extends Model
 {
     use HasFactory;
     protected $fillable = [
         'name','icone'
     ];
-
-    public function note()
-    {
-        return $this->hasMany(Note::class);
-    }
+    
 }

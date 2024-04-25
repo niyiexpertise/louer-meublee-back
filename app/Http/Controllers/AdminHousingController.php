@@ -24,6 +24,9 @@ use App\Models\HousingType;
 use App\Models\PropertyType;
 use App\Models\Criteria;
 use App\Models\Language;
+use App\Models\Note;
+use App\Models\Reservation;
+use App\Models\Review_reservation;
 use Exception;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -261,6 +264,44 @@ public function showHousingDetailForValidationForadmin($id)
         'user',
         'housingType'
     ])->find($id);
+
+    $equipments_nouveau_by_category = $listing->housingEquipments
+    ->where('is_verified', 0)
+    ->groupBy('category.name')
+    ->map(function ($categoryEquipment, $categoryName) {
+        return [
+            'category_id' => $categoryEquipment->first()->category_id,
+            'category_name' => $categoryName,
+            'equipments' => $categoryEquipment->map(function ($housingEquipment) {
+                return [
+                    'equipment_id' => $housingEquipment->equipment_id,
+                    'name' => $housingEquipment->equipment->name,
+                    'icone' => $housingEquipment->equipment->icone,
+                    'valide' => $housingEquipment->is_verified,
+                    'id_housing_equipment' =>  $housingEquipment->id,
+                ];
+            })->toArray(),
+        ];
+    });
+
+    $equipments_defaut_by_category = $listing->housingEquipments
+    ->where('is_verified', 1)
+    ->groupBy('category.name')
+    ->map(function ($categoryEquipment, $categoryName) {
+        return [
+            'category_id' => $categoryEquipment->first()->category_id,
+            'category_name' => $categoryName,
+            'equipments' => $categoryEquipment->map(function ($housingEquipment) {
+                return [
+                    'equipment_id' => $housingEquipment->equipment_id,
+                    'name' => $housingEquipment->equipment->name,
+                    'icone' => $housingEquipment->equipment->icone,
+                    'valide' => $housingEquipment->is_verified,
+                    'id_housing_equipment' =>  $housingEquipment->id,
+                ];
+            })->toArray(),
+        ];
+    });
     $hoteCharge_id = [];
     $travelerCharge_id = [];
     $totalHoteCharge = 0;
@@ -323,15 +364,19 @@ public function showHousingDetailForValidationForadmin($id)
         'surface' => $listing->surface,
         'arrived_independently' => $listing->arrived_independently,
         'is_instant_reservation' => $listing->is_instant_reservation,
-        'maximum_duration' => $listing->maximum_duration,
         'minimum_duration' => $listing->minimum_duration,
         'time_before_reservation' => $listing->time_before_reservation,
         'cancelation_condition' => $listing->cancelation_condition,
         'departure_instruction' => $listing->departure_instruction,
+        'is_accept_arm' => $listing->is_accept_arm,
+        'is_accept_noise' => $listing->is_accept_noise,
+        'is_accept_smoking' => $listing->is_accept_smoking,
+        'is_accept_chill' => $listing->is_accept_smoking,
+        'is_accept_alcool' => $listing->is_accept_alcool,
         'is_deleted' => $listing->is_deleted,
         'is_blocked' => $listing->is_blocked,
         'is_actif' => $listing->is_actif,
-            'is_destroy' => $listing->is_destroy,
+        'is_destroy' => $listing->is_destroy,
 
         'photos_logement' => $listing->photos->map(function ($photo) {
             return [
@@ -425,30 +470,8 @@ public function showHousingDetailForValidationForadmin($id)
         ],
 
         'equipments' => [
-            'nouveau' => $listing->housingEquipments->filter(function ($equipment) {
-                return !$equipment->equipment->is_verified;
-            })->map(function ($housingEquipment) {
-                return [
-                    'equipment_id' => $housingEquipment->equipment_id,
-                    'name' => $housingEquipment->equipment->name,
-                    'icone' => $housingEquipment->equipment->icone,
-                    'valide' => $housingEquipment->is_verified,
-                    'id_housing_equipment' =>  $housingEquipment->id
-                ];
-                
-            })->values()->toArray(),
-
-            'defaut' => $listing->housingEquipments->filter(function ($equipment) {
-                return $equipment->equipment->is_verified;
-            })->map(function ($housingEquipment) {
-                return [
-                    'equipment_id' => $housingEquipment->equipment_id,
-                    'name' => $housingEquipment->equipment->name,
-                    'icone' => $housingEquipment->equipment->icone,
-                    'valide' => $housingEquipment->is_verified,
-                    'id_housing_equipment' =>  $housingEquipment->id
-                ];
-            })->values()->toArray(),
+            'nouveau' => $equipments_nouveau_by_category->values()->toArray(), 
+            'defaut' => $equipments_defaut_by_category->values()->toArray(),  
         ],
         'charges' => [
             'hote_charges' => $hoteCharge_id,
@@ -1180,5 +1203,68 @@ public function ListeDesLogementsValideDisable()
         'message' => $topHotes
     ]);
      }
+
+
+           /**
+     * @OA\Get(
+     *     path="/api/logement/getTop10HousingByAverageNotes",
+     *     summary="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+     * description="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+     *     tags={"Housing"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="To 10 des logements avec le plus grand nombre de note de manière générale"
+     *
+     *     )
+     * )
+     */
+public function getTop10HousingByAverageNotes() {
+    $housingAverages = Housing::with('reservation.notes.criteria')
+        ->get()
+        ->map(function ($housing) {
+            $criteriaAverages = [];
+            $totalAverage = 0;
+            $numCriteria = 0;
+
+            $reservations = $housing->reservation;
+            
+            foreach ($reservations as $reservation) {
+                foreach ($reservation->notes as $note) {
+                    if (!isset($criteriaAverages[$note->criteria_id])) {
+                        $criteriaAverages[$note->criteria_id] = ['sum' => 0, 'count' => 0];
+                    }
+                    $criteriaAverages[$note->criteria_id]['sum'] += $note->note;
+                    $criteriaAverages[$note->criteria_id]['count']++;
+                }
+            }
+
+            foreach ($criteriaAverages as $criteriaId => $data) {
+                $average = $data['sum'] / $data['count'];
+                $criteriaAverages[$criteriaId]['average'] = $average;
+                $totalAverage += $average;
+                $numCriteria++;
+            }
+             if($numCriteria==0)
+             {
+                $overallAverage =0;
+             }else{
+                $overallAverage = $totalAverage / $numCriteria;
+             }
+            
+            return [
+                'housing_id' => $housing->id,
+                'housing_name' => $housing->name,
+                'overall_average' => $overallAverage,
+            ];
+        });
+
+    $top10Housing = $housingAverages->sortByDesc('overall_average')->take(10);
+
+    return response()->json(['data' => $top10Housing], 200);
+}
+
+
+
 
 }

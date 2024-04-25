@@ -8,6 +8,7 @@ use App\Models\Housing;
 use App\Models\housing_preference;
 use App\Models\reduction;
 use App\Models\promotion;
+use App\Models\Commission;
 use App\Models\photo;
 use App\Models\housing_price;
 use App\Models\File;
@@ -24,12 +25,14 @@ use App\Models\Category;
 use App\Models\Housing_charge;
 use App\Models\Reservation;
 use App\Models\Payement;
+use App\Models\Portfeuille;
+use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
 
-    private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal, $valeur_paye, $montant_total, $id_transaction, $is_tranche_paiement) {
+    private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal, $valeur_paye, $montant_total, $id_transaction, $is_tranche_paiement,$payementmethode) {
         $housing = Housing::where('id', $housing_id)
             ->where('is_deleted', 0)
             ->where('is_blocked', 0)
@@ -58,9 +61,6 @@ class ReservationController extends Controller
             return ['is_allowed' => false, 'message' => "La durée minimale de séjour est de {$housing->minimum_duration} jours"];
         }
     
-        if ($housing->maximum_duration && $stay_duration > $housing->maximum_duration) {
-            return ['is_allowed' => false, 'message' => "La durée maximale de séjour est de {$housing->maximum_duration} jours"];
-        }
         if ($valeur_paye > $montant_total) {
 
             return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
@@ -69,6 +69,21 @@ class ReservationController extends Controller
             return ['is_allowed' => false, 'message' => 'L\'ID de transaction doit être unique. Cette transaction existe déjà.'];
 
         }
+        if ($payementmethode == "portfeuille") {
+           
+
+            $user_id = Auth::id();
+            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+
+            if (!$portefeuille) {
+                return ['is_allowed' => false, 'message' => 'Portefeuille introuvable'];
+            }
+    
+            if ($portefeuille->solde < $valeur_paye) {
+                return ['is_allowed' => false, 'message' => 'Solde insuffisant dans le portefeuille pour pouvoir réserver'];
+            }
+        }
+        
         if ($is_tranche_paiement == 1) {
             $required_paid_value = $montant_total / 2;
             
@@ -289,7 +304,7 @@ class ReservationController extends Controller
         ]);
         $user_id=Auth::id();
     
-    $validation_result =$this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'],$validatedData['date_of_end'], $validatedData['number_of_domestical_animal'],$validatedData['valeur_payee'],$validatedData['montant_total'],$validatedData['id_transaction'],$validatedData['is_tranche_paiement'] );
+    $validation_result =$this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'],$validatedData['date_of_end'], $validatedData['number_of_domestical_animal'],$validatedData['valeur_payee'],$validatedData['montant_total'],$validatedData['id_transaction'],$validatedData['is_tranche_paiement'],$validatedData['payment_method']);
     if (!$validation_result['is_allowed']) {
         return response()->json(['message' => $validation_result['message']], 409);
     }    
@@ -345,6 +360,24 @@ class ReservationController extends Controller
         }
     
         $payment = Payement::create($paymentData);
+        if ($validatedData['payment_method'] == "portfeuille") {
+
+        $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+        $portefeuille->solde -= $validatedData['valeur_payee'];
+
+        $portefeuilleTransaction = new Portfeuille_transaction();
+        $portefeuilleTransaction->debit = true;
+        $portefeuilleTransaction->credit = false;
+        $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+        $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
+        $portefeuilleTransaction->reservation_id = $reservation->id;
+        $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
+        $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
+        $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+        $portefeuilleTransaction->save();
+        $portefeuille->save();
+        }
+
         $notificationName="Félicitation!Vous venez de faire une reservation.D'ici 24h,elle sera confirmée ou rejeté par l'hôte";
         $housing = Housing::where('id', $validatedData['housing_id'])
         ->where('is_deleted', 0)
@@ -357,11 +390,14 @@ class ReservationController extends Controller
            'name' => $notificationName,
            'user_id' => $user_id,
           ]);
+          $notification->save();
+
           $notificationName = "Bonne nouvelle! Votre logement a été reservé par un utilisateur.Accéder à la section de reservation pour confirmer la reservation";
              $notification = new Notification([
            'name' => $notificationName,
            'user_id' => $housing->user_id,
              ]);
+          $notification->save();
 
         return response()->json([
             'message' => 'Réservation et paiement créés avec succès',
@@ -466,7 +502,7 @@ class ReservationController extends Controller
      *     )
      * )
      */
-     public function hote_reject_reservation($idReservation, Request $request){
+    public function hote_reject_reservation($idReservation, Request $request){
         try{
             $request->validate([
                 'motif_rejet_hote' =>'required | string',
@@ -493,10 +529,23 @@ class ReservationController extends Controller
                 'message' => 'Reservation déjà rejeté'
             ]);
           }
-          Reservation::whereId($idReservation)->update([
+          if(Reservation::whereId($idReservation)->update([
             'is_rejected_hote'=>1,
             'motif_rejet_hote'=>$request->motif_rejet_hote
-          ]);
+          ])){
+
+              $portfeuille =Portfeuille::where('user_id',$reservation->user_id)->first();
+              $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->montant_total]);
+            $transaction = new portfeuille_transaction();
+            $transaction->portfeuille_id = $portfeuille->id;
+            $transaction->amount = $reservation->montant_total;
+            $transaction->debit = 0;
+            $transaction->credit =1;
+            $transaction->reservation_id = $reservation->id;
+            $transaction->payment_method = "portfeuille";
+            $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
+            $transaction->save();
+          }
           $notification = new Notification();
           $notification->user_id = $reservation->user_id;
           $notification->name = 'Votre reservation concernant '.$reservation->housing->name.'  vient d\être rejetée  par l\'hôte pour le motif suivant << '.$request->motif_rejet_hote. ">>";
@@ -520,7 +569,6 @@ class ReservationController extends Controller
               ], 500);
           }
      }
-
 
               /**
      * @OA\Put(
@@ -610,44 +658,205 @@ class ReservationController extends Controller
      }
 
 
-
-
-    /**
+/**
      * @OA\Get(
-     *     path="/api/reservation/HousingAvailableAtDate/{date}",
-     *     summary="Liste des logements disponible à une date donnée",
-     * description="Liste des logements disponible à une date donnée",
+     *     path="/api/reservation/getReservationsByHousingId/{housingId}",
+     *     summary="Liste et nombres des réservations par logement",
+     * description="Liste et nombres des réservations par logement",
      *     tags={"Reservation"},
      * security={{"bearerAuth": {}}},
      *   @OA\Parameter(
-     *         name="date",
+     *         name="housingId",
      *         in="path",
      *         required=true,
-     *         description="date ",
-     *         @OA\Schema(type="string")
+     *         description="Get housing ID",
+     *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Liste des logements disponible à une date donnée"
+     *         description="number of reservation"
      *
      *     )
      * )
      */
-public function HousingAvailableAtDate($date)
+    public function getReservationsByHousingId($housingId)
+    {
+        $housing = Housing::find($housingId);
+        if(!$housing ){
+            return response()->json([
+                'message' =>'housing not found'
+            ]);
+        }
+    
+        $reservations = Reservation::where('housing_id', $housingId)->get();
+    
+        $reservationCount = $reservations->count();
+    
+        return response()->json( [
+            'housing' => $housing,
+            'reservations' => $reservations,
+            'reservation_count' => $reservationCount,
+        ]);
+    }
+
+     
+     
+                                  /**
+          * @OA\Get(
+          *     path="/api/reservation/showDetailOfReservationForHote/{idReservation}",
+          *     summary="Détail d'une réservation côté hote",
+          * description="Détail d'une réservation côté hote",
+          *     tags={"Reservation"},
+          * security={{"bearerAuth": {}}},
+          *   @OA\Parameter(
+          *         name="idReservation",
+          *         in="path",
+          *         required=true,
+          *         description="Get user ID",
+          *         @OA\Schema(type="integer")
+          *     ),
+          *     @OA\Response(
+          *         response=200,
+          *         description="Détail d'une réservation côté hote"
+          *     )
+          * )
+          */
+     public function showDetailOfReservationForHote($idReservation){
+         $reservation = Reservation::find($idReservation);
+         if(!$reservation){
+             return response()->json([
+                 'message' => 'Reservation not found'
+             ], 404);
+         }
+     
+         if (!(Auth::user()->id == $reservation->housing->user_id)) {
+             return response()->json([
+                 'message' => 'Vous ne pouvez pas consulter les détails d une réservation qui ne vous concerne pas'
+             ], 403);
+         }
+     
+         return response()->json([
+             'data' =>[
+                 'detail de la reservation' => $reservation->toArray(),
+                 'voyageur' => $reservation->user->toArray()
+             ]
+         ]);
+     }
+
+     /**
+ * @OA\Post(
+ *     path="/api/reservation/confirmIntegration",
+ *     summary="Confirmer l'intégration après une réservation(c'est le voyageur qui confirme)",
+ *   security={{"bearerAuth": {}}},
+ *     description="Confirme l'intégration d'une réservation après vérification des conditions nécessaires.",
+ *     tags={"Reservation"},
+ *     @OA\RequestBody(
+ *         description="Informations pour confirmer l'intégration",
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="reservation_id", type="integer", description="L'ID de la réservation à intégrer"),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Intégration confirmée et montant crédité",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Intégration confirmée et montant crédité"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Problème avec la confirmation d'intégration",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="La réservation doit être confirmée par l'hôte"),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation ou autre élément non trouvé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Réservation non trouvée"),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur"),
+ *         ),
+ *     ),
+ * )
+ */
+public function confirmIntegration(Request $request)
 {
+    $reservation = Reservation::find($request->input('reservation_id'));
 
-    $availableHousings = Housing::whereDoesntHave('reservation', function ($query) use ($date) {
-        $query->where('date_of_starting', '<=', $date)
-              ->where('date_of_end', '>=', $date);
-    })->with('reservation')
-    ->where('status', 'verified')
-    ->where('is_deleted', 0)
-    ->where('is_updated', 0)
-    ->where('is_blocked', 0)
-    ->where('is_actif', 1)
-    ->get();
+    if (!$reservation) {
+        return response()->json(['message' => 'Réservation non trouvée'], 404);
+    }
+    if (!$reservation->is_confirmed_hote) {
+        return response()->json(['message' => 'La réservation doit être confirmée par l\'hôte'], 400);
+    }
 
-    return response()->json(['data' => $availableHousings]);
+    if ($reservation->is_rejected_traveler || $reservation->is_rejected_hote) {
+        return response()->json(['message' => 'La réservation a été rejetée, Donc vous ne pouvez pas comnfirmer l\'intégration'], 400);
+    }
+
+    if ($reservation->is_integration) {
+        return response()->json(['message' => 'L\'intégration a déjà été confirmée'], 400);
+    }
+
+    $housing = Housing::find($reservation->housing_id);
+
+    if (!$housing) {
+        return response()->json(['message' => 'Logement non trouvé'], 404);
+    }
+
+    $owner = User::find($housing->user_id);
+
+    if (!$owner) {
+        return response()->json(['message' => 'Propriétaire non trouvé'], 404);
+    }
+
+    $commission = Commission::where('user_id', $owner->id)->first();
+
+    if (!$commission) {
+        return response()->json(['message' => 'Commission non trouvée pour ce proprietaire'], 404);
+    }
+
+    $commission_percentage = $commission->valeur; 
+    $total_amount = $reservation->valeur_payee;
+
+    $commission_amount = $total_amount * ($commission_percentage / 100);
+    $remaining_amount = $total_amount - $commission_amount;
+
+    $reservation->is_integration = true;
+    $reservation->save();
+
+    $portefeuilleTransaction = new Portfeuille_transaction();
+    $portefeuilleTransaction->debit = false;
+    $portefeuilleTransaction->credit = true;
+    $portefeuilleTransaction->amount = $remaining_amount;
+    $portefeuilleTransaction->motif = "Virement sur le compte de l'hôte après confirmation de l'intégration";
+    $portefeuilleTransaction->reservation_id = $reservation->id;
+    $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
+    $portefeuilleTransaction->id_transaction = "0";
+    $portefeuilleTransaction->payment_method = "portfeuille";
+    $portefeuilleTransaction->save();
+
+    $portefeuille = Portfeuille::where('user_id', $owner->id)->first();
+
+    if (!$portefeuille) {
+        return response()->json(['message' => 'Portefeuille du propriétaire non trouvé'], 404);
+    }
+
+    $portefeuille->solde += $remaining_amount;
+    $portefeuille->save();
+
+    return response()->json(['message' => 'Intégration confirmée et montant crédité'], 200);
 }
 
 }
+
+
+

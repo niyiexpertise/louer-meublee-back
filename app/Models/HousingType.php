@@ -14,9 +14,4 @@ class HousingType extends Model
     {
         return $this->hasMany(Housing::class);
     }
-
-    public function subcategory()
-    {
-        return $this->hasMany(subcategory::class);
-    }
 }

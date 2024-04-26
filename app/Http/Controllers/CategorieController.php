@@ -4,128 +4,242 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Equipment;
+use App\Models\Equipment_category;
 use App\Models\EquipmentCategory;
+use App\Models\File;
+use App\Models\Housing_category_file;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Database\Eloquent\Builder as DatabaseEloquentBuilder;
 
 class CategorieController extends Controller
 {
+
+    
     /**
      * @OA\Get(
-     *     path="/api/category/index",
-     *     summary="Get all categories",
+     *     path="/api/category/VerifiednotBlocknotDelete",
+     *     summary="Get all category for admin (not blocked and not deleted)",
      *     tags={"Category"},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
-     *         description="List of categorys"
-     *
+     *         description="List of category with categories"
      *     )
      * )
      */
-    public function index()
+    public function VerifiednotBlocknotDelete()
     {
-        try{
-                $categories = Category::where('is_deleted',false)->get();
-                $data = [];
+        try {
+            $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
+            $data = [];
+            
+    
+            foreach ($categories as $category) {
                 $a = [];
+                $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
+                foreach ($categoryEquipment as $k) {
+                    $b = Equipment::where('id', $k->equipment_id)->get();
+                
+                        foreach ($b as $e) {
+                            $a[] = [
+                                'id' => $e->id,
+                                'name' => $e->name,
+                                'icone' => $e->icone,
+                                'is_deleted' => $e->is_deleted,
+                                'is_blocked' => $e->is_blocked,
+                                'created_at' => $e->created_at,
+                                'updated_at' => $e->updated_at,
+                            ];
 
-               
-
-                foreach ($categories as $category) {
-                    $equipment_category = $category->equipment_category()->get();
-                    foreach ($equipment_category as $e) {
-                        $b= Equipment::where('id',$e->equipment_id)->get();
-                       foreach ($b as $k) {
-                        $a[] = [
-                            'id' => $k->id,
-                            'name' => $k->name,
-                            'is_deleted' => $k->is_deleted,
-                            'is_blocked' => $k->is_blocked,
-                            'created_at' => $k->created_at,
-                            'updated_at' => $k->updated_at
-                        ];
-                       }
-                    }
-                    $data[] =[
-                        'id' =>$category->id,
-                        'name' =>$category->name,
-                        'is_deleted' =>$category->id_deleted,
-                        'is_blocked' =>$category->is_blocked,
-                        'created_at' =>$category->created_at,
-                        'updated_at' =>$category->updated_at,
-                        'equipment' => $a
-                    ];
+                        }
                 }
-                return response()->json([
-                    'data' => $data
-                ],200);
+                
+                $data[] = [
+                    'id' => $category->id,
+                    'name' =>$category->name,
+                    'is_deleted' =>$category->id_deleted,
+                    'is_blocked' =>$category->is_blocked,
+                    'created_at' =>$category->created_at,
+                    'updated_at' =>$category->updated_at,
+                    'equipments'  => $a
+                ];
+
+            }
+
+            return response()->json([
+                'data' => $data
+            ], 200);
         } catch(Exception $e) {
             return response()->json($e);
         }
-
     }
 
-    /**
+        /**
      * @OA\Get(
-     *     path="/api/category/indexCategorieEquipments",
-     *     summary="Get all categories and them equipment",
+     *     path="/api/category/VerifiedBlocknotDelete",
+     *     summary="Get all category for admin (blocked and not deleted)",
      *     tags={"Category"},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
-     *         description="List of categorys"
-     *
+     *         description="List of category with categories"
      *     )
      * )
      */
-    public function indexCategorieEquipments()
+    public function VerifiedBlocknotDelete()
     {
-        try{
-                $categories = Category::where('is_deleted',false)->get();
-                $data = [];
+        try {
+            $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', true)->where('is_deleted', false)->get();
+            $data = [];
+            
+    
+            foreach ($categories as $category) {
                 $a = [];
-
-
-                foreach ($categories as $category) {
-                    $equipment_category = $category->equipment_category()->get();
-                    foreach ($equipment_category as $e) {
-                        $b= Equipment::where('id',$e->equipment_id)->get();
-                       foreach ($b as $k) {
-                        $a[] = [
-                            'id' => $k->id,
-                            'name' => $k->name,
-                            'is_deleted' => $k->is_deleted,
-                            'is_blocked' => $k->is_blocked,
-                            'created_at' => $k->created_at,
-                            'updated_at' => $k->updated_at
-                        ];
-                       }
-                    }
-                    $data[] =[
-                        'id' =>$category->id,
-                        'name' =>$category->name,
-                        'is_deleted' =>$category->id_deleted,
-                        'is_blocked' =>$category->is_blocked,
-                        'created_at' =>$category->created_at,
-                        'updated_at' =>$category->updated_at,
-                        'equipment' => $a
-                    ];
+                $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
+                foreach ($categoryEquipment as $k) {
+                    $b = Equipment::where('id', $k->equipment_id)->get();
+                        foreach ($b as $e) {
+                            $a[] = [
+                                'id' => $e->id,
+                                'name' => $e->name,
+                                'icone' => $e->icone,
+                                'is_deleted' => $e->is_deleted,
+                                'is_blocked' => $e->is_blocked,
+                                'created_at' => $e->created_at,
+                                'updated_at' => $e->updated_at,
+                            ];
+                        }
                 }
-                return response()->json([
-                    'data' => $data
-                ],200);
+                
+                $data[] = [
+                    'id' => $category->id,
+                    'name' =>$category->name,
+                    'is_deleted' =>$category->id_deleted,
+                    'is_blocked' =>$category->is_blocked,
+                    'created_at' =>$category->created_at,
+                    'updated_at' =>$category->updated_at,
+                    'equipments'  => $a
+                ];
+
+            }
+            return response()->json([
+                'data' => $data
+            ], 200);
         } catch(Exception $e) {
             return response()->json($e);
         }
-
     }
 
-    /**
-     * Show the form for creating a new resource.
+        /**
+     * @OA\Get(
+     *     path="/api/category/indexUnverified",
+     *     summary="Get all category for admin (blocked and not deleted)",
+     *     tags={"Category"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of category with categories"
+     *     )
+     * )
      */
-    public function create()
+    public function indexUnverified()
     {
-        //
+        try {
+            $categories = Category::with('equipment_category.equipment')->where('is_deleted', false)->where('is_verified', false)->get();
+            $data = [];
+            
+    
+            foreach ($categories as $category) {
+                $a = [];
+                $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
+                foreach ($categoryEquipment as $k) {
+                    $b = Equipment::where('id', $k->equipment_id)->get();
+                        foreach ($b as $e) {
+                            $a[] = [
+                                'id' => $e->id,
+                                'name' => $e->name,
+                                'icone' => $e->icone,
+                                'is_deleted' => $e->is_deleted,
+                                'is_blocked' => $e->is_blocked,
+                                'created_at' => $e->created_at,
+                                'updated_at' => $e->updated_at,
+                            ];
+                        }
+                }
+                
+                $data[] = [
+                    'id' => $category->id,
+                    'name' =>$category->name,
+                    'is_deleted' =>$category->id_deleted,
+                    'is_blocked' =>$category->is_blocked,
+                    'created_at' =>$category->created_at,
+                    'updated_at' =>$category->updated_at,
+                    'equipments'  => $a
+                ];
+
+            }
+            return response()->json([
+                'data' => $data
+            ], 200);
+        } catch(Exception $e) {
+            return response()->json($e);
+        }
+    }
+
+            /**
+     * @OA\Get(
+     *     path="/api/category/VerifiednotBlockDelete",
+     *     summary="Get all category  (not blocked and deleted))",
+     *     tags={"Category"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of category with categories"
+     *     )
+     * )
+     */
+    public function VerifiednotBlockDelete()
+    {
+        try {
+            $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', false)->where('is_deleted', true)->get();
+            $data = [];
+
+            foreach ($categories as $category) {
+                $a = [];
+                $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
+                foreach ($categoryEquipment as $k) {
+                    $b = Equipment::where('id', $k->equipment_id)->get();
+                        foreach ($b as $e) {
+                            $a[] = [
+                                'id' => $e->id,
+                                'name' => $e->name,
+                                'icone' => $e->icone,
+                                'is_deleted' => $e->is_deleted,
+                                'is_blocked' => $e->is_blocked,
+                                'created_at' => $e->created_at,
+                                'updated_at' => $e->updated_at,
+                            ];
+                        }
+                }
+
+                $data[] = [
+                    'id' => $category->id,
+                    'name' =>$category->name,
+                    'is_deleted' =>$category->id_deleted,
+                    'is_blocked' =>$category->is_blocked,
+                    'created_at' =>$category->created_at,
+                    'updated_at' =>$category->updated_at,
+                    'equipments'  => $a
+                ];
+
+            }
+            return response()->json([
+                'data' => $data
+            ], 200);
+        } catch(Exception $e) {
+            return response()->json($e);
+        }
     }
 
 /**
@@ -133,6 +247,7 @@ class CategorieController extends Controller
      *     path="/api/category/store",
      *     summary="create new category",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -157,21 +272,58 @@ class CategorieController extends Controller
     public function store(Request $request)
     {
         try{
-                $data = $request->validate([
+                $request->validate([
                     'name' => 'required|unique:categories|max:255',
                 ]);
                 $category = new Category();
                 $category->name = $request->name;
+                $category->is_verified = true;
                 $category->save();
                 return response()->json([
                     'message' => 'Category is successfully created',
                     'data' => $category
                 ]);
     
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e);
         }
 
+    }
+
+    public function storeDefault(Request $request,$housingId){
+        $request->validate([
+            'name' => 'required|unique:categories|max:255',
+        ]);
+        $category = new Category();
+        $category->name = $request->name;
+        $category->is_verified = false;
+        $category->save();
+        $categoryId = $category->id;
+            $housingCategoryId = $housingId;
+            $photoCategoryKey = 'photo_categories' . $categoryId;
+            $photoFiles = $request->file($photoCategoryKey);
+            foreach ($photoFiles as $fileId) {
+                // Sauvegarder le fichier dans la table files
+                $photoModel = new File();
+                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+                $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+                $photoUrl = url('/image/photo_category/' . $photoName);
+            
+                $photoModel->path = $photoUrl;
+                $photoModel->save();
+            
+                // Sauvegarder l'association entre le fichier et la catégorie dans la table housing_category_files
+                $housingCategoryFile = new Housing_category_file();
+                $housingCategoryFile->housing_id = $housingCategoryId;
+                $housingCategoryFile->category_id = $categoryId;
+                $housingCategoryFile->file_id = $photoModel->id;
+                $housingCategoryFile->number = $request->input('number_category');
+                $housingCategoryFile->save();
+            }
+        return response()->json([
+            'message' => 'Category is successfully created',
+            'data' => $category
+        ]);
     }
 
      /**
@@ -179,6 +331,7 @@ class CategorieController extends Controller
      *     path="/api/category/show/{id}",
      *     summary="Get a specific category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -199,26 +352,30 @@ class CategorieController extends Controller
     public function show(string $id)
     {
         try{
+            $a = [];
             $category = Category::find($id);
-            // $equipment_category = $category->equipment_category()->get();
-            // $a = [];
-            // foreach ($equipment_category as $e) {
-            //     $b= Equipment::where('id',$e->equipment_id)->get();
-            //    foreach ($b as $k) {
-            //     $a[] = [
-            //         'id' => $k->id,
-            //         'name' => $k->name,
-            //         'is_deleted' => $k->is_deleted,
-            //         'is_blocked' => $k->is_blocked,
-            //         'created_at' => $k->created_at,
-            //         'updated_at' => $k->updated_at
-            //     ];
-            //    }
-            // }
             if (!$category) {
                 return response()->json(['error' => 'Catégorie non trouvé.'], 404);
             }
 
+            $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
+            // return response()->json($categoryEquipment);
+            foreach ($categoryEquipment as $k) {
+                $b = Equipment::where('id', $k->equipment_id)->get();
+                // return response()->json($b);
+                    // $a[] = $b;
+                    foreach ($b as $e) {
+                        $a[] = [
+                            'id' => $e->id,
+                            'name' => $e->name,
+                            'icone' => $e->icone,
+                            'is_deleted' => $e->is_deleted,
+                            'is_blocked' => $e->is_blocked,
+                            'created_at' => $e->created_at,
+                            'updated_at' => $e->updated_at,
+                        ];
+                    }
+            }
             return response()->json([
                 'data' => [
                     'id' => $category->id,
@@ -227,7 +384,7 @@ class CategorieController extends Controller
                     'is_blocked' =>$category->is_blocked,
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
-                    // 'equipment' => $a
+                    'equipments'  => $a
                 ]
             ], 200);
     
@@ -236,69 +393,6 @@ class CategorieController extends Controller
         }
 
     } 
-
-        /**
-     * @OA\Get(
-     *     path="/api/category/showEquipments/{id}",
-     *     summary="Get a specific category by ID and they equipment",
-     *     tags={"Category"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the category",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Category details"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Category not found"
-     *     )
-     * )
-     */
-    public function showEquipments(string $id)
-    {
-        try{
-            $category = Category::find($id);
-            $equipment_category = $category->equipment_category()->get();
-            $a = [];
-            foreach ($equipment_category as $e) {
-                $b= Equipment::where('id',$e->equipment_id)->get();
-               foreach ($b as $k) {
-                $a[] = [
-                    'id' => $k->id,
-                    'name' => $k->name,
-                    'is_deleted' => $k->is_deleted,
-                    'is_blocked' => $k->is_blocked,
-                    'created_at' => $k->created_at,
-                    'updated_at' => $k->updated_at
-                ];
-               }
-            }
-            if (!$category) {
-                return response()->json(['error' => 'Catégorie non trouvé.'], 404);
-            }
-
-            return response()->json([
-                'data' => [
-                    'id' => $category->id,
-                    'name' =>$category->name,
-                    'is_deleted' =>$category->id_deleted,
-                    'is_blocked' =>$category->is_blocked,
-                    'created_at' =>$category->created_at,
-                    'updated_at' =>$category->updated_at,
-                    'equipment' => $a
-                ]
-            ], 200);
-
-        } catch(Exception $e) { 
-            return response()->json($e);
-        }
-
-    }
 
 
     /**
@@ -314,6 +408,7 @@ class CategorieController extends Controller
      *     path="/api/category/update/{id}",
      *     summary="Update category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -345,13 +440,18 @@ class CategorieController extends Controller
 
     public function update(Request $request, string $id)
     {
+
         try{
+            $category = Category::find($id);
+            if (!$category) {
+                return response()->json(['data' => 'Category not found.'], 404);
+            }
             $data = $request->validate([
                 'name' =>'required | string'
             ]);
             $category = Category::whereId($id)->update($data);
             return response()->json(['data' => 'Catégorie mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e);
         }
 
@@ -362,6 +462,7 @@ class CategorieController extends Controller
      *     path="/api/category/destroy/{id}",
      *     summary="Delete category by ID",
      *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -401,6 +502,7 @@ class CategorieController extends Controller
  *     path="/api/category/block/{id}",
  *     summary="Block a category",
  *     tags={"Category"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -450,6 +552,7 @@ class CategorieController extends Controller
  *     path="/api/category/unblock/{id}",
  *     summary="Unblock a category",
  *     tags={"Category"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -490,5 +593,53 @@ class CategorieController extends Controller
 
 
 }
+
+ /**
+     * @OA\Put(
+     *     path="/api/category/makeVerified/{id}",
+     *     summary="make verified an category",
+     *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the category to verified",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="category successfully verified",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="string", example="category successfully verified")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="category not found")
+     *         )
+     *     )
+     * )
+     */
+    public function makeVerified(string $id)
+    {
+        try{
+                $category = Category::find($id);
+                if (!$category) {
+                    return response()->json(['error' => 'Category non trouvé.'], 404);
+                }
+                if ($category->is_verified == true) {
+                    return response()->json(['data' => 'Category déjà vérifié.'], 200);
+                }
+                Category::whereId($id)->update(['is_verified' => true]);
+
+                return response()->json(['data' => 'Category vérifié avec succès.'], 200);
+        } catch(Exception $e) {    
+            return response()->json($e);
+        }
+
+    }
 
 }

@@ -56,10 +56,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function user_role()
-    {
-        return $this->hasMany(User_role::class);
-    }
+
     
 
     public function user_language()
@@ -92,5 +89,19 @@ class User extends Authenticatable
     public function verificationDocuments()
     {
         return $this->hasMany(verification_document::class);
+    }
+
+    public function portfeuille()
+    {
+        return $this->hasOne(Portfeuille::class);
+    }
+    public function retrait()
+    {
+        return $this->hasMany(Retrait::class);
+    }
+
+    public function moyenPayement()
+    {
+        return $this->hasMany(moyenPayement::class);
     }
 }

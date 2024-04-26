@@ -17,6 +17,7 @@ class DocumentController extends Controller
    *     path="/api/document/index",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * *security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of documents"
@@ -47,20 +48,20 @@ class DocumentController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
 
       /**
 * @OA\Post(
 *     path="/api/document/store",
 *     summary="Create a new document",
 *     tags={"Document"},
+**security={{"bearerAuth": {}}},
 *      @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
    *             required={"name"},
-   *             @OA\Property(property="name", type="string", example ="piece d'identite, CIP, passport")
+   *             @OA\Property(property="name", type="string", example ="piece d'identite, CIP, passport"),
+   *             @OA\Property(property="is_actif", type="boolen", example ="0,1"),
+
    *         )
    *     ),
 *     @OA\Response(
@@ -78,9 +79,11 @@ class DocumentController extends Controller
         try{
             $data = $request->validate([
                 'name' => 'required|unique:documents|max:255',
+                'is_actif' => 'required'
             ]);
             $document = new Document();
             $document->name = $request->name;
+            $document->is_actif = $request->is_actif;
             $document->save();
             return response()->json(['data' => 'Document créé avec succès.', 'document' => $document], 201);
     } catch(Exception $e) {    
@@ -97,6 +100,7 @@ class DocumentController extends Controller
    *     path="/api/document/show/{id}",
    *     summary="Get a specific document by ID",
    *     tags={"Document"},
+   * *security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -141,6 +145,7 @@ class DocumentController extends Controller
    *     path="/api/document/update/{id}",
    *     summary="Update a document by ID",
    *     tags={"Document"},
+   * *security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -152,7 +157,8 @@ class DocumentController extends Controller
    *         required=true,
    *         @OA\JsonContent(
    *             required={"name"},
-   *             @OA\Property(property="name", type="string", example="pice of identity, CIP, passport")
+   *             @OA\Property(property="name", type="string", example="pice of identity, CIP, passport"),
+   *             @OA\Property(property="is_actif", type="booleen", example="0,1")
    *         )
    *     ),
    *     @OA\Response(
@@ -173,7 +179,8 @@ class DocumentController extends Controller
     {
         try{
             $data = $request->validate([
-                'name' =>'required | string'
+                'name' =>'required | string',
+                'is_actif'=> 'required'
             ]);
             $document = Document::whereId($id)->update($data);
             return response()->json(['data' => 'Document  mise à jour avec succès.'], 200);
@@ -187,6 +194,7 @@ class DocumentController extends Controller
    *     path="/api/document/destroy/{id}",
    *     summary="Delete a document by ID",
    *     tags={"Document"},
+   * *security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
    *         in="path",
@@ -225,6 +233,7 @@ class DocumentController extends Controller
 *     path="/api/document/block/{id}",
 *     summary="Block a document",
 *     tags={"Document"},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -273,6 +282,7 @@ class DocumentController extends Controller
 *     path="/api/document/unblock/{id}",
 *     summary="Unblock a document",
 *     tags={"Document"},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -324,6 +334,7 @@ class DocumentController extends Controller
    *     path="/api/document/document_actif",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of inactif documents"
@@ -358,6 +369,7 @@ class DocumentController extends Controller
    *     path="/api/document/document_inactif",
    *     summary="Get all documents",
    *     tags={"Document"},
+   * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
    *         description="List of actif documents"
@@ -378,12 +390,12 @@ class DocumentController extends Controller
             return response()->json($e);
         }
     }
-
-        /**
+  /**
 * @OA\Put(
 *     path="/api/document/active/{id}",
 *     summary="active a document",
 *     tags={"Document"},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -411,26 +423,27 @@ class DocumentController extends Controller
 * )
 */
 
-    public function active($id)
-    {
-        try{
-            $document = Document::whereId($id)->update(['is_actif' => true]);
+public function active($id)
+{
+    try{
+        $document = Document::whereId($id)->update(['is_actif' => true]);
 
-            if (!$document) {
-                return response()->json(['error' => 'Document  non trouvé.'], 404);
-            }
+        if (!$document) {
+            return response()->json(['error' => 'Document  non trouvé.'], 404);
+        }
 
-            return response()->json(['data' => 'this document is active successfuly.'], 200);
-    } catch(Exception $e) {
-        return response()->json($e);
-    }
+        return response()->json(['data' => 'this document is active successfuly.'], 200);
+} catch(Exception $e) {
+    return response()->json($e);
+}
 }
 
-    /**
+/**
 * @OA\Put(
 *     path="/api/document/inactive/{id}",
 *     summary="inactive a document",
 *     tags={"Document"},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -460,16 +473,16 @@ class DocumentController extends Controller
 
 public function inactive($id)
 {
-    try{
-        $document = Document::whereId($id)->update(['is_actif' => false]);
+try{
+    $document = Document::whereId($id)->update(['is_actif' => false]);
 
-        if (!$document) {
-            return response()->json(['error' => 'Document  non trouvé.'], 404);
-        }
+    if (!$document) {
+        return response()->json(['error' => 'Document  non trouvé.'], 404);
+    }
 
-        return response()->json(['data' => 'this document is inactive successfuly.'], 200);
+    return response()->json(['data' => 'this document is inactive successfuly.'], 200);
 } catch(Exception $e) {
-    return response()->json($e);
+return response()->json($e);
 }
 }
 

@@ -14,6 +14,7 @@ class NotificationController extends Controller
      *     path="/api/notifications/index",
      *     summary="Get all notification in the site",
      *     tags={"Notification"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of the notification"
@@ -36,6 +37,7 @@ class NotificationController extends Controller
  *     path="/api/notifications/store",
  *     summary="Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
  *     tags={"Notification"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -125,6 +127,7 @@ class NotificationController extends Controller
  *     path="/api/notifications/users",
  *     summary="Récupérer la liste de notifications pour un utilisateur connecté",
  *     tags={"Notification"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des notifications avec succès pour l'utilisateur",

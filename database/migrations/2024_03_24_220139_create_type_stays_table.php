@@ -20,6 +20,19 @@ return new class extends Migration
             $table->timestamps();
             
         });
+
+        DB::table('type_stays')->insert([
+            ['name' => 'Nuit', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Matin', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Soir', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Jour', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Semaine', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Mois', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Année', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Week-end', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Long séjour', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Court séjour', 'is_deleted' => false, 'is_blocked' => false, 'icone' => NULL, 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     /**

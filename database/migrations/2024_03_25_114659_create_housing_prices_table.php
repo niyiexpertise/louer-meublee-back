@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('housing_prices', function (Blueprint $table) {
             $table->id();
+            $table->float('price_with_cleaning_fees');
+            $table->float('price_without_cleaning_fees');
             $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
             $table->foreignId('type_stay_id')->references('id')->on('type_stays')->onDelete('cascade');
-            $table->float('price');
-            $table->float('price_with_cleaning_fees');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

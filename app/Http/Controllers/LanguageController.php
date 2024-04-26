@@ -13,6 +13,7 @@ class LanguageController extends Controller
      *     path="/api/language/index",
      *     summary="Get all languages",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of languages"
@@ -33,19 +34,14 @@ class LanguageController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+
 
 /**
      * @OA\Post(
      *     path="/api/language/store",
      *     summary="add new language",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -68,30 +64,40 @@ class LanguageController extends Controller
      * )
      */
     public function store(Request $request)
-    {
-        try{
-                $data = $request->validate([
-                    'name' => 'required|unique:languages|max:255',
-                ]);
-                $language = new Language();
-                $language->name = $request->name;
-                $language->icone = $request->icone;
-                $language->save();
-                return response()->json([
-                    'message' =>'Language created successfully',
-                    'data' => $language
-                ]);
-        } catch(Exception $e) {    
-            return response()->json($e);
-        }
+{
+    try {
+        $data = $request->validate([
+            'name' => 'required|unique:languages|max:255',
+        ]);
 
+        $language = new Language();
+        $language->name = $request->name;
+        $language->icone = $request->icone;
+        $language->save();
+
+        return response()->json([
+            'message' => 'Language created successfully',
+            'data' => $language
+        ]);
+    } catch(ValidationException $e) {
+        return response()->json([
+            'error' => 'Validation failed',
+            'message' => $e->validator->errors()->first()
+        ], 422);
+    } catch(Exception $e) {
+        return response()->json([
+            'error' => 'An error occurred',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
   /**
      * @OA\Get(
      *     path="/api/language/show/{id}",
      *     summary="Get a specific language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -125,19 +131,13 @@ class LanguageController extends Controller
 
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
 /**
      * @OA\Put(
      *     path="/api/language/update/{id}",
      *     summary="Update a language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -170,7 +170,7 @@ class LanguageController extends Controller
     {
         try{
                 $data = $request->validate([
-                    'name' =>'required | string|unique:languages',
+                    'name' =>'required | string',
                 ]);
                 $language = Language::whereId($id)->update($data);
                 return response()->json(['data' => 'Logement mise à jour avec succès.'], 200);
@@ -185,6 +185,7 @@ class LanguageController extends Controller
      *     path="/api/language/destroy/{id}",
      *     summary="Delete a language by ID",
      *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -224,6 +225,7 @@ class LanguageController extends Controller
  *     path="/api/language/block/{id}",
  *     summary="Block a language",
  *     tags={"Language"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -270,6 +272,7 @@ class LanguageController extends Controller
  *     path="/api/language/unblock/{id}",
  *     summary="Unblock a language",
  *     tags={"Language"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

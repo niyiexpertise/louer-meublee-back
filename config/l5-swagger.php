@@ -191,12 +191,18 @@ return [
                         ],
                     ],
                 ],*/
-                'sanctum' => [ // Unique name of security
-                    'type' => 'apiKey', // Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'Enter token in format (Bearer <token>)',
-                    'name' => 'Authorization', // The name of the header or query parameter to be used.
-                    'in' => 'header', // The location of the API key. Valid values are "query" or "header".
-                ],
+
+                        'bearerAuth' => [ // Unique name of security
+                            'type' => 'http',
+                            'scheme' => 'bearer',
+                            'bearerFormat' => 'JWT',
+                        ],
+                // 'sanctum' => [ // Unique name of security
+                //     'type' => 'apikey', // Valid values are "basic", "apiKey" or "oauth2".
+                //     'description' => 'Enter token in format (Bearer <token>)',
+                //     'name' => 'Authorization', // The name of the header or query parameter to be used.
+                //     'in' => 'header', // The location of the API key. Valid values are "query" or "header".
+                // ],
                 
             ],
             'security' => [
@@ -263,7 +269,7 @@ return [
                  * 'full' (expands the tags and operations),
                  * 'none' (expands nothing).
                  */
-                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'list'),
+                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'none'),
 
                 /**
                  * If set, enables filtering. The top bar will show an edit box that

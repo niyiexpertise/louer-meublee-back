@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Exception;
@@ -14,6 +13,7 @@ class PermissionController extends Controller
      *     path="/api/permission/index",
      *     summary="Get all permissions",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of permissions"
@@ -48,6 +48,7 @@ class PermissionController extends Controller
       *     path="/api/permission/store",
       *     summary="Create a new permission ",
       *     tags={"Permission"},
+      security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(
@@ -68,9 +69,6 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         try{
-            // $data = $request->validate([
-            //     'name' =>'required|unique:permissions'
-            // ]);
                 $permission = new Permission();
                 $permission->name = $request->name;
                 $permission->save();
@@ -89,6 +87,7 @@ class PermissionController extends Controller
      *     path="/api/permission/show/{id}",
      *     summary="Get a specific permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -131,6 +130,7 @@ class PermissionController extends Controller
      *     path="/api/permission/update/{id}",
      *     summary="Update a permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -180,6 +180,7 @@ class PermissionController extends Controller
      *     path="/api/permission/destroy/{id}",
      *     summary="Delete a permission by ID",
      *     tags={"Permission"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -197,36 +198,15 @@ class PermissionController extends Controller
      *     )
      * )
      */
-    public function destroy( $id)
+    public function destroy(string $id)
     {
         try{
-            $permission = Permission::find($id);
-            if (!$permission) {
-                return response()->json([
-                    'message' => 'role not found',
-                ]);
-            }
-            $n = User::permission($permission->name)->count();
-            // dd($n);
-            if (!($n == 0)) {
-                return response()->json([
-                    'message' => 'Cette permission   a  déjà été affecter à '.$n.' personne(s) veuillez lui ou leurs retiré(s) la permission  avant de la supprimé'
-                ]);
-            }
-            $permission->delete();
+            Permission::find($id)->delete();
             return response()->json([
                 'message' => ' successfully deleted'
             ],200);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }catch (Exception $e){
+            return response()->json($e);
+        }
     }
 }

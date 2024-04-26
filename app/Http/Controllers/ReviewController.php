@@ -14,6 +14,7 @@ class ReviewController extends Controller
      *     path="/api/review/index",
      *     summary="Get all reviews",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of reviews"
@@ -22,16 +23,18 @@ class ReviewController extends Controller
      * )
      */
     public function index()
-    {
-        try{
-            $reviews =  Review::where('is_deleted', false);
-            return response()->json([
-                'data' => $reviews
-            ],200);
-        }catch (Exception $e){
-            return response()->json($e);
-        }
+  {
+    try {
+        $reviews = Review::where('is_deleted', false)
+                        ->with('user') 
+                        ->get();
+        return response()->json([
+            'data' => $reviews
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json($e);
     }
+  }
 
     /**
      * Show the form for creating a new resource.
@@ -47,6 +50,7 @@ class ReviewController extends Controller
  *     operationId="createReview",
  *     summary="Créer un nouvel avis",
  *     tags={"Review"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -73,14 +77,14 @@ public function store(Request $request)
     try {
         $review = new Review();
         // $review->user_id = Auth::user()->id; // Pour l'utilisateur authentifié
-        $review->user_id = 26;
+        $review->user_id = 2;
         $review->content = $request->content;
         $review->save();
 
         return response()->json([
-            'message' => 'Création réussie',
+            'message' => 'Commentaire ajouté avec succès',
             'data' => $review
-        ]);
+        ],201);
     } catch (Exception $e) {
         return response()->json($e);
     }
@@ -91,6 +95,7 @@ public function store(Request $request)
      *     path="/api/review/show/{id}",
      *     summary="Get a specific review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -115,7 +120,7 @@ public function store(Request $request)
             if (!$review) {
                 return response()->json(['error' => 'commentaire non trouvé.'], 404);
             }
-            return redirect()->json([
+            return response()->json([
                 'data' => $review
             ]);
         }catch (Exception $e){
@@ -136,6 +141,7 @@ public function store(Request $request)
      *     path="/api/review/update/{id}",
      *     summary="Update a review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -146,8 +152,8 @@ public function store(Request $request)
      *  @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","review_id"},
-     *             @OA\Property(property="name", type="string", example="j'apprécie la démarche,etc"),
+     *             required={"content","review_id"},
+     *             @OA\Property(property="content", type="string", example="j'apprécie la démarche,etc"),
      *         )
      *     ),
      *     @OA\Response(
@@ -164,24 +170,41 @@ public function store(Request $request)
      *     )
      * )
      */
+
     public function update(Request $request, string $id)
     {
-        try{
+        try {
             $data = $request->validate([
-                'user_id' => 'required',
                 'content' => 'required'
             ]);
-            $review = Review::whereId($id)->update($data);
-        }catch (Exception $e){
-            return response()->json($e);
+    
+            $review = Review::findOrFail($id);
+            $review->update($data);
+    
+            return response()->json([
+                'message' => 'Review updated successfully',
+                'data' => $review
+            ]);
+        } catch(ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->validator->errors()->first()
+            ], 422);
+        } catch(Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
+    
 
  /**
      * @OA\Delete(
      *     path="/api/review/destroy/{id}",
      *     summary="Delete a review by ID",
      *     tags={"Review"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -219,6 +242,7 @@ public function store(Request $request)
         *     path="/api/review/block/{id}",
         *     summary="Block a review",
         *     tags={"Review"},
+        security={{"bearerAuth": {}}},
         *     @OA\Parameter(
         *         name="id",
         *         in="path",
@@ -266,6 +290,7 @@ public function store(Request $request)
  *     path="/api/review/unblock/{id}",
  *     summary="Unblock a review",
  *     tags={"Review"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

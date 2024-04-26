@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('equipment', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('description');
             $table->string('icone')->nullable();
             $table->boolean('is_deleted')->default(false);
+            $table->boolean('is_verified');
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();
         });

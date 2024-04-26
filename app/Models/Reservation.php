@@ -21,4 +21,10 @@ class Reservation extends Model
     {
         return $this->belongsTo(Housing::class);
     }
+
+    public function portfeuille_transaction()
+    {
+      return $this->hasMany(portfeuille_transaction::class);
+    }
+
 }

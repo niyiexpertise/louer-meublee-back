@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
@@ -16,6 +15,7 @@ class RoleController extends Controller
      *     path="/api/role/index",
      *     summary="Get all roles",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of roles"
@@ -30,17 +30,9 @@ class RoleController extends Controller
             return response()->json([
                 'roles' => $roles
             ],200);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }catch (Exception $e){
+            return response()->json($e);
+        }
         
 
     }
@@ -58,6 +50,7 @@ class RoleController extends Controller
       *     path="/api/role/store",
       *     summary="Create a new role ",
       *     tags={"Role"},
+      security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(
@@ -85,12 +78,9 @@ class RoleController extends Controller
                 'message' =>'Successfully created',
                 'role' => $role
             ],200);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }catch (Exception $e){
+            return response()->json($e);
+        }
         
     }
 
@@ -99,6 +89,7 @@ class RoleController extends Controller
      *     path="/api/role/show/{id}",
      *     summary="Get a specific role by ID",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -123,17 +114,9 @@ class RoleController extends Controller
                 return response()->json([
                     'data' => $role
                 ],200);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }catch (Exception $e){
+            return response()->json($e);
+        }
     }
 
     /**
@@ -144,68 +127,13 @@ class RoleController extends Controller
         //
     }
 
-/**
-     * @OA\Put(
-     *     path="/api/role/update/{id}",
-     *     summary="Update a role by ID",
-     *     tags={"Role"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the role",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *  @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","role_id"},
-     *             @OA\Property(property="name", type="string", example="traveler"),
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Role updated successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Role not found"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error"
-     *     )
-     * )
-     */
-    public function update(Request $request, string $id)
-    {
-        try{
-            $data = $request->validate([
-                'name' => 'required'
-            ]);
-            Role::whereId($id)->update($data);
-            return response()->json([
-                'message' => 'Role updated successfully',
-                'data' => $data
-            ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
-    }
 
  /**
      * @OA\Delete(
      *     path="/api/role/destroy/{id}",
      *     summary="Delete a role by ID",
      *     tags={"Role"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -226,33 +154,12 @@ class RoleController extends Controller
     public function destroy(string $id)
     {
         try{
-                $role = Role::find($id);
-                $a = new AuthController();
-                if (!$role) {
-                    return response()->json([
-                        'message' => 'role not found',
-                    ]);
-                }
-                $n = User::role($role->name)->count();
-                if (!($n == 0)) {
-                    return response()->json([
-                        'message' => 'Ce rôle   a  déjà été affecter à '.$n.' personne(s) veuillez lui ou leurs retiré(s) la rôle  avant de la supprimé'
-                    ]);
-                }
-                $role->delete();
+                Role::find($id)->delete();
                 return response()->json([
                     'message' => ' role  deleted successfully ',
                 ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }catch (Exception $e){
+            return response()->json($e);
+        }
     }
 }

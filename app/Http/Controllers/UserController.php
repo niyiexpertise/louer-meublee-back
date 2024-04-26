@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ConfirmationLoginEmail;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\User_role;
@@ -9,12 +10,18 @@ use App\Models\User_language;
 use App\Models\Review;
 use App\Models\Language;
 use App\Models\Notification;
+use App\Models\Commission;
+use App\Models\Housing;
 use Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
-
+use Exception;
+use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 class UserController extends Controller
 {
     /**
@@ -22,6 +29,7 @@ class UserController extends Controller
  *     path="/api/users/index",
  *     summary="Get all users",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="List of users",
@@ -89,7 +97,7 @@ class UserController extends Controller
     ])
     ->where('is_deleted', false)
     ->get();
-
+     
     $formattedUsers = [];
     foreach ($users as $user) {
         $formattedUser = [
@@ -106,6 +114,9 @@ class UserController extends Controller
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
+            'is_hote' => $user->is_hote,
+            'is_traveller' => $user->is_traveller,
+            'is_admin' => $user->is_admin,
             'is_deleted' => $user->is_deleted,
             'is_blocked' => $user->is_blocked,
             'email_verified_at' => $user->email_verified_at,
@@ -143,6 +154,7 @@ class UserController extends Controller
  * @OA\Post(
  *   path="/api/users/register",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Enregistrer un nouvel utilisateur",
  *   description="Enregistre un nouvel utilisateur avec les informations fournies",
  *   @OA\RequestBody(
@@ -209,36 +221,37 @@ class UserController extends Controller
         // Validation des données
         
         
-        $validator = Validator::make($request->all(), [
-            'nom' => 'required|string',
-            'prenom' => 'required|string',
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
-            ],
-            'code_pays' => 'required|string',
-            'telephone' => 'required|String|numeric|unique:users',
-            'email' => 'required|email|unique:users',
-            'pays' => 'required|string',
-            'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'ville' => 'required|string',
-            'addresse' => 'required|string',
-            'sexe' => 'required|string',
-            'language_id' => [
-                'required',
-                'min:1',
+        // $validator = Validator::make($request->all(), [
+        //     'lastname' => 'required|string',
+        //     'firstname' => 'required|string',
+        //     'password' => [
+        //         'required',
+        //         'string',
+        //         'min:8',
+        //         'confirmed',
+        //         'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
+        //     ],
+        //     'code_pays' => 'required|string',
+        //     'telephone' => 'required|String|numeric|unique:users',
+        //     'email' => 'required|email|unique:users',
+        //     'country' => 'required|string',
+        //     'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        //     'city' => 'required|string',
+        //     'address' => 'required|string',
+        //     'sexe' => 'required|string',
+        //     'language_id' => [
+        //         'required',
+        //         'min:1',
+        //         'exists:languages,id'
                 
-            ],
-            'password_confirmation' => 'required|string',
+        //     ],
+        //     'password_confirmation' => 'required|string',
             
-        ]);
+        // ]);
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json(['error' => $validator->errors()], 400);
+        // }
         
         if ($request->hasFile('identity_profil')) {
         $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
@@ -246,8 +259,6 @@ class UserController extends Controller
         $base_url = url('/');
         $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
         }
-
-        
         $user = new User([
             'lastname' => strtoupper($request->nom),
             'firstname' => $request->prenom,
@@ -261,8 +272,8 @@ class UserController extends Controller
             'address' => $request->addresse,
             'sexe' => $request->sexe,
             'postal_code' => $request->postal_code,
-            'is_hote' => 0,
             'is_admin' => 0,
+            'is_hote' => 0,
             'is_traveller' => 1
             
             
@@ -296,33 +307,11 @@ class UserController extends Controller
     }
 
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 /**
  * @OA\Delete(
  *   path="/api/users/destroy/{id}",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Marquer un utilisateur comme supprimé",
  *   description="Marque un utilisateur comme supprimé en définissant is_deleted à true.",
  *  @OA\Parameter(
@@ -366,6 +355,7 @@ class UserController extends Controller
  * @OA\Get(
  *     path="/api/users/userReviews",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Obtenir les avis de l'utilisateur connecté",
  *     description="Récupère les avis associés à l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -397,6 +387,7 @@ public function userReviews()
  * @OA\Get(
  *     path="/api/users/userLanguages",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Obtenir les langues de l'utilisateur connecté",
  *     description="Récupère les langues associées à l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -437,6 +428,7 @@ public function userLanguages()
  * @OA\Get(
  *     path="/api/users/userPreferences",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     summary="Afficher les préférences de l'utilisateur connecté",
  *     description="Récupère les préférences de l'utilisateur connecté.",
  *     security={{"bearerAuth": {}}},
@@ -455,7 +447,7 @@ public function userLanguages()
  */
 public function showUserPreferences()
     {
-        $user_Id=1;
+        $user_Id=3;
         //$userId = Auth::id();
         $user = User::findOrFail($user_Id);
 
@@ -470,6 +462,7 @@ public function showUserPreferences()
  * @OA\Post(
  *   path="/api/users/update_profile_photo",
  *   tags={"User"},
+ * security={{"bearerAuth": {}}},
  *   summary="Mettre à jour la photo de profil de l'utilisateur",
  *   description="Permet à l'utilisateur de mettre à jour sa photo de profil en téléchargeant une nouvelle image",
  *   @OA\RequestBody(
@@ -550,6 +543,7 @@ public function showUserPreferences()
  *     path="/api/users/block/{id}",
  *     summary="Block a user",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -599,6 +593,7 @@ public function showUserPreferences()
  *     path="/api/users/unblock/{id}",
  *     summary="Unblock a users",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -644,6 +639,7 @@ public function unblock($id)
  *     path="/api/users/pays/{pays}",
  *     summary="Get all users from a country",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="pays",
  *         in="path",
@@ -692,6 +688,9 @@ public function unblock($id)
              'address' => $user->address,
              'sexe' => $user->sexe,
              'postal_code' => $user->postal_code,
+             'is_hote' => $user->is_hote,
+            'is_traveller' => $user->is_traveller,
+            'is_admin' => $user->is_admin,
              'is_deleted' => $user->is_deleted,
              'is_blocked' => $user->is_blocked,
              'email_verified_at' => $user->email_verified_at,
@@ -729,6 +728,7 @@ public function unblock($id)
      * @OA\Put(
      *     path="/api/users/update_password",
      *     tags={"User"},
+     * security={{"bearerAuth": {}}},
      *     summary="Update user password",
      *     description="Update user password.",
      *     security={{"bearerAuth": {}}},
@@ -799,6 +799,7 @@ public function updatePassword(Request $request)
  *     path="/api/users/travelers",
  *     summary="Obtenir la liste des utilisateurs voyageurs",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des utilisateurs avec le rôle 'traveler'",
@@ -814,19 +815,14 @@ public function updatePassword(Request $request)
  */
 public function getUsersWithRoletraveler()
 {
-    $role = Role::where('name', 'traveler')->first();
-
-    if (!$role) {
-        return response()->json(['error' => 'Le rôle "traveler" n\'existe pas.'], 404);
-    }
-
-    $usersWithRole = $role->users()->with([
-        'user_language.language',
-        'user_preference.preference'
-    ])->get();
+    // Récupérer les utilisateurs qui sont des voyageurs
+    $usersWithRole = User::where('is_traveller', true)
+        ->where('is_deleted', 0)
+        ->with(['user_language.language', 'user_preference.preference'])
+        ->get();
 
     if ($usersWithRole->isEmpty()) {
-        return response()->json(['message' => 'Aucun utilisateur avec le rôle "traveler" trouvé.'], 404);
+        return response()->json(['message' => 'Aucun utilisateur voyageur trouvé.'], 404);
     }
 
     $formattedUsers = [];
@@ -835,28 +831,33 @@ public function getUsersWithRoletraveler()
             'id' => $user->id,
             'lastname' => $user->lastname,
             'firstname' => $user->firstname,
+            'telephone' => $user->telephone,
+            'code_pays' => $user->code_pays,
             'email' => $user->email,
+            'country' => $user->country,
+            'file_profil' => $user->file_profil,
+            'city' => $user->city,
+            'address' => $user->address,
+            'sexe' => $user->sexe,
+            'postal_code' => $user->postal_code,
+            'is_hote' => $user->is_hote,
+            'is_traveller' => $user->is_traveller,
+            'is_admin' => $user->is_admin,
+            'user_language' => $user->user_language->map(function ($userLanguage) {
+                return [
+                    'language_id' => $userLanguage->language_id,
+                    'name' => $userLanguage->language->name,
+                    'icone' => $userLanguage->language->icone,
+                ];
+            }),
+            'user_preference' => $user->user_preference->map(function ($userPreference) {
+                return [
+                    'preference_id' => $userPreference->preference_id,
+                    'name' => $userPreference->preference->name,
+                    'icone' => $userPreference->preference->icone,
+                ];
+            }),
         ];
-
-        $formattedLanguages = [];
-        foreach ($user->user_language as $userLanguage) {
-            $formattedLanguages[] = [
-                'language_id' => $userLanguage->language_id,
-                'name' => $userLanguage->language->name,
-                'icone' => $userLanguage->language->icone,
-            ];
-        }
-        $formattedUser['user_language'] = $formattedLanguages;
-
-        $formattedPreferences = [];
-        foreach ($user->user_preference as $userPreference) {
-            $formattedPreferences[] = [
-                'preference_id' => $userPreference->preference_id,
-                'name' => $userPreference->preference->name,
-                'icone' => $userPreference->preference->icone,
-            ];
-        }
-        $formattedUser['user_preference'] = $formattedPreferences;
 
         $formattedUsers[] = $formattedUser;
     }
@@ -864,12 +865,12 @@ public function getUsersWithRoletraveler()
     return response()->json(['users' => $formattedUsers], 200);
 }
 
-
 /**
  * @OA\Put(
  *     path="/api/users/update",
  *     summary="Mettre à jour les informations d'un utilisateur",
  *     tags={"User"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -946,30 +947,186 @@ public function updateUser(Request $request)
     ], 200);
 }
 
+/**
+ * @OA\Get(
+ *     path="/api/users/hotes",
+ *     summary="Obtenir la liste des utilisateurs hote",
+ *     tags={"User"},
+ * security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des utilisateurs ayant le rôle 'hote'",
+ *         @OA\JsonContent(
+ *            
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucun utilisateur avec le rôle 'traveller' trouvé"
+ *     )
+ * )
+ */
+public function getUsersWithRoleHost()
+{
+    $usersWithRole = User::join('commissions', 'users.id', '=', 'commissions.user_id')
+        ->where('users.is_hote', true)
+        ->where('users.is_deleted', 0)
+        ->select('users.*', 'commissions.valeur as commission_value')
+        ->with(['user_language.language', 'user_preference.preference'])
+        ->get();
 
-      /**
-* @OA\Post(
-*     path="/api/users/login",
-*     summary="make authentification",
-*     tags={"User"},
-*      @OA\RequestBody(
-   *         required=true,
-   *         @OA\JsonContent(
-   *             required={"name"},
-   *             @OA\Property(property="email", type="string", example ="a@gmail.com"),
-   *             @OA\Property(property="password", type="string", example ="P@$$w0rd")
-   *         )
-   *     ),
-*     @OA\Response(
-*         response=201,
-*         description=" connected successfully"
-*     ),
-*     @OA\Response(
-*         response=401,
-*         description="Invalid credentials"
-*     )
-* )
-*/
+    if ($usersWithRole->isEmpty()) {
+        return response()->json(['message' => 'Aucun utilisateur hôte non supprimé trouvé.'], 404);
+    }
+
+    $formattedUsers = [];
+    foreach ($usersWithRole as $user) {
+        $formattedUser = [
+            'id' => $user->id,
+            'lastname' => $user->lastname,
+            'firstname' => $user->firstname,
+            'telephone' => $user->telephone,
+            'code_pays' => $user->code_pays,
+            'email' => $user->email,
+            'country' => $user->country,
+            'file_profil' => $user->file_profil,
+            'city' => $user->city,
+            'address' => $user->address,
+            'sexe' => $user->sexe,
+            'postal_code' => $user->postal_code,
+            'is_hote' => $user->is_hote,
+            'is_traveller' => $user->is_traveller,
+            'is_admin' => $user->is_admin,
+            'commission' =>$user->commission_value,
+            'user_language' => $user->user_language->map(function ($userLanguage) {
+                return [
+                    'language_id' => $userLanguage->language_id,
+                    'name' => $userLanguage->language->name,
+                    'icone' => $userLanguage->language->icone,
+                ];
+            }),
+            'user_preference' => $user->user_preference->map(function ($userPreference) {
+                return [
+                    'preference_id' => $userPreference->preference_id,
+                    'name' => $userPreference->preference->name,
+                    'icone' => $userPreference->preference->icone,
+                ];
+            }),
+            
+        ];
+
+        $formattedUsers[] = $formattedUser;
+    }
+
+    return response()->json(['users' => $formattedUsers], 200);
+}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/users/admins",
+ *     summary="Obtenir la liste des utilisateurs admin",
+ *     tags={"User"},
+ * security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des utilisateurs ayant le rôle 'admin'",
+ *         @OA\JsonContent(
+ *            
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucun utilisateur avec le rôle 'admin' trouvé"
+ *     )
+ * )
+ */
+public function getUsersWithRoleAdmin()
+{
+
+    $usersWithRole = User::where('is_admin', true)
+        ->where('is_deleted', 0)
+        ->with(['user_language.language', 'user_preference.preference'])
+        ->get();
+
+    if ($usersWithRole->isEmpty()) {
+        return response()->json(['message' => 'Aucun utilisateur administrateur non supprimé trouvé.'], 404);
+    }
+
+    $formattedUsers = [];
+    foreach ($usersWithRole as $user) {
+        $formattedUser = [
+            'id' => $user->id,
+            'lastname' => $user->lastname,
+            'firstname' => $user->firstname,
+            'telephone' => $user->telephone,
+            'code_pays' => $user->code_pays,
+            'email' => $user->email,
+            'country' => $user->country,
+            'file_profil' => $user->file_profil,
+            'city' => $user->city,
+            'address' => $user->address,
+            'sexe' => $user->sexe,
+            'postal_code' => $user->postal_code,
+            'is_hote' => $user->is_hote,
+            'is_traveller' => $user->is_traveller,
+            'is_admin' => $user->is_admin,
+            'user_language' => $user->user_language->map(function ($userLanguage) {
+                return [
+                    'language_id' => $userLanguage->language_id,
+                    'name' => $userLanguage->language->name,
+                    'icone' => $userLanguage->language->icone,
+                ];
+            }),
+            'user_preference' => $user->user_preference->map(function ($userPreference) {
+                return [
+                    'preference_id' => $userPreference->preference_id,
+                    'name' => $userPreference->preference->name,
+                    'icone' => $userPreference->preference->icone,
+                ];
+            }),
+        ];
+
+        $formattedUsers[] = $formattedUser;
+    }
+
+    return response()->json(['users' => $formattedUsers], 200);
+}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/users/login",
+ *     tags={"Connection/Deconnection"},
+ *     summary="Authenticate user and generate access token",
+ *     operationId="login",
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="email", type="string", format="email", example="admin@gmail.com"),
+ *             @OA\Property(property="password", type="string", format="password", example="password123")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful authentication",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="token_type", type="string", example="Bearer"),
+ *             @OA\Property(property="user", type="object"),
+ *             @OA\Property(property="role", type="array", @OA\Items(type="string")),
+ *             @OA\Property(property="access_token", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized",
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *     )
+ * )
+ */
 
 
 public function login(Request $request){
@@ -983,27 +1140,696 @@ public function login(Request $request){
       if($user !=null){
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('auth_token')->plainTextToken;
+
+            $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            if($user->code !== null)  {
+                $user->code = $codes;
+                $user->save();
+            }
+            // return response()->json('a');
+
+            $mail = [
+                'title' => 'Entrez le code suivant pour finaliser votre authentification.',
+                'body' => $codes
+            ];
+            
+            // Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
+            unset($user->code);
             return response()->json([
-                'token_type' => 'Bearer',
                 'user' => $user,
                 'role' => $user->getRoleNames(),
-                'access_token' => $token
+                'access_token' => $token,
+                'token_type' => 'Bearer',
             ]);
         } else {
             return response()->json(['error' => 'Mot de passe invalide.'], 401);
       }
 
-}} catch(Exception $e) {    
-    return response()->json($e);
+
+    }else {
+        return response()->json(['error' => 'Adresse email invalide.'], 401);
+    }
+
+   } catch(Exception $e) {    
+    return response()->json($e->getMessage());
+    }
 }
+
+/**
+ * @OA\Post(
+ *     path="/api/users/verification_code",
+ *     tags={"Connection/Deconnection"},
+ *     summary="Vérification du code de vérification",
+ *     description="Vérifie le code de vérification envoyé par l'utilisateur.",
+ *     requestBody={
+ *         "required": true,
+ *         "content": {
+ *             "application/json": {
+ *                 "schema": {
+ *                     "type": "object",
+ *                     "properties": {
+ *                         "code": {
+ *                             "type": "string",
+ *                             "description": "Le code de vérification à vérifier."
+ *                         }
+ *                     },
+ *                     "required": "code"
+ *                 }
+ *             }
+ *         }
+ *     },
+ *     @OA\Response(
+ *         response="401",
+ *         description="Échec de la vérification",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="status_code",
+ *                 type="integer",
+ *                 example=401,
+ *                 description="Le code d'état de la réponse."
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Check failed",
+ *                 description="Le message indiquant que la vérification a échoué."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response="500",
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="status_code",
+ *                 type="integer",
+ *                 example=500,
+ *                 description="Le code d'état de la réponse."
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 description="Le message d'erreur détaillé."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response="default",
+ *         description="Réponse par défaut pour les autres cas",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="status_code",
+ *                 type="integer",
+ *                 example=401,
+ *                 description="Le code d'état de la réponse."
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Verification passed",
+ *                 description="Le message indiquant que la vérification a réussi."
+ *             ),
+ *             @OA\Property(
+ *                 property="verification",
+ *                 type="string",
+ *                 description="Le code de vérification vérifié."
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function verification_code(Request $request)
+{
+    try {
+        $verification = $request->code;
+        $code = User::where('code', $verification)->first();
+
+        if ($code !== null) {
+            return response()->json([
+                'status_code' => 401,
+                'message' => 'Verification passed',
+                'verification' => $verification
+            ]);
+        }
+
+        return response()->json([
+            'status_code' => 401,
+            'message' => 'Check failed',
+        ]);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'status_code' => 500,
+            'message' => $e->getMessage(),
+        ]);
+    }
 }
 
 
-public function login_jwt(Request $request){
+
+/**
+ * @OA\Post(
+ *     path="/api/users/new_code/{id}",
+ *     summary="Generate a new code for user",
+ *     tags={"Connection/Deconnection"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="User ID",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Code sent successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Code sent successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="This id does not exist",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="This id does not exist")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Internal Server Error")
+ *         )
+ *     )
+ * )
+ */
+public function new_code($id) {
+    try {
+        if($id !== null) {
+            $user = User::find($id);
+            $email = $user->email;
+            $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            if($user->code !== null) {
+                $user->code = $codes;
+                $user->save();
+            }
+            $mail = [
+                'title' => 'Help us protect your account',
+                'body' => $user->code
+            ];
+            Mail::to($email)->send(new ConfirmationLoginEmail($mail) );
+            
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Code sent successfully',
+            ]);
+        } 
+        return response()->json([
+            'status_code' => 404,
+            'message' => 'This id does not exist'
+        ]);
+
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Internal Server Error'], 500);
+    }
+}
+/**
+ * @OA\Post(
+ *     path="/api/users/password_recovery_start_step",
+ *     summary="Start password recovery process",
+ *     tags={"Connection/Deconnection"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 @OA\Property(
+ *                     property="email",
+ *                     type="string",
+ *                     description="User's email address",
+ *                     example="user@example.com"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Email sent successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Email sent successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Email not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Email not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Internal Server Error")
+ *         )
+ *     )
+ * )
+ */
+
+public function password_recovery_start_step(Request $request){
+    try{
+
+        $request->validate([
+            'email' => 'required',
+        ]);
+        $email = $request->email;
+        if(User::where('email',$email)->exists()){
+            $user = User::where('email',$email)->first();
+            $mail = [
+                'title' => 'Help us protect your account',
+                'body' => $user->code
+            ];
+            // Mail::to($email)->send(new ConfirmationLoginEmail($mail) );
+            return response()->json([
+                'status_code' => 200,
+                'message' => "Email sent successfully"
+             ]);
+        }else{
+            return response()->json([
+                'status_code' => 404,
+                'message' => "Email not found"
+             ]);
+        }
+
+    } catch(Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+
+/**
+ * @OA\Post(
+ *     path="/api/users/password_recovery_end_step",
+ *     summary="End password recovery process",
+ *     tags={"Connection/Deconnection"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 @OA\Property(
+ *                     property="email",
+ *                     type="string",
+ *                     description="User's email address",
+ *                     example="user@example.com"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="new_password",
+ *                     type="string",
+ *                     description="New password for the user",
+ *                     example="new_password123"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Password changed successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Password changed successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Email not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Email not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Internal Server Error")
+ *         )
+ *     )
+ * )
+ */
+
+public function password_recovery_end_step(Request $request){
+    try {
+
+        $request->validate([
+            'email' => 'required',
+            'new_password' => 'required'
+        ]);
+
+        $email = $request->email;
+        $user = User::where('email', $email)->first();
+        if($user){
+            $user->update(['password' => Hash::make($request->new_password)]);
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Password changed successfully'
+            ]);
+        }else {
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Email not found'
+                ]);
+        }
+
+          } catch(Exception $e) {
+            return response()->json($e->getMessage());
+            }
+}
+
+/**
+ * @OA\Post(
+ *     path="/api/users/logout",
+ *     tags={"Connection/Deconnection"},
+ *     summary="Logout the user",
+ *     operationId="logout",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successfully logged out",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="You are disconnected")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized",
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *     )
+ * )
+ */
+public function logout(Request $request){
+    try{
+        $accessToken = $request->bearerToken();
+        $token = PersonalAccessToken::findToken($accessToken);
+        $token->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'You are disconnected'
+        ]);
+
+    } catch (Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+/**
+ * @OA\Get(
+ *     path="/api/user",
+ *     summary="Check authentication status",
+ *     description="Check if the user is authenticated and retrieve user data and role",
+ *     tags={"Authentication"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="data", type="object"),
+ *             @OA\Property(property="role", type="array", @OA\Items(type="string"))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function checkAuth(Request $request){
+
+    try{
+        return response()->json([
+            'data' => $request->user(),
+            'role'=>$request->user()->getRoleNames()
+        ]);
+
+    } catch (Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+
+
+      /**
+     * @OA\Delete(
+     *     path="/api/users/destroyHousingHote/{id}",
+     *     summary="Suppression d un logement par l' hote",
+     *     tags={"User"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the housing",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="housing deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Housing not found"
+     *     )
+     * )
+     */
+public function destroyHousingHote($id){
+
+    try{
+        $housing = Housing::find($id);
+        if (!$housing) {
+            return response()->json(['error' => 'Housing not found.'], 404);
+        }
+        if(!(Auth::user()->id == $housing->user_id)){
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement que vous n avez pas ajouté.'],);
+        }
+        if ($housing->is_disponible == true) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement disponible.'],);
+        }
+        if ($housing->is_destroy == true) {
+            return response()->json(['error' => 'Logement déjà supprimé.'],);
+        }
+        Housing::whereId($id)->update(['is_destroy' => 1]);
+        return response()->json(['data' => 'Logement supprimé avec succès'], 200);
+    } catch(Exception $e) {
+        return response()->json($e);
+    }
+}
+
+
+   /**
+     * @OA\Get(
+     *     path="/api/users/getHousingDestroyedByHote",
+     *     summary="Liste des logements supprimés par les hotes",
+     *     tags={"User"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of housing what be retrieve by hote"
+     *
+     *     )
+     * )
+     */
+public function getHousingDestroyedByHote(){
+    try{
+        $housings = Housing::where('is_destroy',true)->get();
+        $data = [];
+        foreach($housings as $housing){
+            $data[] = [
+                'id_logement' =>$housing->id,
+                'id_user' =>$housing->user_id,
+                'user_firstname' =>$housing->user->firstname,
+                'user_lastname' =>$housing->user->lastname,
+            ];
+        }
+        return response()->json(['data' => $data], 200);
+    } catch(Exception $e) {
+        return response()->json($e->getMessage());
+    }
+  
+}
+
+
+   /**
+     * @OA\Get(
+     *     path="/api/users/getHoteHousing",
+     *     summary="Liste des logements pour l'admin",
+     *     tags={"User"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of housing what be retrieve by hote"
+     *
+     *     )
+     * )
+     */
+public function getHoteHousing(){
+    try{
+        $housings = Housing::where('is_deleted',false)->get();
+        $data = [];
+        foreach($housings as $housing){
+            $data[] = [
+                'id_logement' =>$housing->id,
+                'id_user' =>$housing->user_id,
+                'user_firstname' =>$housing->user->firstname,
+                'user_lastname' =>$housing->user->lastname,
+            ];
+        }
+        return response()->json(['data' => $data], 200);
+    } catch(Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+
+
+   /**
+     * @OA\Get(
+     *     path="/api/users/getHousingForHote",
+     *     summary="Liste des logements pour l'hote",
+     *     tags={"User"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of housing what be retrieve by hote"
+     *
+     *     )
+     * )
+     */
+public function getHousingForHote(){
+   
+
+    try{
+        $housings = Housing::where('is_destroyed',0)
+        ->where('is_deleted',0)
+        ->where('is_blocked',0)
+        ->where('user_id',Auth::user()->id)
+        ->with('user')
+        ->get();
+        return response()->json(['data' => $housings], 200);
+    } catch(Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+
+
+/**
+ * Mettre à jour le mot de passe de l'utilisateur connecté.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\JsonResponse
+ *
+ * @OA\Put(
+ *      path="/api/users/update_passwords",
+ *      operationId="updatePasswords",
+ *      tags={"User"},
+ *      summary="Modification du mot de passe de l'utilisateur connecté",
+ *      description="Cette fonction permet à un utilisateur de modifier son mot de passe.",
+ *      security={{"bearerAuth": {}}},
+ *      @OA\RequestBody(
+ *          required=true,
+ *          description="Données pour la mise à jour du mot de passe",
+ *          @OA\JsonContent(
+ *              required={"password", "new_password"},
+ *              @OA\Property(property="old_password", type="string", format="password", description="Ancien mot de passe"),
+ *              @OA\Property(property="new_password", type="string", format="password", description="Nouveau mot de passe"),
+ *  @OA\Property(property="new_password_confirmation", type="string", example="new_password")
+ *          ),
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Mot de passe modifié avec succès",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="status_code", type="integer", example=200),
+ *              @OA\Property(property="message", type="string", example="Password modified successfully"),
+ *          ),
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Mot de passe incorrect",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="status_code", type="integer", example=400),
+ *              @OA\Property(property="message", type="string", example="Your old password is incorrect"),
+ *          ),
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Utilisateur non trouvé",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="status_code", type="integer", example=404),
+ *              @OA\Property(property="message", type="string", example="User not found"),
+ *          ),
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur interne du serveur",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="An error occurred"),
+ *              @OA\Property(property="message", type="string", example="Message d'erreur spécifique"),
+ *          ),
+ *      ),
+ * )
+ */
+
+public function update_passwords(Request $request){
+  
+    try{
+        $user = User::find(Auth::user()->id);
+        if($user->id == Auth::user()->id){
+
+           $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|min:8|confirmed|regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+           ]);
+          
+            if (\Hash::check($request->old_password, $user->password)) {
+                if (isset($request->new_password)){
+                    User::whereId($user->id)->update(['password' => Hash::make($request->new_password)]);
+                }
+
+                return response()->json([
+
+                    'status_code' => 200,
+                    'message' => 'Password modified successfully'
+                ]);
+            } else {
+
+                return response()->json([
+
+                    'status_code' => 400,
+                    'message' => 'Your old password is incorrect'
+                ]);
+            }
+        }else{
     
+            return response()->json([
+                
+                'status_code' => 404,
+                'message' => 'User not found'
+            ]);
+        }
+       
+    } catch(Exception $e) {
+        return response()->json($e->getMessage());
+    }
+}
+
 }
 
 
-}
 
 

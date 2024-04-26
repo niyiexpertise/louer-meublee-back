@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('night_number');
             $table->float('value');
+            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

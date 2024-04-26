@@ -1,27 +1,37 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccessibilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HousingTypeController; 
-use App\Http\Controllers\TypeStayController; 
+use App\Http\Controllers\HousingTypeController;
+use App\Http\Controllers\TypeStayController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\CriteriaController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\CategorieController;
-use App\Http\Controllers\CommissionController;
-use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\EquipementController;
-use App\Http\Controllers\HousingController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\ReductionController;
-use App\Http\Controllers\PromotionController;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\User_preferenceController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\User_preferenceController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChargeController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\CommissionController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\HousingChargeController;
+use App\Http\Controllers\VerificationDocumentController;
+use App\Http\Controllers\HousingController;
+use App\Http\Controllers\HousingEquipmentController;
+use App\Http\Controllers\HousingPreferenceController;
+use App\Http\Controllers\MethodPayementController;
+use App\Http\Controllers\MoyenPayementController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\RetraitController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,58 +45,68 @@ use App\Http\Controllers\UserController;
 */
 
 // Route::group(['middleware' => ['role:manager']], function () {
-   
 // });
 // Route::group(['middleware' => ['permission:publish articles']], function () { ... });
 // Route::group(['middleware' => ['role_or_permission:publish articles']], function () { ... });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json([
-        'data' => $request->user(),
-        'role'=>$request->user()->getRoleNames()
-    ]);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [UserController::class, 'checkAuth']);
+    
 });
 
-
-
+//Inscription et Connexion
 Route::prefix('users')->group(function () {
     Route::post('/register', [UserController::class, 'register']);
     Route::post('/login', [UserController::class, 'login']);
+    Route::post('/logout', [UserController::class, 'logout']);
+    Route::post('/verification_code', [UserController::class, 'verification_code']);
+    Route::post('/password_recovery_start_step', [UserController::class, 'password_recovery_start_step']);
+    Route::post('/password_recovery_end_step', [UserController::class, 'password_recovery_end_step']);
+    Route::post('/new_code/{id}', [UserController::class, 'new_code']);
+    
 });
+
 
 
 /**route nécéssitant l'authentification */
 
- Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
     //Gestion des catégories.
-    Route::group(['middleware' => ['permission:manageCategory']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('category')->group(function () {
-            Route::get('/indexCategorieEquipments', [CategorieController::class, 'indexCategorieEquipments']);
+            Route::get('/indexUnverified', [CategorieController::class, 'indexUnverified']);
+            Route::get('/VerifiednotBlockDelete', [CategorieController::class, 'VerifiednotBlockDelete']);
             Route::post('/store', [CategorieController::class, 'store']);
-            Route::get('/showEquipments/{id}', [CategorieController::class, 'showEquipments']);
             Route::get('/show/{id}', [CategorieController::class, 'show']);
             Route::put('/update/{id}', [CategorieController::class, 'update']);
             Route::delete('/destroy/{id}', [CategorieController::class, 'destroy']);
             Route::put('/block/{id}', [CategorieController::class, 'block']);
             Route::put('/unblock/{id}', [CategorieController::class, 'unblock']);
+            Route::put('/makeVerified/{id}', [CategorieController::class, 'makeVerified']);
+            Route::get('/VerifiednotBlocknotDelete', [CategorieController::class, 'VerifiednotBlocknotDelete']);
+            Route::get('/VerifiedBlocknotDelete', [CategorieController::class, 'VerifiedBlocknotDelete']);
         });
     });
 
     //Gestion des permissions
-    Route::group(['middleware' => ['permission: manageHousingType']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('housingtype')->group(function () {
             Route::post('/store', [HousingTypeController::class, 'store']);
             Route::get('/show/{id}', [HousingTypeController::class, 'show']);
+            Route::put('/updateName/{id}', [HousingTypeController::class, 'updateName']);
+            Route::post('/updateIcone/{id}', [HousingTypeController::class, 'updateIcone']);
             Route::put('/update/{id}', [HousingTypeController::class, 'update']);
             Route::delete('/destroy/{id}', [HousingTypeController::class, 'destroy']);
             Route::put('/block/{id}', [HousingTypeController::class, 'block']);
             Route::put('unblock/{id}', [HousingTypeController::class, 'unblock']);
+            Route::get('/indexBlock', [HousingTypeController::class, 'indexBlock']);
         });
     });
 
     // Gestion des type de sejour
-    Route::group(['middleware' => ['permission: manageTypeStay']], function () {
+    Route::group(['middleware' => ['permission:manageTypeStay']], function () {
         Route::prefix('typestays')->group(function () {
             Route::post('/store', [TypeStayController::class, 'store']);
             Route::get('/show/{id}', [TypeStayController::class, 'show']);
@@ -98,19 +118,20 @@ Route::prefix('users')->group(function () {
     });
 
     //Gestion  des critères de note .
-    Route::group(['middleware' => ['permission: manageCriteria']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('criteria')->group(function () {
             Route::post('/store', [CriteriaController::class, 'store']);
             Route::get('/show/{id}', [CriteriaController::class, 'show']);
-            Route::put('/update/{id}', [CriteriaController::class, 'update']);
+            Route::put('/updateName/{id}', [CriteriaController::class, 'updateName']);
+            Route::post('/updateIcone/{id}', [CriteriaController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [CriteriaController::class, 'destroy']);
             Route::put('/block/{id}', [CriteriaController::class, 'block']);
             Route::put('/unblock/{id}', [CriteriaController::class, 'unblock']);
         });
     });
 
-    //Gestion des types de role possible.
-    Route::group(['middleware' => ['permission: manageRole']], function () {
+    //Gestion des types de role possible sous forme crud.
+    Route::group(['middleware' => ['permission:manageRole']], function () {
         Route::prefix('role')->group(function () {
             Route::get('/index', [RoleController::class, 'index']);
             Route::post('/store', [RoleController::class, 'store']);
@@ -123,21 +144,31 @@ Route::prefix('users')->group(function () {
     });
 
     //Gestion des équipements.
-    Route::group(['middleware' => ['permission: manageEquipment']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('equipment')->group(function () {
-            Route::get('/index', [EquipementController::class, 'index']);
+            Route::get('/indexAdmin', [EquipementController::class, 'indexAdmin']);
+            Route::get('/indexBlock', [EquipementController::class, 'indexBlock']);
+            Route::get('/VerifiedBlocknotDelete', [EquipementController::class, 'VerifiedBlocknotDelete']);
+            Route::get('/VerifiednotBlocknotDelete', [EquipementController::class, 'VerifiednotBlocknotDelete']);
+            Route::get('/VerifiednotBlockDelete', [EquipementController::class, 'VerifiednotBlockDelete']);
             Route::post('/store', [EquipementController::class, 'store']);
+            Route::post('/storeUnexist/{housingId}', [EquipementController::class, 'storeUnexist']);
             Route::get('/show/{id}', [EquipementController::class, 'show']);
-            Route::get('/showCategories/{id}', [EquipementController::class, 'showCategories']);
-            Route::put('/update/{id}', [EquipementController::class, 'update']);
+            Route::put('/updateName/{id}', [EquipementController::class, 'updateName']);
+            Route::put('/updateCategory/{equipmentCategory}', [EquipementController::class, 'updateCategory']);
+            Route::post('/updateIcone/{id}', [EquipementController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [EquipementController::class, 'destroy']);
             Route::put('/block/{id}', [EquipementController::class, 'block']);
+            Route::put('/makeVerified/{id}/{housingId}', [EquipementController::class, 'makeVerified']);
             Route::put('/unblock/{id}', [EquipementController::class, 'unblock']);
+            Route::get('/indexUnverified', [EquipementController::class, 'indexUnverified']);
+            Route::post('/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing']);
         });
     });
 
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('users')->group(function () {
+            Route::put('/update_passwords', [UserController::class, 'update_passwords']);
             
             Route::post('/assignPermToRole/{role}/{permission}', [AuthController::class, 'assignPermToRole']);
             Route::post('/RevokePermToRole/{role}/{permission}', [AuthController::class, 'RevokePermToRole']);
@@ -166,23 +197,42 @@ Route::prefix('users')->group(function () {
 
 
 
-    //Getion des utilisateurs
-    Route::group(['middleware' => ['permission: manageUser']], function () {
+    // Gestion des utilisateurs
+Route::group(['middleware' => ['permission:manageUser']], function () {
+    Route::prefix('users')->group(function () {
+        Route::get('/index', [UserController::class, 'index']);
+        Route::get('/show/{id}', [UserController::class, 'show']);
+        Route::get('/userReviews', [UserController::class, 'userReviews']);
+        Route::get('/userLanguages', [UserController::class, 'userLanguages']);
+        Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto']);
+        Route::put('/update_password', [UserController::class, 'updatePassword']);
+        Route::put('/update', [UserController::class, 'updateUser']);
+        Route::get('/result/demande', [VerificationDocumentController::class, 'userVerificationRequests']);
+    });
+    Route::get('/document/document_actif', [DocumentController::class, 'document_actif']);
+    Route::post('/verificationdocument/store', [VerificationDocumentController::class, 'store']);
+    Route::get('/notifications/users', [NotificationController::class, 'getUserNotifications']);
+});
+
+
+    // Gestion des utilisateurs du côté de l'admin
+    Route::group(['middleware' => ['permission:manageUserAdmin']], function () {
         Route::prefix('users')->group(function () {
-            Route::get('/userReviews/{id}', [UserController::class, 'userReviews']);
             Route::get('/index', [UserController::class, 'index']);
-            Route::get('/show/{id}', [UserController::class, 'show']);
-            Route::put('/update/{id}', [UserController::class, 'update']);
             Route::delete('/destroy/{id}', [UserController::class, 'destroy']);
             Route::put('/block/{id}', [UserController::class, 'block']);
             Route::put('/unblock/{id}', [UserController::class, 'unblock']);
+            Route::get('/pays/{pays}', [UserController::class, 'getUsersByCountry']);
+            Route::get('/travelers', [UserController::class, 'getUsersWithRoletraveler']);
+            Route::get('/hotes', [UserController::class, 'getUsersWithRoleHost']);
+            Route::get('/admins', [UserController::class, 'getUsersWithRoleAdmin']);
         });
-        });
+    });
 
 
 
-    //  });
-    Route::group(['middleware' => ['permission: managePermission']], function () {
+    // Gestion des permissions sous forme crud
+    Route::group(['middleware' => ['permission:managePermission']], function () {
         Route::prefix('permission')->group(function () {
             Route::get('/index', [PermissionController::class, 'index']);
             Route::post('/store', [PermissionController::class, 'store']);
@@ -194,23 +244,45 @@ Route::prefix('users')->group(function () {
         });
     });
 
+        // Gestion des notes  sous forme crud
+        Route::group(['middleware' => ['role:traveler']], function () {
+            Route::prefix('note')->group(function () {
+                Route::get('/index', [NoteController::class, 'index']);
+                Route::post('/store', [NoteController::class, 'store']);
+                Route::get('/show/{id}', [NoteController::class, 'show']);
+                Route::put('/update/{id}', [NoteController::class, 'update']);
+                Route::delete('/destroy/{id}', [NoteController::class, 'destroy']);
+                Route::put('/block/{id}', [NoteController::class, 'block']);
+                Route::put('/unblock/{id}', [NoteController::class, 'unblock']);
+            });
+        });
+
+                // Gestion des reservations sous forme crud
+                Route::group(['middleware' => ['role:traveler']], function () {
+                    Route::prefix('reservation')->group(function () {
+                        Route::get('/index', [ReservationController::class, 'index']);
+                        Route::post('/store', [ReservationController::class, 'store']);
+                        Route::get('/show/{id}', [ReservationController::class, 'show']);
+                        Route::put('/update/{id}', [ReservationController::class, 'update']);
+                        Route::delete('/destroy/{id}', [ReservationController::class, 'destroy']);
+                        Route::put('/block/{id}', [ReservationController::class, 'block']);
+                        Route::put('/unblock/{id}', [ReservationController::class, 'unblock']);
+                    });
+                });
+
     // Gestion des commentaires
-    Route::group(['middleware' => ['permission: manageReview']], function () {
+    Route::group(['middleware' => ['permission:manageReview']], function () {
         Route::prefix('review')->group(function () {
-            Route::get('/index', [ReviewController::class, 'index']);
             Route::post('/store', [ReviewController::class, 'store']);
             Route::get('/show/{id}', [ReviewController::class, 'show']);
             Route::put('/update/{id}', [ReviewController::class, 'update']);
             Route::delete('/destroy/{id}', [ReviewController::class, 'destroy']);
-            Route::put('/block/{id}', [ReviewController::class, 'block']);
-            Route::put('/unblock/{id}', [ReviewController::class, 'unblock']);
         });
     });
 
-    //Gestion des langues.
+    //Gestion des langues sous formes de CRUD.
     Route::group(['middleware' => ['permission:manageLanguage']], function () {
         Route::prefix('language')->group(function () {
-            Route::get('/index', [LanguageController::class, 'index']);
             Route::post('/store', [LanguageController::class, 'store']);
             Route::get('/show/{id}', [LanguageController::class, 'show']);
             Route::put('/update/{id}', [LanguageController::class, 'update']);
@@ -223,33 +295,42 @@ Route::prefix('users')->group(function () {
 
 
     //Gestion des préférences.
-    Route::group(['middleware' => ['permission: managePreference']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('preference')->group(function () {
-            Route::get('/index', [PreferenceController::class, 'index']);
             Route::post('/store', [PreferenceController::class, 'store']);
+           
+            Route::get('/indexUnverified', [PreferenceController::class, 'indexUnverified']);
+            Route::post('/storeUnexist/{housingId}', [PreferenceController::class, 'storeUnexist']);
             Route::get('/show/{id}', [PreferenceController::class, 'show']);
-            Route::put('/update/{id}', [PreferenceController::class, 'update']);
+            Route::put('/updateName/{id}', [PreferenceController::class, 'updateName']);
+            Route::post('/updateIcone/{id}', [PreferenceController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [PreferenceController::class, 'destroy']);
+            Route::put('/makeVerified/{id}/{housingId}', [PreferenceController::class, 'makeVerified']);
             Route::put('/block/{id}', [PreferenceController::class, 'block']);
             Route::put('/unblock/{id}', [PreferenceController::class, 'unblock']);
+            Route::get('/VerifiedBlocknotDelete', [PreferenceController::class, 'VerifiedBlocknotDelete']);
+            Route::get('/VerifiednotBlocknotDelete', [PreferenceController::class, 'VerifiednotBlocknotDelete']);
+            Route::get('/VerifiednotBlockDelete', [PreferenceController::class, 'VerifiednotBlockDelete']);
         });
     });
 
     //Gestion des types de propriété.
-    Route::group(['middleware' => ['permission: managePropertyType']], function () {
+    Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('propertyType')->group(function () {
             Route::post('/store', [PropertyTypeController::class, 'store']);
             Route::get('/show/{id}', [PropertyTypeController::class, 'show']);
-            Route::put('/update/{id}', [PropertyTypeController::class, 'update']);
+            Route::put('/updateName/{id}', [PropertyTypeController::class, 'updateName']);
+            Route::post('/updateIcone/{id}', [PropertyTypeController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [PropertyTypeController::class, 'destroy']);
             Route::put('/block/{id}', [PropertyTypeController::class, 'block']);
+            Route::get('/indexBlock', [PropertyTypeController::class, 'indexBlock']);
             Route::put('/unblock/{id}', [PropertyTypeController::class, 'unblock']);
         });
     });
 
 
     //Gestion de la liste des documents
-    Route::group(['middleware' => ['permission: manageDocument']], function () {
+    Route::group(['middleware' => ['permission:manageDocument']], function () {
         Route::prefix('document')->group(function () {
             Route::get('/index', [DocumentController::class, 'index']);
             Route::post('/store', [DocumentController::class, 'store']);
@@ -260,59 +341,174 @@ Route::prefix('users')->group(function () {
             Route::put('/unblock/{id}', [DocumentController::class, 'unblock']);
             Route::put('/active/{id}', [DocumentController::class, 'active']);
             Route::put('/inactive/{id}', [DocumentController::class, 'inactive']);
-            Route::get('/document_actif', [DocumentController::class, 'document_actif']);
             Route::get('/document_inactif', [DocumentController::class, 'document_inactif']);
         });
     });
-
-    //Gestion des types de permission possible.
-    Route::group(['middleware' => ['permission: manageVerificationDocument']], function () {
+        //Gestion de la Verification des documents
+    Route::group(['middleware' => ['permission:manageVerificationDocument']], function () {
         
+        Route::prefix('verificationdocument')->group(function () {
+            Route::get('/index', [VerificationDocumentController::class, 'index']);
+            Route::get('/show/{id}', [VerificationDocumentController::class, 'show']);
+            Route::post('/update', [VerificationDocumentController::class, 'changeDocument']);
+            Route::post('/hote/valider/all', [VerificationDocumentController::class, 'validateDocuments']);
+            Route::post('/hote/valider/one', [VerificationDocumentController::class, 'validateDocument']);
+        });
     });
 
     //Gestion des commissions
     Route::group(['middleware' => ['permission: manageCommission']], function () {
+        
         Route::prefix('commission')->group(function () {
             Route::post('/updateCommissionForSpecifiqueUser', [CommissionController::class, 'updateCommissionForSpecifiqueUser']);
-            Route::put('/updateCommissionValueByAnother/{commission}', [DocumentController::class, 'updateCommissionValueByAnother']);
-            Route::get('/usersWithCommission/{commission}', [DocumentController::class, 'usersWithCommission']);
+            Route::put('/updateCommissionValueByAnother', [CommissionController::class, 'updateCommissionValueByAnother']);
+            Route::get('/usersWithCommission/{commission}', [CommissionController::class, 'usersWithCommission']);
         });
     });
 
-    Route::group(['middleware' => ['role:hote']], function () {
-        Route::prefix('logement')->group(function () {
-            Route::post('/store', [HousingController::class, 'store']);
-        });
-    });
-
+  //Gestion des préférences des utilisateurs
     Route::group(['middleware' => ['permission:manageUserPreference']], function () {
     
-        //Gestion des préférences des utilisateurs
+      
         Route::prefix('users/preference')->group(function () {
-            Route::post('/add', [User_preferenceController::class, 'AddUserPreferences']);
+            Route::post('/preference/add', [User_preferenceController::class, 'AddUserPreferences']);
+            Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
         });
 
     });
 
 
-    Route::group(['middleware' => ['permission: manageSubcategory']], function () {
+   // Gestion des Notifications
+   Route::group(['middleware' => ['permission:manageNotification']], function () {
+     Route::prefix('notifications')->group(function () {
+        Route::get('/index', [NotificationController::class, 'index']);
+        Route::post('/store', [NotificationController::class, 'store']);
+        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
+    });
+   });
 
+    // Gestion logement côté hôte
+    Route::group(['middleware' => ['permission: manageHousing']], function () {
+        
+        Route::prefix('logement')->group(function () {
+            Route::get('/index', [HousingController::class, 'index']);
+            Route::post('/store', [HousingController::class, 'addHousing']);
+            Route::get('/show/{id}', [HousingController::class, 'show']);
+            Route::put('/update/{id}', [HousingController::class, 'update']);
+            Route::delete('/destroy/{id}', [HousingController::class, 'destroy']);
+            Route::put('/block/{id}', [HousingController::class, 'block']);
+            Route::put('/unblock/{id}', [HousingController::class, 'unblock']);
+
+        });
     });
 
-    Route::group(['middleware' => ['permission: managePromotion']], function () {
-
+    //Gestion des charges
+    Route::group(['middleware' => ['role:traveler']], function () {
+        Route::prefix('charge')->group(function () {
+            Route::delete('/destroy/{id}', [ChargeController::class, 'destroy']);
+            Route::put('/updateName/{id}', [ChargeController::class, 'updateName']);
+            Route::post('/updateIcone/{id}', [ChargeController::class, 'updateIcone']);
+            Route::post('/store', [ChargeController::class, 'store']);
+        });
+    });
+    Route::group(['middleware' => ['role:traveler']], function () {
     });
 
-    Route::group(['middleware' => ['permission: manageReduction']], function () {
-
+    Route::group(['middleware' => ['role:traveler']], function () {
+        Route::prefix('reservation')->group(function(){
+            //hote
+            Route::put('/hote_confirm_reservation/{idReservation}', [ReservationController::class, 'hote_confirm_reservation']);
+            Route::put('/hote_reject_reservation/{idReservation}', [ReservationController::class, 'hote_reject_reservation']);
+            Route::get('/showDetailOfReservationForHote/{idReservation}', [ReservationController::class, 'showDetailOfReservationForHote']);
+            Route::get('/reservationsConfirmedByHost', [ReservationController::class, 'reservationsConfirmedByHost']);
+            Route::get('/reservationsRejectedByHost', [ReservationController::class, 'reservationsRejectedByHost']);
+            Route::get('/reservationsCanceledByTravelerForHost', [ReservationController::class, 'reservationsCanceledByTravelerForHost']);
+            //traveler
+            Route::put('/traveler_reject_reservation/{idReservation}', [ReservationController::class, 'traveler_reject_reservation']);
+            //admin
+            Route::get('/hote_with_many_housing', [ReservationController::class, 'hote_with_many_housing']);
+            Route::get('/housing_with_many_reservation', [ReservationController::class, 'housing_with_many_reservation']);
+            Route::get('/country_with_many_housing', [ReservationController::class, 'country_with_many_housing']);
+            Route::get('/country_with_many_reservation', [ReservationController::class, 'country_with_many_reservation']);
+            Route::get('/housing_without_reservation', [ReservationController::class, 'housing_without_reservation']);
+            Route::get('/getReservationsCountByYear', [ReservationController::class, 'getReservationsCountByYear']);
+            Route::get('/getReservationsByHousingId/{housingId}', [ReservationController::class, 'getReservationsByHousingId']);
+            Route::get('/getAllReservation', [ReservationController::class, 'getAllReservation']);
+            Route::get('/getUserReservations/{user}', [ReservationController::class, 'getUserReservations']);
+            Route::get('/showDetailOfReservation/{idReservation}', [ReservationController::class, 'showDetailOfReservation']);
+            Route::get('/HousingAvailableAtDate/{date}', [ReservationController::class, 'HousingAvailableAtDate']);
+            Route::get('/HousingAvailableBetweenDates/{dateDebut}/{dateFin}', [ReservationController::class, 'HousingAvailableBetweenDates']);
+            Route::get('/topTravelersWithMostReservations', [ReservationController::class, 'topTravelersWithMostReservations']);
+            Route::get('/getAllReservationCanceledByTravelerForAdmin', [ReservationController::class, 'getAllReservationCanceledByTravelerForAdmin']);
+            Route::get('/getAllReservationRejectedForAdmin', [ReservationController::class, 'getAllReservationRejectedForAdmin']);
+            Route::get('/getAllReservationConfirmedForAdmin', [ReservationController::class, 'getAllReservationConfirmedForAdmin']);
+    });
     });
 
+    Route::group(['middleware' => ['role:traveler']], function () {
+        Route::prefix('users')->group(function(){
+            Route::delete('/destroyHousingHote/{id}', [UserController::class, 'destroyHousingHote']);
+            Route::get('/getHousingDestroyedByHote', [UserController::class, 'getHousingDestroyedByHote']);
+            Route::get('/getHousingForHote', [UserController::class, 'getHousingForHote']);
+            Route::get('/getHoteHousing', [UserController::class, 'getHoteHousing']);
+        });
+});
+
+Route::group(['middleware' => ['role:traveler']], function () {
+    Route::prefix('retrait')->group(function () {
+        //Admin
+        Route::get('/ListRetraitWaitingConfirmationByAdmin', [RetraitController::class, 'ListRetraitWaitingConfirmationByAdmin']);
+        Route::get('/ListRetraitOfTravelerWaitingConfirmationByAdmin', [RetraitController::class, 'ListRetraitOfTravelerWaitingConfirmationByAdmin']);
+        Route::get('/ListRetraitOfHoteWaitingConfirmationByAdmin', [RetraitController::class, 'ListRetraitOfHoteWaitingConfirmationByAdmin']);
+        Route::get('/ListRetraitConfirmedByAdmin', [RetraitController::class, 'ListRetraitConfirmedByAdmin']);
+        Route::put('/validateRetraitByAdmin/{retraitId}', [RetraitController::class, 'validateRetraitByAdmin']);
+        Route::get('/ListRetraitRejectForAdmin', [RetraitController::class, 'ListRetraitRejectForAdmin']);
+        Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin']);
+        //another user
+        Route::post('/store', [RetraitController::class, 'store']);
+        Route::get('/ListRetraitOfUserAuth', [RetraitController::class, 'ListRetraitOfUserAuth']);
+        Route::get('/ListRetraitRejectOfUserAuth', [RetraitController::class, 'ListRetraitRejectOfUserAuth']);
+    });
+});
+
+
+Route::group(['middleware' => ['role:traveler']], function () {
+    Route::prefix('methodPayement')->group(function () {
+
+        //another user
+        Route::post('/store', [MethodPayementController::class, 'store']);
+        Route::get('/index', [MethodPayementController::class, 'index']);
+        Route::get('/show/{id}', [MethodPayementController::class, 'show']);
+        Route::put('/updateName/{id}', [MethodPayementController::class, 'updateName']);
+        Route::post('/updateIcone/{id}', [MethodPayementController::class, 'updateIcone']);
+        Route::delete('/destroy/{id}', [MethodPayementController::class, 'destroy']);
+        Route::put('/block/{id}', [MethodPayementController::class, 'block']);
+        Route::put('/unblock/{id}', [MethodPayementController::class, 'unblock']);
+       
+    });
+});
+
+Route::group(['middleware' => ['role:traveler']], function () {
+    Route::prefix('moyenPayement')->group(function () {
+        Route::get('/ListeMoyenPayement', [MoyenPayementController::class, 'ListeMoyenPayement']);
+        Route::get('/ListeMoyenPayementUserAuth', [MoyenPayementController::class, 'ListeMoyenPayementUserAuth']);
+        Route::get('/ListeMoyenPayementBlocked', [MoyenPayementController::class, 'ListeMoyenPayementBlocked']);
+        Route::get('/ListeMoyenPayementDeleted', [MoyenPayementController::class, 'ListeMoyenPayementDeleted']);
+        Route::post('/store', [MoyenPayementController::class, 'store']);
+        Route::get('/show/{idMoyenPayement}', [MoyenPayementController::class, 'show']);
+        Route::put('/update/{idMoyenPayement}', [MoyenPayementController::class, 'update']);
+        Route::delete('/destroy/{idMoyenPayement}', [MoyenPayementController::class, 'destroy']);
+        Route::put('/block/{idMoyenPayement}', [MoyenPayementController::class, 'block']);
+        Route::put('/unblock/{idMoyenPayement}', [MoyenPayementController::class, 'unblock']);
+    });
+});
 
 });
 
+
 /**end Route nécéssitant l'authentification*/
 
-/**_______________________________________________________________________________ */
+
 
 /**Route ne nécéssitant pas l'authentification */
 
@@ -321,10 +517,41 @@ Route::get('/housingtype/index', [HousingTypeController::class, 'index']);
 Route::get('/typestays/index', [TypeStayController::class, 'index']);
 Route::get('/category/index', [CategorieController::class, 'index']);
 Route::get('/criteria/index', [CriteriaController::class, 'index']);
+Route::get('/review/index', [ReviewController::class, 'index']);
+Route::get('/preference/index', [PreferenceController::class, 'index']);
+Route::get('/language/index', [LanguageController::class, 'index']);
+Route::get('charge/index', [ChargeController::class, 'index']);
 
-/** end Route ne nécéssitant pas l'authentification */
+Route::post('file/updateFile/{imageID}', [FileController::class, 'updateFile']);
+Route::post('/assignRoleToUser/{id}/{role}', [AuthController::class, 'assignRoleToUser']);
+
+Route::post('/logement/charge/addChargeToHousing', [HousingChargeController::class, 'addChargeToHousing']);
+
+Route::get('charge/listCharge', [HousingChargeController::class, 'listCharge']);
+Route::get('charge/listelogementcharge/{housingId}', [HousingChargeController::class, 'listelogementcharge']);
+
+
+Route::get('logement/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid']);
+
+Route::post('logement/makeVerifiedHousingEquipment/{housingId}', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment']);
+
+Route::get('logement/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid']);
+
+Route::get('logement/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid']);
+
+Route::get('logement/getUnexistEquipmentInvalidForHousing', [HousingEquipmentController::class, 'getUnexistEquipmentInvalidForHousing']);
 
 
 
+Route::get('logement/getHousingPreferenceInvalid', [HousingPreferenceController::class, 'getHousingPreferenceInvalid']);
 
+Route::get('logement/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing']);
+
+Route::get('logement/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid']);
+
+Route::get('logement/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid']);
+
+Route::post('logement/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference']);
+
+Route::post('/preference/addPreferenceToHousing', [HousingPreferenceController::class, 'addPreferenceToHousing']);
 

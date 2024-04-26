@@ -19,6 +19,7 @@ class AuthController extends Controller
  *     path="/api/users/assignPermToRole/{role}/{permission}",
  *     summary="ajouter une permission à un rôle",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -111,6 +112,7 @@ class AuthController extends Controller
  *     path="/api/users/RevokePermToRole/{role}/{permission}",
  *     summary="retirer une permission à un rôle",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -194,6 +196,7 @@ class AuthController extends Controller
  *     path="/api/users/getUserRoles/{id}",
  *     summary="Récupérer la liste des rôle assigner a un utilisateur",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -258,6 +261,7 @@ class AuthController extends Controller
  *     path="/api/users/assignRoleToUser/{id}/{role}",
  *     summary="assigner un rôle à un utilisateur",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -360,6 +364,7 @@ class AuthController extends Controller
  *     path="/api/users/RevokeRoleToUser/{id}/{role}",
  *     summary="retirer un rôle à un utilisateur",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -462,6 +467,7 @@ class AuthController extends Controller
  *     path="/api/users/assignPermToUser/{id}/{permission}",
  *     summary="ajouter une permission à un utilisateur",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -574,6 +580,7 @@ class AuthController extends Controller
  *     path="/api/users/revokePermToUser/{id}/{permission}",
  *     summary="retirer une permission à un rôle",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -677,6 +684,7 @@ class AuthController extends Controller
  *     path="/api/users/getUserPerms/{id}",
  *     summary="Récupérer la liste des permissions assigner a un utilisateur",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -740,6 +748,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithRole/{role}",
  *     summary="Liste des utilisateurs ayant un rôle donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -801,6 +810,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithRoleCount/{role}",
  *     summary="Nombre des utilisateurs ayant un rôle donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -863,6 +873,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithPerm/{permission}",
  *     summary="Liste des utilisateurs ayant une permission donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="permission",
  *         in="path",
@@ -924,6 +935,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithPermCount/{permission}",
  *     summary="nombre des utilisateurs ayant une permission donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="permission",
  *         in="path",
@@ -984,6 +996,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithoutRole/{role}",
  *     summary="Liste des utilisateurs n'ayant pas un rôle donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -1044,6 +1057,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithoutRoleCount/{role}",
  *     summary="Nombre des utilisateurs n'ayant pas un rôle donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -1104,6 +1118,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithoutPerm/{permission}",
  *     summary="Liste des utilisateurs n'ayant une permission donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="permission",
  *         in="path",
@@ -1143,9 +1158,6 @@ class AuthController extends Controller
                     return response()->json('permission not found');
                 }
                 $users = User::withoutPermission($permission->name)->get();
-                if(!$users){
-                    return response()->json('users not found for this permission');
-                }
                 return response()->json([
                     'data' => $users
                 ]);
@@ -1159,6 +1171,7 @@ class AuthController extends Controller
  *     path="/api/users/usersWithoutPermCount/{permission}",
  *     summary="Nombre des utilisateurs n'ayant une permission donné",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="permission",
  *         in="path",
@@ -1211,6 +1224,7 @@ class AuthController extends Controller
      *     path="/api/users/usersRoles",
      *     summary="liste des utilisateurs et leur rôles",
      *     tags={"ManageAccess"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="list of users and their roles"
@@ -1237,6 +1251,7 @@ class AuthController extends Controller
      *     path="/api/users/usersPerms",
      *     summary="liste des utilisateurs et leur permissions",
      *     tags={"ManageAccess"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of users and their permissions"
@@ -1289,6 +1304,7 @@ class AuthController extends Controller
  *     path="/api/users/rolesPerms/{role}",
  *     summary="liste des permissions d'un rôle",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -1337,6 +1353,7 @@ class AuthController extends Controller
  *     path="/api/users/rolesPermsCount/{role}",
  *     summary="nombre des permissions d'un rôle",
  *     tags={"ManageAccess"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
@@ -1385,6 +1402,7 @@ class AuthController extends Controller
        *     path="/api/users/switchToHote",
        *     summary="quitter le role voyageur au role hote",
        *     tags={"ManageAccess"},
+       * security={{"bearerAuth": {}}},
        *     @OA\Response(
        *         response=200,
        *         description="move to hote"
@@ -1419,6 +1437,7 @@ class AuthController extends Controller
        *     path="/api/users/switchToTraveler",
        *     summary="quitter le role hote au role voyageur",
        *     tags={"ManageAccess"},
+       * security={{"bearerAuth": {}}},
        *     @OA\Response(
        *         response=200,
        *         description="move to traveler"

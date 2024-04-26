@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->float('valeur');
-            $table->boolean('is_deleted')->default(false);
-            $table->boolean('is_blocked')->default(false);
             $table->timestamps();
         });
     }

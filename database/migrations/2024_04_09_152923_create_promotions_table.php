@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('number_of_reservation');
             $table->float('value');
+            $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
             $table->timestamps();

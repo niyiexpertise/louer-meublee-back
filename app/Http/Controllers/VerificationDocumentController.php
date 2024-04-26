@@ -185,52 +185,64 @@ public function index()
 
 
 
-public function store(Request $request)
-{
-    try {
-        $verificationDocuments = [];
-        $user_id = auth()->user()->id;
-        $idDocuments =$request->id_document;
-        $imagePieces = $request->file('image_piece');     
-        if (count($idDocuments) !== count($imagePieces)) {
-            return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
-        }
+     public function store(Request $request)
+     {
+         try {
+             $user_id = auth()->user()->id;
+             $idDocuments = $request->id_document;
+             $imagePieces = $request->file('image_piece');     
+             if (count($idDocuments) !== count($imagePieces)) {
+                 return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
+             }
+     
+             $verificationDocuments = [];
+     
+             foreach ($idDocuments as $key => $idDocument) {
 
-        foreach ($idDocuments as $key => $idDocument) {
-            $imagePiece = $imagePieces[$key];
-
-            $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-            
-            $base_url = url('/');
-            $path_url = $base_url . '/image/document_verification/' . $path_name;
-            
-            $verificationDocument = new verification_document();
-            $verificationDocument->user_id = $user_id; 
-
-            $verificationDocument->document_id = $idDocument;
-            $verificationDocument->path = $path_url;
-            $verificationDocument->save();
-            
-            $verificationStatut = new verification_statut();
-            $verificationStatut->verification_document_id = $verificationDocument->id;
-            $verificationStatut->save();
-            $path_path = $imagePiece->move(public_path('image/document_verification'), $path_name);
-            $verificationDocuments[] = $verificationDocument;
-
-            $adminUsers = User::where('is_admin', 1)->get();
-            foreach ($adminUsers as $adminUser) {
-                $notification = new Notification();
-                $notification->user_id = $adminUser->id;
-                $notification->name = "Une demande d'être hôte vient d'être envoyée.";
-                $notification->save();
-            }
-        }
-
-        return response()->json(['data' => 'Verification documents crees avec succes.', 'verification_documents' => $verificationDocuments], 201);
-    } catch (Exception $e) {
-        return response()->json($e);
-    }
-}
+                 $existingDocument = verification_document::where('user_id', $user_id)
+                     ->where('document_id', $idDocument)
+                     ->first();
+     
+                 if ($existingDocument) {
+                     return response()->json([
+                         'error' => "Le document avec l'identifiant $idDocument a déjà été soumis par cet utilisateur."
+                     ], 400);
+                 }
+     
+                 $imagePiece = $imagePieces[$key];
+     
+                 $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
+                 $path_url = url('/image/document_verification/' . $path_name);
+     
+                 $verificationDocument = new verification_document();
+                 $verificationDocument->user_id = $user_id; 
+                 $verificationDocument->document_id = $idDocument;
+                 $verificationDocument->path = $path_url;
+                 $verificationDocument->save();
+                 
+                 $verificationStatut = new verification_statut();
+                 $verificationStatut->verification_document_id = $verificationDocument->id;
+                 $verificationStatut->save();
+     
+                 $imagePiece->move(public_path('image/document_verification'), $path_name);
+     
+                 $verificationDocuments[] = $verificationDocument;
+     
+                 $adminUsers = User::where('is_admin', 1)->get();
+                 foreach ($adminUsers as $adminUser) {
+                     $notification = new Notification();
+                     $notification->user_id = $adminUser->id;
+                     $notification->name = "Une demande d'être hôte vient d'être envoyée.";
+                     $notification->save();
+                 }
+             }
+     
+             return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
+         } catch (Exception $e) {
+             return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
+         }
+     }
+     
 
  
     /**

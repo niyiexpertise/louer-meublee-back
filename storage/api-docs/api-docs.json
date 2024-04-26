@@ -6630,6 +6630,101 @@
                 }
             }
         },
+        "/api/logement/available_at_date": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements disponibles à une date donnée",
+                "description": "Renvoie la liste des logements disponibles à une date donnée, en tenant compte du délai de 'time before reservation'.",
+                "operationId": "728a1142bdb27654829af6075ea71977",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date pour laquelle vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements disponibles à la date donnée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Appartement Luxueux"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "example": "123 Rue de Paris"
+                                            },
+                                            "city": {
+                                                "type": "string",
+                                                "example": "Paris"
+                                            },
+                                            "country": {
+                                                "type": "string",
+                                                "example": "France"
+                                            },
+                                            "price": {
+                                                "type": "number",
+                                                "example": 120.5
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de format de date",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Format de date invalide. Utilisez YYYY-MM-DD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucun logement trouvé pour la date donnée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
@@ -7984,6 +8079,139 @@
                 ]
             }
         },
+        "/api/users/register": {
+            "post": {
+                "tags": [
+                    "Inscription"
+                ],
+                "summary": "Enregistrer un nouvel utilisateur",
+                "description": "Enregistre un nouvel utilisateur avec les informations fournies",
+                "operationId": "d62a46aefee7c5921c98e5ddb6164436",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "nom": {
+                                        "description": "Nom de l'utilisateur",
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "prenom": {
+                                        "description": "Prénom de l'utilisateur",
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "password": {
+                                        "description": "Mot de passe (min : 8 caractères, une majuscule, un chiffre, un caractère spécial)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Bagdadi2000!"
+                                    },
+                                    "code_pays": {
+                                        "description": "Code du pays",
+                                        "type": "string",
+                                        "example": "FR"
+                                    },
+                                    "telephone": {
+                                        "description": "Numéro de téléphone",
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    },
+                                    "email": {
+                                        "description": "Adresse e-mail de l'utilisateur",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@gmail.com"
+                                    },
+                                    "pays": {
+                                        "description": "Pays de l'utilisateur",
+                                        "type": "string",
+                                        "example": "France"
+                                    },
+                                    "identity_profil": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "file",
+                                        "format": "binary"
+                                    },
+                                    "ville": {
+                                        "description": "Ville de l'utilisateur",
+                                        "type": "string",
+                                        "example": "Paris"
+                                    },
+                                    "addresse": {
+                                        "description": "Adresse de l'utilisateur",
+                                        "type": "string",
+                                        "example": "123 Rue de la Paix"
+                                    },
+                                    "sexe": {
+                                        "description": "Sexe de l'utilisateur",
+                                        "type": "string",
+                                        "example": "Masculin"
+                                    },
+                                    "postal_code": {
+                                        "description": "Code postal de l'utilisateur",
+                                        "type": "string",
+                                        "example": "75001"
+                                    },
+                                    "language_id[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "description": "ID de la langue préférée de l'utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "password_confirmation": {
+                                        "description": "Confirmation du mot de passe (doit correspondre au mot de passe)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Bagdadi2000!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Utilisateur enregistré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur enregistré avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/language/index": {
             "get": {
                 "tags": [
@@ -8289,6 +8517,478 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "make authentification",
+                "operationId": "af8d52eaca6894116132c882b4499ae9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "a@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "P@$$w0rd"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": " connected successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Check authentication status",
+                "description": "Check if the user is authenticated and retrieve user data and role",
+                "operationId": "2321de506ac21b60207081c4bf25ed27",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "role": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/verification_code": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Vérification du code de vérification",
+                "description": "Vérifie le code de vérification envoyé par l'utilisateur.",
+                "operationId": "4e6923e02b38b0c62afd10fa2cbfe41b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "description": "Le code de vérification à vérifier."
+                                    }
+                                },
+                                "required": "code"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "Échec de la vérification",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "description": "Le code d'état de la réponse.",
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "message": {
+                                            "description": "Le message indiquant que la vérification a échoué.",
+                                            "type": "string",
+                                            "example": "Check failed"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "description": "Le code d'état de la réponse.",
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "description": "Le message d'erreur détaillé.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Réponse par défaut pour les autres cas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "description": "Le code d'état de la réponse.",
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "message": {
+                                            "description": "Le message indiquant que la vérification a réussi.",
+                                            "type": "string",
+                                            "example": "Verification passed"
+                                        },
+                                        "verification": {
+                                            "description": "Le code de vérification vérifié.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/new_code/{id}": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Generate a new code for user",
+                "operationId": "f6c0024eea787581682399c170203f27",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Code sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Code sent successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "This id does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This id does not exist"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal Server Error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/password_recovery_start_step": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Start password recovery process",
+                "operationId": "63bd36eafce9060edecc8c8e34c9af01",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "description": "User's email address",
+                                        "type": "string",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email sent successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Email not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal Server Error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/password_recovery_end_step": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "End password recovery process",
+                "operationId": "135f5b80cf07e3ec83bf2d816b83e7ae",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "description": "User's email address",
+                                        "type": "string",
+                                        "example": "user@example.com"
+                                    },
+                                    "new_password": {
+                                        "description": "New password for the user",
+                                        "type": "string",
+                                        "example": "new_password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password changed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Email not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal Server Error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/logout": {
+            "post": {
+                "tags": [
+                    "Deconnexion"
+                ],
+                "summary": "Logout the user",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are disconnected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 },
                 "security": [
@@ -12388,6 +13088,116 @@
                 ]
             }
         },
+        "/api/reservation/statistiques_notes/{housing_id}": {
+            "get": {
+                "tags": [
+                    "Note et Commentaire sur les reservation (Logement)"
+                ],
+                "summary": "Implementation de la fonction qui retourne pour un logement donné,la statistique des notes obtenus par utilisateur(exemple. on dira le nombre de personne qui ont noté 5,le nombre personne qui ont noté 4,le nombre de personne qui ont noté 3,etc",
+                "description": "Cette API retourne le nombre total d'utilisateurs ayant donné leur avis sur le logement ainsi que le nombre de notes obtenues pour chaque valeur de 1 à 5, et le pourcentage de chaque catégorie de notes.",
+                "operationId": "5d02cc6dee340b8bf3cd9e39845de75c",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "L'ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des notes des utilisateurs pour le logement donné",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "logement_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nombre_total_utilisateurs": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "statistiques": {
+                                            "properties": {
+                                                "notes_5": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "notes_4": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "notes_3": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "notes_2": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "notes_1": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pourcentages": {
+                                            "properties": {
+                                                "notes_5": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50
+                                                },
+                                                "notes_4": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 30
+                                                },
+                                                "notes_3": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                },
+                                                "notes_2": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                },
+                                                "notes_1": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Paramètres invalides ou erreur de requête"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/role/index": {
             "get": {
                 "tags": [
@@ -12983,139 +13793,6 @@
                         "bearerAuth": []
                     }
                 ]
-            }
-        },
-        "/api/users/register": {
-            "post": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Enregistrer un nouvel utilisateur",
-                "description": "Enregistre un nouvel utilisateur avec les informations fournies",
-                "operationId": "758e750cf3b7f1b6a9c906c443a12b83",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "properties": {
-                                    "nom": {
-                                        "description": "Nom de l'utilisateur",
-                                        "type": "string",
-                                        "example": "Doe"
-                                    },
-                                    "prenom": {
-                                        "description": "Prénom de l'utilisateur",
-                                        "type": "string",
-                                        "example": "John"
-                                    },
-                                    "password": {
-                                        "description": "Mot de passe (min : 8 caractères, une majuscule, un chiffre, un caractère spécial)",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "Bagdadi2000!"
-                                    },
-                                    "code_pays": {
-                                        "description": "Code du pays",
-                                        "type": "string",
-                                        "example": "FR"
-                                    },
-                                    "telephone": {
-                                        "description": "Numéro de téléphone",
-                                        "type": "string",
-                                        "example": "1234567890"
-                                    },
-                                    "email": {
-                                        "description": "Adresse e-mail de l'utilisateur",
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john.doe@example.com"
-                                    },
-                                    "pays": {
-                                        "description": "Pays de l'utilisateur",
-                                        "type": "string",
-                                        "example": "France"
-                                    },
-                                    "identity_profil": {
-                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
-                                        "type": "file",
-                                        "format": "binary"
-                                    },
-                                    "ville": {
-                                        "description": "Ville de l'utilisateur",
-                                        "type": "string",
-                                        "example": "Paris"
-                                    },
-                                    "addresse": {
-                                        "description": "Adresse de l'utilisateur",
-                                        "type": "string",
-                                        "example": "123 Rue de la Paix"
-                                    },
-                                    "sexe": {
-                                        "description": "Sexe de l'utilisateur",
-                                        "type": "string",
-                                        "example": "Masculin"
-                                    },
-                                    "postal_code": {
-                                        "description": "Code postal de l'utilisateur",
-                                        "type": "string",
-                                        "example": "75001"
-                                    },
-                                    "language_id[]": {
-                                        "type": "array",
-                                        "items": {
-                                            "description": "ID de la langue préférée de l'utilisateur",
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "password_confirmation": {
-                                        "description": "Confirmation du mot de passe (doit correspondre au mot de passe)",
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "Bagdadi2000!"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Utilisateur enregistré avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Utilisateur enregistré avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erreur de validation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         "/api/users/destroy/{id}": {
@@ -13756,69 +14433,136 @@
                 ]
             }
         },
-        "/api/users/login": {
-            "post": {
+        "/api/users/detail/{userId}": {
+            "get": {
                 "tags": [
                     "User"
                 ],
-                "summary": "make authentification",
-                "operationId": "c9b20e2431404b7383ce7e626b4b6f05",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "example": "a@gmail.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "P@$$w0rd"
-                                    }
-                                },
-                                "type": "object"
-                            }
+                "summary": "Obtenir les détails d'un utilisateur",
+                "description": "Retourne des détails complets pour un utilisateur spécifique, y compris les informations personnelles, les langues, les préférences, le nombre de logements, le nombre de réservations, le solde du portefeuille, et le nombre total de transactions.",
+                "operationId": "3cc091dda63762ca396e4d04016aebcf",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID de l'utilisateur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
-                },
-                "responses": {
-                    "201": {
-                        "description": " connected successfully"
-                    },
-                    "401": {
-                        "description": "Invalid credentials"
-                    }
-                }
-            }
-        },
-        "/api/user": {
-            "get": {
-                "tags": [
-                    "Authentication"
                 ],
-                "summary": "Check authentication status",
-                "description": "Check if the user is authenticated and retrieve user data and role",
-                "operationId": "ee70f3bb18e11e1c3720dfbf39b9c3f8",
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
+                        "description": "Détails de l'utilisateur obtenus avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
+                                            "properties": {
+                                                "user_info": {
+                                                    "description": "Informations sur l'utilisateur",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "lastname": {
+                                                            "type": "string"
+                                                        },
+                                                        "firstname": {
+                                                            "type": "string"
+                                                        },
+                                                        "email": {
+                                                            "type": "string"
+                                                        },
+                                                        "code_pays": {
+                                                            "type": "string"
+                                                        },
+                                                        "telephone": {
+                                                            "type": "string"
+                                                        },
+                                                        "country": {
+                                                            "type": "string"
+                                                        },
+                                                        "file_profil": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "city": {
+                                                            "type": "string"
+                                                        },
+                                                        "address": {
+                                                            "type": "string"
+                                                        },
+                                                        "sexe": {
+                                                            "type": "string"
+                                                        },
+                                                        "postal_code": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "is_hote": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_traveller": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_admin": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "languages": {
+                                                    "description": "Langues préférées de l'utilisateur",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "language_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "language_name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "preferences": {
+                                                    "description": "Préférences de l'utilisateur",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "preference_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "preference_name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total_housings": {
+                                                    "description": "Nombre de logements",
+                                                    "type": "integer"
+                                                },
+                                                "total_reservations": {
+                                                    "description": "Nombre de réservations",
+                                                    "type": "integer"
+                                                },
+                                                "solde": {
+                                                    "description": "Solde du portefeuille",
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "total_transactions": {
+                                                    "description": "Nombre total de transactions",
+                                                    "type": "integer"
+                                                }
+                                            },
                                             "type": "object"
-                                        },
-                                        "role": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
                                         }
                                     },
                                     "type": "object"
@@ -13826,8 +14570,40 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
+                    "404": {
+                        "description": "Utilisateur non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur non trouvé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Une erreur s'est produite."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

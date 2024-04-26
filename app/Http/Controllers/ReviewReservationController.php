@@ -71,8 +71,8 @@ class ReviewReservationController extends Controller
          'criteria_notes.*.note' => 'required|numeric|min:0|max:10',
          'general_comment' => 'nullable|string',
      ]);
- 
-     $userId = Auth::id();
+     $userId = 11;
+     //$userId = Auth::id();
  
      $criteriaIds = [];
      $duplicateCriteriaIds = [];
@@ -173,64 +173,181 @@ class ReviewReservationController extends Controller
  * )
  */
 
-public function LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($housingId)
-{
-    $reservations = Reservation::where('housing_id', $housingId)->get();
-
-    $criteria_notes = [];
-
-    $user_comments = [];
-
-    foreach ($reservations as $reservation) {
-        $notes = Note::where('reservation_id', $reservation->id)->get();
-
-        foreach ($notes as $note) {
-            if (!isset($criteria_notes[$note->criteria_id])) {
-                $criteria_notes[$note->criteria_id] = [
-                    'criteria_name' => $note->criteria->name,
-                    'total_notes' => 0,
-                    'note_sum' => 0
+ public function LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($housingId)
+ {
+     $reservations = Reservation::where('housing_id', $housingId)->get();
+ 
+     $criteria_notes = [];
+     $user_comments = [];
+ 
+     foreach ($reservations as $reservation) {
+         $notes = Note::where('reservation_id', $reservation->id)->get();
+ 
+         foreach ($notes as $note) {
+             if (!isset($criteria_notes[$note->criteria_id])) {
+                 $criteria_notes[$note->criteria_id] = [
+                     'criteria_name' => $note->criteria->name,
+                     'total_notes' => 0,
+                     'note_sum' => 0
+                 ];
+             }
+ 
+             $criteria_notes[$note->criteria_id]['total_notes'] += 1;
+             $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
+         }
+ 
+         $review = Review_reservation::where('reservation_id', $reservation->id)->get();
+         if ($review) {
+            foreach ($review as $reviews) {
+                $user = User::find($reviews->user_id);
+                $user_comments[] = [
+                    'content' => $reviews->content,
+                    'created_at' => $reviews->created_at,
+                    'updated_at' => $reviews->updated_at,
+                    'user' => $user, 
                 ];
-            }
+               }
+         }
+     }
+ 
+     $average_notes_by_criteria = [];
+     $overall_note_sum = 0;
+     $total_criteria_count = 0;
+ 
+     foreach ($criteria_notes as $details) {
+         $average_note = $details['note_sum'] / $details['total_notes'];
+         $average_notes_by_criteria[] = [
+             'criteria_name' => $details['criteria_name'],
+             'average_note' => round($average_note, 2),
+             'nb_personne' => $details['total_notes'] 
+         ];
+ 
+         $overall_note_sum += $average_note;
+         $total_criteria_count += 1;
+     }
+ 
+     $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
+ 
+     return response()->json(['data' => [
+         'average_notes_by_criteria' => $average_notes_by_criteria,
+         'overall_average' => $overall_average,
+         'user_comments' => $user_comments
+     ]]);
+ }
+ 
 
-            $criteria_notes[$note->criteria_id]['total_notes'] += 1;
-            $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
-        }
+/**
+ * @OA\Get(
+ *     path="/api/reservation/statistiques_notes/{housing_id}",
+ *     summary="Implementation de la fonction qui retourne pour un logement donné,la statistique des notes obtenus par utilisateur(exemple. on dira le nombre de personne qui ont noté 5,le nombre personne qui ont noté 4,le nombre de personne qui ont noté 3,etc",
+ *     description="Cette API retourne le nombre total d'utilisateurs ayant donné leur avis sur le logement ainsi que le nombre de notes obtenues pour chaque valeur de 1 à 5, et le pourcentage de chaque catégorie de notes.",
+ *     tags={"Note et Commentaire sur les reservation (Logement)"},
+ *    security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housing_id",
+ *         in="path",
+ *         required=true,
+ *         description="L'ID du logement",
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=1
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Statistiques des notes des utilisateurs pour le logement donné",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="logement_id", type="integer", example=1),
+ *             @OA\Property(property="nombre_total_utilisateurs", type="integer", example=10),
+ *             @OA\Property(
+ *                 property="statistiques",
+ *                 type="object",
+ *                 @OA\Property(property="notes_5", type="integer", example=5),
+ *                 @OA\Property(property="notes_4", type="integer", example=3),
+ *                 @OA\Property(property="notes_3", type="integer", example=1),
+ *                 @OA\Property(property="notes_2", type="integer", example=1),
+ *                 @OA\Property(property="notes_1", type="integer", example=0)
+ *             ),
+ *             @OA\Property(
+ *                 property="pourcentages",
+ *                 type="object",
+ *                 @OA\Property(property="notes_5", type="number", format="float", example=50.0),
+ *                 @OA\Property(property="notes_4", type="number", format="float", example=30.0),
+ *                 @OA\Property(property="notes_3", type="number", format="float", example=10.0),
+ *                 @OA\Property(property="notes_2", type="number", format="float", example=10.0),
+ *                 @OA\Property(property="notes_1", type="number", format="float", example=0.0)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Paramètres invalides ou erreur de requête"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur"
+ *     )
+ * )
+ */
 
-        $review = Review_reservation::where('reservation_id', $reservation->id)->first();
-        if ($review) {
-            $user = User::find($review->user_id);
-            $user_comments[] = [
-                'content' => $review->content,
-                'created_at' => $review->created_at,
-                'updated_at' => $review->updated_at,
-                'user' => $user, 
-            ];
+
+public function getStatistiquesDesNotes($logementId)
+{
+
+    $reservations = Reservation::where('housing_id', $logementId)->get();
+
+    if ($reservations->isEmpty()) {
+        return response()->json(['message' => 'Aucune réservation trouvée pour ce logement'], 404);
+    }
+
+
+    $notes = Note::whereIn('reservation_id', $reservations->pluck('id'))->get();
+
+    $notesParUtilisateur = $notes->groupBy('user_id');
+
+    $nombreTotalUtilisateurs = $notesParUtilisateur->count(); 
+    $moyennesParUtilisateur = $notesParUtilisateur->map(function ($notesUtilisateur) {
+        $somme = $notesUtilisateur->sum('note');
+        $nombreDeNotes = $notesUtilisateur->count();
+        return $somme / $nombreDeNotes;
+    });
+
+    $statistiques = [
+        'notes_5' => 0,
+        'notes_4' => 0,
+        'notes_3' => 0,
+        'notes_2' => 0,
+        'notes_1' => 0,
+    ];
+
+    foreach ($moyennesParUtilisateur as $moyenne) {
+        if ($moyenne >= 4.5) {
+            $statistiques['notes_5']++;
+        } elseif ($moyenne >= 3.5) {
+            $statistiques['notes_4']++;
+        } elseif ($moyenne >= 2.5) {
+            $statistiques['notes_3']++;
+        } elseif ($moyenne >= 1.5) {
+            $statistiques['notes_2']++;
+        } else {
+            $statistiques['notes_1']++;
         }
     }
 
-    $average_notes_by_criteria = [];
-    $overall_note_sum = 0;
-    $total_criteria_count = 0;
-
-    foreach ($criteria_notes as $criteria_id => $details) {
-        $average_note = $details['note_sum'] / $details['total_notes'];
-        $average_notes_by_criteria[] = [
-            'criteria_name' => $details['criteria_name'],
-            'average_note' => round($average_note, 2)
-        ];
-
-        $overall_note_sum += $average_note;
-        $total_criteria_count += 1;
+    $pourcentages = [];
+    foreach ($statistiques as $key => $count) {
+        $pourcentage = ($nombreTotalUtilisateurs > 0) ? ($count / $nombreTotalUtilisateurs) * 100 : 0;
+        $pourcentages[$key] = round($pourcentage, 2);
     }
 
-    $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
-
-    return response()->json(['data' =>[
-        'average_notes_by_criteria' => $average_notes_by_criteria,
-        'overall_average' => $overall_average,
-        'user_comments' => $user_comments]
-    ]);
+    return response()->json([
+        'logement_id' => $logementId,
+        'nombre_total_utilisateurs' => $nombreTotalUtilisateurs,
+        'statistiques' => $statistiques,
+        'pourcentages' => $pourcentages,
+    ], 200);
 }
+
 
 }

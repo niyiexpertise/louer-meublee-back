@@ -38,6 +38,10 @@ use App\Http\Controllers\PortfeuilleTransactionController;
 use App\Http\Controllers\RetraitController;
 use App\Http\Controllers\MethodPayementController;
 use App\Http\Controllers\MoyenPayementController;
+use App\Http\Controllers\InscriptionController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\LogoutController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -49,17 +53,20 @@ use App\Http\Controllers\MoyenPayementController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json([
-        'data' => $request->user(),
-        'role'=>$request->user()->getRoleNames()
-    ]);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [LoginController::class, 'checkAuth']);
+    
 });
 
 //Inscription et Connexion
 Route::prefix('users')->group(function () {
-    Route::post('/register', [UserController::class, 'register']);
-    Route::post('/login', [UserController::class, 'login']);
+    Route::post('/register', [InscriptionController::class, 'register']);
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/logout', [LogoutController::class, 'logout']);
+    Route::post('/verification_code', [LoginController::class, 'verification_code']);
+    Route::post('/new_code/{id}', [LoginController::class, 'new_code']);
+    Route::post('/password_recovery_start_step', [LoginController::class, 'password_recovery_start_step']);
+    Route::post('/password_recovery_end_step', [LoginController::class, 'password_recovery_end_step']);
 });
 
 
@@ -218,6 +225,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::get('/travelers', [UserController::class, 'getUsersWithRoletraveler']);
             Route::get('/hotes', [UserController::class, 'getUsersWithRoleHost']);
             Route::get('/admins', [UserController::class, 'getUsersWithRoleAdmin']);
+            Route::get('/detail/{userId}', [UserController::class, 'getUserDetails']);
         });
     });
 
@@ -362,6 +370,8 @@ Route::group(['middleware' => ['role:traveler']], function () {
 
 
 
+            
+
         }); 
     });
 
@@ -459,7 +469,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
             // Reviews
             Route::post('/reviews/note/add', [ReviewReservationController::class, 'AddReviewNote']);
             Route::get('/{housingId}/reviews/note/get', [ReviewReservationController::class, 'LogementAvecMoyenneNotesCritereEtCommentairesAcceuil']);
-    
+            Route::get('/statistiques_notes/{housing_id}', [ReviewReservationController::class, 'getStatistiquesDesNotes']);
             // Reservation operations
             Route::post('/store', [ReservationController::class, 'storeReservationWithPayment']);
     
@@ -590,6 +600,7 @@ Route::prefix('logement')->group(function () {
    Route::get('/filterby/nightpricemax/{price}', [HousingController::class, 'getListingsByNightPriceMax']);
    Route::get('/filterby/nightpricemin/{price}', [HousingController::class, 'getListingsByNightPriceMin']);
    Route::get('/detail/getHousingStatisticAcceuil/{housing_id}', [HousingController::class, 'getHousingStatisticAcceuil']);
+   Route::get('/available_at_date', [HousingController::class, 'getAvailableHousingsAtDate']);
 
 });
 

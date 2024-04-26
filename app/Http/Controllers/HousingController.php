@@ -12,6 +12,7 @@ use App\Models\photo;
 use App\Models\housing_price;
 use App\Models\File;
 use App\Models\Notification;
+use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Equipment;
 use App\Models\Equipment_category;
@@ -239,8 +240,8 @@ class HousingController extends Controller
             foreach ($adminUsers as $adminUser) {
                 $notification = new Notification();
                 $notification->user_id = $adminUser->id;
-                    $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
-                          $notification->save();
+                $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
+                $notification->save();
             }
  
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
@@ -299,58 +300,72 @@ class HousingController extends Controller
  */
 public function ListeDesPhotosLogementAcceuil($id)
 {
-        
-        $listing = Housing::with([
-            'photos',
-            'housingCategoryFiles.category',
-            'housingEquipments.equipment',
-        ])->find($id);
-    
-        $data = [
-            'id_housing' => $listing->id,
-            'photos_logement' => $listing->photos->map(function ($photo) {
-                return [
-                    'id_photo' => $photo->id,
-                    'path' => url($photo->path), 
-                    'extension' => $photo->extension,
-                    'is_couverture' => $photo->is_couverture,
-                ];
-            }),
-            'categories' => $listing->housingCategoryFiles
-                ->where('is_verified', 1)
-                ->groupBy('category.name')
-                ->map(function ($categoryFiles, $categoryName) use ($listing) {
-                    $equipments = $listing->housingEquipments
-                        ->where('category_id', $categoryFiles->first()->category_id)
-                        ->where('is_verified', 1)
-                        ->map(function ($housingEquipment) {
-                            return [
-                                'equipment_id' => $housingEquipment->equipment->id,
-                                'equipment_name' => $housingEquipment->equipment->name,
-                                'equipment_icone' => $housingEquipment->equipment->icone,
-                            ];
-                        });
-    
-                    $photos_category = $categoryFiles->map(function ($categoryFile) {
-                        return [
-                            'file_id' => $categoryFile->file->id,
-                            'path' => url($categoryFile->file->path),
-                        ];
-                    });
-    
-                    return [
-                        'category_id' => $categoryFiles->first()->category_id,
-                        'category_name' => $categoryFiles->first()->category->name,
-                        'number' => $categoryFiles->first()->number,
-                        'photos_category' => $photos_category,
-                        'equipments' => $equipments,
-                    ];
-                })->values(),
-        ];
-    
-        return response()->json(['data' => $data], 200);
+    $listing = Housing::with([
+        'photos',
+        'housingCategoryFiles.file',
+        'housingEquipments.equipment',
+    ])->find($id);
+
+    if (!$listing) {
+        return response()->json(['message' => 'Logement non trouvé.'], 404);
     }
-    
+    $photo_general = [];
+
+    if ($listing->photos->isNotEmpty()) {
+        foreach ($listing->photos as $photo) {
+            $photo_id = uniqid(); 
+            $photo_info = [
+                'photo_unique_id' => $photo_id,
+                'id_photo' => $photo->id,
+                'path' => url($photo->path),
+                'extension' => $photo->extension,
+                'is_couverture' => $photo->is_couverture,
+            ];
+
+            $photo_general[] = $photo_info; 
+        }
+    }
+
+    $categories = [];
+
+    if ($listing->housingCategoryFiles->isNotEmpty()) {
+        foreach ($listing->housingCategoryFiles->groupBy('category.name') as $categoryName => $categoryFiles) {
+            $category_photos = [];
+            
+            foreach ($categoryFiles as $categoryFile) {
+                if (isset($categoryFile->file)) {
+                    $photo_id = uniqid(); 
+                    $photo_info = [
+                        'photo_unique_id' => $photo_id,
+                        'file_id' => $categoryFile->file->id,
+                        'path' => url($categoryFile->file->path),
+                    ];
+
+                    $category_photos[] = $photo_info;
+                    $photo_general[] = $photo_info;
+                }
+            }
+
+            $categories[] = [
+                'category_id' => $categoryFiles->first()->category_id,
+                'category_name' => $categoryFiles->first()->category->name,
+                'number' => $categoryFiles->first()->number,
+                'photos_category' => $category_photos,
+            ];
+        }
+    }
+
+    $data = [
+        'id_housing' => $listing->id,
+        'photos_logement' => $photo_general, 
+        'categories' => $categories,
+        'photo_general' => $photo_general, 
+    ];
+
+    return response()->json(['data' => $data], 200);
+}
+
+
 
 
 
@@ -1678,6 +1693,111 @@ public function enableHousing($housingId)
             'global_average_for_user' => $globalAverageForOwner,
             'user' => $housing->user
         ]);
-    }    
+    }   
+    
+    /**
+ * @OA\Get(
+ *     path="/api/logement/available_at_date",
+ *     summary="Liste des logements disponibles à une date donnée",
+ *     description="Renvoie la liste des logements disponibles à une date donnée, en tenant compte du délai de 'time before reservation'.",
+ *     tags={"Housing"},
+ *     @OA\Parameter(
+ *         name="date",
+ *         in="query",
+ *         description="Date pour laquelle vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+ *         required=true,
+ *         @OA\Schema(type="string", format="date"),
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements disponibles à la date donnée",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="name", type="string", example="Appartement Luxueux"),
+ *                 @OA\Property(property="address", type="string", example="123 Rue de Paris"),
+ *                 @OA\Property(property="city", type="string", example="Paris"),
+ *                 @OA\Property(property="country", type="string", example="France"),
+ *                 @OA\Property(property="price", type="number", example=120.5),
+ *             ),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de format de date",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Format de date invalide. Utilisez YYYY-MM-DD."),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune donnée trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Aucun logement trouvé pour la date donnée."),
+ *         ),
+ *     ),
+ * )
+ */
+
+ public function getAvailableHousingsAtDate(Request $request) {
+
+    $date = $request->query('date');
+    
+    if (empty($date)) {
+        return response()->json([
+            'message' => 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.'
+        ], 400);
+    }
+
+    try {
+        $targetDate = Carbon::parse($date);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
+        ], 400);
+    }
+
+    if ($targetDate < Carbon::now()->startOfDay()) {
+        return response()->json([
+            'message' => 'La date ne peut pas être antérieure à la date actuelle.'
+        ], 400);
+    }
+
+    $allHousings = Housing::all();
+    $availableHousings = [];
+
+    foreach ($allHousings as $housing) {
+        $reservations = Reservation::where('housing_id', $housing->id)->get();
+        $isAvailable = true;
+
+        foreach ($reservations as $reservation) {
+            $reservationEnd = Carbon::parse($reservation->date_of_end);
+            $timeBeforeReservation = $housing->time_before_reservation ?? 0;
+            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
+
+            if (($targetDate >= $reservation->date_of_starting && $targetDate <= $reservationEnd) ||
+                ($targetDate >= $reservationEnd && $targetDate <= $minimumStartDate)) {
+                $isAvailable = false;
+                break;
+            }
+        }
+
+        if ($isAvailable) {
+            $availableHousings[] = $housing;
+        }
+    }
+
+    $formattedData = $this->formatListingsData(collect($availableHousings));
+
+    return response()->json(['data' => $formattedData], 200);
+}
+
+
+    
+
+
+
 
 }

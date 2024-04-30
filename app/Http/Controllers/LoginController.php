@@ -40,7 +40,6 @@ class LoginController extends Controller
  *     path="/api/users/login",
  *     summary="make authentification",
  *     tags={"Authentication"},
- * security={{"bearerAuth": {}}},
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -141,7 +140,7 @@ public function login(Request $request){
  *     summary="Check authentication status",
  *     description="Check if the user is authenticated and retrieve user data and role",
  *     tags={"Authentication"},
- *     security={{"bearerAuth": {}}},
+ *  security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",

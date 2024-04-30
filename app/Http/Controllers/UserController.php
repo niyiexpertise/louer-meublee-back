@@ -15,7 +15,10 @@ use App\Models\File;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Right;
+use App\Models\User_right;
 use App\Models\Equipment;
+use App\Models\Review;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\Housing_category_file;
@@ -31,6 +34,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
+use Illuminate\Support\Facades\DB;
+
 class UserController extends Controller
 {
     /**
@@ -304,7 +309,7 @@ public function showUserPreferences()
     {
         
         $userId = Auth::id();
-        $user = User::findOrFail($user_Id);
+        $user = User::findOrFail($userId);
 
         $userPreferences = $user->user_preference()->with('preference')->get();
 
@@ -374,14 +379,15 @@ public function showUserPreferences()
          return response()->json(['error' => $validator->errors()], 400);
      }
      $oldProfilePhotoUrl = $user->file_profil;
+    
      if ($oldProfilePhotoUrl) {
          $parsedUrl = parse_url($oldProfilePhotoUrl);
          $oldProfilePhotoPath = public_path($parsedUrl['path']);
-         if (File::exists($oldProfilePhotoPath)) {
-             File::delete($oldProfilePhotoPath);
+         if (F::exists($oldProfilePhotoPath)) {
+             F::delete($oldProfilePhotoPath);
          }
      }
- 
+
      $profilePhotoName = uniqid() . '.' . $request->file('profile_photo')->getClientOriginalExtension();
      $profilePhotoPath = $request->file('profile_photo')->move(public_path('image/photo_profil'), $profilePhotoName);
      $base_url = url('/');
@@ -669,16 +675,27 @@ public function updatePassword(Request $request)
  */
 public function getUsersWithRoletraveler()
 {
-    // Récupérer les utilisateurs qui sont des voyageurs
-    $usersWithRole = User::where('is_traveller', true)
-        ->where('is_deleted', 0)
-        ->with(['user_language.language', 'user_preference.preference'])
-        ->get();
+    // Récupérer l'ID du rôle 'traveler'
+    $travelerRole = DB::table('rights')->where('name', 'traveler')->first();
+
+    if (!$travelerRole) {
+        return response()->json(['message' => 'Le rôle de traveler n\'a pas été trouvé.'], 404);
+    }
+
+    // Obtenir les utilisateurs avec le rôle 'traveler'
+    $usersWithRole = User::whereHas('user_right', function ($query) use ($travelerRole) {
+        $query->where('right_id', $travelerRole->id);
+    })
+    ->where('is_deleted', 0)
+    ->with(['user_language.language', 'user_preference.preference'])  // Charger les relations nécessaires
+    ->with('portfeuille')  // Charger le portefeuille pour le solde
+    ->get();
 
     if ($usersWithRole->isEmpty()) {
         return response()->json(['message' => 'Aucun utilisateur voyageur trouvé.'], 404);
     }
 
+    // Formater les utilisateurs
     $formattedUsers = [];
     foreach ($usersWithRole as $user) {
         $formattedUser = [
@@ -694,22 +711,19 @@ public function getUsersWithRoletraveler()
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'is_hote' => $user->is_hote,
-            'is_traveller' => $user->is_traveller,
-            'is_admin' => $user->is_admin,
-            'solde_portfeuille' => $user->portfeuille->solde,
+            'solde_portfeuille' => $user->portfeuille->solde,  // Solde du portefeuille
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
-                    'name' => $userLanguage->language->name,
-                    'icone' => $userLanguage->language->icone,
+                    'name' => $userLanguage->name,
+                    'icone' => $userLanguage->icone,
                 ];
             }),
             'user_preference' => $user->user_preference->map(function ($userPreference) {
                 return [
                     'preference_id' => $userPreference->preference_id,
-                    'name' => $userPreference->preference->name,
-                    'icone' => $userPreference->preference->icone,
+                    'name' => $userPreference->name,
+                    'icone' => $userPreference->icone,
                 ];
             }),
         ];
@@ -717,8 +731,11 @@ public function getUsersWithRoletraveler()
         $formattedUsers[] = $formattedUser;
     }
 
+    // Retour des utilisateurs au format JSON
     return response()->json(['users' => $formattedUsers], 200);
 }
+
+
 
 /**
  * @OA\Put(
@@ -822,17 +839,29 @@ public function updateUser(Request $request)
  */
 public function getUsersWithRoleHost()
 {
-    $usersWithRole = User::join('commissions', 'users.id', '=', 'commissions.user_id')
-        ->where('users.is_hote', true)
-        ->where('users.is_deleted', 0)
-        ->select('users.*', 'commissions.valeur as commission_value')
-        ->with(['user_language.language', 'user_preference.preference'])
-        ->get();
+    // Obtenez l'ID du rôle 'hote'
+    $hostRole = Right::where('name', 'hote')->first();
 
-    if ($usersWithRole->isEmpty()) {
-        return response()->json(['message' => 'Aucun utilisateur hôte non supprimé trouvé.'], 404);
+    if (!$hostRole) {
+        return response()->json(['message' => 'Le rôle d\'hôte n\'a pas été trouvé.']);
     }
 
+    // Récupérer les utilisateurs avec le rôle 'hote'
+    $usersWithRole = User::whereHas('user_right', function ($query) use ($hostRole) {
+        $query->where('right_id', $hostRole->id);
+    })
+    ->where('is_deleted', 0)  // Filtre pour exclure les utilisateurs supprimés
+    ->with(['user_language.language', 'user_preference.preference'])  // Charger les relations nécessaires
+    ->with('portfeuille')  // Charger le portefeuille pour avoir le solde
+    ->leftJoin('commissions', 'users.id', '=', 'commissions.user_id')  // Jointure pour obtenir la commission
+    ->select('users.*', 'commissions.valeur as commission_value')  // Sélectionner les données nécessaires
+    ->get();
+
+    if ($usersWithRole->isEmpty()) {
+        return response()->json(['message' => 'Aucun utilisateur hôte non supprimé trouvé.']);
+    }
+
+    // Formater les utilisateurs
     $formattedUsers = [];
     foreach ($usersWithRole as $user) {
         $formattedUser = [
@@ -848,11 +877,8 @@ public function getUsersWithRoleHost()
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'is_hote' => $user->is_hote,
-            'is_traveller' => $user->is_traveller,
-            'is_admin' => $user->is_admin,
-            'commission' =>$user->commission_value,
-            'solde_portfeuille' => $user->portfeuille->solde,
+            'solde_portfeuille' => $user->portfeuille->solde,  // Solde du portefeuille
+            'commission' => $user->commission_value,  // Commission associée
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -867,14 +893,16 @@ public function getUsersWithRoleHost()
                     'icone' => $userPreference->preference->icone,
                 ];
             }),
-            
         ];
 
         $formattedUsers[] = $formattedUser;
     }
 
-    return response()->json(['users' => $formattedUsers], 200);
+    return response()->json(['users' => $formattedUsers]);
+
 }
+
+
 
 
 /**
@@ -898,14 +926,23 @@ public function getUsersWithRoleHost()
  */
 public function getUsersWithRoleAdmin()
 {
+    // Obtenez l'ID du rôle 'admin'
+    $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
-    $usersWithRole = User::where('is_admin', true)
-        ->where('is_deleted', 0)
-        ->with(['user_language.language', 'user_preference.preference'])
-        ->get();
+    if (!$adminRole) {
+        return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+    }
+
+    $usersWithRole = User::whereHas('user_right', function ($query) use ($adminRole) {
+        $query->where('right_id', $adminRole->id);
+    })
+    ->where('is_deleted', 0)
+    ->with(['user_language.language', 'user_preference.preference'])  
+    ->with('portfeuille')  
+    ->get();
 
     if ($usersWithRole->isEmpty()) {
-        return response()->json(['message' => 'Aucun utilisateur administrateur non supprimé trouvé.'], 404);
+        return response()->json(['message' => 'Aucun utilisateur admin trouvé.'], 404);
     }
 
     $formattedUsers = [];
@@ -923,13 +960,10 @@ public function getUsersWithRoleAdmin()
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'is_hote' => $user->is_hote,
-            'is_traveller' => $user->is_traveller,
-            'is_admin' => $user->is_admin,
-            'solde_portfeuille' => $user->portfeuille->solde,
+            'solde_portfeuille' => $user->portfeuille->solde,  // Solde du portefeuille
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
-                    'language_id' => $userLanguage->language_id,
+                    'language_id' => $userLanguage->language->id,
                     'name' => $userLanguage->language->name,
                     'icone' => $userLanguage->language->icone,
                 ];
@@ -937,8 +971,8 @@ public function getUsersWithRoleAdmin()
             'user_preference' => $user->user_preference->map(function ($userPreference) {
                 return [
                     'preference_id' => $userPreference->preference_id,
-                    'name' => $userPreference->preference->name,
-                    'icone' => $userPreference->preference->icone,
+                    'name' => $userPreference->name,
+                    'icone' => $userPreference->icone,
                 ];
             }),
         ];
@@ -946,8 +980,10 @@ public function getUsersWithRoleAdmin()
         $formattedUsers[] = $formattedUser;
     }
 
+    // Retourner les utilisateurs au format JSON
     return response()->json(['users' => $formattedUsers], 200);
 }
+
 
 
 
@@ -1050,14 +1086,16 @@ public function getUserDetails($userId) {
     $languages = $user->user_language->map(function($userLanguage) {
         return [
             'language_id' => $userLanguage->language_id,
-            'language_name' => $userLanguage->language->name
+            'language_name' => $userLanguage->language->name,
+            'language_icone' => $userLanguage->language->icone
         ];
     });
 
     $preferences = $user->user_preference->map(function($userPreference) {
         return [
             'preference_id' => $userPreference->preference_id,
-            'preference_name' => $userPreference->preference->name
+            'preference_name' => $userPreference->preference->name,
+            'preference_icone' => $userPreference->preference->icone
         ];
     });
 

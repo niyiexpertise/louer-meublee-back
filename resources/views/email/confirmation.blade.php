@@ -45,7 +45,7 @@
 
         <div style="width: 650px; height: 450px; margin-left: 100px; background: #fff">
                 <div> 
-                    <center> <img style="width: 150px; height: 150px; " src="{{asset('image/Quotidishop.png')}}"> </img> </center> 
+                    <center> <img style="width: 150px; height: 150px; " src="{{ $message->embed(public_path('image/logo/logo.jpg')) }}"> </img> </center> 
                     <hr style="margin-top: -15px;">
                 </div>
                 <div style="margin-top: -20px; color: #1e272e; font-size: 24px;">  <center> <p> {{ $mail ['title'] }} </p>  </center></div> 

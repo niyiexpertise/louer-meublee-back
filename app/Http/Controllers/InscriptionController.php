@@ -15,6 +15,8 @@ use App\Models\File;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Right;
+use App\Models\User_right;
 use App\Models\Equipment;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
@@ -32,7 +34,7 @@ use App\Models\User_language;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
-use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 class InscriptionController extends Controller
 {
    /**
@@ -150,7 +152,12 @@ class InscriptionController extends Controller
      ]);
 
      $user->save();
+     $right = Right::where('name','traveler')->first();
      $user->assignRole('traveler');
+     $user_right = new User_right();
+     $user_right->user_id = $user->id;
+     $user_right->right_id = $right->id;
+     $user_right->save();
      $userLanguages =$request->language_id;
 
      foreach ($userLanguages as $language_id) {
@@ -177,7 +184,7 @@ class InscriptionController extends Controller
         'body' => "Compte créé avec succès le ". $date_creation
     ];
     
-    Mail::to($request->email)->send(new NotificationEmail($mail) );
+    Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail) );
 
      $portfeuille= new Portfeuille([
          'solde' =>0,

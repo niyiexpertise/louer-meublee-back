@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Attachment;
 
 class NotificationEmail extends Mailable
 {
@@ -17,9 +18,11 @@ class NotificationEmail extends Mailable
      * Create a new message instance.
      */
     public $mail;
-    public function __construct($mail)
+    public $attachedFiles;
+    public function __construct($mail,$attachedFiles = [])
     {
         $this->mail = $mail;
+        $this->attachedFiles = $attachedFiles;
     }
 
     /**
@@ -49,6 +52,13 @@ class NotificationEmail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+        
+        foreach ($this->attachedFiles as $filePath) {
+            $attachments[] = Attachment::fromPath($filePath);
+        }
+
+        return $attachments;
     }
+    
 }

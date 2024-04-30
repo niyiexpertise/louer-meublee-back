@@ -31,6 +31,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
+use Laravel\Sanctum\PersonalAccessToken;
 class LogoutController extends Controller
 {
    /**

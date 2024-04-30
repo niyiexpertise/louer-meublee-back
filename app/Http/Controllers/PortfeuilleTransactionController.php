@@ -99,27 +99,48 @@ class PortfeuilleTransactionController extends Controller
  * )
  */
 
-    public function getPortfeuilleDetails(Request $request)
-    {
-        $user = $request->user();
-    
-        $portefeuille = Portfeuille::where('user_id', $user->id)->first();
-    
-        if (!$portefeuille) {
-            return response()->json([
-                'message' => 'Portefeuille non trouvé pour cet utilisateur.'
-            ], 404);
-        }
-    
-        $transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-    
-        return response()->json([
-            'solde' => $portefeuille->solde,
-            'transactions' => $transactions,
-        ], 200);
-    }
+ public function getPortfeuilleDetails(Request $request)
+ {
+     $user = $request->user();
+ 
+     $portefeuille = Portfeuille::where('user_id', $user->id)->first();
+ 
+     if (!$portefeuille) {
+         return response()->json([
+             'message' => 'Portefeuille non trouvé pour cet utilisateur.'
+         ], 404);
+     }
+ 
+     $transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)
+         ->orderBy('created_at', 'desc')
+         ->get();
+ 
+     // Filtrer les champs indésirables des transactions
+     $filtered_transactions = $transactions->map(function($transaction) {
+         return $transaction->only([
+             'id',
+             'debit',
+             'credit',
+             'amount',
+             'valeur_commission',
+             'montant_commission',
+             'montant_restant' ,
+             'motif',
+             'reservation_id',
+             'payment_method',
+             'portfeuille_id',
+             'id_transaction',
+             'created_at',
+             'updated_at',
+         ]);
+     });
+ 
+     return response()->json([
+         'solde_portefeuille' => $portefeuille->solde,
+         'transactions' => $filtered_transactions,
+     ], 200);
+ }
+ 
   /**
    * @OA\Get(
    *     path="/api/portefeuille/transaction/all",

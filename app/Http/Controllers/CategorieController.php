@@ -42,7 +42,7 @@ class CategorieController extends Controller
                     $b = Equipment::where('id', $k->equipment_id)->get();
                         foreach ($b as $e) {
                             $a[] = [
-                                'id' => $e->id,
+                                'id_equipement' => $e->id,
                                 'id_equipement_category' => $k->id,
                                 'name' => $e->name,
                                 'icone' => $e->icone,
@@ -55,7 +55,7 @@ class CategorieController extends Controller
                 }
                 
                 $data[] = [
-                    'id' => $category->id,
+                    'id_categorie' => $category->id,
                     'name' =>$category->name,
                     'is_deleted' =>$category->id_deleted,
                     'is_blocked' =>$category->is_blocked,

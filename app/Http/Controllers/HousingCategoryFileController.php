@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File as F;
 use Illuminate\Http\Request;
 use App\Models\Category;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 class HousingCategoryFileController extends Controller
 {
   
@@ -427,6 +429,11 @@ public function validateDefaultCategoryHousing($housing_id, $category_id)
         'user_id' => $user_id,
     ]);
     $notification->save();
+    $mail = [
+        'title' => "Validation de  la catégorie ajoutée au logement",
+        'body' => "L'ajout de cette catégorie : " . $category->name . " a été validé par l'administrateur.",
+    ];
+    Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
 
     return response()->json(['message' => 'Catégories validées avec succès'], 200);
 }
@@ -574,6 +581,11 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
         'user_id' => $user_id,
     ]);
     $notification->save();
+    $mail = [
+        'title' => "Validation de  la catégorie ajoutée au logement",
+        'body' => "L'ajout de cette catégorie : " . $category->name . " a été validé par l'administrateur.",
+    ];
+    Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
 
     return response()->json(['message' => 'Catégories validées avec succès'], 200);
 }

@@ -32,6 +32,9 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 
 
 class AdminHousingController extends Controller
@@ -86,7 +89,6 @@ class AdminHousingController extends Controller
                 'status' => $listing->status,
                 'arrived_independently' => $listing->arrived_independently,
                 'is_instant_reservation' => $listing->is_instant_reservation,
-                'maximum_duration' => $listing->maximum_duration,
                 'minimum_duration' => $listing->minimum_duration,
                 'time_before_reservation' => $listing->time_before_reservation,
                 'cancelation_condition' => $listing->cancelation_condition,
@@ -94,7 +96,7 @@ class AdminHousingController extends Controller
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
                 'is_actif' => $listing->is_actif,
-            'is_destroy' => $listing->is_destroy,
+                  'is_destroy' => $listing->is_destroy,
     
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
@@ -179,7 +181,6 @@ class AdminHousingController extends Controller
                 'status' => $listing->status,
                 'arrived_independently' => $listing->arrived_independently,
                 'is_instant_reservation' => $listing->is_instant_reservation,
-                'maximum_duration' => $listing->maximum_duration,
                 'minimum_duration' => $listing->minimum_duration,
                 'time_before_reservation' => $listing->time_before_reservation,
                 'cancelation_condition' => $listing->cancelation_condition,
@@ -187,7 +188,12 @@ class AdminHousingController extends Controller
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
                 'is_actif' => $listing->is_actif,
-            'is_destroy' => $listing->is_destroy,
+                'is_destroy' => $listing->is_destroy,
+                'is_accept_anulation'=> $listing->is_accept_anulation,
+                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
     
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
@@ -372,11 +378,16 @@ public function showHousingDetailForValidationForadmin($id)
         'is_accept_noise' => $listing->is_accept_noise,
         'is_accept_smoking' => $listing->is_accept_smoking,
         'is_accept_chill' => $listing->is_accept_smoking,
-        'is_accept_alcool' => $listing->is_accept_alcool,
+        'is_accept_alcool' => $listing->is_accept_alccol,
         'is_deleted' => $listing->is_deleted,
         'is_blocked' => $listing->is_blocked,
         'is_actif' => $listing->is_actif,
         'is_destroy' => $listing->is_destroy,
+        'is_accept_anulation'=> $listing->is_accept_anulation,
+        'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+        'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+        'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+        'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
 
         'photos_logement' => $listing->photos->map(function ($photo) {
             return [
@@ -488,7 +499,7 @@ public function showHousingDetailForValidationForadmin($id)
 
 
 /**
- * @OA\Post(
+ * @OA\Put(
  *     path="/api/logement/validate/one/{id}",
  *     tags={"Housing"},
  *     summary="Valider un logement spécifique en attente de verification",
@@ -546,6 +557,12 @@ public function showHousingDetailForValidationForadmin($id)
              'user_id' => $housing->user_id,
          ]);
          $notification->save();
+         $mail = [
+            'title' => "Confirmation d'ajout d'un logement",
+            'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
+           ];
+        
+         Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail));
  
          return response()->json(['message' => 'Statut du logement mis à jour avec succès'], 200);
      } catch (\Exception $e) {
@@ -553,7 +570,7 @@ public function showHousingDetailForValidationForadmin($id)
      }
  }
 /**
- * @OA\Post(
+ * @OA\Put(
  *     path="/api/logement/validate/many/",
  *     tags={"Housing"},
  *     summary="Valider plusieurs logements",
@@ -623,6 +640,12 @@ public function showHousingDetailForValidationForadmin($id)
                  'user_id' => $housing->user_id,
              ]);
              $notification->save();
+             $mail = [
+                'title' => "Confirmation d'ajout d'un logement",
+                'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
+               ];
+            
+             Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail));
          }
  
          return response()->json(['message' => 'Statut des logements mis à jour avec succès'], 200);
@@ -683,7 +706,6 @@ public function showHousingDetailForValidationForadmin($id)
              'surface' => $listing->surface,
              'arrived_independently' => $listing->arrived_independently,
              'is_instant_reservation' => $listing->is_instant_reservation,
-             'maximum_duration' => $listing->maximum_duration,
              'minimum_duration' => $listing->minimum_duration,
              'time_before_reservation' => $listing->time_before_reservation,
              'cancelation_condition' => $listing->cancelation_condition,
@@ -691,7 +713,12 @@ public function showHousingDetailForValidationForadmin($id)
              'is_deleted' => $listing->is_deleted,
              'is_blocked' => $listing->is_blocked,
              'is_actif' => $listing->is_actif,
-            'is_destroy' => $listing->is_destroy,
+             'is_destroy' => $listing->is_destroy,
+             'is_accept_anulation'=> $listing->is_accept_anulation,
+             'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+             'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+             'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+             'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
  
              'photos_logement' => $listing->photos->map(function ($photo) {
                  return [
@@ -774,7 +801,6 @@ public function showHousingDetailForValidationForadmin($id)
              'surface' => $listing->surface,
              'arrived_independently' => $listing->arrived_independently,
              'is_instant_reservation' => $listing->is_instant_reservation,
-             'maximum_duration' => $listing->maximum_duration,
              'minimum_duration' => $listing->minimum_duration,
              'time_before_reservation' => $listing->time_before_reservation,
              'cancelation_condition' => $listing->cancelation_condition,
@@ -782,7 +808,12 @@ public function showHousingDetailForValidationForadmin($id)
              'is_deleted' => $listing->is_deleted,
              'is_blocked' => $listing->is_blocked,
              'is_actif' => $listing->is_actif,
-            'is_destroy' => $listing->is_destroy,
+             'is_destroy' => $listing->is_destroy,
+             'is_accept_anulation'=> $listing->is_accept_anulation,
+             'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+             'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+             'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+             'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
  
              'photos_logement' => $listing->photos->map(function ($photo) {
                  return [
@@ -1044,7 +1075,6 @@ public function ListeDesLogementsValideDisable()
             'surface' => $listing->surface,
             'arrived_independently' => $listing->arrived_independently,
             'is_instant_reservation' => $listing->is_instant_reservation,
-            'maximum_duration' => $listing->maximum_duration,
             'minimum_duration' => $listing->minimum_duration,
             'time_before_reservation' => $listing->time_before_reservation,
             'cancelation_condition' => $listing->cancelation_condition,
@@ -1053,6 +1083,11 @@ public function ListeDesLogementsValideDisable()
             'is_blocked' => $listing->is_blocked,
             'is_actif' => $listing->is_actif,
             'is_destroy' => $listing->is_destroy,
+            'is_accept_anulation'=> $listing->is_accept_anulation,
+            'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+            'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+            'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+            'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
 
             'photos_logement' => $listing->photos->map(function ($photo) {
                 return [
@@ -1130,7 +1165,6 @@ public function ListeDesLogementsValideDisable()
                         'surface' => $listing->surface,
                         'arrived_independently' => $listing->arrived_independently,
                         'is_instant_reservation' => $listing->is_instant_reservation,
-                        'maximum_duration' => $listing->maximum_duration,
                         'minimum_duration' => $listing->minimum_duration,
                         'time_before_reservation' => $listing->time_before_reservation,
                         'cancelation_condition' => $listing->cancelation_condition,
@@ -1139,6 +1173,11 @@ public function ListeDesLogementsValideDisable()
                         'is_blocked' => $listing->is_blocked,
                         'is_actif' => $listing->is_actif,
                         'is_destroy' => $listing->is_destroy,
+                        'is_accept_anulation'=> $listing->is_accept_anulation,
+                        'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+                        'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+                        'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+                        'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
                         
                         'user_detail' =>$listing->user,
                         

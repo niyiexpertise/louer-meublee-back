@@ -7,11 +7,17 @@ use App\Models\verification_statut;
 use App\Models\User;
 use App\Models\Document;
 use App\Models\Commission;
+use App\Models\Right;
+use App\Models\User_right;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
+use Illuminate\Support\Facades\DB;
 class VerificationDocumentController extends Controller
 {
 
@@ -188,7 +194,10 @@ public function index()
      public function store(Request $request)
      {
          try {
-             $user_id = auth()->user()->id;
+             $user = auth()->user();
+             $user_id = $user->id;
+             $user_name = $user->lastname;
+             $user_firstname = $user->firstname;
              $idDocuments = $request->id_document;
              $imagePieces = $request->file('image_piece');     
              if (count($idDocuments) !== count($imagePieces)) {
@@ -225,17 +234,38 @@ public function index()
                  $verificationStatut->save();
      
                  $imagePiece->move(public_path('image/document_verification'), $path_name);
-     
+
+                 $filePath = public_path('image/document_verification/' . $path_name);
+                 $filePaths[] = $filePath;
                  $verificationDocuments[] = $verificationDocument;
      
-                 $adminUsers = User::where('is_admin', 1)->get();
-                 foreach ($adminUsers as $adminUser) {
-                     $notification = new Notification();
-                     $notification->user_id = $adminUser->id;
-                     $notification->name = "Une demande d'être hôte vient d'être envoyée.";
-                     $notification->save();
-                 }
+
              }
+             $adminRole = DB::table('rights')->where('name', 'admin')->first();
+
+             if (!$adminRole) {
+                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+             }
+         
+             $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+                 $query->where('right_id', $adminRole->id);
+             })
+             ->get();
+         
+             foreach ($adminUsers as $adminUser) {
+                 $notification = new Notification();
+                 $notification->user_id = $adminUser->id;
+                 $notification->name = "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname.";
+                 $notification->save();
+         
+                 $mail = [
+                     'title' => 'Demande d\'être hôte',
+                     'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
+                 ];
+         
+                 Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
+
+                } 
      
              return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
          } catch (Exception $e) {
@@ -379,6 +409,13 @@ public function validateDocuments(Request $request)
     if (!$verificationDocumentsExist) {
         return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
     }
+    $user_exist = User::where('id', $user_id )->exists();
+    if (!$user_exist) {
+        return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+    }
+    if (!$verificationDocumentsExist) {
+        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
+    }
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
@@ -389,7 +426,11 @@ public function validateDocuments(Request $request)
         }
 
         $user = User::findOrFail($user_id);
-        $user->update(['is_hote' => 1]);
+        $right = Right::where('name','hote')->first();
+        $user_right = new User_right();
+        $user_right->user_id = $user_id;
+        $user_right->right_id = $right->id;
+        $user_right->save();
         $notification = new Notification();
         $notification->user_id = $user_id;
         $notification->name = "Votre demande d'être hôte a été validée avec succès.";
@@ -398,6 +439,11 @@ public function validateDocuments(Request $request)
         $commission->user_id=$user->id;
         $commission->valeur=5;
         $commission->save();
+        $mail = [
+            'title' => 'Demande d\'être hôte',
+            'body' => "Votre demande d'être hôte a été validée avec succès."
+        ];
+         Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
@@ -467,6 +513,11 @@ public function validateDocument(Request $request)
             return response()->json(['error' => 'Le document de vérification spécifié n\'existe pas.'], 404);
         }
 
+        $user_exist = User::where('id', $user_id )->exists();
+        if (!$user_exist) {
+            return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+        }
+
         $verificationStatut->update(['status' => 1]);
 
         $user = User::findOrFail($user_id);
@@ -475,7 +526,11 @@ public function validateDocument(Request $request)
         })->count() === 0;
 
         if ($allDocumentsValidated) {
-            $user->update(['is_hote' => 1]);
+            $right = Right::where('name','hote')->first();
+            $user_right = new User_right();
+            $user_right->user_id = $user_id;
+            $user_right->right_id = $right->id;
+            $user_right->save();
             $notification = new Notification();
             $notification->user_id = $user_id;
             $notification->name = "Votre demande d'être hôte a été validée avec succès.";
@@ -484,6 +539,12 @@ public function validateDocument(Request $request)
             $commission->user_id=$user->id;
             $commission->valeur=5;
             $commission->save();
+            $mail = [
+                'title' => 'Demande d\'être hôte',
+                'body' => "Votre demande d'être hôte a été validée avec succès."
+            ];
+             Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
+            
 
         }
 
@@ -536,7 +597,8 @@ public function userVerificationRequests()
             $query->with('verificationStatut');
         }])->findOrFail($userId);
 
-        $is_hote = $user->is_hote;
+        $right = Right::where('name','hote')->first();
+        $exist = User_right::where('user_id',$userId)->where('right_id',$right->id)->exists();
 
         $verificationDocumentsWithStatus = $user->verificationDocuments->map(function ($verificationDocument) {
             return [
@@ -547,7 +609,7 @@ public function userVerificationRequests()
             ];
         });
 
-        $requestStatus = $is_hote ? 'Validé' : 'Non validé';
+        $requestStatus = $exist ? 'Validé' : 'Non validé';
 
         return response()->json([
             'verification_documents' => $verificationDocumentsWithStatus,

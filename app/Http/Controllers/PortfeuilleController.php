@@ -28,6 +28,8 @@ use App\Models\Reservation;
 use App\Models\Payement;
 use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmailwithoutfile;
 
 class PortfeuilleController extends Controller
 {
@@ -115,6 +117,10 @@ class PortfeuilleController extends Controller
                 'message' => 'Portefeuille non trouvé pour cet utilisateur.',
             ], 404);
         }
+
+        $soldeTotal = Portfeuille_transaction::sum('amount');
+        $soldeCommission = Portfeuille_transaction::sum('montant_commission');
+        $soldeRestant = Portfeuille_transaction::sum('montant_restant');
     
         $portefeuille->solde += $amount;
         $portefeuille->save();
@@ -126,15 +132,29 @@ class PortfeuilleController extends Controller
         $portefeuilleTransaction->motif = "Recharge de portfeuille";
         $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
         $portefeuilleTransaction->id_transaction = $request->input('transaction_id'); 
-        $portefeuilleTransaction->payment_method = $request->input('paiement_methode'); 
+        $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
+        $portefeuilleTransaction->valeur_commission = 0;
+        $portefeuilleTransaction->montant_commission = 0;
+        $portefeuilleTransaction->montant_restant = 0;
+        $portefeuilleTransaction->solde_total = $soldeTotal  + $amount;
+        $portefeuilleTransaction->solde_commission = $soldeCommission  + 0;
+        $portefeuilleTransaction->solde_restant = $soldeRestant  + 0; 
         $portefeuilleTransaction->save();
     
 
         $notification = new Notification([
-            'name' => "Votre portefeuille a été crédité de {$amount} FCFA",
+            'name' => "Votre portefeuille a été crédité de {$amount} FCFA Nouveau solde : {$portefeuille->solde} FCFA",
             'user_id' => $userId,
         ]);
         $notification->save();
+
+        $mail = [
+            "title" => "Confirmation de dépôt sur votre portefeuille",
+            "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
+        ];
+        
+        
+  Mail::to(User::find($userId)->email)->send(new NotificationEmailwithoutfile($mail) );
     
         return response()->json([
             'message' => 'Le portefeuille a été crédité avec succès.',
@@ -142,6 +162,6 @@ class PortfeuilleController extends Controller
         ], 200);
     }
 
-    
+
     
 }

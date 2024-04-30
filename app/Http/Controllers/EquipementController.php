@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Equipment;
+use App\Models\Notification;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\EquipmentCategory;
@@ -11,6 +12,9 @@ use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Builder as DatabaseEloquentBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -752,24 +756,45 @@ class EquipementController extends Controller
      * )
      */
     public function makeVerified(string $id)
-    {
-        try{
-            $equipment = Equipment::find($id);
-            if (!$equipment) {
-                return response()->json(['error' => 'Equipment non trouvé.'], 404);
-            }
-            if ($equipment->is_verified == true) {
-                return response()->json(['data' => 'Equipment déjà vérifié.'], 200);
-            }
-            Equipment::whereId($id)->update(['is_verified' => true]);
+{
+    try {
 
-            return response()->json(['data' => 'Equipment vérifié avec succès.'], 200);
-    } catch(Exception $e) {    
-        return response()->json($e);
+        $equipment = Equipment::find($id);
+        
+        if (!$equipment) {
+            return response()->json(['error' => 'Équipement non trouvé.'], 404);
+        }
+
+        if ($equipment->is_verified) {
+            return response()->json(['data' => 'Équipement déjà vérifié.'], 200);
+        }
+
+        $equipment->update(['is_verified' => true]);
+
+        $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
+        
+        if ($housingEquipment) {
+            $housingEquipment->update(['is_verified' => true]);
+            
+            $notification = new Notification([
+                'name' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
+                'user_id' => $housingEquipment->housing->user_id,
+            ]);
+            $notification->save();
+
+            $mail = [
+                'title' => "Validation du nouvel équipement ajouté au logement",
+                'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
+            ];
+            Mail::to($housingEquipment->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+        }
+
+        return response()->json(['data' => 'Équipement vérifié avec succès.'], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
-
-    }
 
 
 }

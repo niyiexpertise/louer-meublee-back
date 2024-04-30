@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
+
 class NotificationController extends Controller
 {
    /**
@@ -82,6 +86,14 @@ class NotificationController extends Controller
         ]);
 
         $notification->save();
+        $user = User::findOrFail($userId);
+
+        $mail_to_traveler= [
+            'title' => 'Notification',
+            'body' =>$notificationName
+                 ];
+    
+        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
 
         return response()->json([
             'message' => "Notification '$notificationName' ajouté avec succès",
@@ -139,8 +151,7 @@ class NotificationController extends Controller
  */
     public function getUserNotifications()
     {
-        //$userID = auth()->user()->id;
-        $userId = 11;
+        $userId  = auth()->user()->id;
         $notification = Notification::where('user_id', $userId)->get();
         if (!$notification ) {
             return response()->json(['error' => 'Notification non trouvée non trouvé'], 404);

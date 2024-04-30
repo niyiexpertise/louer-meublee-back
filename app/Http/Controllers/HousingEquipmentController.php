@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Exception;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 
 class HousingEquipmentController extends Controller
 {
@@ -271,6 +273,12 @@ public function DeleteEquipementHousing(Request $request)
                                 $notification->user_id = $adminUser->id;
                                 $notification->name = "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider";
                                 $notification->save();
+                                $mail = [
+                                    'title' => "Notification sur l'ajout d'un nouveau équipement",
+                                    'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
+                                ];
+                                
+                                Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
                             }
 
                     return response()->json([
@@ -375,6 +383,12 @@ public function DeleteEquipementHousing(Request $request)
                     $adminNotification->user_id = $adminUser->id;
                     $adminNotification->name = "Un hôte vient de faire un ajout de nouveaux équipements. Veuillez vous connecter pour valider.";
                     $adminNotification->save();
+                    $mail = [
+                        'title' => "Notification sur l'ajout d'un nouveau équipement",
+                        'body' => "Un hôte vient de faire un ajout de nouveaux équipements. Veuillez vous connecter pour valider.",
+                    ];
+                    
+                    Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
                 }
         
                 return response()->json([
@@ -455,10 +469,11 @@ public function ListHousingEquipmentInvalid($housingId)
                 'category_name' => $category->name,
                 'is_deleted' => $equipment->is_deleted,
                 'is_blocked' => $equipment->is_blocked,
-                'is_verified' => $equipment->is_verified,
+                'equipement_is_verified' => $equipment->is_verified,
                 'updated_at' => $equipment->updated_at,
                 'created_at' => $equipment->created_at,
                 'icone' => $equipment->icone,
+                'housing_equipment_is_verified' => $housingEquipment->is_verified,
             ];
         }
     }
@@ -528,6 +543,13 @@ public function makeVerifiedHousingEquipment(string $id)
                'user_id' =>$housingEquipment->housing->user_id ,
               ]);
               $notification->save();
+              $mail = [
+                'title' => "Notification sur la validation du nouveau équipement ajouté au logement",
+                'body' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
+            ];
+            
+            Mail::to($housingEquipment->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+              
 
         return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
     } catch(Exception $e) {

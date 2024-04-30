@@ -103,9 +103,18 @@ class User extends Authenticatable
     {
         return $this->hasOne(Portfeuille::class);
     }
+    public function commission()
+    {
+        return $this->hasOne(Commission::class);
+    }
     public function MoyenPayement()
     {
         return $this->hasMany(MoyenPayement::class);
+    }
+
+    public function user_right()
+    {
+        return $this->hasMany(User_right::class);
     }
 
 }

@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Housing_equipment extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'is_verified',
+    ];
 
     public function equipment()
     {

@@ -40,7 +40,7 @@ class HousingTypeController extends Controller
 
                 return response()->json(['data' => $housingTypes], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -65,7 +65,7 @@ class HousingTypeController extends Controller
 
                 return response()->json(['data' => $housingTypes], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -127,7 +127,7 @@ class HousingTypeController extends Controller
                 $housingType->save();
                 return response()->json(['data' => 'Type de type de logement  créé avec succès.', 'housingType' => $housingType], 201);
         } catch(Exception $e) {
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -166,7 +166,7 @@ class HousingTypeController extends Controller
 
                 return response()->json(['data' => $housingType], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -223,7 +223,7 @@ class HousingTypeController extends Controller
 
             return response()->json(['data' => 'Type de logement  mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -361,7 +361,7 @@ class HousingTypeController extends Controller
 
             return response()->json(['data' => 'Type de logement  supprimé avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -412,7 +412,7 @@ class HousingTypeController extends Controller
 
                 return response()->json(['data' => 'HousingType bloqué avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -463,7 +463,7 @@ class HousingTypeController extends Controller
 
                 return response()->json(['data' => 'HousingType débloquée avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }

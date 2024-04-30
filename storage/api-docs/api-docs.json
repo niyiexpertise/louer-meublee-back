@@ -128,13 +128,13 @@
             }
         },
         "/api/logement/validate/one/{id}": {
-            "post": {
+            "put": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Valider un logement spécifique en attente de verification",
                 "description": "Valide un logement spécifié par son ID et met à jour son statut en 'verified'. Envoie également une notification à l'utilisateur propriétaire du logement.",
-                "operationId": "d599d3ecac5f6795c6d7d2d702998c6e",
+                "operationId": "5cc6d6096d40d99a820de210307eca67",
                 "parameters": [
                     {
                         "name": "id",
@@ -205,13 +205,13 @@
             }
         },
         "/api/logement/validate/many/": {
-            "post": {
+            "put": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Valider plusieurs logements",
                 "description": "Valide plusieurs logements spécifiés par leurs IDs et met à jour leur statut en 'verified'. Envoie également une notification à chaque utilisateur propriétaire des logements validés.",
-                "operationId": "3f77c3e17c623b510c5502c301eda7b7",
+                "operationId": "2091c2d8a011aa026a3a22305395050d",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5899,7 +5899,7 @@
                         "description": "Nom du pays",
                         "required": true,
                         "schema": {
-                            "type": "integer",
+                            "type": "string",
                             "format": "int64"
                         }
                     }
@@ -5969,7 +5969,7 @@
                         "description": "Nom de la ville",
                         "required": true,
                         "schema": {
-                            "type": "integer",
+                            "type": "string",
                             "format": "int64"
                         }
                     }
@@ -6004,7 +6004,7 @@
                         "description": "Nom du departement",
                         "required": true,
                         "schema": {
-                            "type": "integer",
+                            "type": "string",
                             "format": "int64"
                         }
                     }
@@ -10077,6 +10077,62 @@
                 ]
             }
         },
+        "/api/paiement/reservation/user": {
+            "get": {
+                "tags": [
+                    "Paiement"
+                ],
+                "summary": "Liste des paiements éffectués par le voyageur lors des reservations",
+                "description": "Liste des paiements éffectués par le voyageur lors des reservations.",
+                "operationId": "662319232b772e2d94de8e51010b8296",
+                "responses": {
+                    "200": {
+                        "description": "Liste des paiements éffectués par le voyageur lors des reservations",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune réservation trouvée pour cet utilisateur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paiement/reservation/all": {
+            "get": {
+                "tags": [
+                    "Paiement"
+                ],
+                "summary": "Liste des paiements éffectués sur le site lors des reservations",
+                "description": "Liste des paiements éffectués sur le site lors des reservations.",
+                "operationId": "4359353960f64ea0b8a5a99bf8cced4d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des paiements éffectués sur le site lors des reservations",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun paiement effectué sur le site"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/permission/index": {
             "get": {
                 "tags": [
@@ -13315,319 +13371,6 @@
                     },
                     "404": {
                         "description": "Role not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/index": {
-            "get": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Tous les types de séjour possibles",
-                "operationId": "6a32e6600816c247e3dd1890f0262f5c",
-                "responses": {
-                    "200": {
-                        "description": "Liste de tous les types de séjour"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/store": {
-            "post": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Créer un nouveau type de séjour",
-                "operationId": "082207135a10ce5d033be3d7d5f97a79",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "jours,nuit,mois,etc"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Type de séjour créé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de séjour créé avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid credentials"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/show/{id}": {
-            "get": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Obtenir un type de séjour spécifique par ID",
-                "operationId": "6fc62eebef5ee3a54c69355aaea231c6",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de séjour",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Détails du type de séjour"
-                    },
-                    "404": {
-                        "description": "Type de séjour non trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/update/{id}": {
-            "put": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Mettre à jour un type de séjour par ID",
-                "operationId": "a81bca038e1ac0502e244659136235be",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de séjour",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "jours"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Type de séjour mis à jour avec succès"
-                    },
-                    "404": {
-                        "description": "Type de séjour non trouvé"
-                    },
-                    "422": {
-                        "description": "Erreur de validation"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/destoy/{id}": {
-            "delete": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "\n    * Supprimer un type de séjour par ID",
-                "operationId": "c4a246d71d1b1dc1808966b9617b9892",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de séjour",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Type de séjour supprimé avec succès"
-                    },
-                    "404": {
-                        "description": "Type de séjour non trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/block/{id}": {
-            "put": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Bloquer un type de séjour",
-                "operationId": "0772042743b91b1fb4637075894fdfeb",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de séjour à bloquer",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Type de séjour bloqué avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de séjour bloqué avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Type de séjour non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Type de séjour non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/typestays/unblock/{id}": {
-            "put": {
-                "tags": [
-                    "TypeStay"
-                ],
-                "summary": "Débloquer un type de séjour",
-                "operationId": "61921610035bb7b9d14d6cc8f22b1f4f",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du type de séjour à débloquer",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Type de séjour débloqué avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Type de séjour débloqué avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Type de séjour non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Type de séjour non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [

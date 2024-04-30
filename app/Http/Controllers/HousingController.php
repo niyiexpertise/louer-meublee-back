@@ -24,7 +24,12 @@ use Illuminate\Support\Facades\File as F;
 use App\Models\Category;
 use App\Models\Housing_charge;
 use App\Models\Review_reservation;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
+
 class HousingController extends Controller
 {
 
@@ -67,8 +72,14 @@ class HousingController extends Controller
      $housing->is_accept_smoking= $request->input('is_accept_smoking');
      $housing->is_accept_chill= $request->input('is_accept_chill');
      $housing->is_accept_noise= $request->input('is_accept_noise');
-     $housing->is_accept_alcool= $request->input('is_accept_alcool');
-     
+     $housing->is_accept_alccol= $request->input('is_accept_alcool');
+     $housing->is_accept_anulation = $request->input('is_accept_anulation');
+     if ( $request->input('is_accept_anulation')) {
+        $housing->delai_partiel_remboursement = $request->input('delai_partiel_remboursement');
+        $housing->delai_integral_remboursement = $request->input('delai_integral_remboursement');
+        $housing->valeur_integral_remboursement = $request->input('valeur_integral_remboursement');
+        $housing->valeur_partiel_remboursement = $request->input('valeur_partiel_remboursement');
+    }    
      $housing->save();
  
      if ($request->hasFile('photos')) {
@@ -120,6 +131,8 @@ class HousingController extends Controller
         foreach ($request->input('reduction_night_number') as $index => $nightNumber) {
             $reduction = new reduction();
             $reduction->night_number = $nightNumber;
+            $reduction->date_debut =$request->input('reduction_date_debut')[$index];
+            $reduction->date_fin = $request->input('reduction_date_fin')[$index];
             $reduction->value = $request->input('reduction_value_night_number')[$index];
             $reduction->housing_id = $housing->id;
             $reduction->save();
@@ -127,6 +140,8 @@ class HousingController extends Controller
     }    
     if ($request->has('promotion_number_of_reservation')) {
         $promotion = new promotion();
+        $promotion->date_debut =$request->input('promotion_date_debut');
+        $promotion->date_fin = $request->input('promotion_date_fin');
         $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
         $promotion->value = $request->input('promotion_value');
         $promotion->housing_id = $housing->id;
@@ -181,7 +196,7 @@ class HousingController extends Controller
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
             $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-            $photoPath = $fileId->move(public_path('image/photo   b_category'), $photoName);
+            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
             $photoUrl = url('/image/photo_category/' . $photoName);
         
             $photoModel->path = $photoUrl;
@@ -230,20 +245,44 @@ class HousingController extends Controller
       }
     }
     
-     $notificationName="Félicitation!Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'aprés validation de l'administrateur";
+     $notificationName="Félicitation!Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'après validation de l'administrateur";
 
      $notification = new Notification([
         'name' => $notificationName,
         'user_id' => $userId,
        ]);
-     $adminUsers = User::where('is_admin', 1)->get();
-            foreach ($adminUsers as $adminUser) {
-                $notification = new Notification();
-                $notification->user_id = $adminUser->id;
-                $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
-                $notification->save();
-            }
- 
+       $mail = [
+        'title' => "Ajout d'un logement",
+        'body' => "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'aprés validation de l'administrateur."
+       ];
+
+       Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail));
+     $adminRole = DB::table('rights')->where('name', 'admin')->first();
+
+             if (!$adminRole) {
+                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+             }
+    
+     $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+        $query->where('right_id', $adminRole->id);
+    })
+    ->get();
+
+    foreach ($adminUsers as $adminUser) {
+        $notification = new Notification();
+        $notification->user_id = $adminUser->id;
+        $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
+        $notification->save();
+
+        $mail = [
+            'title' => "Notification d'ajout  d'un logement",
+            'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
+           ];
+
+           Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail)); 
+
+       } 
+       
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
  
 }
@@ -349,6 +388,7 @@ public function ListeDesPhotosLogementAcceuil($id)
             $categories[] = [
                 'category_id' => $categoryFiles->first()->category_id,
                 'category_name' => $categoryFiles->first()->category->name,
+                'category_icone' => $categoryFiles->first()->category->icone,
                 'number' => $categoryFiles->first()->number,
                 'photos_category' => $category_photos,
             ];
@@ -365,15 +405,6 @@ public function ListeDesPhotosLogementAcceuil($id)
     return response()->json(['data' => $data], 200);
 }
 
-
-
-
-
- 
-     
-
- 
- 
  /**
  * @OA\Get(
  *   path="/api/logement/index/ListeDesLogementsAcceuil",
@@ -604,9 +635,14 @@ public function ListeDesPhotosLogementAcceuil($id)
          'is_accept_noise' => $listing->is_accept_noise,
          'is_accept_smoking' => $listing->is_accept_smoking,
          'is_accept_chill' => $listing->is_accept_smoking,
-         'is_accept_alcool' => $listing->is_accept_alcool,
+         'is_accept_alcool' => $listing->is_accept_alccol,
          'is_deleted' => $listing->is_deleted,
          'is_blocked' => $listing->is_blocked,
+         'is_accept_anulation'=> $listing->is_accept_anulation,
+         'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+         'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+         'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+         'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
  
          'photos_logement' => $listing->photos->map(function ($photo) {
              return [
@@ -781,7 +817,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  *         description="Nom du pays",
  *         required=true,
  *         @OA\Schema(
- *             type="integer",
+ *             type="string",
  *             format="int64"
  *         )
  *     ),
@@ -868,7 +904,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *         description="Nom de la ville",
  *         required=true,
  *         @OA\Schema(
- *             type="integer",
+ *             type="string",
  *             format="int64"
  *         )
  *     ),
@@ -911,7 +947,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *         description="Nom du departement",
  *         required=true,
  *         @OA\Schema(
- *             type="integer",
+ *             type="string",
  *             format="int64"
  *         )
  *     ),
@@ -1189,32 +1225,53 @@ public function getListingsByNightPriceMin($price)
  */
 
 
-public function updateSensibleHousing(Request $request, $id)
-{
-    $userId = Auth::id();
-    $housing = Housing::find($id);
-    if (!$housing) {
-        return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
-    }
+ public function updateSensibleHousing(Request $request, $id)
+ {
+     $userId = Auth::id();
+     $housing = Housing::find($id);
+ 
+     if (!$housing) {
+         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+     }
+ 
+     $validatedData = $request->validate([
+         'interior_regulation' => 'required',
+         'telephone' => 'required',
+         'code_pays' => 'required',
+         'arrived_independently' => 'required',
+         'cancelation_condition' => 'required',
+         'departure_instruction' => 'required',
+         'surface' => 'required',
+         'price' => 'required',
+     ]);
+ 
+     $housing->update($validatedData);
+ 
+     $housing->is_updated = true;
+     $housing->save();
+ 
+     $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
+ 
+     $adminUsers = User::where('is_admin', 1)->get();
+ 
+     foreach ($adminUsers as $adminUser) {
+         $notification = new Notification([
+             'name' => $notificationText,
+             'user_id' => $adminUser->id,
+         ]);
+         $notification->save();
+ 
+         $mail = [
+             'title' => 'Mise à jour de logement',
+             'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
+         ];
 
-    $validatedData = $request->validate([
-        'interior_regulation' => 'required',
-        'telephone' => 'required',
-        'code_pays' => 'required',
-        'arrived_independently' => 'required',
-        'cancelation_condition' => 'required',
-        'departure_instruction' => 'required',
-        'surface'=> 'required',
-        'price'=> 'required',
-    ]);
-
-    $housing->update($validatedData);
-
-    $housing->is_updated = true;
-    $housing->save();
-
-    return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
-}
+         Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
+     }
+ 
+     return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
+ }
+ 
 
 
 /**
@@ -1368,9 +1425,15 @@ private function formatListingsData($listings)
                 'is_accept_noise' => $listing->is_accept_noise,
                 'is_accept_smoking' => $listing->is_accept_smoking,
                 'is_accept_chill' => $listing->is_accept_smoking,
-                'is_accept_alcool' => $listing->is_accept_alcool,
+                'is_accept_alcool' => $listing->is_accept_alccol,
                 'is_deleted' => $listing->is_deleted,
                 'is_blocked' => $listing->is_blocked,
+                'is_accept_anulation'=> $listing->is_accept_anulation,
+                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
+                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
+                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
+                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
+                
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
                         'id_photo' => $photo->id,

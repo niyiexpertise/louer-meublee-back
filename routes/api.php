@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\CriteriaController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\PropertyTypeController;
 use App\Http\Controllers\EquipementController;
@@ -41,6 +42,8 @@ use App\Http\Controllers\MoyenPayementController;
 use App\Http\Controllers\InscriptionController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
+use App\Http\Controllers\ValeurRemboursementController;
+use App\Http\Controllers\PayementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -203,6 +206,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
         Route::get('/index', [UserController::class, 'index']);
         Route::get('/show/{id}', [UserController::class, 'show']);
         Route::get('/userReviews', [UserController::class, 'userReviews']);
+        Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
         Route::get('/userLanguages', [UserController::class, 'userLanguages']);
         Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto']);
         Route::put('/update_password', [UserController::class, 'updatePassword']);
@@ -419,7 +423,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('logement')->group(function () {
              //Gestion des logements en attente de validation ou de mise à jours pour être visible sur le site  coté administrateur
-            Route::get('/withoutvalidation', [AdminHousingController::class, 'indexHousingForValidationForadmin']);
+            Route::get('/withoutvalidate', [AdminHousingController::class, 'indexHousingForValidationForadmin']);
             Route::get('/withoutupdate', [AdminHousingController::class, 'indexHousingForUpdateForadmin']);
             Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin']);
             Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing']);
@@ -565,7 +569,41 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::put('/unblock/{idMoyenPayement}', [MoyenPayementController::class, 'unblock']);
         });
     });
+    Route::group(['middleware' => ['role:traveler']], function () {
+        Route::prefix('valeurRemboursement')->group(function () {
+            Route::post('/store', [ValeurRemboursementController::class, 'store']);
+            Route::put('/update/{id}', [ValeurRemboursementController::class, 'update']);
+            Route::delete('/destroy/{id}', [ValeurRemboursementController::class, 'destroy']);
+            Route::get('/index', [ValeurRemboursementController::class, 'index']);
+        });
+    });
+    Route::group(['middleware' => ['role:traveler']], function () {
+        Route::prefix('paiement')->group(function () {
+            Route::get('/reservation/user', [PayementController::class, 'listPaymentsForUser']);
+            Route::get('/reservation/all', [PayementController::class, 'listAllPayments']);
+        });
+    });
     
+    Route::middleware('role:traveler')->group(function() {
+    
+        Route::prefix('charge')->group(function() {
+            
+            Route::get('index', [ChargeController::class, 'index'])
+                ->name('charge.index');
+    
+            Route::post('store', [ChargeController::class, 'store'])
+                ->name('charge.store');
+    
+            Route::put('updateName/{id}', [ChargeController::class, 'updateName'])
+                ->name('charge.updateName');
+    
+            Route::post('updateIcone/{id}', [ChargeController::class, 'updateIcone'])
+                ->name('charge.updateIcone');
+    
+            Route::delete('destroy/{id}', [ChargeController::class, 'destroy'])
+                ->name('charge.destroy');
+        });
+    });
     
 
 
@@ -606,9 +644,4 @@ Route::prefix('logement')->group(function () {
 
 
 /** end Route ne nécéssitant pas l'authentification */
-
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [UserController::class, 'checkAuth']);
-});
 

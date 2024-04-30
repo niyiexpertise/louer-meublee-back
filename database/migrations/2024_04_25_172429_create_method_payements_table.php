@@ -13,10 +13,26 @@ return new class extends Migration
     {
         Schema::create('method_payements', function (Blueprint $table) {
             $table->id();
-            $table->string('icone');
+            $table->string('icone')->nullable();
             $table->string('name');
             $table->timestamps();
         });
+
+        DB::table('method_payements')->insert([
+            ['name' => 'Momo', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Flooz', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Portefeuille', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Visa', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'MasterCard', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'PayPal', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Stripe', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Bitcoin', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Apple Pay', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Google Pay', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Western Union', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Bank Transfer', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Cash', 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     /**

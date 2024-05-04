@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File as F;
 use App\Models\Category;
 use App\Models\Housing_charge;
+use App\Models\User_right;
+use App\Models\Right;
 use App\Models\Reservation;
 use App\Models\Payement;
 use App\Models\Portfeuille;
@@ -32,6 +34,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
 use DateTime;
 use App\Mail\NotificationEmail;
+use Exception;
 
 
 class ReservationController extends Controller
@@ -313,7 +316,6 @@ class ReservationController extends Controller
     if (!$validation_result['is_allowed']) {
         return response()->json(['message' => $validation_result['message']], 409);
     }    
-    
 
         $reservation = Reservation::create([
             'housing_id' => $validatedData['housing_id'],
@@ -417,7 +419,7 @@ class ReservationController extends Controller
         " Date de fin : " . $reservation->date_of_end . "\n" 
              ];
         
-        
+        $promotion_statut=$this->checkAndUpdateIsEncours($validatedData['housing_id']);
 
         Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
         Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
@@ -482,6 +484,12 @@ class ReservationController extends Controller
           $notification->user_id = $reservation->user_id;
           $notification->name = 'Votre reservation vient d\être confirmée par l\'hôte';
           $notification->save();
+
+          $mail = [
+            "title" => "Confirmation  de  réservation",
+            "body" => " Votre réservation concernant le logement '{$reservation->housing->name}'.   vient d'être confirmée par l'hôte"
+        ];
+        Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mail) );
           return response()->json([
             'message' => 'Reservation confirmed successfully'
         ]);
@@ -556,6 +564,9 @@ class ReservationController extends Controller
             'is_rejected_hote'=>1,
             'motif_rejet_hote'=>$request->motif_rejet_hote
           ])){
+            $soldeTotal = Portfeuille_transaction::sum('amount');
+            $soldeCommission = Portfeuille_transaction::sum('montant_commission');
+            $soldeRestant = Portfeuille_transaction::sum('montant_restant');
 
             $portfeuille =Portfeuille::where('user_id',$reservation->user_id)->first();
             $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->montant_total]);
@@ -567,18 +578,40 @@ class ReservationController extends Controller
             $transaction->reservation_id = $reservation->id;
             $transaction->payment_method = "portfeuille";
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
-            $transaction->save();
+        
+            $transaction->valeur_commission = 0;
+              $transaction->montant_commission = 0;
+              $transaction->montant_restant = 0;
+              $transaction->solde_total = $soldeTotal  + $reservation->montant_total;
+              $transaction->solde_commission = $soldeCommission  + 0;
+              $transaction->solde_restant = $soldeRestant  + 0;
+              $transaction->save();
           }
           $notification = new Notification();
           $notification->user_id = $reservation->user_id;
           $notification->name = 'Votre reservation concernant '.$reservation->housing->name.'  vient d\être rejetée  par l\'hôte pour le motif suivant << '.$request->motif_rejet_hote. ">>";
           $notification->save();
-          $adminUsers = User::where('is_admin', 1)->get();
+
+          $mail = [
+            "title" => "Rejet de votre réservation",
+            "body" => " Votre réservation concernant le logement '{$reservation->housing->name}'. vient d'être rejetée  par l'hôte pour le motif suivant << $request->motif_rejet_hote>>.Votre compte du portefeuille a été crédité de{$reservation->montant_total}FCFA.Nouveau solde:{$portfeuille->solde}FCFA "
+        ];
+        Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+        $right = Right::where('name','admin')->first();
+        $adminUsers = User_right::where('right_id', $right->id)->get();
           foreach ($adminUsers as $adminUser) {
               $notification = new Notification();
-              $notification->user_id = $adminUser->id;
+              $notification->user_id = $adminUser->user_id;
               $notification->name = 'Une reservation vient d\être rejetée par l hote pour le motif suivant << '.$request->motif_rejet_hote. ">>  et le logement appartient à ".$reservation->housing->user->firstname." ".$reservation->housing->user->lastname." il a pour identifiant ".$reservation->housing->user->id;
               $notification->save();
+
+              $mail = [
+                "title" => "Rejet d'une réservation",
+                "body" => " Une reservation vient d\être annulé  par l hote pour le motif suivant << $request->motif_rejet_hote >>  et le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}.il a pour identifiant "
+            ];
+            
+      Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
           }
           return response()->json([
             'message' => 'Reservation rejected successfully'
@@ -607,16 +640,17 @@ class ReservationController extends Controller
 
         $portefeuilleHote = Portfeuille::find($reservation->housing->user->portfeuille->id);
         $notification = new Notification();
-        $notification->user_id = $reservation->user_id;
+        $notification->user_id = $reservation->housing->user_id;
         $notification->name = $mailhote['body'];
         $notification->save();
         
       Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote) );
 
-        $adminUsers = User::where('is_admin', 1)->get();
+      $right = Right::where('name','admin')->first();
+      $adminUsers = User_right::where('right_id', $right->id)->get();
         foreach ($adminUsers as $adminUser) {
             $notification = new Notification();
-            $notification->user_id = $adminUser->id;
+            $notification->user_id = $adminUser->user_id;
             $notification->name = 'Une reservation vient d\être annulé  par un client ayant pour id '.$reservation->user->id.'  pour le motif suivant << '.$request->motif_rejet_traveler. ">>  et le logement appartient à ".$reservation->housing->user->firstname.". ".$reservation->housing->user->lastname." il a pour identifiant ".$reservation->housing->user->id;
             $notification->save();
 
@@ -625,7 +659,7 @@ class ReservationController extends Controller
                 "body" => "Une réservation vient d'être annulée par un client avec l'identifiant {$reservation->user->id}. Le motif de l'annulation est le suivant : « $request->motif_rejet_traveler ». Le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}, avec l'identifiant {$reservation->housing->user->id}. Vous recevez une commission de {$montant_commission} FCFA sur cette opération"
             ];
             
-      Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail) );
+      Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
         }
      }
 
@@ -699,6 +733,12 @@ class ReservationController extends Controller
             ]);
         }
 
+        if($reservation->housing->is_accept_anulation == false){
+            return response()->json([
+                'message' => "Ce logement n'accepte pas d'annulation après sa réservation."
+            ]);
+        }
+
         $dateIntegration = $reservation->date_of_starting;
 
         $dateReservation = $reservation->date_of_reservation;
@@ -727,7 +767,7 @@ class ReservationController extends Controller
 
 
         Reservation::whereId($idReservation)->update([
-            'is_rejected_traveler'=>0,
+            'is_rejected_traveler'=>1,
             'motif_rejet_traveler'=>$request->motif_rejet_traveler
           ]);
 
@@ -1173,10 +1213,78 @@ public function confirmIntegration(Request $request)
     $portefeuille->solde += $remaining_amount;
     $portefeuille->save();
 
+    $notification = new Notification();
+    $notification->user_id = $reservation->housing->user_id;
+    $notification->name = " Un voyageur vient de confirmer lson intégration dans votre logement  intitulé {$reservation->housing->name}. Votre venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA ";
+    $notification->save();
+
+    $mail = [
+        "title" => "Confirmation de  l'intégration d'un voyageur",
+        "body" => "Un voyageur vient de confirmer lson intégration dans votre logement  intitulé {$reservation->housing->name}. Votre venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA "
+    ];
+    
+  Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+  $right = Right::where('name','admin')->first();
+  $adminUsers = User_right::where('right_id', $right->id)->get();
+    foreach ($adminUsers as $adminUser) {
+        $notification = new Notification();
+        $notification->user_id = $adminUser->user_id;
+        $notification->name = "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmé son intégration à ce logement.Vous bénéficiez d'une commission de {$commission_amount}FCFA";
+        $notification->save();
+
+        $mail = [
+            "title" => "Confirmation de l'intégration d'un voyageur dans un logement",
+            "body" => "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmé son intégration à ce logement.Vous bénéficiez d'une commission de {$commission_amount}FCFA"
+        ];
+        
+  Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+    }
+
     return response()->json(['message' => 'Intégration confirmée et montant crédité'], 200);
 }
 
+// Mettre a jours le statut de la promotion en cours;voir si la date n'est pas dépassé ou bien le nombre de reservation n'est pas atteint
+public function checkAndUpdateIsEncours($housingId)
+{
+    try {
+        $currentDate = Carbon::now();
+
+        $promotion = promotion::where('housing_id', $housingId)
+                              ->where('is_encours', true)
+                              ->where('date_debut', '<=', $currentDate)
+                              ->where('date_fin', '>=', $currentDate)->first();
+
+        if (!$promotion) {
+            return response()->json(['error' => 'Aucune promotion en cours trouvée pour ce logement.'], 404);
+        }
+
+         $totalReservations = Reservation::where('housing_id', $housingId)
+                                        ->where('date_of_reservation', '>=', $promotion->date_debut)
+                                        ->where('date_of_reservation', '<=', $promotion->date_fin)
+                                        ->count();
+              
+        // Condition 1: Nombre de réservations atteint ou dépassé
+        if ($totalReservations >= $promotion->number_of_reservation) {
+
+            $promotion->is_encours = false;
+            $promotion->save();
+            return response()->json(['message' => 'Promotion terminée car le nombre de réservations a été atteint.'], 200);
+        }
+
+        // Condition 2: Date de fin dépassée
+        if ($currentDate->greaterThanOrEqualTo(Carbon::parse($promotion->date_fin))) {
+
+            $promotion->is_encours = false;
+            $promotion->save();
+            return response()->json(['message' => 'Promotion terminée car la date de fin est passée.'], 200);
+        }
+     
+        return response()->json(['message' => 'La promotion est encore en cours.'], 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 }
 
-
-
+}

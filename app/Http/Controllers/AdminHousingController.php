@@ -395,6 +395,7 @@ public function showHousingDetailForValidationForadmin($id)
                 'path' => $photo->path,
                 'extension' => $photo->extension,
                 'is_couverture' => $photo->is_couverture,
+                'is_verified' => $photo->is_verified,
             ];
         }),
         'user' => [
@@ -410,9 +411,7 @@ public function showHousingDetailForValidationForadmin($id)
             'address' => $listing->user->address,
             'sexe' => $listing->user->sexe,
             'postal_code' => $listing->user->postal_code,
-            'is_admin' => $listing->user->is_admin,
-            'is_traveller' => $listing->user->is_traveller,
-            'is_hote' => $listing->user->is_hote,
+
         ],
 
         'housing_preference' => [
@@ -1090,12 +1089,14 @@ public function ListeDesLogementsValideDisable()
             'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
 
             'photos_logement' => $listing->photos->map(function ($photo) {
-                return [
-                    'id_photo' => $photo->id,
-                    'path' => $photo->path,
-                    'extension' => $photo->extension,
-                    'is_couverture' => $photo->is_couverture,
-                ];
+                if($photo->is_verified){
+                    return [
+                        'id_photo' => $photo->id,
+                        'path' => $photo->path,
+                        'extension' => $photo->extension,
+                        'is_couverture' => $photo->is_couverture,
+                    ];
+                }
             }),
             'user' => [
                 'id' => $listing->user->id,

@@ -23,6 +23,11 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use Illuminate\Support\Facades\Response;
+use App\Models\User_right;
+use App\Models\Right;
+use Illuminate\Support\Facades\DB;
+
 class HousingCategoryFileController extends Controller
 {
   
@@ -175,14 +180,27 @@ class HousingCategoryFileController extends Controller
         'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
         'user_id' => $userId,
        ]);
-     $adminUsers = User::where('is_admin', 1)->get();
-            foreach ($adminUsers as $adminUser) {
-                $notification = new Notification();
-                $notification->user_id = $adminUser->id;
-                $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider";
-                $notification->save();
-            }
- 
+       $notification->save();
+    $mailhote = [
+        "title" => "Notification ajout d'une pièce à un logement",
+        "body" => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h."
+     ];
+    Mail::to($existingEntry->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
+     foreach ($adminUsers as $adminUser) {
+     $notification = new Notification();
+     $notification->user_id = $adminUser->user_id;
+     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
+     $notification->save();
+
+     $mail = [
+         "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
+         "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
+     ];
+     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+       }
      return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
  }
  
@@ -280,13 +298,27 @@ class HousingCategoryFileController extends Controller
         'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
         'user_id' => $userId,
        ]);
-     $adminUsers = User::where('is_admin', 1)->get();
-            foreach ($adminUsers as $adminUser) {
-                $notification = new Notification();
-                $notification->user_id = $adminUser->id;
-                $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce inexistante.Veuilez vous connecter pour valider";
-                $notification->save();
-            }
+    $notification->save();
+       $mailhote = [
+        "title" => "Notification ajout d'une pièce à un logement",
+        "body" => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h."
+     ];
+    Mail::to(User::where('id',$userId)->first()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
+     foreach ($adminUsers as $adminUser) {
+     $notification = new Notification();
+     $notification->user_id = $adminUser->user_id;
+     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
+     $notification->save();
+
+     $mail = [
+         "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
+         "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
+     ];
+     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+       }
 
     return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
 }
@@ -587,6 +619,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
     ];
     Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
 
+
     return response()->json(['message' => 'Catégories validées avec succès'], 200);
 }
 
@@ -625,61 +658,409 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
  * )
  */
 
- public function getCategoryDetail($housing_id, $category_id)
+ public function getCategoryDetail($housingId, $categoryId)
+{
+    try {
+
+        $housing = Housing::with('user')->find($housingId);
+
+        if (!$housing) {
+            return response()->json(['error' => 'Logement non trouvé.'], 404);
+        }
+
+        // Récupérer la catégorie par son ID
+        $category = Category::find($categoryId);
+
+        if (!$category) {
+            return response()->json(['error' => 'Catégorie non trouvée.'], 404);
+        }
+
+        // Récupérer les relations entre le logement et la catégorie
+        $housingCategoryFiles = Housing_category_file::where('housing_id', $housingId)
+                                                   ->where('category_id', $categoryId)
+                                                   ->get();
+
+        if ($housingCategoryFiles->isEmpty()) {
+            return response()->json(['error' => 'Aucune relation entre le logement et la catégorie trouvée.'], 404);
+        }
+
+        $photos = [];
+        foreach ($housingCategoryFiles as $housingCategoryFile) {
+            $file = File::find($housingCategoryFile->file_id);
+
+            if ($file) {
+                $path = parse_url($file->path, PHP_URL_PATH);
+                $photos[] = [
+                    'id' => $file->id,
+                    'path' => $file->path,
+                ];
+            }
+        }
+
+        $number = $housingCategoryFiles->first()->number;
+
+        return response()->json([
+            'housing' => $housing,
+            'category' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'number' => $number, 
+                'is_verified' => $category->is_verified, 
+                'photos' => $photos,
+                
+            ],
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+
+ 
+/**
+ * @OA\Delete(
+ *     path="/api/logement/{housingId}/category/{categoryId}/delete",
+ *     summary="Supprimer une catégorie et ses fichiers associés d'un logement",
+ *     tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}}, 
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(type="integer"),
+ *     ),
+ *     @OA\Parameter(
+ *         name="categoryId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la catégorie",
+ *         @OA\Schema(type="integer"),
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Catégorie et fichiers associés supprimés avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Catégorie et fichiers associés supprimés avec succès."),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune relation entre le logement et la catégorie trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Aucune relation entre le logement et la catégorie trouvée."),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Erreur interne du serveur."),
+ *         ),
+ *     ),
+ * )
+ */
+
+ public function deleteHousingCategory($housingId, $categoryId)
+{
+    try {
+
+        $housingCategoryFiles = Housing_category_file::where('housing_id', $housingId)
+                              ->where('category_id', $categoryId)
+                              ->get();
+
+        if ($housingCategoryFiles->isEmpty()) {
+            return response()->json(['error' => 'Aucune relation entre le logement et la catégorie trouvée.'], 400);
+        }
+
+        foreach ($housingCategoryFiles as $housingCategoryFile) {
+            $file = File::find($housingCategoryFile->file_id);
+
+            if ($file) {
+                $path = parse_url($file ->path, PHP_URL_PATH);
+                $filePath = public_path($path);
+
+                if (F::exists($filePath)) {
+                    F::delete($filePath);
+                }
+
+                $file->delete();
+            }
+
+            $housingCategoryFile->delete();
+        }
+        $category = Category::find($categoryId);
+        if ($category && !$category->is_verified) {
+            $category->delete();
+        }
+
+        return response()->json(['message' => 'Catégorie et fichiers associés supprimés avec succès.'], 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+ /**
+ * @OA\Post(
+ *     path="/api/logement/{housingId}/category/{categoryId}/photos/add",
+ *     tags={"Housing Category Photo"},
+ *     summary="Ajouter des photos à une catégorie d'un logement",
+ *     description="Ajouter des photos à une catégorie d'un logement",
+ *     security={{"bearerAuth": {}}},
+      *     @OA\Parameter(
+     *         name="housingId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID du logement"
+     *     ),
+     *     @OA\Parameter(
+     *         name="categoryId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID de la catégorie"
+     *     ),
+
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="photos[]",
+ *                     type="array",
+ *                     @OA\Items(type="string", format="binary", description="Image de la catégorie (JPEG, PNG, JPG, GIF, taille max : 2048)")
+ *                 ),
+ *                 required={"photos[]"}
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Photos ajoutées avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Photos ajoutées avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de validation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="object", additionalProperties={"type": "string"})
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=409,
+ *         description="Conflit - Une entrée pour cette catégorie et ce logement existe déjà",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Une entrée pour cette catégorie et ce logement existe déjà")
+ *         )
+ *     )
+ * )
+ */
+
+ public function addPhotosCategoryToHousing(Request $request, $housingId, $categoryId)
  {
-     $categories = Category::all();
+
+     $validator = Validator::make($request->all(), [
+         'photos' => 'required',
+         'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+     ]);
  
-     $data = [];
- 
-     foreach ($categories as $category) {
-         $housingCategoryFiles = Housing_category_file::where('category_id', $category_id)
-             ->where('housing_id', $housing_id)
-             ->with('housing.user')
-             ->get();
- 
-         foreach ($housingCategoryFiles as $housingCategoryFile) {
-             $housingId = $housingCategoryFile->housing->id;
- 
-             $existingHousingIndex = null;
-             foreach ($data as $index => $existingHousing) {
-                 if ($existingHousing['housing_id'] === $housingId && $existingHousing['category_id'] === $category_id) {
-                     $existingHousingIndex = $index;
-                     break;
-                 }
-             }
- 
-             if ($existingHousingIndex === null) {
-                 $housingData = [
-                     'housing_category_file_id' => $housingCategoryFile->id,
-                     'category_id' => $category_id,
-                     'category_name' => $category->name,
-                     'is_verified' => $housingCategoryFile->is_verified,
-                     'housing_id' => $housingId,
-                     'housing_details' => $housingCategoryFile->housing->toArray(),
-                     'photos_category' => [],
-                     'user_id' => $housingCategoryFile->housing->user->id,
-                     'user_details' => $housingCategoryFile->housing->user->toArray(),
-                 ];
- 
-                 $data[] = $housingData;
-             }
- 
-             $photos = $housingCategoryFile->file()->select('id', 'path')->get()->toArray();
-             foreach ($photos as $photo) {
-                 if (!isset($data[$existingHousingIndex]['photos_category'][$photo['id']])) {
-                     $data[$existingHousingIndex]['photos_category'][$photo['id']] = $photo;
-                 }
-             }
-         }
+     if ($validator->fails()) {
+         return response()->json(['error' => $validator->errors()], 400);
      }
  
-     foreach ($data as &$housing) {
-         $housing['photos_category'] = array_values($housing['photos_category']);
-     }
+     $housingCategoryFile = Housing_category_file::where('housing_id', $housingId)
+            ->where('category_id', $categoryId)
+            ->first();
+
+        if (is_null($housingCategoryFile)) {
+            return response()->json([
+                'message' => 'Aucune relation trouvée entre ce logement et cette catégorie',
+            ], 404);
+        }
+     $constantNumber = $housingCategoryFile->number;
+
+        $savedFiles = [];
+     foreach ($request->file('photos') as $photo) {
+         $photoModel = new File();
+         $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
+         $photoPath = $photo->move(public_path('image/photo_category'), $photoName);
+         $photoUrl = url('/image/photo_category/' . $photoName);
+         $photoModel->path = $photoUrl;
+         $photoModel->save();
  
-     return response()->json(['data' => $data]);
+         $housingCategoryFile = new Housing_category_file();
+         $housingCategoryFile->housing_id = $housingId;
+         $housingCategoryFile->category_id = $categoryId;
+         $housingCategoryFile->file_id = $photoModel->id;
+         $housingCategoryFile->number = $constantNumber;
+         $housingCategoryFile->is_verified= false;
+         $housingCategoryFile->save();
+         $savedFiles[] = $photoModel;
+     }
+     $userId = Auth::id();
+     $notification = new Notification([
+        'name' => "Votre ajout de la photo a été prise en compte. l'administrateur validera dans moin de 48h",
+        'user_id' => $userId,
+       ]);
+    $notification->save();
+     $mailhote = [
+        'title' => "Notification d'ajout de photo à une pièce",
+        'body' => "Votre ajout de la photo a été prise en compte. l'administrateur validera dans moin de 48h.",
+    ];
+     Mail::to( $housingCategoryFile->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote));
+
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
+     foreach ($adminUsers as $adminUser) {
+     $notification = new Notification();
+     $notification->user_id = $adminUser->user_id;
+     $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour une categorie d'un logement.";
+     $notification->save();
+
+     $mail = [
+         "title" => "Ajout d'une/de nouvelle(s) photo(s) à une catégorie d'un logement",
+         "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour une categorie d'un logement."
+     ];
+    
+         Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+       }
+ 
+     return response()->json([
+            'message' => 'Photos ajoutées avec succès',
+            'housing_id' => $housingId,
+            'category_id' => $categoryId,
+            'saved_files' => $savedFiles,
+        ], 201);
  }
  
+/**
+     * @OA\Get(
+     *     path="/api/logement/category/photo/unverified",
+     *     summary="Récupérer les photos des catégories(pièce) en attente de validation",
+     *     tags={"Housing Category Photo"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des  photos des catégories(pièce) en attente de validation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement"),
+     *                 @OA\Property(property="category_id", type="integer", description="ID de la catégorie"),
+     *                 @OA\Property(property="file_path", type="string", description="Chemin du fichier"),
+     *                 @OA\Property(property="housing_name", type="string", description="Nom du logement"),
+     *                 @OA\Property(property="housing_address", type="string", description="Adresse du logement"),
+     *                 @OA\Property(property="owner_name", type="string", description="Nom du propriétaire"),
+     *                 @OA\Property(property="owner_email", type="string", description="E-mail du propriétaire"),
+     *                 @OA\Property(property="category_name", type="string", description="Nom de la catégorie"),
+     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+public function getUnverifiedHousingCategoryFilesWithDetails()
+{
 
+    $unverifiedFiles = Housing_category_file::with(['file', 'housing.user', 'category'])
+        ->where('is_verified', false)
+        ->whereHas('category', function ($query) {
+            $query->where('is_verified', true);
+        })
+        ->get();
+
+    return response()->json([
+        'message' => 'Liste des photos des catégoriesen attente de validation avec détails',
+        'data' => $unverifiedFiles,
+    ]);
+}
+
+ /**
+     * @OA\Put(
+     *     path="/api/logement/category/photo/{id}/validate",
+     *     summary="Mettre à jour le statut de vérification d'un fichier de logement",
+     *     tags={"Housing Category Photo"}, 
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID du housing_category_file"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut de vérification mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", description="Message de confirmation"),
+     *             @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Fichier non trouvé",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+    public function validateHousingCategoryFile($id)
+    {
+        try {
+            $housingCategoryFile = Housing_category_file::find($id);
+            if (!$housingCategoryFile) {
+                return response()->json([
+                    'message' => 'Le fichier de logement avec cet ID n\'a pas été trouvé',
+                ], 404);
+            }
+            $housingCategoryFile->is_verified = true;
+            $housingCategoryFile->save();
+            $notification = new Notification([
+                'name' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur",
+                'user_id' => $user_id,
+            ]);
+            $notification->save();
+            $mail = [
+                'title' => "Validation de  la photo ajoutée à la catégorie de votre logement",
+                'body' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur.",
+            ];
+            Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+            return response()->json([
+                'message' => 'Statut de vérification mis à jour avec succès',
+                'is_verified' => $housingCategoryFile->is_verified,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Une erreur s\'est produite',
+            ], 500);
+        }
+    }
 
 }

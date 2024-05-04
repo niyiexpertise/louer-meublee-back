@@ -45,6 +45,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'code'
     ];
 
     /**
@@ -115,6 +116,11 @@ class User extends Authenticatable
     public function user_right()
     {
         return $this->hasMany(User_right::class);
+    }
+
+    public function visites()
+    {
+        return $this->hasMany(UserVisiteHousing::class);
     }
 
 }

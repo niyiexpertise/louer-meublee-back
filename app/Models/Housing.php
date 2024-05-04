@@ -113,6 +113,10 @@ class Housing extends Model
     public function housing_charge(){
         return $this->hasMany(Housing_charge::class);
     }
+    public function visites()
+    {
+        return $this->hasMany(UserVisiteHousing::class);
+    }
     
 
 }

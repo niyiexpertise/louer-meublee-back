@@ -26,6 +26,9 @@ use Exception;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\User_right;
+use App\Models\Right;
+use Illuminate\Support\Facades\DB;
 
 class HousingEquipmentController extends Controller
 {
@@ -260,26 +263,32 @@ public function DeleteEquipementHousing(Request $request)
                     $housingEquipment->housing_id = $housingId;
                     $housingEquipment->is_verified = false;
                     $housingEquipment->save();
-
                     $userId = Auth::id();
                     $notification = new Notification([
                         'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
                         'user_id' => $userId,
                        ]);
-                       $notification->save();
-                     $adminUsers = User::where('is_admin', 1)->get();
-                            foreach ($adminUsers as $adminUser) {
-                                $notification = new Notification();
-                                $notification->user_id = $adminUser->id;
-                                $notification->name = "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider";
-                                $notification->save();
-                                $mail = [
-                                    'title' => "Notification sur l'ajout d'un nouveau équipement",
-                                    'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
-                                ];
-                                
-                                Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
-                            }
+                    $notification->save();
+                    $mailhote = [
+                        "title" => "Notification ajout d'un équipement à un logement",
+                        "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
+                     ];
+                    Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+                
+                     $right = Right::where('name','admin')->first();
+                     $adminUsers = User_right::where('right_id', $right->id)->get();
+                     foreach ($adminUsers as $adminUser) {
+                     $notification = new Notification();
+                     $notification->user_id = $adminUser->user_id;
+                     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
+                     $notification->save();
+                
+                     $mail = [
+                        'title' => "Notification sur l'ajout d'un nouveau équipement",
+                        'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
+                    ];
+                     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+                       }
 
                     return response()->json([
                         "message" =>"save successfully",
@@ -371,25 +380,31 @@ public function DeleteEquipementHousing(Request $request)
                 }
         
                 $userId = Auth::id();
-                $userNotification = new Notification([
-                    'name' => "Votre ajout d'équipement(s) a été pris en compte. L'administrateur validera dans moins de 48 heures.",
-                    'user_id' => $userId,
-                ]);
-                $userNotification->save();
-        
-                $adminUsers = User::where('is_admin', 1)->get();
-                foreach ($adminUsers as $adminUser) {
-                    $adminNotification = new Notification();
-                    $adminNotification->user_id = $adminUser->id;
-                    $adminNotification->name = "Un hôte vient de faire un ajout de nouveaux équipements. Veuillez vous connecter pour valider.";
-                    $adminNotification->save();
-                    $mail = [
+                    $notification = new Notification([
+                        'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
+                        'user_id' => $userId,
+                       ]);
+                    $notification->save();
+                    $mailhote = [
+                        "title" => "Notification ajout d'un équipement à un logement",
+                        "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
+                     ];
+                    Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+                
+                     $right = Right::where('name','admin')->first();
+                     $adminUsers = User_right::where('right_id', $right->id)->get();
+                     foreach ($adminUsers as $adminUser) {
+                     $notification = new Notification();
+                     $notification->user_id = $adminUser->user_id;
+                     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
+                     $notification->save();
+                
+                     $mail = [
                         'title' => "Notification sur l'ajout d'un nouveau équipement",
-                        'body' => "Un hôte vient de faire un ajout de nouveaux équipements. Veuillez vous connecter pour valider.",
+                        'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
                     ];
-                    
-                    Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
-                }
+                     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+                       }
         
                 return response()->json([
                     'message' => empty($m) ? 'Erreur' : $m,

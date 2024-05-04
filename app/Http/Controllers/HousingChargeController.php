@@ -236,6 +236,54 @@ class HousingChargeController extends Controller
     }
 }
 
+/**
+ * @OA\Delete(
+ *     path="/api/logement/charge",
+ *     tags={"Housing Charge"},
+ *     summary="Supprime des charges associés à un logement",
+ *     description="Supprime l'association entre plusieurs charges et un logement à partir des IDs des associations.",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"housingChargeIds"},
+ *                 @OA\Property(
+ *                     property="housingChargeIds",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     description="Tableau contenant les IDs des charges du logement à supprimer"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Les charges du logement ont été retirés avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Les charges du logement ont été retirés avec succès")
+ *         )
+ *     ),
+ * )
+ */
+public function DeleteChargeHousing(Request $request)
+{
+    try {
+        $request->validate([
+            'housingChargeIds' => 'required|array',
+            'housingChargeIds.*' => 'integer|exists:housing_charges,id',
+        ]);
 
+        $housingChargeIds = $request->input('housingChargeIds');
+
+        Housing_charge::whereIn('id', $housingChargeIds)->delete();
+
+        return response()->json(['message' => 'Les charges du logement ont été retirés avec succès'], 200);
+    } catch (ValidationException $e) {
+        return response()->json(['message' => 'Un ou plusieurs charges du logement à retirer n\'existent pas'], 404);
+    }
+}
 
 }

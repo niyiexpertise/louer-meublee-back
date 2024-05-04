@@ -112,7 +112,7 @@ class InscriptionController extends Controller
          'addresse' => 'required|string',
          'sexe' => 'required|string',
          'language_id' => [
-             'required',
+             'nullable',
              'min:1',
              'exists:languages,id'
              
@@ -144,10 +144,6 @@ class InscriptionController extends Controller
          'address' => $request->addresse,
          'sexe' => $request->sexe,
          'postal_code' => $request->postal_code,
-         'is_admin' => 0,
-         'is_hote' => 0,
-         'is_traveller' => 1
-         
          
      ]);
 
@@ -159,15 +155,16 @@ class InscriptionController extends Controller
      $user_right->right_id = $right->id;
      $user_right->save();
      $userLanguages =$request->language_id;
-
-     foreach ($userLanguages as $language_id) {
-         $userLanguage = new User_language([
-            'user_id' => $user->id,
-            'language_id' => $language_id,
-              ]);
-
-        $userLanguage->save();
-            }
+     if (!empty($request->language_id)) {
+        foreach ($userLanguages as $language_id) {
+            $userLanguage = new User_language([
+               'user_id' => $user->id,
+               'language_id' => $language_id,
+                 ]);
+   
+           $userLanguage->save();
+               }
+    }
 
      $created_at = $user->created_at;
      $date_creation = Carbon::parse($created_at)->isoFormat('D MMMM YYYY [à] HH[h]mm');

@@ -2177,20 +2177,22 @@
                 "tags": [
                     "Category"
                 ],
-                "summary": "create new category",
+                "summary": "Create a new category ",
                 "operationId": "24d7fd33662f3e469ba90283e634bf99",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "cuisine,etc"
+                                        "example": "Bureau,..."
+                                    },
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -2199,21 +2201,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "category add successfuly",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "piscine,cuisine,etc"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "200": {
+                        "description": "Category  created successfully"
                     },
                     "401": {
                         "description": "Invalid credentials"
@@ -2259,13 +2248,13 @@
                 ]
             }
         },
-        "/api/category/update/{id}": {
+        "/api/category/updateName/{id}": {
             "put": {
                 "tags": [
                     "Category"
                 ],
                 "summary": "Update category by ID",
-                "operationId": "2211e5d53c60462c7497f91ff3240819",
+                "operationId": "2dc070e6bba99bb4ebdb7697cf4d2fd3",
                 "parameters": [
                     {
                         "name": "id",
@@ -2305,6 +2294,98 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/category/updateIcone/{id}": {
+            "post": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Update a category icone by ID",
+                "operationId": "c287c1e8f80edf30d1deaa3038f5fbe9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the category to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Category updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Category not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4803,6 +4884,26 @@
                 ]
             }
         },
+        "/api/reservation/reservationsNotConfirmedYetByHost": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des réservations en attente de confirmation pour l'hote connecté",
+                "description": "Liste des réservations en attente de confirmation pour l'hote connecté",
+                "operationId": "031b430bbe6197be30c4eb93a7925b84",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations en attente de confirmation pour l'hote connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/category/photo/{photoid}": {
             "delete": {
                 "tags": [
@@ -5277,6 +5378,362 @@
                 ]
             }
         },
+        "/api/logement/{housingId}/category/{categoryId}/delete": {
+            "delete": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Supprimer une catégorie et ses fichiers associés d'un logement",
+                "operationId": "997558843722dbe021bb329d449366ce",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "ID de la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Catégorie et fichiers associés supprimés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Catégorie et fichiers associés supprimés avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune relation entre le logement et la catégorie trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Aucune relation entre le logement et la catégorie trouvée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housingId}/category/{categoryId}/photos/add": {
+            "post": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Ajouter des photos à une catégorie d'un logement",
+                "description": "Ajouter des photos à une catégorie d'un logement",
+                "operationId": "45670d744e307386578a1d77f2cf6a0a",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "ID de la catégorie",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "photos[]"
+                                ],
+                                "properties": {
+                                    "photos[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "description": "Image de la catégorie (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Photos ajoutées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Photos ajoutées avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflit - Une entrée pour cette catégorie et ce logement existe déjà",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une entrée pour cette catégorie et ce logement existe déjà"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/photo/unverified": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les photos des catégories(pièce) en attente de validation",
+                "operationId": "fb7430d6cdba90c427bb4177a5a3900d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des  photos des catégories(pièce) en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "category_id": {
+                                                "description": "ID de la catégorie",
+                                                "type": "integer"
+                                            },
+                                            "file_path": {
+                                                "description": "Chemin du fichier",
+                                                "type": "string"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "housing_address": {
+                                                "description": "Adresse du logement",
+                                                "type": "string"
+                                            },
+                                            "owner_name": {
+                                                "description": "Nom du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "owner_email": {
+                                                "description": "E-mail du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "category_name": {
+                                                "description": "Nom de la catégorie",
+                                                "type": "string"
+                                            },
+                                            "is_verified": {
+                                                "description": "Statut de vérification",
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/photo/{id}/validate": {
+            "put": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Mettre à jour le statut de vérification d'un fichier de logement",
+                "operationId": "e173daedf2f5ad4b1fb00820c13905a6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du housing_category_file",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statut de vérification mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de confirmation",
+                                            "type": "string"
+                                        },
+                                        "is_verified": {
+                                            "description": "Statut de vérification",
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Fichier non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/charge/addChargeToHousing": {
             "post": {
                 "tags": [
@@ -5373,6 +5830,61 @@
                 "responses": {
                     "200": {
                         "description": "List of charges"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/charge": {
+            "delete": {
+                "tags": [
+                    "Housing Charge"
+                ],
+                "summary": "Supprime des charges associés à un logement",
+                "description": "Supprime l'association entre plusieurs charges et un logement à partir des IDs des associations.",
+                "operationId": "d1f0cb69cc2a5ce0ce68887d415cf4de",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housingChargeIds"
+                                ],
+                                "properties": {
+                                    "housingChargeIds": {
+                                        "description": "Tableau contenant les IDs des charges du logement à supprimer",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Les charges du logement ont été retirés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Les charges du logement ont été retirés avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -5499,13 +6011,30 @@
             }
         },
         "/api/logement/index/ListeDesLogementsAcceuil": {
-            "get": {
+            "post": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements pour l'accueil et pour l'admin en même temps.",
                 "description": "Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
-                "operationId": "f6da0a74c98a222da98c79fd7d3ef60f",
+                "operationId": "a3b238531dbd2117bd75fe12636926da",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur, facultatif",
+                                        "type": "integer",
+                                        "example": 123
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Liste des logements récupérée avec succès",
@@ -5767,25 +6296,39 @@
                 }
             }
         },
-        "/api/logement/ShowDetailLogementAcceuil/{housing_id}": {
-            "get": {
+        "/api/logement/ShowDetailLogementAcceuil": {
+            "post": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des détails possibles d'un logement donné côté acceuil",
-                "description": "Récupère les détails d'un logement spécifié par son ID, y compris les informations sur le propriétaire, les photos, les équipements, les préférences, les réductions, les promotions, les catégories et les prix.",
-                "operationId": "dd8e8b73cffab02bf19ad3316ffea0dc",
-                "parameters": [
-                    {
-                        "name": "housing_id",
-                        "in": "path",
-                        "description": "ID du logement à afficher",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "description": "Récupère les détails d'un logement spécifié par son ID. Prend les paramètres au format JSON dans le corps de la requête.",
+                "operationId": "59c5076b80620c37da66d20c303cfa54",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housing_id"
+                                ],
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement à afficher",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur, facultatif",
+                                        "type": "integer",
+                                        "example": 123
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Détails du logement récupérés avec succès",
@@ -6723,6 +7266,278 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/logement/add/file/{housingId}": {
+            "post": {
+                "tags": [
+                    "Housing Photo"
+                ],
+                "summary": "Ajouter une ou plusieurs photos à un logement",
+                "description": "Ajouter une ou plusieurs photos à un logement",
+                "operationId": "0949b077a2b54df265c8c53fa3e9b10f",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "photos[]"
+                                ],
+                                "properties": {
+                                    "photos[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "description": "Image de la catégorie (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Photo(s) du logement ajoutée(s) avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Photo(s) du logement ajoutée(s) avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/photos/unverified": {
+            "get": {
+                "tags": [
+                    "Housing Photo"
+                ],
+                "summary": "Obtenir la liste des photos des logements en attente de validation",
+                "operationId": "68f77d41f780aee3808545ebf51f064f",
+                "responses": {
+                    "200": {
+                        "description": "Liste des photos en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID de la photo",
+                                                "type": "integer"
+                                            },
+                                            "path": {
+                                                "description": "Chemin de la photo",
+                                                "type": "string"
+                                            },
+                                            "extension": {
+                                                "description": "Extension de la photo",
+                                                "type": "string"
+                                            },
+                                            "is_couverture": {
+                                                "description": "Photo de couverture",
+                                                "type": "boolean"
+                                            },
+                                            "housing_id": {
+                                                "description": "ID du logement associé",
+                                                "type": "integer"
+                                            },
+                                            "is_verified": {
+                                                "description": "Statut de vérification",
+                                                "type": "boolean"
+                                            },
+                                            "housing": {
+                                                "description": "Détails du logement associé",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "owner": {
+                                                        "description": "Propriétaire du logement",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune photo en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Aucune photo trouvée",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/photos/validate/{photoId}": {
+            "put": {
+                "tags": [
+                    "Housing Photo"
+                ],
+                "summary": "Valider une photo du logement par son ID",
+                "operationId": "d53c60384059f380ec75a2c5e0aa9e84",
+                "parameters": [
+                    {
+                        "name": "photoId",
+                        "in": "path",
+                        "description": "ID de la photo à valider",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Photo validée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "photo": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "is_verified": {
+                                                    "type": "boolean"
+                                                },
+                                                "housing_id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Photo non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/logement/{housingId}/equipements": {
@@ -8236,20 +9051,22 @@
                 "tags": [
                     "Language"
                 ],
-                "summary": "add new language",
+                "summary": "Create a new language ",
                 "operationId": "1b4a62d317c7ac00f8e27096f72b7bb9",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "name"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "français,anglais,etc"
+                                        "example": "Allemand , Mandarin"
+                                    },
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -8258,21 +9075,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "new language created successfuly",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "new language created successfuly"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "200": {
+                        "description": "Language  created successfully"
                     },
                     "401": {
                         "description": "Invalid credentials"
@@ -8318,13 +9122,13 @@
                 ]
             }
         },
-        "/api/language/update/{id}": {
+        "/api/language/updateName/{id}": {
             "put": {
                 "tags": [
                     "Language"
                 ],
                 "summary": "Update a language by ID",
-                "operationId": "fc63869b247b3665f2590ffd96ac6aed",
+                "operationId": "da404e88f9fd7ede9b4e36e613aba528",
                 "parameters": [
                     {
                         "name": "id",
@@ -8364,6 +9168,98 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/language/updateIcone/{id}": {
+            "post": {
+                "tags": [
+                    "Language"
+                ],
+                "summary": "Update a language icone by ID",
+                "operationId": "dfd6340686acc723c5b512405eff091a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the language to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "icone": {
+                                        "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Language updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Language updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Language not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Language not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -10077,6 +10973,264 @@
                 ]
             }
         },
+        "/api/notifications/unread": {
+            "get": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Obtenir les notifications non lues pour un utilisateur connecté",
+                "operationId": "cbc72457bde618b8a2059580ea992e1c",
+                "responses": {
+                    "200": {
+                        "description": "Notifications non lues pour l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "unread_notifications": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Nouvelle notification"
+                                                    },
+                                                    "is_read": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-12-01T10:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Utilisateur non connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Utilisateur non connecté."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/read": {
+            "get": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Obtenir les notifications lues pour un utilisateur connecté",
+                "operationId": "1fc1d75ed3da08cca17395eab537a6f1",
+                "responses": {
+                    "200": {
+                        "description": "Notifications lues pour l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "read_notifications": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_read": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Utilisateur non connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Utilisateur non connecté."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}/markread": {
+            "put": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Marquer une notification comme lue",
+                "operationId": "b14e37bf0323e01004e37eef00a90313",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la notification à marquer comme lue",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marquée comme lue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification marquée comme lue."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Notification non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Notification non trouvée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Notification déjà lue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Notification déjà lue."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/paiement/reservation/user": {
             "get": {
                 "tags": [
@@ -11312,6 +12466,537 @@
                 ]
             }
         },
+        "/api/promotion/add": {
+            "post": {
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Ajouter une nouvelle promotion",
+                "operationId": "484877ccac081ba9952ebe7eaf5a3b76",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housing_id",
+                                    "number_of_reservation",
+                                    "value",
+                                    "date_debut",
+                                    "date_fin"
+                                ],
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement",
+                                        "type": "integer"
+                                    },
+                                    "number_of_reservation": {
+                                        "description": "Nombre de réservations",
+                                        "type": "integer"
+                                    },
+                                    "value": {
+                                        "description": "Valeur de la promotion",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "date_debut": {
+                                        "description": "Date de début de la promotion",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "date_fin": {
+                                        "description": "Date de fin de la promotion",
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Promotion ajoutée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Promotion ajoutée avec succès."
+                                        },
+                                        "promotion": {
+                                            "properties": {
+                                                "housing_id": {
+                                                    "type": "integer"
+                                                },
+                                                "number_of_reservation": {
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "is_encours": {
+                                                    "type": "boolean"
+                                                },
+                                                "date_debut": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "date_fin": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Promotion en cours",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Ce logement a déjà une promotion en cours."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Données non valides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "properties": {
+                                                "housing_id": {
+                                                    "type": "string",
+                                                    "example": "Le logement est requis."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/user": {
+            "get": {
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Obtenir les promotions d'un utilisateur connecté(Dashboard hote)",
+                "operationId": "61ea1ab39e88b4a8c868f9a3aad5e5e2",
+                "responses": {
+                    "200": {
+                        "description": "Promotions associées à l'utilisateur qui est connecté actuellement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "number_of_reservation": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 15.5
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2024-01-01"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2024-01-31"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Utilisateur non connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Utilisateur non connecté."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/housing/{housingId}": {
+            "get": {
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Obtenir toutes les promotions d'un logement donné",
+                "operationId": "5def71c386ad0cdd645ff053124afc15",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Toutes les promotions associées au logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number_of_reservation": {
+                                                        "type": "integer"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/all": {
+            "get": {
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Obtenir toutes les promotions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
+                "operationId": "a97c2cf22edcb590e73c6ddac0811427",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les promotions avec les détails du logement et de l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "housing": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "address": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "housing.user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "firstname": {
+                                                                "type": "string"
+                                                            },
+                                                            "lastname": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "number_of_reservation": {
+                                                        "type": "integer"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/delete/{id}": {
+            "delete": {
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Supprimer une promotion par ID",
+                "operationId": "c9c23ffa57c7684a6b194b8e45ee8e62",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la promotion à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Promotion supprimée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Promotion non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Promotion non trouvée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/propertyType/index": {
             "get": {
                 "tags": [
@@ -11711,6 +13396,535 @@
                                         "error": {
                                             "type": "string",
                                             "example": "PropertyType not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/add": {
+            "post": {
+                "tags": [
+                    "Reduction"
+                ],
+                "summary": "Ajouter une nouvelle réduction",
+                "operationId": "8dcdfd95ed65609ae0909e644bec634d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housing_id",
+                                    "night_number",
+                                    "value",
+                                    "date_debut",
+                                    "date_fin"
+                                ],
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement",
+                                        "type": "integer"
+                                    },
+                                    "night_number": {
+                                        "description": "Nombre de nuits",
+                                        "type": "integer"
+                                    },
+                                    "value": {
+                                        "description": "Valeur de la réduction",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "date_debut": {
+                                        "description": "Date de début de la réduction",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "date_fin": {
+                                        "description": "Date de fin de la réduction",
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Réduction ajoutée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réduction ajoutée avec succès."
+                                        },
+                                        "reduction": {
+                                            "properties": {
+                                                "housing_id": {
+                                                    "type": "integer"
+                                                },
+                                                "night_number": {
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "is_encours": {
+                                                    "type": "boolean"
+                                                },
+                                                "date_debut": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "date_fin": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Réduction en cours avec même nombre de nuits",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Ce logement a déjà une réduction en cours avec le même nombre de nuits."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Données non valides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "properties": {
+                                                "housing_id": {
+                                                    "type": "string",
+                                                    "example": "Le logement est requis."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/user": {
+            "get": {
+                "tags": [
+                    "Reduction"
+                ],
+                "summary": "Obtenir les réductions de l'utilisateur connecté",
+                "operationId": "c151c5ac6549389cabfb0bdf6f2bced6",
+                "responses": {
+                    "200": {
+                        "description": "Réductions associées à l'utilisateur connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "night_number": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 15.5
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Utilisateur non connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Utilisateur non connecté."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/housing/{housingId}": {
+            "get": {
+                "tags": [
+                    "Reduction"
+                ],
+                "summary": "Obtenir toutes les réductions d'un logement donné",
+                "operationId": "1619e9adb11d42846dd82e1170d5e1aa",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Toutes les réductions associées au logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "night_number": {
+                                                        "type": "integer"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/all": {
+            "get": {
+                "tags": [
+                    "Reduction"
+                ],
+                "summary": "Obtenir toutes les réductions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
+                "operationId": "54a86da1b3fd08f45f1f67f8f652eb08",
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les réductions avec les détails du logement et de l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "housing": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "address": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "housing.user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "firstname": {
+                                                                "type": "string"
+                                                            },
+                                                            "lastname": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "night_number": {
+                                                        "type": "integer"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "is_encours": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "date_debut": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_fin": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/delete/{id}": {
+            "delete": {
+                "tags": [
+                    "Reduction"
+                ],
+                "summary": "Supprimer une réduction par ID",
+                "operationId": "73481fb655ac012b5130221866b00864",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la réduction à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réduction supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réduction supprimée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réduction non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Réduction non trouvée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
                                         }
                                     },
                                     "type": "object"
@@ -14341,6 +16555,453 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Une erreur s'est produite."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housingId}/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques sur les visites pour un logement donné",
+                "description": "Retourne le nombre total de visites, le nombre total de visites avec user_id, \n     *         le nombre total de revisites avec user_id, et le nombre total de visites sans user_id.",
+                "operationId": "getHousingVisitStatistics",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites pour le logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec user_id",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec user_id",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans user_id",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans user_id",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/site/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques sur les visites du site",
+                "description": "Retourne des statistiques sur le nombre total de visites, les visites avec utilisateur, et les revisites.",
+                "operationId": "09966949bfac36ee235a5f2930f8e168",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques de visites du site",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/site/date/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour une date donnée",
+                "description": "Retourne le nombre total de visites, de visites avec utilisateur, et de revisites pour une date spécifique.",
+                "operationId": "2f12d900950a6286ddd85f7c58cf3aee",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date pour laquelle obtenir les statistiques au format AAAA-MM-JJ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-05-04"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques de visites du site pour une date donnée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "date": {
+                                            "description": "Date des statistiques",
+                                            "type": "string",
+                                            "example": "2024-05-04"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Date invalide ou paramètre manquant."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/site/current_month/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour le mois courant",
+                "description": "Retourne les statistiques des visites pour le mois courant, y compris le nombre total de visites, les visites avec utilisateur, les visites anonymes, et les revisites.",
+                "operationId": "343419b0e5471af6b41750c7975e38c3",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites du mois courant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "month": {
+                                            "description": "Mois de statistiques",
+                                            "type": "string",
+                                            "example": "May 2024"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/site/current_year/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour l'année actuelle",
+                "description": "Retourne le nombre total de visites, les visites avec utilisateur, les visites anonymes, et les revisites pour l'année en cours.",
+                "operationId": "3ecba11e264f9623c6acc30cc1f0917b",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites pour l'année actuelle",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "year": {
+                                            "description": "Année de statistiques",
+                                            "type": "string",
+                                            "example": "2024"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de la récupération des statistiques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/site/yearly/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites par mois pour une année donnée",
+                "description": "Retourne les statistiques des visites pour chaque mois d'une année donnée.",
+                "operationId": "23116d3832a1521223501b4147d8795f",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "L'année pour laquelle obtenir les statistiques",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2024
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites par mois pour une année donnée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "year": {
+                                            "description": "Année des statistiques",
+                                            "type": "integer",
+                                            "example": 2024
+                                        },
+                                        "monthly_statistics": {
+                                            "description": "Statistiques mensuelles",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "month": {
+                                                        "description": "Nom du mois",
+                                                        "type": "string",
+                                                        "example": "January"
+                                                    },
+                                                    "total_visits": {
+                                                        "description": "Nombre total de visites",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_user_visits": {
+                                                        "description": "Nombre total de visites avec utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_anonymous_visits": {
+                                                        "description": "Nombre total de visites sans utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_user_revisits": {
+                                                        "description": "Nombre total de revisites avec utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_anonymous_revisits": {
+                                                        "description": "Nombre total de revisites sans utilisateur",
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de la récupération des statistiques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
                                         }
                                     },
                                     "type": "object"

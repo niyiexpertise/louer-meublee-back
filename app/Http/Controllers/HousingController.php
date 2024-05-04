@@ -15,6 +15,8 @@ use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Equipment;
+use App\Models\User_right;
+use App\Models\Right;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\Housing_category_file;
@@ -29,7 +31,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
-
+use App\Models\UserVisiteHousing;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Session;
 class HousingController extends Controller
 {
 
@@ -135,7 +139,8 @@ class HousingController extends Controller
             $reduction->date_fin = $request->input('reduction_date_fin')[$index];
             $reduction->value = $request->input('reduction_value_night_number')[$index];
             $reduction->housing_id = $housing->id;
-            $reduction->save();
+            $reduction->is_encours = false;
+        $reduction->save();
         }
     }    
     if ($request->has('promotion_number_of_reservation')) {
@@ -145,6 +150,7 @@ class HousingController extends Controller
         $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
         $promotion->value = $request->input('promotion_value');
         $promotion->housing_id = $housing->id;
+        $promotion->is_encours = false;
         $promotion->save();
     }
 
@@ -342,7 +348,6 @@ public function ListeDesPhotosLogementAcceuil($id)
     $listing = Housing::with([
         'photos',
         'housingCategoryFiles.file',
-        'housingEquipments.equipment',
     ])->find($id);
 
     if (!$listing) {
@@ -352,16 +357,20 @@ public function ListeDesPhotosLogementAcceuil($id)
 
     if ($listing->photos->isNotEmpty()) {
         foreach ($listing->photos as $photo) {
-            $photo_id = uniqid(); 
-            $photo_info = [
-                'photo_unique_id' => $photo_id,
-                'id_photo' => $photo->id,
-                'path' => url($photo->path),
-                'extension' => $photo->extension,
-                'is_couverture' => $photo->is_couverture,
-            ];
+             if($photo->is_verified){
 
-            $photo_general[] = $photo_info; 
+                $photo_id = uniqid(); 
+                $photo_info = [
+                    'photo_unique_id' => $photo_id,
+                    'id_photo' => $photo->id,
+                    'path' => url($photo->path),
+                    'extension' => $photo->extension,
+                    'is_couverture' => $photo->is_couverture,
+                ];
+                $photo_logement[] = $photo_info;
+                   $photo_general[] = $photo_info; 
+             }
+          
         }
     }
 
@@ -372,7 +381,7 @@ public function ListeDesPhotosLogementAcceuil($id)
             $category_photos = [];
             
             foreach ($categoryFiles as $categoryFile) {
-                if (isset($categoryFile->file)) {
+                if (isset($categoryFile->file) and ($categoryFile->is_verified)) {
                     $photo_id = uniqid(); 
                     $photo_info = [
                         'photo_unique_id' => $photo_id,
@@ -397,7 +406,7 @@ public function ListeDesPhotosLogementAcceuil($id)
 
     $data = [
         'id_housing' => $listing->id,
-        'photos_logement' => $photo_general, 
+        'photos_logement' => $photo_logement, 
         'categories' => $categories,
         'photo_general' => $photo_general, 
     ];
@@ -406,11 +415,23 @@ public function ListeDesPhotosLogementAcceuil($id)
 }
 
  /**
- * @OA\Get(
+ * @OA\Post(
  *   path="/api/logement/index/ListeDesLogementsAcceuil",
  *   tags={"Housing"},
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
+ *    @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="user_id",
+ *                 type="integer",
+ *                 description="ID de l'utilisateur, facultatif",
+ *                 example=123
+ *             )
+ *         )
+ *     ),
  *   @OA\Response(
  *     response=200,
  *     description="Liste des logements récupérée avec succès",
@@ -489,7 +510,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function ListeDesLogementsAcceuil()
+ public function ListeDesLogementsAcceuil(Request $request)
     {
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
@@ -499,23 +520,38 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->get();
         $data = $this->formatListingsData($listings);
+               
+        $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
+                
+        $userId = $request->user_id;
+           $insertvisite=$controllervisitesite->recordSiteVisit($userId);
 
-        return response()->json(['data' => $data], 200);
+             return response()->json(['data' => $data], 200);
     }
 
 /**
- * @OA\Get(
- *     path="/api/logement/ShowDetailLogementAcceuil/{housing_id}",
+ * @OA\Post(
+ *     path="/api/logement/ShowDetailLogementAcceuil",
  *     tags={"Housing"},
  *     summary="Liste des détails possibles d'un logement donné côté acceuil",
- *     description="Récupère les détails d'un logement spécifié par son ID, y compris les informations sur le propriétaire, les photos, les équipements, les préférences, les réductions, les promotions, les catégories et les prix.",
- *     @OA\Parameter(
- *         name="housing_id",
- *         in="path",
- *         description="ID du logement à afficher",
+ *     description="Récupère les détails d'un logement spécifié par son ID. Prend les paramètres au format JSON dans le corps de la requête.",
+ *     @OA\RequestBody(
  *         required=true,
- *         @OA\Schema(
- *             type="integer"
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"housing_id"},
+ *             @OA\Property(
+ *                 property="housing_id",
+ *                 type="integer",
+ *                 description="ID du logement à afficher",
+ *                 example=1
+ *             ),
+ *             @OA\Property(
+ *                 property="user_id",
+ *                 type="integer",
+ *                 description="ID de l'utilisateur, facultatif",
+ *                 example=123
+ *             )
  *         )
  *     ),
  *     @OA\Response(
@@ -534,8 +570,18 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
-    public function ShowDetailLogementAcceuil($id)
+ public function ShowDetailLogementAcceuil(Request $request)
  {
+
+      
+       $id=  $request->input('housing_id');
+       $user_id= $request->input('user_id');
+    $housing = Housing::find($id);
+   
+        if (!$housing) {
+            return response()->json(['message' => 'L\'ID du logement spécifié n\'existe pas'], 404);
+        }
+
      $listing = Housing::with([
          'photos',
          'housing_preference.preference',
@@ -543,7 +589,8 @@ public function ListeDesPhotosLogementAcceuil($id)
          'promotions',
          'housingCategoryFiles.category',
          'user',
-         'housingType'
+         'housingType',
+         'housingEquipments'
      ])->find($id);
 
      $equipments_by_category = $listing->housingEquipments
@@ -563,6 +610,7 @@ public function ListeDesPhotosLogementAcceuil($id)
          ];
      })
      ->values();
+
      $hoteCharge_id = [];
      $travelerCharge_id = [];
      $housingCharges = Housing_charge::where('housing_id', $id)->get();
@@ -578,8 +626,9 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'housing_id' => $housingCharge->housing_id,
                  'id_charge' => $charge->id,
                  'charge_name' => $charge->name,
+                 'charge_icone' => $charge->icone,  
                  'is_mycharge' => $housingCharge->is_mycharge,
-                 'valeur_charge' => $housingCharge->valeur
+                    'valeur_charge' => $housingCharge->valeur
              ];
          }else{
              $travelerCharge_id[] = [
@@ -587,14 +636,24 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'housing_id' => $housingCharge->housing_id,
                  'id_charge' => $charge->id,
                  'charge_name' => $charge->name,
+                 'charge_icone' => $charge->icone,
                  'is_mycharge' => $housingCharge->is_mycharge,
-                  'valeur_charge' => $housingCharge->valeur
+                'valeur_charge' => $housingCharge->valeur
              ];
          }
      }
+
      $userStatistique=$this->getHousingStatisticAcceuil($id);
+     $promotion=$this->getCurrentPromotion($id);
+     $reduction=$this->getCurrentReductions($id);
      $controllerreviewreservation = App::make('App\Http\Controllers\ReviewReservationController');
-      $note_commentaire= $controllerreviewreservation->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($id);
+     $controllervitehousing = App::make('App\Http\Controllers\UserVisiteHousingController');
+     $checkAuth=App::make('App\Http\Controllers\LoginController');
+
+     
+
+     $note_commentaire= $controllerreviewreservation->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($id);
+      $insertvisite=$controllervitehousing->recordHousingVisit($id,$user_id);
 
      $data = [
          'id_housing' => $listing->id,
@@ -645,12 +704,15 @@ public function ListeDesPhotosLogementAcceuil($id)
          'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
  
          'photos_logement' => $listing->photos->map(function ($photo) {
-             return [
-                 'id_photo' => $photo->id,
-                 'path' => $photo->path,
-                 'extension' => $photo->extension,
-                 'is_couverture' => $photo->is_couverture,
-             ];
+            if($photo->is_verified){
+                return [
+                    'id_photo' => $photo->id,
+                    'path' => $photo->path,
+                    'extension' => $photo->extension,
+                    'is_couverture' => $photo->is_couverture,
+                ];
+            }
+             
          }),
          'user' => [
              'id' => $listing->user->id,
@@ -681,14 +743,15 @@ public function ListeDesPhotosLogementAcceuil($id)
             ];
           }),
  
-         'reductions' => $listing->reductions,
+         'reductions' =>$reduction->original['data'],
  
-         'promotions' => $listing->promotions,
+         'promotions' => $promotion->original['data'],
  
          'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
             return [
                 'category_id' => $categoryFiles->first()->category_id,
                 'category_name' => $categoryFiles->first()->category->name,
+                'icone' => $categoryFiles->first()->category->icone,
                 'number' => $categoryFiles->first()->number,
                 'photos_category' => $categoryFiles->map(function ($categoryFile) {
                     return [
@@ -1435,12 +1498,14 @@ private function formatListingsData($listings)
                 'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
                 
                 'photos_logement' => $listing->photos->map(function ($photo) {
-                    return [
-                        'id_photo' => $photo->id,
-                        'path' => $photo->path,
-                        'extension' => $photo->extension,
-                        'is_couverture' => $photo->is_couverture,
-                    ];
+                    if($photo->is_verified){
+                        return [
+                            'id_photo' => $photo->id,
+                            'path' => $photo->path,
+                            'extension' => $photo->extension,
+                            'is_couverture' => $photo->is_couverture,
+                        ];
+                    }
                 }),
                 'user' => [
                     'id' => $listing->user->id,
@@ -1643,9 +1708,6 @@ public function enableHousing($housingId)
             }
             if(!(Auth::user()->id == $housing->user_id)){
                 return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement que vous n avez pas ajouté.'],);
-            }
-            if ($housing->is_disponible == true) {
-                return response()->json(['error' => 'Vous ne pouvez pas supprimer un logement disponible.'],);
             }
             if ($housing->is_destroy == true) {
                 return response()->json(['error' => 'Logement déjà supprimé.'],);
@@ -1858,9 +1920,266 @@ public function enableHousing($housingId)
 }
 
 
+/**
+ * @OA\Post(
+ *     path="/api/logement/add/file/{housingId}",
+ *     tags={"Housing Photo"},
+ *     summary="Ajouter une ou plusieurs photos à un logement",
+ *     description="Ajouter une ou plusieurs photos à un logement",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="photos[]",
+ *                     type="array",
+ *                     @OA\Items(type="string", format="binary", description="Image de la catégorie (JPEG, PNG, JPG, GIF, taille max : 2048)")
+ *                 ),
+ *                 required={"photos[]"}
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Photo(s) du logement ajoutée(s) avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Photo(s) du logement ajoutée(s) avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de validation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="object", additionalProperties={"type": "string"})
+ *         )
+ *     )
+ * )
+ */
+
+ public function addPhotoToHousing(Request $request, string $housingId)
+ {
+
+     try {
+         $housing = Housing::find($housingId);
+
+         if (!$housing) {
+             return response()->json(['error' => 'Housing non trouvé.'], 404);
+         }
+
+         foreach ($request->file('photos') as $index => $photo) {
+             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
+             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
+             $photoUrl = url('/image/photo_logement/' . $photoName);
+             $type = $photo->getClientOriginalExtension();
+             $photoModel = new photo();
+             $photoModel->path = $photoUrl;
+             $photoModel->extension = $type;
+             $photoModel->is_verified = false;
+             $photoModel->housing_id = $housing->id;
+             $photoModel->save();
+         }
+
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
+     foreach ($adminUsers as $adminUser) {
+     $notification = new Notification();
+     $notification->user_id = $adminUser->user_id;
+     $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}.";
+     $notification->save();
+
+          $mail = [
+         "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
+        "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
+     ];
     
+         Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+       }
+             return response()->json(['data' => 'Photos de logement ajouté avec succès'], 200);
+
+   } catch (Exception $e) {
+     return response()->json(['error' => $e->getMessage()], 500);
+   }
+}  
 
 
+// Fonction retournant la promotion en cours d'un logement donné à un instant t;
+public function getCurrentPromotion($housingId)
+{
+    try {
+        $currentDate = Carbon::now();
+
+        $promotion = Promotion::where('housing_id', $housingId)
+                              ->where('is_encours', true)
+                              ->where('is_deleted', false)
+                              ->where('is_blocked', false)
+                              ->where('date_debut', '<=', $currentDate)
+                              ->where('date_fin', '>=', $currentDate)
+                              ->first();
+
+
+        return response()->json([
+            'data' => $promotion,
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function getCurrentReductions($housingId)
+{
+    $currentDate = Carbon::now();
+
+    $ongoingReductions = Reduction::where('housing_id', $housingId)
+        ->where('is_encours', true)
+        ->where('is_deleted', false)
+        ->where('is_blocked', false)
+        ->where('date_debut', '<=', $currentDate)
+        ->where('date_fin', '>=', $currentDate)
+        ->get(); 
+
+    return response()->json([
+        'data' => $ongoingReductions,
+    ], 200);
+}
+
+    /**
+     * @OA\Get(
+     *     path="/api/logement/photos/unverified",
+     *     summary="Obtenir la liste des photos des logements en attente de validation",
+     *     tags={"Housing Photo"},
+    *  security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des photos en attente de validation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", description="ID de la photo"),
+     *                 @OA\Property(property="path", type="string", description="Chemin de la photo"),
+     *                 @OA\Property(property="extension", type="string", description="Extension de la photo"),
+     *                 @OA\Property(property="is_couverture", type="boolean", description="Photo de couverture"),
+     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement associé"),
+     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification"),
+     *                 @OA\Property(property="housing", type="object", description="Détails du logement associé",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="owner", type="object", description="Propriétaire du logement",
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="name", type="string"),
+     *                         @OA\Property(property="email", type="string")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Aucune photo en attente de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", description="Aucune photo trouvée")
+     *         )
+     *     )
+     * )
+     */
+
+public function getUnverifiedPhotos()
+{
+    $unverifiedPhotos = Photo::where('is_verified', false)
+        ->with(['housing.user'])
+        ->where('is_deleted', false)
+        ->where('is_blocked', false)
+        ->get();
+
+    if ($unverifiedPhotos->isEmpty()) {
+        return response()->json([
+            'message' => 'Aucune photo en attente de validation.',
+        ], 404);
+    }
+
+    return response()->json([
+        'message' => 'Photos en attente de validation récupérées avec succès.',
+        'photos' => $unverifiedPhotos,
+    ], 200);
+}
+
+ /**
+     * @OA\Put(
+     *     path="/api/logement/photos/validate/{photoId}",
+     *     summary="Valider une photo du logement par son ID",
+     *     tags={"Housing Photo"},
+     *  security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="photoId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="ID de la photo à valider"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Photo validée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="photo", type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="is_verified", type="boolean"),
+     *                 @OA\Property(property="housing_id", type="integer")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Photo non trouvée",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+public function validatePhoto(Request $request, $photoId)
+{
+    try {
+        $photo = Photo::findOrFail($photoId);
+
+        $photo->is_verified = true;
+            $photo->save();
+
+        return response()->json([
+            'message' => 'Photo validée avec succès.',
+            'photo' => $photo,
+        ], 200);
+    } catch (ModelNotFoundException $e) {
+        return response()->json([
+            'message' => 'Photo non trouvée avec cet ID.',
+        ], 404); 
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Une erreur s\'est produite lors de la validation de la photo.',
+        ], 500); 
+    }
+}
 
 
 }

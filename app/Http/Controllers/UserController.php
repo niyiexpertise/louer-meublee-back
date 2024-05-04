@@ -675,27 +675,25 @@ public function updatePassword(Request $request)
  */
 public function getUsersWithRoletraveler()
 {
-    // Récupérer l'ID du rôle 'traveler'
+
     $travelerRole = DB::table('rights')->where('name', 'traveler')->first();
 
     if (!$travelerRole) {
         return response()->json(['message' => 'Le rôle de traveler n\'a pas été trouvé.'], 404);
     }
 
-    // Obtenir les utilisateurs avec le rôle 'traveler'
     $usersWithRole = User::whereHas('user_right', function ($query) use ($travelerRole) {
         $query->where('right_id', $travelerRole->id);
     })
     ->where('is_deleted', 0)
-    ->with(['user_language.language', 'user_preference.preference'])  // Charger les relations nécessaires
-    ->with('portfeuille')  // Charger le portefeuille pour le solde
+    ->with(['user_language.language', 'user_preference.preference'])
+    ->with('portfeuille')
     ->get();
 
     if ($usersWithRole->isEmpty()) {
         return response()->json(['message' => 'Aucun utilisateur voyageur trouvé.'], 404);
     }
 
-    // Formater les utilisateurs
     $formattedUsers = [];
     foreach ($usersWithRole as $user) {
         $formattedUser = [
@@ -731,7 +729,6 @@ public function getUsersWithRoletraveler()
         $formattedUsers[] = $formattedUser;
     }
 
-    // Retour des utilisateurs au format JSON
     return response()->json(['users' => $formattedUsers], 200);
 }
 
@@ -839,29 +836,27 @@ public function updateUser(Request $request)
  */
 public function getUsersWithRoleHost()
 {
-    // Obtenez l'ID du rôle 'hote'
+
     $hostRole = Right::where('name', 'hote')->first();
 
     if (!$hostRole) {
         return response()->json(['message' => 'Le rôle d\'hôte n\'a pas été trouvé.']);
     }
 
-    // Récupérer les utilisateurs avec le rôle 'hote'
     $usersWithRole = User::whereHas('user_right', function ($query) use ($hostRole) {
         $query->where('right_id', $hostRole->id);
     })
-    ->where('is_deleted', 0)  // Filtre pour exclure les utilisateurs supprimés
-    ->with(['user_language.language', 'user_preference.preference'])  // Charger les relations nécessaires
-    ->with('portfeuille')  // Charger le portefeuille pour avoir le solde
-    ->leftJoin('commissions', 'users.id', '=', 'commissions.user_id')  // Jointure pour obtenir la commission
-    ->select('users.*', 'commissions.valeur as commission_value')  // Sélectionner les données nécessaires
+    ->where('is_deleted', 0)
+    ->with(['user_language.language', 'user_preference.preference']) 
+    ->with('portfeuille')
+    ->leftJoin('commissions', 'users.id', '=', 'commissions.user_id')
+    ->select('users.*', 'commissions.valeur as commission_value')
     ->get();
 
     if ($usersWithRole->isEmpty()) {
         return response()->json(['message' => 'Aucun utilisateur hôte non supprimé trouvé.']);
     }
 
-    // Formater les utilisateurs
     $formattedUsers = [];
     foreach ($usersWithRole as $user) {
         $formattedUser = [
@@ -877,8 +872,8 @@ public function getUsersWithRoleHost()
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'solde_portfeuille' => $user->portfeuille->solde,  // Solde du portefeuille
-            'commission' => $user->commission_value,  // Commission associée
+            'solde_portfeuille' => $user->portfeuille->solde,
+            'commission' => $user->commission_value,
             'user_language' => $user->user_language->map(function ($userLanguage) {
                 return [
                     'language_id' => $userLanguage->language_id,
@@ -980,7 +975,6 @@ public function getUsersWithRoleAdmin()
         $formattedUsers[] = $formattedUser;
     }
 
-    // Retourner les utilisateurs au format JSON
     return response()->json(['users' => $formattedUsers], 200);
 }
 
@@ -1121,9 +1115,6 @@ public function getUserDetails($userId) {
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'is_hote' => $user->is_hote,
-            'is_traveller' => $user->is_traveller,
-            'is_admin' => $user->is_admin,
         ],
         'languages' => $languages,
         'preferences' => $preferences,

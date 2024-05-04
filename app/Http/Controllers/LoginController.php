@@ -99,8 +99,7 @@ public function login(Request $request){
         $user = User::where('email', $request->email)->first();
         if($user !=null){
           if (Hash::check($request->password, $user->password)) {
-              $token = $user->createToken('auth_token')->plainTextToken;
-  
+              $token = $user->createToken('auth_token')->plainTextToken;  
               $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
               if($user->code !== null)  {
                   $user->code = $codes;
@@ -159,8 +158,8 @@ public function checkAuth(Request $request){
 
     try{
         return response()->json([
-            'data' => $request->user(),
-            'role'=>$request->user()->getRoleNames()
+            'data' => Auth::user(),
+            'role'=>Auth::user()->getRoleNames()
         ]);
 
     } catch (Exception $e) {

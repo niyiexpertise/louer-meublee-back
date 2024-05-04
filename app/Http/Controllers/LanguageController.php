@@ -37,60 +37,71 @@ class LanguageController extends Controller
 
 
 /**
-     * @OA\Post(
-     *     path="/api/language/store",
-     *     summary="add new language",
-     *     tags={"Language"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="français,anglais,etc")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=201,
-     *         description="new language created successfuly",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="new language created successfuly")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Invalid credentials"
-     *     )
-     * )
-     */
-    public function store(Request $request)
-{
-    try {
-        $data = $request->validate([
-            'name' => 'required|unique:languages|max:255',
-        ]);
-
-        $language = new Language();
-        $language->name = $request->name;
-        $language->icone = $request->icone;
-        $language->save();
-
-        return response()->json([
-            'message' => 'Language created successfully',
-            'data' => $language
-        ]);
-    } catch(ValidationException $e) {
-        return response()->json([
-            'error' => 'Validation failed',
-            'message' => $e->validator->errors()->first()
-        ], 422);
-    } catch(Exception $e) {
-        return response()->json([
-            'error' => 'An error occurred',
-            'message' => $e->getMessage()
-        ], 500);
-    }
-}
+         * @OA\Post(
+         *     path="/api/language/store",
+         *     summary="Create a new language ",
+         *     tags={"Language"},
+         * security={{"bearerAuth": {}}},
+ * @OA\RequestBody(
+ *     required=true,
+ *     @OA\MediaType(
+ *       mediaType="multipart/form-data",
+ *       @OA\Schema(
+ *         type="object",
+ *         @OA\Property(property="name", type="string", example="Allemand , Mandarin"),
+ *         @OA\Property(
+ *           property="icone",
+ *           type="string",
+ *           format="binary",
+ *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
+ *         ),
+ *       )
+ *     )
+ *   ),
+         *     @OA\Response(
+         *         response=200,
+         *         description="Language  created successfully"
+         *     ),
+         *     @OA\Response(
+         *         response=401,
+         *         description="Invalid credentials"
+         *     )
+         * )
+         */
+        public function store(Request $request)
+        {
+            try {
+                $data = $request->validate([
+                    'name' => 'required|unique:languages|max:255',
+                ]);
+        
+                $language = new Language();
+                if ($request->hasFile('icone')) {
+                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
+                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeLanguage'), $icone_name);
+                    $base_url = url('/');
+                    $icone_url = $base_url . '/image/iconeLanguage/' . $icone_name;
+                    $language->icone = $icone_url;
+                    }
+                $language->name = $request->name;
+                $language->save();
+        
+                return response()->json([
+                    'message' => 'Language created successfully',
+                    'data' => $language
+                ]);
+            } catch(ValidationException $e) {
+                return response()->json([
+                    'error' => 'Validation failed',
+                    'message' => $e->validator->errors()->first()
+                ], 422);
+            } catch(Exception $e) {
+                return response()->json([
+                    'error' => 'An error occurred',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
 
   /**
      * @OA\Get(
@@ -134,7 +145,7 @@ class LanguageController extends Controller
 
 /**
      * @OA\Put(
-     *     path="/api/language/update/{id}",
+     *     path="/api/language/updateName/{id}",
      *     summary="Update a language by ID",
      *     tags={"Language"},
      * security={{"bearerAuth": {}}},
@@ -166,7 +177,7 @@ class LanguageController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, string $id)
+    public function updateName(Request $request, string $id)
     {
         try{
                 $data = $request->validate([
@@ -178,6 +189,101 @@ class LanguageController extends Controller
             return response()->json($e);
         }
 
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/language/updateIcone/{id}",
+     *     summary="Update a language icone by ID",
+     *     tags={"Language"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the language to update",
+     *         @OA\Schema(type="integer")
+     *     ),
+ * @OA\RequestBody(
+ *     required=true,
+ *     @OA\MediaType(
+ *       mediaType="multipart/form-data",
+ *       @OA\Schema(
+ *         type="object",
+ *         @OA\Property(
+ *           property="icone",
+ *           type="string",
+ *           format="binary",
+ *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
+ *         ),
+ *       )
+ *     )
+ *   ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Language updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="string", example="Language updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Language not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Language not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="The given data was invalid.")
+     *         )
+     *     )
+     * )
+     */
+    public function updateIcone(Request $request, string $id)
+    {
+        
+        try {
+            $language = Language::find($id);
+            
+            if (!$language) {
+                return response()->json(['error' => 'Language non trouvé.'], 404);
+            }
+            
+            // $request->validate([
+            //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
+            //     ]);
+
+            $oldProfilePhotoUrl = $language->icone;
+            if ($oldProfilePhotoUrl) {
+                $parsedUrl = parse_url($oldProfilePhotoUrl);
+                $oldProfilePhotoPath = public_path($parsedUrl['path']);
+                if (F::exists($oldProfilePhotoPath)) {
+                    F::delete($oldProfilePhotoPath);
+                }
+            }
+                
+                if ($request->hasFile('icone')) {
+                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
+                    $icone_path = $request->file('icone')->move(public_path('image/iconeLanguage'), $icone_name);
+                    $base_url = url('/');
+                    $icone_url = $base_url . '/image/iconeLanguage/' . $icone_name;
+                    
+                    Language::whereId($id)->update(['icone' => $icone_url]);
+                    
+                    return response()->json(['data' => 'icône de la langue mis à jour avec succès.'], 200);
+                } else {
+                return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
+            }
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Erreur de requête SQL: ' . $e->getMessage()], 500);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
       /**

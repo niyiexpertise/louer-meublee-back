@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
-
+use Illuminate\Support\Facades\DB;
 
 class AdminHousingController extends Controller
 {
@@ -869,7 +869,6 @@ public function showHousingDetailForValidationForadmin($id)
  */
  public function getAdminStatistics()
 {
-    // Nombre total de logements non supprimés, non bloqués et vérifiés
     $totalListings = Housing::where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('status', "verified")
@@ -877,14 +876,6 @@ public function showHousingDetailForValidationForadmin($id)
 
     // Nombre de logements en attente de validation
     $pendingListings = Housing::where('status', 'Unverified')
-        ->count();
-
-    // Nombre total de logements non disponibles
-    $unavailableListings = Housing::where('is_disponible', false)
-        ->count();
-
-    // Nombre total de logements disponibles
-    $availableListings = Housing::where('is_disponible', true)
         ->count();
 
     // Nombre total de catégories
@@ -904,18 +895,27 @@ public function showHousingDetailForValidationForadmin($id)
     // Nombre total d'utilisateurs
     $totalUsers = User::count();
 
-    // Nombre total d'utilisateurs is_traveler
-    $totalTravelerUsers = User::where('is_traveller', true)
-        ->count();
+    $adminRole = DB::table('rights')->where('name', 'admin')->first();
+    $travelerRole = DB::table('rights')->where('name', 'traveler')->first();
+    $hostRole = DB::table('rights')->where('name', 'hote')->first();
 
-    // Nombre total d'utilisateurs is_hote
-    $totalHostUsers = User::where('is_hote', true)
-        ->count();
+    if (!$adminRole || !$travelerRole || !$hostRole) {
+        return response()->json([
+            'message' => 'Les rôles requis n\'ont pas été trouvés.'
+        ], 404);
+    }
 
-    // Nombre total d'utilisateurs is_admin
-    $totalAdminUsers = User::where('is_admin', true)
-        ->count();
+    $totalAdminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+        $query->where('right_id', $adminRole->id);
+    })->count();
 
+    $totalTravelerUsers = User::whereHas('user_right', function ($query) use ($travelerRole) {
+        $query->where('right_id', $travelerRole->id);
+    })->count();
+
+    $totalHostUsers = User::whereHas('user_right', function ($query) use ($hostRole) {
+        $query->where('right_id', $hostRole->id);
+    })->count();
     // Nombre total de types de logements
     $totalHousingTypes = HousingType::count();
 
@@ -937,8 +937,6 @@ public function showHousingDetailForValidationForadmin($id)
     return response()->json([
         'housing_verified' => $totalListings,
         'housing_unverified' => $pendingListings,
-        'unavailable_housing' => $unavailableListings,
-        'available_housing' => $availableListings,
         'total_categories' => $totalCategories,
         'unverified_equipments' => $unverifiedEquipments,
         'verified_equipments' => $verifiedEquipments,

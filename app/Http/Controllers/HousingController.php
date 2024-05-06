@@ -34,11 +34,147 @@ use App\Mail\NotificationEmailwithoutfile;
 use App\Models\UserVisiteHousing;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
+
+use Illuminate\Validation\ValidationException;
+
 class HousingController extends Controller
 {
 
  public function addHousing(Request $request)
  {
+
+     $validator = Validator::make($request->all(), [
+        'housing_type_id' => 'required|integer|exists:housing_types,id',
+        'property_type_id' => 'required|integer|exists:property_types,id',
+        'name' => 'required|string|max:255|unique:housings',
+        'description' => 'required|string',
+        'number_of_bed' => 'required|integer|min:1',
+        'number_of_traveller' => 'required|integer|min:1',
+        'sit_geo_lat' => 'required|numeric',
+        'sit_geo_lng' => 'required|numeric',
+        'country' => 'required|string',
+        'address' => 'required|string',
+        'city' => 'required|string',
+        'department' => 'required|string',
+        'is_camera' => 'required|boolean',
+        'is_accepted_animal' => 'required|boolean',
+        'is_animal_exist' => 'required|boolean',
+        'interior_regulation' => 'required|string',
+        'telephone' => 'required|string|max:20',
+        'code_pays' => 'required|string|max:5',
+        'arrived_independently' => 'required|string',
+        'is_instant_reservation' => 'required|boolean',
+        'minimum_duration' => 'required|integer|min:1',
+        'time_before_reservation' => 'required|integer|min:0',
+        'cancelation_condition' => 'required|string',
+        'departure_instruction' => 'required|string',
+        'surface' => 'required|numeric|min:1',
+        'price' => 'required|numeric|min:1',
+        'is_accept_arm' => 'required|boolean',
+        'is_accept_smoking' => 'required|boolean',
+        'is_accept_chill' => 'required|boolean',
+        'is_accept_noise' => 'required|boolean',
+        'is_accept_alccol' => 'required|boolean',
+        'is_accept_anulation' => 'required|boolean',
+        'profile_photo_id' => 'nullable|integer',
+        'photos' => 'nullable|array',
+        'photos.*' => 'file|image|max:2048',
+        'preferences' => 'nullable|array',
+        'preferences.*' => 'integer',
+        'Hotecharges' => 'nullable|array',
+        'Hotecharges.*' => 'integer',
+        'Hotechargesvalue' => 'nullable|array',
+        'Hotechargesvalue.*' => 'numeric|min:0',
+        'Travelercharges' => 'nullable|array',
+        'Travelercharges.*' => 'integer',
+        'Travelerchargesvalue' => 'nullable|array',
+        'Travelerchargesvalue.*' => 'numeric|min:0',
+        'reduction_night_number' => 'nullable|array',
+        'reduction_date_debut' => 'nullable|array',
+        'reduction_date_fin' => 'nullable|array',
+        'reduction_value_night_number' => 'nullable|array',
+        'promotion_date_debut' => 'nullable|date',
+        'promotion_date_fin' => 'nullable|date',
+        'promotion_number_of_reservation' => 'nullable|integer|min:1',
+        'promotion_value' => 'nullable|numeric|min:0',
+        'equipment_housing' => 'nullable|array',
+        'equipment_housing.*' => 'integer',
+        'category_equipment_housing' => 'nullable|array',
+        'category_equipment_housing.*' => 'integer',
+        'category_id' => 'nullable|array',
+        'category_id.*' => 'integer',
+        'number_category' => 'nullable|array',
+        'photo_categories.*' => 'nullable|file|image|max:2048',
+        'new_equipment' => 'nullable|array',
+        'new_equipment.*' => 'string',
+        'new_equipment_category' => 'nullable|array',
+        'new_equipment_category.*' => 'integer',
+        'new_categories' => 'nullable|array',
+        'new_categories_numbers' => 'nullable|array',
+      'new_category_photos_.*' => 'nullable|array',
+        'new_category_photos_.*.*' => 'file|image|max:2048',
+    ]);
+
+    if ($request->has('Hotecharges') && $request->has('Hotechargesvalue') && count($request->input('Hotecharges')) !== count($request->input('Hotechargesvalue')) ) {
+        return response()->json(['message' => 'Le nombre de valeurs de charges Hote ne correspond pas au nombre de charges.'], 400);
+    }
+
+    if ($request->has('category_equipment_housing') && $request->has('equipment_housing') && count($request->input('category_equipment_housing')) !== count($request->input('equipment_housing'))) {
+        return response()->json(['message' => 'La taille de la variable <<category_equipment_housing>> doit être égale à la taille de <<equipment_housing>>'], 400);
+    }
+
+    if ($request->has('new_equipment') && $request->has('new_equipment_category') && count($request->input('new_equipment')) !== count($request->input('new_equipment_category'))) {
+        return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 400);
+    }
+
+    if ($request->has('Travelercharges') && count($request->input('Travelercharges')) !== count($request->input('Travelerchargesvalue'))) {
+        return response()->json(['message' => 'Le nombre de valeurs de charges Traveler ne correspond pas au nombre de charges.'], 400);
+    }
+
+    if ($request->has('reduction_night_number') && (count($request->input('reduction_night_number')) !== count($request->input('reduction_date_debut')) ||
+        count($request->input('reduction_date_debut')) !== count($request->input('reduction_date_fin')) ||
+        count($request->input('reduction_date_fin')) !== count($request->input('reduction_value_night_number')))) {
+        return response()->json(['message' => 'Les données de réduction sont incohérentes.'], 400);
+    }
+
+    if ($request->has('category_id') && $request->has('number_category') && count($request->input('category_id')) !== count(($request->input('number_category'))) ) {
+        return response()->json([
+            'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "number_category".'
+        ], 400);
+    }
+
+    if ($request->has('category_id') ) {
+       
+        foreach ($request->input('category_id') as $index => $categoryId) {
+            $photoCategoryKey = 'photo_categories' . $categoryId;
+            if (!$request->hasFile($photoCategoryKey)) {
+                return response()->json([
+                    'message' => "Aucune photo trouvée pour la catégorie $categoryId."
+                ], 400);
+            }
+          }
+    }
+    if ($request->has('new_categories') && $request->has('new_categories_numbers') && count($request->input('new_categories')) !== count(($request->input('new_categories_numbers'))) ) {
+        return response()->json([
+            'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "new_categories_numbers".'
+        ], 400);
+    }
+
+    if ($request->has('new_categories') ) {
+       
+        foreach ($request->input('new_categories') as $index => $new_categoriesName) {
+            $photoCategoryKey = 'new_category_photos_' . $new_categoriesName;
+            if (!$request->hasFile($photoCategoryKey)) {
+                return response()->json([
+                    'message' => "Aucune photo trouvée pour la catégorie $new_categoriesName."
+                ], 400);
+            }
+          }
+    }
+
+    if ($validator->fails()) {
+        return response()->json(['message' => 'Les données fournies ne sont pas valides.', 'errors' => $validator->errors()], 400);
+    }
      $userId = Auth::id();
      $housing = new Housing();
      $housing->housing_type_id = $request->input('housing_type_id');
@@ -76,7 +212,7 @@ class HousingController extends Controller
      $housing->is_accept_smoking= $request->input('is_accept_smoking');
      $housing->is_accept_chill= $request->input('is_accept_chill');
      $housing->is_accept_noise= $request->input('is_accept_noise');
-     $housing->is_accept_alccol= $request->input('is_accept_alcool');
+     $housing->is_accept_alccol= $request->input('is_accept_alccol');
      $housing->is_accept_anulation = $request->input('is_accept_anulation');
      if ( $request->input('is_accept_anulation')) {
         $housing->delai_partiel_remboursement = $request->input('delai_partiel_remboursement');
@@ -523,7 +659,6 @@ public function ListeDesPhotosLogementAcceuil($id)
                
         $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
                 
-        $userId = $request->user_id;
            $insertvisite=$controllervisitesite->recordSiteVisit($userId);
 
              return response()->json(['data' => $data], 200);
@@ -2180,6 +2315,127 @@ public function validatePhoto(Request $request, $photoId)
         ], 500); 
     }
 }
+
+/**
+ * @OA\Get(
+ *     path="/api/logement/available_between_dates",
+ *     summary="Liste des logements disponibles entre un intervalle de dates",
+ *     description="Renvoie la liste des logements disponibles entre deux dates, en tenant compte du délai de 'time before reservation'.",
+ *     tags={"Housing"},
+ *     @OA\Parameter(
+ *         name="start_date",
+ *         in="query",
+ *         description="Date de début pour vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+ *         required=true,
+ *         @OA\Schema(type="string", format="date"),
+ *     ),
+ *     @OA\Parameter(
+ *         name="end_date",
+ *         in="query",
+ *         description="Date de fin pour vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+ *         required=true,
+ *         @OA\Schema(type="string", format="date"),
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements disponibles entre les dates données",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="name", type="string", example="Appartement Luxueux"),
+ *                 @OA\Property(property="address", type="string", example="123 Rue de Paris"),
+ *                 @OA\Property(property="city", type="string", example="Paris"),
+ *                 @OA\Property(property="country", type="string", example="France"),
+ *                 @OA\Property(property="price", type="number", example=120.5),
+ *             ),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de format de date",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Format de date invalide. Utilisez YYYY-MM-DD."),
+ *         ),
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucun logement trouvé entre les dates données",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Aucun logement trouvé entre les dates données."),
+ *         ),
+ *     ),
+ * )
+ */
+public function getAvailableHousingsBetweenDates(Request $request)
+{
+    $startDateParam = $request->query('start_date');
+    $endDateParam = $request->query('end_date');
+
+    if (empty($startDateParam) || empty($endDateParam)) {
+        return response()->json([
+            'message' => 'Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD.'
+        ], 400);
+    }
+
+    try {
+        $startDate = Carbon::parse($startDateParam);
+        $endDate = Carbon::parse($endDateParam);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
+        ], 400);
+    }
+
+    if ($startDate > $endDate) {
+        return response()->json([
+            'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
+        ], 400);
+    }
+
+    if ($startDate < Carbon::now()->startOfDay()) {
+        return response()->json([
+            'message' => 'La date de début ne peut pas être antérieure à la date actuelle.'
+        ], 400);
+    }
+
+    $allHousings = Housing::all();
+    $availableHousings = [];
+
+    foreach ($allHousings as $housing) {
+        $reservations = Reservation::where('housing_id', $housing->id)->get();
+        $isAvailable = true;
+
+        foreach ($reservations as $reservation) {
+            $reservationStart = Carbon::parse($reservation->date_of_starting);
+            $reservationEnd = Carbon::parse($reservation->date_of_end);
+
+            $timeBeforeReservation = $housing->time_before_reservation ?? 0;
+            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);           
+            if (($startDate <= $reservationEnd && $endDate >= $reservationStart) ||
+                ($endDate >= $reservationEnd && $startDate <= $minimumStartDate)) {
+                $isAvailable = false;
+                break;
+            }
+        }
+
+        if ($isAvailable) {
+            $availableHousings[] = $housing;
+        }
+    }
+
+    if (count($availableHousings) === 0) {
+        return response()->json([
+            'message' => 'Aucun logement trouvé entre les dates données.'
+        ], 404);
+    }
+
+    $formattedData = $this->formatListingsData(collect($availableHousings));
+
+    return response()->json(['data' => $formattedData], 200);
+}
+
 
 
 }

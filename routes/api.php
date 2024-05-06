@@ -410,7 +410,6 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::get('/{housingId}/equipements', [HousingEquipmentController::class, 'equipementsHousing']);
             Route::delete('/equipement', [HousingEquipmentController::class, 'DeleteEquipementHousing']);
             Route::post('/equipment/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing']);
-            Route::post('/equipment/storeUnexist', [HousingEquipmentController::class, 'storeUnexist']);
             //Gestion des preferences du logement
             Route::get('/{housingPreferenceId}/preferences', [HousingPreferenceController::class, 'housingPreference']);
             Route::delete('/preference', [HousingPreferenceController::class, 'deletePreferenceHousing']);
@@ -485,7 +484,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
              
 
         });
-        Route::get('/admin/statistique', [AdminHousingController::class, 'getAdminStatistics']);
+        
     });
     //Gestion des reservation
     Route::group(['middleware' => ['role:traveler']], function () {
@@ -540,9 +539,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
        });
     });
 
-    Route::group(['middleware' => ['permission:manageReduction']], function () {
 
-    });
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('methodPayement')->group(function () {
     
@@ -644,7 +641,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
 
 });
 
-/**end Route nécéssitant l'authentification*/
+/*end Route nécéssitant l'authentification/
 
 
 
@@ -674,7 +671,9 @@ Route::prefix('logement')->group(function () {
    Route::get('/filterby/nightpricemin/{price}', [HousingController::class, 'getListingsByNightPriceMin']);
    Route::get('/detail/getHousingStatisticAcceuil/{housing_id}', [HousingController::class, 'getHousingStatisticAcceuil']);
    Route::get('/available_at_date', [HousingController::class, 'getAvailableHousingsAtDate']);
-   Route::get('/{housingId}/visit_statistics', [UserVisiteHousingController::class, 'getHousingVisitStatistics']);
+   Route::get('/available_between_dates', [HousingController::class, 'getAvailableHousingsBetweenDates']);
+
+ 
    
 
 });
@@ -686,20 +685,32 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/current_month/visit_statistics', [UserVisiteSiteController::class, 'getCurrentMonthVisitStatistics']);
         Route::get('/current_year/visit_statistics', [UserVisiteSiteController::class, 'getCurrentYearVisitStatistics']);
         Route::get('/yearly/visit_statistics', [UserVisiteSiteController::class, 'getYearlyVisitStatistics']);
-
-        
-
-        
-
     
     });
+    Route::get('logement/admin/statistique', [AdminHousingController::class, 'getAdminStatistics']);
     
 
     
 });
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('logement')->group(function () {
+    Route::get('{housing_id}/date/visit_statistics', [UserVisiteHousingController::class, 'getVisitStatisticsDate']);
+
+    Route::get('{housing_id}/current_month/visit_statistics', [UserVisiteHousingController::class, 'getCurrentMonthVisitStatistics']);
+
+    Route::get('{housing_id}/current_year/visit_statistics', [UserVisiteHousingController::class, 'getCurrentYearVisitStatistics']);
+    
+    Route::get('{housing_id}/yearly/visit_statistics', [UserVisiteHousingController::class, 'getYearlyVisitStatistics']);
+    Route::get('/{housingId}/visit_statistics', [UserVisiteHousingController::class, 'getHousingVisitStatistics']);
 
 
+    });
+    
+    
+
+    
+});
+ 
 
 
 /** end Route ne nécéssitant pas l'authentification */
-

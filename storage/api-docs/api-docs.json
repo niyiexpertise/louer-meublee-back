@@ -7540,6 +7540,111 @@
                 ]
             }
         },
+        "/api/logement/available_between_dates": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements disponibles entre un intervalle de dates",
+                "description": "Renvoie la liste des logements disponibles entre deux dates, en tenant compte du délai de 'time before reservation'.",
+                "operationId": "d76e3e988d1995a50dfdfc508e32f251",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début pour vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin pour vérifier la disponibilité des logements (format: YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements disponibles entre les dates données",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Appartement Luxueux"
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "example": "123 Rue de Paris"
+                                            },
+                                            "city": {
+                                                "type": "string",
+                                                "example": "Paris"
+                                            },
+                                            "country": {
+                                                "type": "string",
+                                                "example": "France"
+                                            },
+                                            "price": {
+                                                "type": "number",
+                                                "example": 120.5
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de format de date",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Format de date invalide. Utilisez YYYY-MM-DD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun logement trouvé entre les dates données",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucun logement trouvé entre les dates données."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
@@ -16624,6 +16729,365 @@
                     },
                     "404": {
                         "description": "Logement non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housing_id}/date/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour un logement à une date donnée",
+                "description": "Retourne le nombre total de visites, de visites avec utilisateur, et de revisites pour une date spécifique.",
+                "operationId": "39ef28564ca6eef5e94193821af702f0",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date pour laquelle obtenir les statistiques au format AAAA-MM-JJ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-05-04"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques de visites du logement pour une date donnée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "date": {
+                                            "description": "Date des statistiques",
+                                            "type": "string",
+                                            "example": "2024-05-04"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housing_id}/current_month/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour un logement au mois courant",
+                "description": "Retourne les statistiques des visites pour le mois courant, y compris le nombre total de visites, les visites avec utilisateur, les visites anonymes, et les revisites.",
+                "operationId": "6c777ed8691222d330ab1cf052afa09f",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites du mois courant pour un logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "month": {
+                                            "description": "Mois des statistiques",
+                                            "type": "string",
+                                            "example": "May 2024"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de la récupération des statistiques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housing_id}/current_year/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites pour un logement pour l'année actuelle",
+                "description": "Retourne le nombre total de visites, les visites avec utilisateur, les visites anonymes, et les revisites pour l'année en cours.",
+                "operationId": "84aa352ee7a174d1b032800b6dbf74ee",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites pour l'année actuelle",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "year": {
+                                            "description": "Année des statistiques",
+                                            "type": "string",
+                                            "example": "2024"
+                                        },
+                                        "total_visits": {
+                                            "description": "Nombre total de visites",
+                                            "type": "integer"
+                                        },
+                                        "total_user_visits": {
+                                            "description": "Nombre total de visites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_visits": {
+                                            "description": "Nombre total de visites sans utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_user_revisits": {
+                                            "description": "Nombre total de revisites avec utilisateur",
+                                            "type": "integer"
+                                        },
+                                        "total_anonymous_revisits": {
+                                            "description": "Nombre total de revisites sans utilisateur",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de la récupération des statistiques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/{housing_id}/yearly/visit_statistics": {
+            "get": {
+                "tags": [
+                    "Trafic"
+                ],
+                "summary": "Obtenir des statistiques de visites par mois pour un logement d'une année donnée",
+                "description": "Retourne les statistiques des visites pour chaque mois d'une année donnée pour un logement spécifique.",
+                "operationId": "f167235dcd4ac58ae91ebd0969623aab",
+                "parameters": [
+                    {
+                        "name": "housing_id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "L'année pour laquelle obtenir les statistiques",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2024
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des visites par mois pour une année donnée pour un logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "year": {
+                                            "description": "Année des statistiques",
+                                            "type": "integer",
+                                            "example": 2024
+                                        },
+                                        "monthly_statistics": {
+                                            "description": "Statistiques mensuelles",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "month": {
+                                                        "description": "Nom du mois",
+                                                        "type": "string",
+                                                        "example": "January"
+                                                    },
+                                                    "total_visits": {
+                                                        "description": "Nombre total de visites",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_user_visits": {
+                                                        "description": "Nombre total de visites avec utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_anonymous_visits": {
+                                                        "description": "Nombre total de visites sans utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_user_revisits": {
+                                                        "description": "Nombre total de revisites avec utilisateur",
+                                                        "type": "integer"
+                                                    },
+                                                    "total_anonymous_revisits": {
+                                                        "description": "Nombre total de revisites sans utilisateur",
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de la récupération des statistiques",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des statistiques."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

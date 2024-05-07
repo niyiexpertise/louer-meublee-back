@@ -27,6 +27,7 @@ use App\Models\Language;
 use App\Models\Note;
 use App\Models\Reservation;
 use App\Models\Review_reservation;
+use App\Http\Controllers\HousingController;
 use Exception;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -61,7 +62,7 @@ class AdminHousingController extends Controller
  */
     public function indexHousingForValidationForadmin()
     {
-        $listings = Housing::where('status', 'Unverified')->get();
+        $listings = Housing::where('status', 'Unverified')->where('is_finished', 1)->get();
     
         $data = $listings->map(function ($listing) {
             return [
@@ -675,6 +676,7 @@ public function showHousingDetailForValidationForadmin($id)
      $listings = Housing::where('status', 'verified')
      ->where('is_deleted', 0)
      ->where('is_blocked', 1)
+     ->where('is_finished', 1)
      ->get();
  
      $data = $listings->map(function ($listing) {
@@ -770,6 +772,7 @@ public function showHousingDetailForValidationForadmin($id)
      $listings = Housing::where('status', 'verified')
      ->where('is_deleted', 1)
      ->where('is_blocked', 0)
+     ->where('is_finished', 1)
      ->get();
  
      $data = $listings->map(function ($listing) {
@@ -872,6 +875,7 @@ public function showHousingDetailForValidationForadmin($id)
     $totalListings = Housing::where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('status', "verified")
+        ->where('is_finished', 1)
         ->count();
 
     // Nombre de logements en attente de validation
@@ -1042,6 +1046,7 @@ public function ListeDesLogementsValideDisable()
     ->where('is_blocked', 0)
     ->where('is_destroy', 0)
     ->where('is_actif', 0)
+    ->where('is_finished', 1)
     ->get();
 
     $data = $listings->map(function ($listing) {
@@ -1303,6 +1308,32 @@ public function getTop10HousingByAverageNotes() {
 }
 
 
+   /**
+ * @OA\Get(
+ *     path="/api/logement/HousingHoteInProgressForAdmin",
+ *  security={{"bearerAuth": {}}},
+ *     tags={"Housing"},
+ *     summary="Liste des logements non rempli complètement par les hôtes",
+ *     description="Récupère la liste des logements des logements non rempli complètement par les hôtes.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements non rempli complètement par les hôtes",
+ *         @OA\JsonContent(
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Liste des logements non rempli complètement par les hôtes"
+ *     )
+ * )
+ */
+public function HousingHoteInProgressForAdmin(){
+    $listings = Housing::where('is_finished', 0)
+        ->get();
+        $h = new HousingController();
+        $data = $h->formatListingsData($listings);
+        return response()->json(['data' => $data,'nombre'=>$data->count()],200);
+}
 
 
 }

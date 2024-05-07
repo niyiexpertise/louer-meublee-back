@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('housings', function (Blueprint $table) {
-            $table->integer('delai_partiel_remboursement');
-            $table->integer('delai_integral_remboursement');
+            $table->integer('delai_partiel_remboursement')->nullable();
+            $table->integer('delai_integral_remboursement')->nullable();
         });
     }
 

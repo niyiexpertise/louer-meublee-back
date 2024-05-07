@@ -44,9 +44,10 @@ class HousingController extends Controller
  {
 
      $validator = Validator::make($request->all(), [
+        'housing_id' => 'nullable',
         'housing_type_id' => 'required|integer|exists:housing_types,id',
         'property_type_id' => 'required|integer|exists:property_types,id',
-        'name' => 'required|string|max:255|unique:housings',
+        'name' => 'required|string|max:255|unique:housings,name,' . $request->housing_id,
         'description' => 'required|string',
         'number_of_bed' => 'required|integer|min:1',
         'number_of_traveller' => 'required|integer|min:1',
@@ -176,6 +177,11 @@ class HousingController extends Controller
         return response()->json(['message' => 'Les données fournies ne sont pas valides.', 'errors' => $validator->errors()], 400);
     }
      $userId = Auth::id();
+     if($request->has('housing_id')){
+        $housingId = $request->housing_id;
+        $exist = Housing::where('id',$housingId)->first();
+        $exist->delete();
+    }
      $housing = new Housing();
      $housing->housing_type_id = $request->input('housing_type_id');
      $housing->property_type_id = $request->input('property_type_id');
@@ -208,6 +214,7 @@ class HousingController extends Controller
      $housing->is_updated=0;
      $housing->is_actif=1;
      $housing->is_destroy=0;
+     $housing->is_finished=1;
      $housing->is_accept_arm= $request->input('is_accept_arm');
      $housing->is_accept_smoking= $request->input('is_accept_smoking');
      $housing->is_accept_chill= $request->input('is_accept_chill');
@@ -428,6 +435,9 @@ class HousingController extends Controller
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
  
 }
+
+
+
  /**
  * @OA\Get(
  *   path="/api/logement/index/ListeDesPhotosLogementAcceuil/{id}",
@@ -654,12 +664,18 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->get();
         $data = $this->formatListingsData($listings);
                
         $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
-                
-           $insertvisite=$controllervisitesite->recordSiteVisit($userId);
+        if ($request->has('user_id') ) {
+            $user_id= $request->input('user_id');
+            $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
+                }else{
+                    $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
+                }
+       
 
              return response()->json(['data' => $data], 200);
     }
@@ -709,12 +725,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  {
 
       
-       $id=  $request->input('housing_id');
+       $id= $request->input('housing_id');
+    //    dd($id);
        $user_id= $request->input('user_id');
-    $housing = Housing::find($id);
+          $housing = Housing::where('id', $id)->get();
    
-        if (!$housing) {
-            return response()->json(['message' => 'L\'ID du logement spécifié n\'existe pas'], 404);
+        if(!$housing) {
+            return response()->json(['message' => " $housing L\'ID du logement spécifié n\'existe pas"], 404);
         }
 
      $listing = Housing::with([
@@ -749,9 +766,9 @@ public function ListeDesPhotosLogementAcceuil($id)
      $hoteCharge_id = [];
      $travelerCharge_id = [];
      $housingCharges = Housing_charge::where('housing_id', $id)->get();
-     if ($housingCharges->isEmpty()) {
-         return response()->json(['message' => 'Aucune charge associé à ce logement'], 404);
-     }
+    //  if ($housingCharges->isEmpty()) {
+    //      return response()->json(['message' => 'Aucune charge associé à ce logement'], 404);
+    //  }
      
      foreach ($housingCharges as $housingCharge) {
          $charge = Charge::find($housingCharge->charge_id);
@@ -950,6 +967,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->get();
     
         $data = $this->formatListingsData($listings);
@@ -994,7 +1012,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('property_type_id', $id)
+        ->where('is_finished', 1)
+                ->where('property_type_id', $id)
         ->get();
 
         $data = $this->formatListingsData($listings);
@@ -1039,6 +1058,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->where('country', $country)
         ->get();
     
@@ -1082,6 +1102,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->whereHas('housing_preference', function ($query) use ($preferenceId) {
             $query->where('preference_id', $preferenceId);
         })
@@ -1126,6 +1147,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->where('city', $city)
         ->get();
     
@@ -1169,6 +1191,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->where('department', $department)
         ->get();
         $data = $this->formatListingsData($listings);
@@ -1210,6 +1233,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
         ->where('number_of_traveller', $nbtravaler)
         ->get();
     
@@ -1255,6 +1279,7 @@ public function getListingsByNightPriceMax($price)
     ->where('is_updated', 0)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
     ->get();
 
     $data = $this->formatListingsData($listings);
@@ -1299,6 +1324,7 @@ public function getListingsByNightPriceMin($price)
     ->where('is_updated', 0)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('is_finished', 1)
     ->get();
 
     $data = $this->formatListingsData($listings);
@@ -1343,6 +1369,7 @@ public function getListingsByNightPriceMin($price)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('user_id', $userId)
+        ->where('is_finished', 1)
         ->get();
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
@@ -1584,7 +1611,7 @@ public function updateInsensibleHousing(Request $request, $id)
 
 
 
-private function formatListingsData($listings)
+public function formatListingsData($listings)
     {
         return $listings->map(function ($listing) {
             return [
@@ -2025,7 +2052,14 @@ public function enableHousing($housingId)
         ], 400);
     }
 
-    $allHousings = Housing::all();
+    $allHousings = Housing::where('status', 'verified')
+        ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+                ->get();
     $availableHousings = [];
 
     foreach ($allHousings as $housing) {
@@ -2400,7 +2434,14 @@ public function getAvailableHousingsBetweenDates(Request $request)
         ], 400);
     }
 
-    $allHousings = Housing::all();
+    $allHousings = Housing::where('status', 'verified')
+    ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+    ->where('is_updated', 0)
+    ->where('is_actif', 1)
+    ->where('is_destroy', 0)
+    ->where('is_finished', 1)
+            ->get();
     $availableHousings = [];
 
     foreach ($allHousings as $housing) {
@@ -2436,6 +2477,438 @@ public function getAvailableHousingsBetweenDates(Request $request)
     return response()->json(['data' => $formattedData], 200);
 }
 
+public function getOrDefault($input, $default = 'XX') {
+    return empty($input) ? $default : $input;
+}
 
+
+
+public function addHousingInProgress(Request $request)
+ {
+
+     $validator = Validator::make($request->all(), [
+
+        'housing_id' =>'nullable',
+        'housing_type_id' => 'required|integer|exists:housing_types,id',
+        'property_type_id' => 'required|integer|exists:property_types,id',
+        'name' => 'string|max:255|unique:housings,name,' . $request->housing_id,
+        'description' => 'string',
+        'number_of_bed' => 'integer|min:1',
+        'number_of_traveller' => 'integer|min:1',
+        'sit_geo_lat' => 'numeric',
+        'sit_geo_lng' => 'numeric',
+        'country' => 'string',
+        'address' => 'string',
+        'city' => 'string',
+        'department' => 'string',
+        'is_camera' => 'boolean',
+        'is_accepted_animal' => 'boolean',
+        'is_animal_exist' => 'boolean',
+        'interior_regulation' => 'string',
+        'telephone' => 'string|max:20',
+        'code_pays' => 'string|max:5',
+        'arrived_independently' => 'string',
+        'is_instant_reservation' => 'boolean',
+        'minimum_duration' => 'integer|min:1',
+        'time_before_reservation' => 'integer|min:0',
+        'cancelation_condition' => 'string',
+        'departure_instruction' => 'string',
+        'surface' => 'numeric|min:1',
+        'price' => 'numeric|min:1',
+        'is_accept_arm' => 'boolean',
+        'is_accept_smoking' => 'boolean',
+        'is_accept_chill' => 'boolean',
+        'is_accept_noise' => 'boolean',
+        'is_accept_alccol' => 'boolean',
+        'is_accept_anulation' => 'boolean',
+        'profile_photo_id' => 'nullable|integer',
+        'photos' => 'nullable|array',
+        'photos.*' => 'file|image|max:2048',
+        'preferences' => 'nullable|array',
+        'preferences.*' => 'integer',
+        'Hotecharges' => 'nullable|array',
+        'Hotecharges.*' => 'integer',
+        'Hotechargesvalue' => 'nullable|array',
+        'Hotechargesvalue.*' => 'numeric|min:0',
+        'Travelercharges' => 'nullable|array',
+        'Travelercharges.*' => 'integer',
+        'Travelerchargesvalue' => 'nullable|array',
+        'Travelerchargesvalue.*' => 'numeric|min:0',
+        'reduction_night_number' => 'nullable|array',
+        'reduction_date_debut' => 'nullable|array',
+        'reduction_date_fin' => 'nullable|array',
+        'reduction_value_night_number' => 'nullable|array',
+        'promotion_date_debut' => 'nullable|date',
+        'promotion_date_fin' => 'nullable|date',
+        'promotion_number_of_reservation' => 'nullable|integer|min:1',
+        'promotion_value' => 'nullable|numeric|min:0',
+        'equipment_housing' => 'nullable|array',
+        'equipment_housing.*' => 'integer',
+        'category_equipment_housing' => 'nullable|array',
+        'category_equipment_housing.*' => 'integer',
+        'category_id' => 'nullable|array',
+        'category_id.*' => 'integer',
+        'number_category' => 'nullable|array',
+        'photo_categories.*' => 'nullable|file|image|max:2048',
+        'new_equipment' => 'nullable|array',
+        'new_equipment.*' => 'string',
+        'new_equipment_category' => 'nullable|array',
+        'new_equipment_category.*' => 'integer',
+         'new_categories' => 'nullable|array',
+            'new_categories_numbers' => 'nullable|array',
+      'new_category_photos_.*' => 'nullable|array',
+        'new_category_photos_.*.*' => 'file|image|max:2048',
+    ]);
+
+    if ($request->has('Hotecharges') && $request->has('Hotechargesvalue') && count($request->input('Hotecharges')) !== count($request->input('Hotechargesvalue')) ) {
+        return response()->json(['message' => 'Le nombre de valeurs de charges Hote ne correspond pas au nombre de charges.'], 400);
+    }
+
+    if ($request->has('category_equipment_housing') && $request->has('equipment_housing') && count($request->input('category_equipment_housing')) !== count($request->input('equipment_housing'))) {
+        return response()->json(['message' => 'La taille de la variable <<category_equipment_housing>> doit être égale à la taille de <<equipment_housing>>'], 400);
+    }
+
+    if ($request->has('new_equipment') && $request->has('new_equipment_category') && count($request->input('new_equipment')) !== count($request->input('new_equipment_category'))) {
+        return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 400);
+    }
+
+    if ($request->has('Travelercharges') && count($request->input('Travelercharges')) !== count($request->input('Travelerchargesvalue'))) {
+        return response()->json(['message' => 'Le nombre de valeurs de charges Traveler ne correspond pas au nombre de charges.'], 400);
+    }
+
+    if ($request->has('reduction_night_number') && (count($request->input('reduction_night_number')) !== count($request->input('reduction_date_debut')) ||
+        count($request->input('reduction_date_debut')) !== count($request->input('reduction_date_fin')) ||
+        count($request->input('reduction_date_fin')) !== count($request->input('reduction_value_night_number')))) {
+        return response()->json(['message' => 'Les données de réduction sont incohérentes.'], 400);
+    }
+
+    if ($request->has('category_id') && $request->has('number_category') && count($request->input('category_id')) !== count(($request->input('number_category'))) ) {
+        return response()->json([
+            'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "number_category".'
+        ], 400);
+    }
+
+    if ($request->has('category_id') ) {
+       
+        foreach ($request->input('category_id') as $index => $categoryId) {
+            $photoCategoryKey = 'photo_categories' . $categoryId;
+            if (!$request->hasFile($photoCategoryKey)) {
+                return response()->json([
+                    'message' => "Aucune photo trouvée pour la catégorie $categoryId."
+                ], 400);
+            }
+          }
+    }
+    if ($request->has('new_categories') && $request->has('new_categories_numbers') && count($request->input('new_categories')) !== count(($request->input('new_categories_numbers'))) ) {
+        return response()->json([
+            'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "new_categories_numbers".'
+        ], 400);
+    }
+
+    if ($request->has('new_categories') ) {
+       
+        foreach ($request->input('new_categories') as $index => $new_categoriesName) {
+            $photoCategoryKey = 'new_category_photos_' . $new_categoriesName;
+            if (!$request->hasFile($photoCategoryKey)) {
+                return response()->json([
+                    'message' => "Aucune photo trouvée pour la catégorie $new_categoriesName."
+                ], 400);
+            }
+          }
+    }
+
+    if ($validator->fails()) {
+        return response()->json(['message' => 'Les données fournies ne sont pas valides.', 'errors' => $validator->errors()], 400);
+    }
+     $userId = Auth::id();
+        if($request->has('housing_id')){
+                $housingId = $request->housing_id;
+                $exist = Housing::where('id',$housingId)->first();
+                $exist->delete();
+            }
+        $housing = new Housing();
+       // Fonction utilitaire pour retourner une valeur ou un défaut si vide
+
+
+// Application de la fonction pour assigner les valeurs
+$housing->user_id = $userId;
+$housing->housing_type_id = $this->getOrDefault($request->input('housing_type_id'));
+$housing->property_type_id = $this->getOrDefault($request->input('property_type_id'));
+$housing->name = $this->getOrDefault($request->input('name'));
+$housing->description = $this->getOrDefault($request->input('description'));
+$housing->number_of_bed = $this->getOrDefault($request->input('number_of_bed'),00);
+$housing->number_of_traveller = $this->getOrDefault($request->input('number_of_traveller'),00);
+$housing->sit_geo_lat = $this->getOrDefault($request->input('sit_geo_lat'),00.00);
+$housing->sit_geo_lng = $this->getOrDefault($request->input('sit_geo_lng'),00.00);
+$housing->country = $this->getOrDefault($request->input('country'));
+$housing->address = $this->getOrDefault($request->input('address'));
+$housing->city = $this->getOrDefault($request->input('city'));
+$housing->department = $this->getOrDefault($request->input('department'));
+$housing->is_camera = $this->getOrDefault($request->input('is_camera'), false); // Pour les booléens
+$housing->is_accepted_animal = $this->getOrDefault($request->input('is_accepted_animal'), false);
+$housing->is_animal_exist = $this->getOrDefault($request->input('is_animal_exist'), false);
+$housing->interior_regulation = $this->getOrDefault($request->input('interior_regulation'));
+$housing->telephone = $this->getOrDefault($request->input('telephone'));
+$housing->code_pays = $this->getOrDefault($request->input('code_pays'));
+$housing->status = "Unverified";
+$housing->arrived_independently = $this->getOrDefault($request->input('arrived_independently'));
+$housing->is_instant_reservation = $this->getOrDefault($request->input('is_instant_reservation'), false);
+$housing->minimum_duration = $this->getOrDefault($request->input('minimum_duration'),00);
+$housing->time_before_reservation = $this->getOrDefault($request->input('time_before_reservation'),00);
+$housing->departure_instruction = $this->getOrDefault($request->input('departure_instruction'));
+$housing->surface = $this->getOrDefault($request->input('surface'),00.00);
+$housing->price = $this->getOrDefault($request->input('price'),00.00);
+$housing->is_updated = 0;
+$housing->is_actif = 1;
+$housing->is_destroy = 0;
+$housing->is_accept_arm = $this->getOrDefault($request->input('is_accept_arm'), false);
+$housing->is_accept_smoking = $this->getOrDefault($request->input('is_accept_smoking'), false);
+$housing->is_accept_chill = $this->getOrDefault($request->input('is_accept_chill'), false);
+$housing->is_accept_noise = $this->getOrDefault($request->input('is_accept_noise'), false);
+$housing->is_accept_alccol = $this->getOrDefault($request->input('is_accept_alccol'), false);
+$housing->is_accept_anulation = $this->getOrDefault($request->input('is_accept_anulation'), true);
+
+     $housing->is_finished=0;
+     if ( $request->input('is_accept_anulation')) {
+        $housing->delai_partiel_remboursement = $this->getOrDefault($request->input('delai_partiel_remboursement'), 00);
+        $housing->delai_integral_remboursement = $this->getOrDefault($request->input('delai_integral_remboursement'), 00);
+        $housing->valeur_integral_remboursement = $this->getOrDefault($request->input('valeur_integral_remboursement'), 00);
+        $housing->valeur_partiel_remboursement = $this->getOrDefault($request->input('valeur_partiel_remboursement'), 00);
+    }   
+     $housing->save();
+ 
+     if ($request->hasFile('photos')) {
+         foreach ($request->file('photos') as $index => $photo) {
+             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
+             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
+             $photoUrl = url('/image/photo_logement/' . $photoName);
+             $type = $photo->getClientOriginalExtension();
+             $photoModel = new photo();
+             $photoModel->path = $photoUrl;
+             $photoModel->extension = $type;
+             if ($index == $request->input('profile_photo_id')) {
+                 $photoModel->is_couverture = true;
+             }
+             $photoModel->housing_id = $housing->id;;
+             $photoModel->save();
+         }
+     }
+     if ($request->has('preferences')) {
+        foreach ($request->input('preferences') as $preference) {
+            $housingPreference = new housing_preference();
+            $housingPreference->housing_id = $housing->id;
+            $housingPreference->preference_id = $preference;
+            $housingPreference->is_verified = true;
+            $housingPreference->save();
+     }
+    }
+     if ($request->has('Hotecharges')) {
+        foreach ($request->input('Hotecharges') as $index => $charge) {
+            $housingCharge = new Housing_charge();
+            $housingCharge->housing_id = $housing->id;
+            $housingCharge->charge_id = $charge;
+            $housingCharge->is_mycharge= true;
+            $housingCharge->valeur=$request->input('Hotechargesvalue')[$index];
+            $housingCharge->save();
+        }
+     }
+     if ($request->has('Travelercharges')) {
+        foreach ($request->input('Travelercharges') as $index => $charge) {
+            $housingCharge = new Housing_charge();
+            $housingCharge->housing_id = $housing->id;
+            $housingCharge->charge_id = $charge;
+            $housingCharge->is_mycharge= false;
+            $housingCharge->valeur=$request->input('Travelerchargesvalue')[$index];
+            $housingCharge->save();
+        }
+     }
+     if ($request->has('reduction_night_number')) {
+        foreach ($request->input('reduction_night_number') as $index => $nightNumber) {
+            $reduction = new reduction();
+            $reduction->night_number = $nightNumber;
+            $reduction->date_debut =$request->input('reduction_date_debut')[$index];
+            $reduction->date_fin = $request->input('reduction_date_fin')[$index];
+            $reduction->value = $request->input('reduction_value_night_number')[$index];
+            $reduction->housing_id = $housing->id;
+            $reduction->is_encours = false;
+        $reduction->save();
+        }
+    }    
+    if ($request->has('promotion_number_of_reservation')) {
+        $promotion = new promotion();
+        $promotion->date_debut =$request->input('promotion_date_debut');
+        $promotion->date_fin = $request->input('promotion_date_fin');
+        $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
+        $promotion->value = $request->input('promotion_value');
+        $promotion->housing_id = $housing->id;
+        $promotion->is_encours = false;
+        $promotion->save();
+    }
+
+    if ($request->has('equipment_housing')) {
+        foreach ($request->equipment_housing as $index => $equipmentId ) {
+            $equipment = Equipment::find($equipmentId);   
+            if ($equipment) {
+                $housingEquipment = new Housing_equipment();
+                $housingEquipment->equipment_id = $equipmentId;
+                $housingEquipment->category_id =  $request->input('category_equipment_housing')[$index];
+                $housingEquipment->housing_id = $housing->id;
+                $housingEquipment->is_verified = true;
+                $housingEquipment->save();
+            } else {
+               
+            }
+        }
+    }
+
+    if ($request->has('new_equipment') && $request->has('new_equipment_category')) {
+        $newEquipments = $request->input('new_equipment');
+        $newEquipmentCategories = $request->input('new_equipment_category');
+
+        foreach ($newEquipments as $index => $newEquipment) {
+            $equipment = new Equipment();
+            $equipment->name = $newEquipment;
+            $equipment->is_verified=false;
+            $equipment->save();
+
+
+            $equipmentCategory = new Equipment_category();
+            $equipmentCategory->equipment_id = $equipment->id;
+            $equipmentCategory->category_id = $newEquipmentCategories[$index];
+            $equipmentCategory->save();
+
+            $housingEquipment = new Housing_equipment();
+            $housingEquipment->equipment_id = $equipment->id;
+            $housingEquipment->category_id =$newEquipmentCategories[$index];
+            $housingEquipment->housing_id = $housing->id;
+            $housingEquipment->is_verified = false;
+            $housingEquipment->save();
+        }
+    }
+    if ($request->has('category_id')) {
+    foreach ($request->input('category_id') as $index => $categoryId) {
+        $housingCategoryId = $housing->id;
+        $photoCategoryKey = 'photo_categories' . $categoryId;
+        $photoFiles = $request->file($photoCategoryKey);
+        foreach ($photoFiles as $fileId) {
+            $photoModel = new File();
+            $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+            $photoUrl = url('/image/photo_category/' . $photoName);
+        
+            $photoModel->path = $photoUrl;
+            $photoModel->save();
+            $housingCategoryFile = new Housing_category_file();
+            $housingCategoryFile->housing_id = $housingCategoryId;
+            $housingCategoryFile->category_id = $categoryId;
+            $housingCategoryFile->file_id = $photoModel->id;
+            $housingCategoryFile->number = $request->input('number_category')[$index];
+            $housingCategoryFile->is_verified = true;
+            $housingCategoryFile->save();
+        }
+      }
+    }
+    if($request->has('new_categories')&& $request->has('new_categories_numbers')) {
+    $newCategories = $request->input('new_categories') ?? [];
+    $newCategoriesNumbers = $request->input('new_categories_numbers') ?? [];
+
+    foreach ($newCategories as $index => $newCategory) {
+        $categoryName = $newCategory;
+        $categoryNumber = $newCategoriesNumbers[$index];
+        $photoCategoryKey = 'new_category_photos_' . $categoryName;
+        $categoryPhotos = $request->file($photoCategoryKey) ?? [];
+        $category = new Category();
+        $category->name = $categoryName;
+        $category->is_verified = false;
+        $category->save();
+
+        foreach ($categoryPhotos as $photoFile) {
+            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
+            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
+            $photoUrl = url('/image/photo_category/' . $photoName);
+
+            $photo = new File();
+            $photo->path = $photoUrl;
+            $photo->save();
+
+            $housingCategoryFile = new Housing_category_file();
+            $housingCategoryFile->housing_id = $housing->id;
+            $housingCategoryFile->category_id = $category->id;
+            $housingCategoryFile->file_id = $photo->id;
+            $housingCategoryFile->number = $categoryNumber;
+            $housingCategoryFile->is_verified = false;
+            $housingCategoryFile->save();
+        }
+      }
+    }
+    
+     $notificationName="Félicitation!Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'après validation de l'administrateur";
+
+     $notification = new Notification([
+        'name' => $notificationName,
+        'user_id' => $userId,
+       ]);
+       $mail = [
+        'title' => "Ajout d'un logement",
+        'body' => "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'aprés validation de l'administrateur."
+       ];
+
+       Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail));
+     $adminRole = DB::table('rights')->where('name', 'admin')->first();
+
+             if (!$adminRole) {
+                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+             }
+    
+     $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+        $query->where('right_id', $adminRole->id);
+    })
+    ->get();
+
+    foreach ($adminUsers as $adminUser) {
+        $notification = new Notification();
+        $notification->user_id = $adminUser->id;
+        $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
+        $notification->save();
+
+        $mail = [
+            'title' => "Notification d'ajout  d'un logement",
+            'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
+           ];
+
+           Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail)); 
+
+       } 
+       
+     return response()->json(['message' => 'Logement ajoute avec succes'], 201);
+ 
+}
+
+    /**
+ * @OA\Get(
+ *     path="/api/logement/liste/notFinished",
+ *     tags={"Housing"},
+ *  security={{"bearerAuth": {}}},
+ *     summary="Liste des logements non rempli complètement par l'hôte connecté",
+ *     description="Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements non rempli complètement par l'hôte connecté",
+ *         @OA\JsonContent(
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Liste des logements non rempli complètement par l'hôte connecté"
+ *     )
+ * )
+ */
+public function HousingHoteInProgress(){
+    $listings = Housing::where('user_id', Auth::user()->id)
+        ->where('is_finished', 0)
+        ->get();
+        $data = $this->formatListingsData($listings);
+        return response()->json(['data' => $data,'nombre'=>$data->count()],200);
+}
 
 }

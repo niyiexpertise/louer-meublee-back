@@ -394,6 +394,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('logement')->group(function () {
             //Gestion des logements (CRUD)
             Route::post('/store', [HousingController::class, 'addHousing']);
+            Route::post('/storeInProgress', [HousingController::class, 'addHousingInProgress']);
             Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing']);
             Route::put('/update/insensible{housingid}', [HousingController::class, 'updateInsensibleHousing']);
             Route::put('/{housingId}/hote/disable', [HousingController::class, 'disableHousing']);
@@ -430,14 +431,18 @@ Route::group(['middleware' => ['role:traveler']], function () {
             Route::get('/charge/listelogementcharge/{housingId}', [HousingChargeController::class, 'listelogementcharge']);
             Route::delete('/charge', [HousingChargeController::class, 'DeleteChargeHousing']);
 
+            //Liste des logements non rempli complètement par l'hôte  
+            Route::get('/liste/notFinished', [HousingController::class, 'HousingHoteInProgress']);
+
         });
     });
    
     // Gestion logement côté admin
     Route::group(['middleware' => ['role:traveler']], function () {
         Route::prefix('logement')->group(function () {
-             //Gestion des logements en attente de validation ou de mise à jours pour être visible sur le site  coté administrateur
+             //Gestion des logements en attente de validation ou de mise à jours pour être visible sur le site  coté administrateur 
             Route::get('/withoutvalidate', [AdminHousingController::class, 'indexHousingForValidationForadmin']);
+            Route::get('/HousingHoteInProgressForAdmin', [AdminHousingController::class, 'HousingHoteInProgressForAdmin']);
             Route::get('/withoutupdate', [AdminHousingController::class, 'indexHousingForUpdateForadmin']);
             Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin']);
             Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing']);

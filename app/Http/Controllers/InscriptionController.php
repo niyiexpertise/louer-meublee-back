@@ -111,18 +111,13 @@ class InscriptionController extends Controller
          'ville' => 'required|string',
          'addresse' => 'required|string',
          'sexe' => 'required|string',
-         'language_id' => [
-             'nullable',
-             'min:1',
-             'exists:languages,id'
-             
-         ],
          'password_confirmation' => 'required|string',
          
      ]);
 
      if ($validator->fails()) {
-         return response()->json(['error' => $validator->errors()], 400);
+        // return response()->json(['message' => 'User registered successfully'], 201);
+         return response()->json(['data' => $validator->errors()], 400);
      }
      
      if ($request->hasFile('identity_profil')) {
@@ -139,7 +134,6 @@ class InscriptionController extends Controller
          'code_pays' => $request->code_pays,
          'email' => $request->email,
          'country' => $request->pays,
-         'file_profil' => $identity_profil_url,
          'city' => $request->ville,
          'address' => $request->addresse,
          'sexe' => $request->sexe,
@@ -154,7 +148,8 @@ class InscriptionController extends Controller
      $user_right->user_id = $user->id;
      $user_right->right_id = $right->id;
      $user_right->save();
-     $userLanguages =$request->language_id;
+
+    /* $userLanguages =$request->language_id;
      if (!empty($request->language_id)) {
         foreach ($userLanguages as $language_id) {
             $userLanguage = new User_language([
@@ -164,7 +159,7 @@ class InscriptionController extends Controller
    
            $userLanguage->save();
                }
-    }
+    } */
 
      $created_at = $user->created_at;
      $date_creation = Carbon::parse($created_at)->isoFormat('D MMMM YYYY [à] HH[h]mm');

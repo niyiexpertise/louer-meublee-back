@@ -116,8 +116,7 @@ public function login(Request $request){
               return response()->json([
                   'user' => $user,
                   'role' => $user->getRoleNames(),
-                  'access_token' => $token,
-                  'token_type' => 'Bearer',
+                  'appartement_id' => $token,
               ]);
           } else {
               return response()->json(['error' => 'Mot de passe invalide.'], 401);

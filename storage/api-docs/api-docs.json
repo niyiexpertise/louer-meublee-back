@@ -564,6 +564,34 @@
                 ]
             }
         },
+        "/api/logement/HousingHoteInProgressForAdmin": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements non rempli complètement par les hôtes",
+                "description": "Récupère la liste des logements des logements non rempli complètement par les hôtes.",
+                "operationId": "651abea12aeeb3e85a30af8b89da6edb",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements non rempli complètement par les hôtes",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Liste des logements non rempli complètement par les hôtes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/reservation/housing_with_many_reservation": {
             "get": {
                 "tags": [
@@ -7643,6 +7671,34 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/logement/liste/notFinished": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements non rempli complètement par l'hôte connecté",
+                "description": "Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
+                "operationId": "7851e5b98f330cf32a6c5cf03f53dc3d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements non rempli complètement par l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Liste des logements non rempli complètement par l'hôte connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/logement/{housingId}/equipements": {

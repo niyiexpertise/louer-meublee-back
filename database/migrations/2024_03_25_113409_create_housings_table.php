@@ -47,6 +47,7 @@ return new class extends Migration
             $table->boolean('is_updated');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
+            $table->boolean('is_finished');
             $table->timestamps();
         });
     }

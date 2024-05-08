@@ -304,6 +304,7 @@ class AuthController extends Controller
     //assigner un rôle à un utilisateur
     public function assignRoleToUser(Request $request,$id,$r){
         try{
+                
                 $role = Role::find($r);
 
                 $right = Right::find($r);
@@ -322,6 +323,11 @@ class AuthController extends Controller
 
                 if (!$user) {
                     return response()->json('user not found');
+                }
+                $u = User_right::where('user_id',$id)->get();
+                foreach($u as $utilisateur){
+                    $roles = Role::where('id',$utilisateur->right_id)->first();
+                    $user->removeRole($roles);
                 }
                 
                 if($user->hasRole($role->name) && User_right::where('user_id',$id)->where('right_id',$r)->exists()){

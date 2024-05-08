@@ -15,6 +15,8 @@ use App\Models\File;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\User_right;
+use App\Models\Right;
 use App\Models\Equipment;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
@@ -110,13 +112,29 @@ public function login(Request $request){
                   'title' => 'Entrez le code suivant pour finaliser votre authentification.',
                   'body' => $codes
               ];
+
+              $userRights = User_right::where('user_id', $user->id)->get();
+
+              $rightsDetails = [];
+              
+              foreach ($userRights as $userRight) {
+                  $right = Right::find($userRight->right_id);
+                  
+                  if ($right) {
+                      $rightsDetails[] = [
+                          'right_id' => $right->id,
+                          'right_name' => $right->name,
+                      ];
+                  }
+              }
               
               Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
               unset($user->code);
               return response()->json([
                   'user' => $user,
-                  'role' => $user->getRoleNames(),
+                  'role_actif' => $user->getRoleNames(),
                   'appartement_id' => $token,
+                  'user_role' =>$rightsDetails
               ]);
           } else {
               return response()->json(['error' => 'Mot de passe invalide.'], 401);
@@ -156,9 +174,24 @@ public function login(Request $request){
 public function checkAuth(Request $request){
 
     try{
+        $userRights = User_right::where('user_id', Auth::user()->id)->get();
+
+        $rightsDetails = [];
+        
+        foreach ($userRights as $userRight) {
+            $right = Right::find($userRight->right_id);
+            
+            if ($right) {
+                $rightsDetails[] = [
+                    'right_id' => $right->id,
+                    'right_name' => $right->name,
+                ];
+            }
+        }
         return response()->json([
             'data' => Auth::user(),
-            'role'=>Auth::user()->getRoleNames()
+            'role_actif'=>Auth::user()->getRoleNames(),
+            'user_roles'=>$rightsDetails
         ]);
 
     } catch (Exception $e) {

@@ -176,7 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:admin']], function () {
         Route::prefix('users')->group(function () {
             
             Route::post('/assignPermToRole/{role}/{permission}', [AuthController::class, 'assignPermToRole']);
@@ -199,6 +199,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/rolesPerms/{role}', [AuthController::class, 'rolesPerms']);
             Route::get('/rolesPermsCount/{role}', [AuthController::class, 'rolesPermsCount']);
             Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
+            Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
             Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
             Route::get('/usersRoles', [AuthController::class, 'usersRoles']);
         });
@@ -212,7 +213,6 @@ Route::group(['middleware' => ['role:traveler']], function () {
         Route::get('/index', [UserController::class, 'index']);
         Route::get('/show/{id}', [UserController::class, 'show']);
         Route::get('/userReviews', [UserController::class, 'userReviews']);
-        Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
         Route::get('/userLanguages', [UserController::class, 'userLanguages']);
         Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto']);
         Route::put('/update_password', [UserController::class, 'updatePassword']);
@@ -355,7 +355,8 @@ Route::group(['middleware' => ['role:traveler']], function () {
       
         Route::prefix('users/preference')->group(function () {
             Route::post('/add', [User_preferenceController::class, 'AddUserPreferences']);
-            Route::get('/userPreferences', [UserController::class, 'showUserPreferences']);
+            Route::post('/remove', [User_preferenceController::class, 'RemoveUserPreferences']);
+            Route::get('/show', [User_preferenceController::class, 'showUserPreferences']);
         });
 
     });

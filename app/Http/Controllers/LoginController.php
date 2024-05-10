@@ -100,35 +100,45 @@ public function login(Request $request){
   
         $user = User::where('email', $request->email)->first();
         if($user !=null){
-          if (Hash::check($request->password, $user->password)) {
-              $token = $user->createToken('auth_token')->plainTextToken;  
-              $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-              if($user->code !== null)  {
-                  $user->code = $codes;
-                  $user->save();
-              }
-  
-              $mail = [
-                  'title' => 'Entrez le code suivant pour finaliser votre authentification.',
-                  'body' => $codes
-              ];
+            if (Hash::check($request->password, $user->password)) {
+                $token = $user->createToken('auth_token')->plainTextToken;  
+                $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                if($user->code !== null)  {
+                    $user->code = $codes;
+                    $user->save();
+                }
+                
+                $mail = [
+                    'title' => 'Entrez le code suivant pour finaliser votre authentification.',
+                    'body' => $codes
+                ];
+                
+                $userRights = User_right::where('user_id', $user->id)->get();
+                
+                $rightsDetails = [];
+                
+                foreach ($userRights as $userRight) {
+                    $right = Right::find($userRight->right_id);
+                    
+                    if ($right) {
+                        $rightsDetails[] = [
+                            'right_id' => $right->id,
+                            'right_name' => $right->name,
+                        ];
+                    }
+                }
 
-              $userRights = User_right::where('user_id', $user->id)->get();
+                // Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
 
-              $rightsDetails = [];
-              
-              foreach ($userRights as $userRight) {
-                  $right = Right::find($userRight->right_id);
-                  
-                  if ($right) {
-                      $rightsDetails[] = [
-                          'right_id' => $right->id,
-                          'right_name' => $right->name,
-                      ];
-                  }
-              }
-              
-              Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
+                try {
+                    Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
+                } catch (\Exception $e) {
+                   
+                }
+                
+                
+                
+                // dd('salut');
               unset($user->code);
               return response()->json([
                   'user' => $user,

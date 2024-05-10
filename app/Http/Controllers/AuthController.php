@@ -1425,7 +1425,7 @@ class AuthController extends Controller
        /**
        * @OA\Post(
        *     path="/api/users/switchToHote",
-       *     summary="quitter le role voyageur au role hote",
+       *     summary="Passer au role hote",
        *     tags={"ManageAccess"},
        * security={{"bearerAuth": {}}},
        *     @OA\Response(
@@ -1436,13 +1436,17 @@ class AuthController extends Controller
        * )
        */
 
-        //quitter le role voyageur au role hote
+        //aller au role hote
        public function switchToHote(){
             try{
              $id = auth()->id();
                 
+                
+                $role =  User::find($id)->getRoleNames();
+                $role_actif = $role[0];
+                // dd($role_actif);
+                $user = User::find($id)->removeRole($role_actif);
                 $user = User::find($id)->assignRole("hote");
-                $user = User::find($id)->removeRole("traveler");
                 return response()->json([
                     'message' => 'role retire avec success',
                     'data' => [
@@ -1457,10 +1461,50 @@ class AuthController extends Controller
             }
        }
 
+
+
+       /**
+       * @OA\Post(
+       *     path="/api/users/switchToAdmin",
+       *     summary="Passer au role admin",
+       *     tags={"ManageAccess"},
+       * security={{"bearerAuth": {}}},
+       *     @OA\Response(
+       *         response=200,
+       *         description="move to admin"
+       * 
+       *     )
+       * )
+       */
+       //aller au role admin
+       public function switchToAdmin(){
+        try{
+         $id = auth()->id();
+            
+            
+            $role =  User::find($id)->getRoleNames();
+            $role_actif = $role[0];
+            // dd($role_actif);
+            $user = User::find($id)->removeRole($role_actif);
+            $user = User::find($id)->assignRole("admin");
+            return response()->json([
+                'message' => 'role retire avec success',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => User::find($id)->getRoleNames()
+                ]
+            ]);
+        }catch (Exception $e){
+            return response()->json($e);
+        }
+   }
+
               /**
        * @OA\Post(
        *     path="/api/users/switchToTraveler",
-       *     summary="quitter le role hote au role voyageur",
+       *     summary="Passer au role voyageur",
        *     tags={"ManageAccess"},
        * security={{"bearerAuth": {}}},
        *     @OA\Response(
@@ -1471,13 +1515,17 @@ class AuthController extends Controller
        * )
        */
 
-               //quitter le role hote au role voyageur
+               //aller au role voyageur
                public function switchToTraveler(){
                 try{
-                    // $id = auth()->id();
-                    $id = 4;
+                    $id = auth()->id();
+                    // $id = 4;
+                    
+                    $role =  User::find($id)->getRoleNames();
+                    $role_actif = $role[0];
+                    // return response()->json($role_actif);
+                    $user = User::find($id)->removeRole($role_actif);
                     $user = User::find($id)->assignRole("traveler");
-                    $user = User::find($id)->removeRole("hote");
                     return response()->json([
                         'message' => 'role retire avec success',
                         'data' => [

@@ -284,39 +284,7 @@ public function userLanguages()
     ]);
 }
 
-/**
- * @OA\Get(
- *     path="/api/users/userPreferences",
- *     tags={"User"},
- * security={{"bearerAuth": {}}},
- *     summary="Afficher les préférences de l'utilisateur connecté",
- *     description="Récupère les préférences de l'utilisateur connecté.",
- *     security={{"bearerAuth": {}}},
- *     @OA\Response(
- *         response=200,
- *         description="Liste des préférences de l'utilisateur connecté",
- *         @OA\JsonContent(
- *         
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Non autorisé"
- *     )
- * )
- */
-public function showUserPreferences()
-    {
-        
-        $userId = Auth::id();
-        $user = User::findOrFail($userId);
 
-        $userPreferences = $user->user_preference()->with('preference')->get();
-
-        return response()->json([
-            'data' => $userPreferences,
-        ]);
-    }
 
     /**
  * @OA\Post(

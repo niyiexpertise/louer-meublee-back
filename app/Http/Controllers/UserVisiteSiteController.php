@@ -9,7 +9,7 @@ use Carbon\Carbon;
 class UserVisiteSiteController extends Controller
 {
 
-    public function recordSiteVisit($userId)
+    public function recordSiteVisit($userId=null)
     {
         $date = Carbon::now()->toDateString();
         

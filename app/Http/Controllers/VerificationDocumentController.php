@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Document;
 use App\Models\Commission;
 use App\Models\Right;
+use Spatie\Permission\Models\Role;
 use App\Models\User_right;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -48,8 +49,7 @@ class VerificationDocumentController extends Controller
 public function index()
 {
     try {
-        $users = User::where('is_hote', 0)
-                     ->whereHas('verificationDocuments', function ($query) {
+        $users = User::whereHas('verificationDocuments', function ($query) {
                          $query->whereHas('verificationStatut', function ($query) {
                              $query->where('status', 0);
                          });
@@ -262,8 +262,14 @@ public function index()
                      'title' => 'Demande d\'être hôte',
                      'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
                  ];
+
+                 try {
+                    Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
+                } catch (\Exception $e) {
+                   
+                }
          
-                 Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
+                 
 
                 } 
      
@@ -426,11 +432,9 @@ public function validateDocuments(Request $request)
         }
 
         $user = User::findOrFail($user_id);
-        $right = Right::where('name','hote')->first();
-        $user_right = new User_right();
-        $user_right->user_id = $user_id;
-        $user_right->right_id = $right->id;
-        $user_right->save();
+        $role = Role::where('name','hote')->first();
+        $grant = new AuthController();
+        $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
         $notification = new Notification();
         $notification->user_id = $user_id;
         $notification->name = "Votre demande d'être hôte a été validée avec succès.";
@@ -515,7 +519,10 @@ public function validateDocument(Request $request)
 
         $user_exist = User::where('id', $user_id )->exists();
         if (!$user_exist) {
-            return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+            return response()->json(['error' => "ID de l'utilisateur  invalides."], 200);
+        }
+        if($verificationStatut->status == 1){
+            return response()->json(['error' => "Ce document a déjà été validé. Vous ne pouvez plus le revalider."], 200);
         }
 
         $verificationStatut->update(['status' => 1]);
@@ -526,19 +533,21 @@ public function validateDocument(Request $request)
         })->count() === 0;
 
         if ($allDocumentsValidated) {
-            $right = Right::where('name','hote')->first();
-            $user_right = new User_right();
-            $user_right->user_id = $user_id;
-            $user_right->right_id = $right->id;
-            $user_right->save();
+
+            $role = Role::where('name','hote')->first();
+            $grant = new AuthController();
+            $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
+            
             $notification = new Notification();
             $notification->user_id = $user_id;
             $notification->name = "Votre demande d'être hôte a été validée avec succès.";
             $notification->save();
+            
             $commission=new Commission();
             $commission->user_id=$user->id;
             $commission->valeur=5;
             $commission->save();
+            // dd('salut');
             $mail = [
                 'title' => 'Demande d\'être hôte',
                 'body' => "Votre demande d'être hôte a été validée avec succès."

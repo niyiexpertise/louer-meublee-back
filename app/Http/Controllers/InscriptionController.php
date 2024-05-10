@@ -119,6 +119,8 @@ class InscriptionController extends Controller
         // return response()->json(['message' => 'User registered successfully'], 201);
          return response()->json(['data' => $validator->errors()], 400);
      }
+
+     $identity_profil_url ='';
      
      if ($request->hasFile('identity_profil')) {
      $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
@@ -138,6 +140,7 @@ class InscriptionController extends Controller
          'address' => $request->addresse,
          'sexe' => $request->sexe,
          'postal_code' => $request->postal_code,
+         'file_profil' => $identity_profil_url
          
      ]);
 
@@ -176,7 +179,12 @@ class InscriptionController extends Controller
         'body' => "Compte créé avec succès le ". $date_creation
     ];
     
-    Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail) );
+    try {
+        Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail));
+    } catch (\Exception $e) {
+       
+    }
+    
 
      $portfeuille= new Portfeuille([
          'solde' =>0,

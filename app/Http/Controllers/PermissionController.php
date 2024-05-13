@@ -48,7 +48,7 @@ class PermissionController extends Controller
       *     path="/api/permission/store",
       *     summary="Create a new permission ",
       *     tags={"Permission"},
-      security={{"bearerAuth": {}}},
+      *security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(

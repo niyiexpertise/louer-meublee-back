@@ -561,6 +561,7 @@ class AuthController extends Controller
             // hasDirectPermission('edit articles')
             $permissionsDirect = $user->getDirectPermissions();
             $permissionsRole = $user->getPermissionsViaRoles();
+            // $user->syncPermissions($permissions);
             $user->givePermissionTo($permission);
             return response()->json([
                 'message'=>'permission add successfully',
@@ -1445,6 +1446,14 @@ class AuthController extends Controller
                 $role =  User::find($id)->getRoleNames();
                 $role_actif = $role[0];
                 // dd($role_actif);
+                $r = Right::where('name','hote')->first();
+            $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
+            // dd($exist);
+                    if(!$exist){
+                        return response()->json([
+                            "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
+                        ]);
+                    }
                 $user = User::find($id)->removeRole($role_actif);
                 $user = User::find($id)->assignRole("hote");
                 return response()->json([
@@ -1485,6 +1494,14 @@ class AuthController extends Controller
             $role =  User::find($id)->getRoleNames();
             $role_actif = $role[0];
             // dd($role_actif);
+            $r = Right::where('name','admin')->first();
+            $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
+            // dd($exist);
+                    if(!$exist){
+                        return response()->json([
+                            "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
+                        ]);
+                    }
             $user = User::find($id)->removeRole($role_actif);
             $user = User::find($id)->assignRole("admin");
             return response()->json([
@@ -1524,6 +1541,15 @@ class AuthController extends Controller
                     $role =  User::find($id)->getRoleNames();
                     $role_actif = $role[0];
                     // return response()->json($role_actif);
+                    
+                    $r = Right::where('name','traveler')->first();
+                    $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
+                    // dd($exist);
+                            if(!$exist){
+                                return response()->json([
+                                    "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
+                                ]);
+                            }
                     $user = User::find($id)->removeRole($role_actif);
                     $user = User::find($id)->assignRole("traveler");
                     return response()->json([

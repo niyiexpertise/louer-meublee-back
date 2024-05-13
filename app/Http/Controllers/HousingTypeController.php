@@ -105,6 +105,7 @@ class HousingTypeController extends Controller
     public function store(Request $request)
     {
         try{
+            return response()->json(['data' => 'Soyez les bienvenus  chers collègue!Que pouvons-nous faire pour vous? Pour chaque service,nous vous facturons 15fcfa'], 201);
                 $validatedData = $request->validate([
                     'name' => 'required|unique:housing_types|max:255',
                     'description' => 'required|string',

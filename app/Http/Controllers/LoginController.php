@@ -60,7 +60,7 @@ class LoginController extends Controller
  *         )
  *     ),
  *     @OA\Response(
- *         response=401,
+ *         response=200,
  *         description="Invalid credentials"
  *     )
  * )
@@ -84,7 +84,7 @@ class LoginController extends Controller
 *         description=" connected successfully"
 *     ),
 *     @OA\Response(
-*         response=401,
+*         response=200,
 *         description="Invalid credentials"
 *     )
 * )
@@ -103,10 +103,9 @@ public function login(Request $request){
             if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('auth_token')->plainTextToken;  
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-                if($user->code !== null)  {
-                    $user->code = $codes;
-                    $user->save();
-                }
+                $user->code = $codes;
+                $user->save();
+                
                 
                 $mail = [
                     'title' => 'Entrez le code suivant pour finaliser votre authentification.',
@@ -147,12 +146,12 @@ public function login(Request $request){
                   'user_role' =>$rightsDetails
               ]);
           } else {
-              return response()->json(['error' => 'Mot de passe invalide.'], 401);
+              return response()->json(['error' => 'Mot de passe invalide.'], 200);
         }
   
   
       }else {
-          return response()->json(['error' => 'Adresse email invalide.'], 401);
+          return response()->json(['error' => 'Adresse email invalide.'], 200);
       }
   
      } catch(Exception $e) {    
@@ -176,7 +175,7 @@ public function login(Request $request){
  *         )
  *     ),
  *     @OA\Response(
- *         response=401,
+ *         response=200,
  *         description="Unauthorized"
  *     )
  * )
@@ -233,13 +232,13 @@ public function checkAuth(Request $request){
  *         }
  *     },
  *     @OA\Response(
- *         response="401",
+ *         response="200",
  *         description="Échec de la vérification",
  *         @OA\JsonContent(
  *             @OA\Property(
  *                 property="status_code",
  *                 type="integer",
- *                 example=401,
+ *                 example=200,
  *                 description="Le code d'état de la réponse."
  *             ),
  *             @OA\Property(
@@ -274,7 +273,7 @@ public function checkAuth(Request $request){
  *             @OA\Property(
  *                 property="status_code",
  *                 type="integer",
- *                 example=401,
+ *                 example=200,
  *                 description="Le code d'état de la réponse."
  *             ),
  *             @OA\Property(
@@ -297,17 +296,17 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         $code = User::where('code', $verification)->first();
-
+        $code->code=0;
+        $code->save();
         if ($code !== null) {
             return response()->json([
-                'status_code' => 401,
+                'status_code' => 200,
                 'message' => 'Verification passed',
-                'verification' => $verification
             ]);
         }
 
         return response()->json([
-            'status_code' => 401,
+            'status_code' => 200,
             'message' => 'Check failed',
         ]);
 

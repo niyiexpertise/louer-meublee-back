@@ -27,7 +27,7 @@ class AddPermissionsToTable extends Migration
             if ($routeName) {
                 $permissions[] = [
                     'name' =>'Manage'. $routeName,
-                    'guard_name' => "web",
+                    'guard_name' => "sanctum",
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

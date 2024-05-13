@@ -83,7 +83,7 @@ Route::prefix('users')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     //Gestion des catégories.
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:admin']], function () {
         Route::prefix('category')->group(function () {
             Route::get('/indexUnverified', [CategorieController::class, 'indexUnverified']);
             Route::get('/VerifiednotBlockDelete', [CategorieController::class, 'VerifiednotBlockDelete']);
@@ -100,10 +100,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/updateIcone/{id}', [CategorieController::class, 'updateIcone']);
         });
     });
+    Route::group(['middleware' => ['permission:category.makeVerified']], function () {
+        Route::prefix('category')->group(function () {
+            Route::put('/makeVerified/{id}', [CategorieController::class, 'makeVerified'])->name('category.makeVerified');
+        });
+    });
     
 
     ///Gestion des types de logement
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:admin|superAdmin']], function () {
         Route::prefix('housingtype')->group(function () {
             Route::post('/store', [HousingTypeController::class, 'store']);
             Route::get('/show/{id}', [HousingTypeController::class, 'show']);
@@ -117,20 +122,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Gestion des type de sejour
-    Route::group(['middleware' => ['role:traveler']], function () {
-        Route::prefix('typestays')->group(function () {
-            Route::post('/store', [TypeStayController::class, 'store']);
-            Route::get('/show/{id}', [TypeStayController::class, 'show']);
-            Route::put('/update/{id}', [TypeStayController::class, 'update']);
-            Route::delete('/destroy/{id}', [TypeStayController::class, 'destroy']);
-            Route::put('/block/{id}', [TypeStayController::class, 'block']);
-            Route::put('/unblock/{id}', [TypeStayController::class, 'unblock']);
-        });
-    });
+    
 
     //Gestion  des critères de note .
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:admin|superAdmin']], function () {
         Route::prefix('criteria')->group(function () {
             Route::post('/store', [CriteriaController::class, 'store']);
             Route::get('/show/{id}', [CriteriaController::class, 'show']);
@@ -143,7 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //Gestion des types de role possible sous forme crud.
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:superAdmin']], function () {
         Route::prefix('role')->group(function () {
             Route::get('/index', [RoleController::class, 'index']);
             Route::post('/store', [RoleController::class, 'store']);
@@ -156,7 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //Gestion des équipements.
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:admin|superAdmin']], function () {
         Route::prefix('equipment')->group(function () {
             Route::get('/indexAdmin', [EquipementController::class, 'indexAdmin']);
             Route::get('/indexBlock', [EquipementController::class, 'indexBlock']);
@@ -170,13 +165,19 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/updateIcone/{id}', [EquipementController::class, 'updateIcone']);
             Route::delete('/destroy/{id}', [EquipementController::class, 'destroy']);
             Route::put('/block/{id}', [EquipementController::class, 'block']);
-            Route::put('/makeVerified/{id}', [EquipementController::class, 'makeVerified']);
             Route::put('/unblock/{id}', [EquipementController::class, 'unblock']);
             Route::get('/indexUnverified', [EquipementController::class, 'indexUnverified']);
+
+        });
+    });
+    Route::group(['middleware' => ['role_or_permission:superAdmin|Manageequipment.makeVerified']], function () {
+        Route::prefix('equipment')->group(function () {
+            
+            Route::put('/makeVerified/{id}', [EquipementController::class, 'makeVerified'])->name('equipment.makeVerified');
         });
     });
 
-    Route::group(['middleware' => ['role:admin']], function () {
+    Route::group(['middleware' => ['role:superAdmin']], function () {
         Route::prefix('users')->group(function () {
             
             Route::post('/assignPermToRole/{role}/{permission}', [AuthController::class, 'assignPermToRole']);
@@ -198,20 +199,33 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/usersPerms', [AuthController::class, 'usersPerms']);
             Route::get('/rolesPerms/{role}', [AuthController::class, 'rolesPerms']);
             Route::get('/rolesPermsCount/{role}', [AuthController::class, 'rolesPermsCount']);
-            Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
-            Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
-            Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
+            
             Route::get('/usersRoles', [AuthController::class, 'usersRoles']);
         });
     });
 
+    Route::prefix('users')->group(function () {   
+        Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
+        Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
+        Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
+    });
+
+   
+
 
 
     // Gestion des utilisateurs
-Route::group(['middleware' => ['role:traveler']], function () {
+
+    Route::group(['middleware' => ['role:admin|superAdmin']], function () {
+        Route::prefix('users')->group(function () {
+            Route::get('/index', [UserController::class, 'index']);
+
+        });
+      
+
+    });
+Route::group(['middleware' => ['role:traveler|superAdmin']], function () {
     Route::prefix('users')->group(function () {
-        Route::get('/index', [UserController::class, 'index']);
-        Route::get('/show/{id}', [UserController::class, 'show']);
         Route::get('/userReviews', [UserController::class, 'userReviews']);
         Route::get('/userLanguages', [UserController::class, 'userLanguages']);
         Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto']);
@@ -219,10 +233,11 @@ Route::group(['middleware' => ['role:traveler']], function () {
         Route::put('/update', [UserController::class, 'updateUser']);
         Route::get('/result/demande', [VerificationDocumentController::class, 'userVerificationRequests']);
     });
-    Route::get('/document/document_actif', [DocumentController::class, 'document_actif']);
+  
     Route::post('/verificationdocument/store', [VerificationDocumentController::class, 'store']);
     Route::get('/notifications/users', [NotificationController::class, 'getUserNotifications']);
 });
+Route::get('/document/document_actif', [DocumentController::class, 'document_actif']); 
 
     // Gestion des utilisateurs du côté de l'admin
     Route::group(['middleware' => ['role:traveler']], function () {
@@ -242,7 +257,7 @@ Route::group(['middleware' => ['role:traveler']], function () {
 
 
     // Gestion des permissions sous forme crud
-    Route::group(['middleware' => ['role:traveler']], function () {
+    Route::group(['middleware' => ['role:superAdmin']], function () {
         Route::prefix('permission')->group(function () {
             Route::get('/index', [PermissionController::class, 'index']);
             Route::post('/store', [PermissionController::class, 'store']);

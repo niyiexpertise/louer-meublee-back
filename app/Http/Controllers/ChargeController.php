@@ -9,7 +9,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
 use Exception;
-
+use Illuminate\Validation\Rule;
 
 class ChargeController extends Controller
 {
@@ -139,6 +139,14 @@ class ChargeController extends Controller
     public function updateName(Request $request, string $id)
     {
         try{
+            
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('charges')->ignore($id),
+                ],
+            ]);
             $charge = Charge::find($id);
             if(!$charge){
                 return response()->json(['error' => 'charge non trouvé.'], 404);
@@ -147,7 +155,7 @@ class ChargeController extends Controller
                 Charge::whereId($id)->update(['name' => $request->name]);
                 return response()->json(['data' => 'charge mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -291,7 +299,7 @@ class ChargeController extends Controller
                 ]);
             }
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }

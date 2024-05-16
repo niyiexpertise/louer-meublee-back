@@ -908,28 +908,18 @@
                 ]
             }
         },
-        "/api/users/assignPermToRole/{role}/{permission}": {
+        "/api/users/assignPermsToRole/{role}": {
             "post": {
                 "tags": [
                     "ManageAccess"
                 ],
-                "summary": "ajouter une permission à un rôle",
-                "operationId": "4c7f90c820db261d2a181b6f4e6ec6bc",
+                "summary": "Assign multiple permissions to a role",
+                "operationId": "87095caaae6d318c1214fbbe1507d7cc",
                 "parameters": [
                     {
                         "name": "role",
                         "in": "path",
-                        "description": "ID of the role ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    },
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
+                        "description": "ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -937,16 +927,63 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "permissions": {
+                                        "description": "List of permission IDs to assign to the role",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "permission assigned to role sucessfully",
+                        "description": "Permissions assigned to role successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "permission assigned to role sucessfully"
+                                            "example": "Permissions assigned to role successfully"
+                                        },
+                                        "assigned_permissions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "permission": {
+                                                        "description": "Name of the permission",
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "description": "Status of the permission assignment",
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "Assigned",
+                                                            "Already assigned"
+                                                        ]
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "role": {
+                                            "description": "Details of the role assigned",
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -955,14 +992,54 @@
                         }
                     },
                     "404": {
-                        "description": "permission not assigned to role",
+                        "description": "Role or permission not found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "permission not assigned to role"
+                                            "example": "Role or permission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error message"
                                         }
                                     },
                                     "type": "object"
@@ -978,28 +1055,18 @@
                 ]
             }
         },
-        "/api/users/RevokePermToRole/{role}/{permission}": {
+        "/api/users/RevokePermsToRole/{role}": {
             "post": {
                 "tags": [
                     "ManageAccess"
                 ],
-                "summary": "retirer une permission à un rôle",
-                "operationId": "5987e90ac760ae571fe0663bf7e8a171",
+                "summary": "Revoke multiple permissions from a role",
+                "operationId": "c1a02e2d12bccf1915976589226bdf5a",
                 "parameters": [
                     {
                         "name": "role",
                         "in": "path",
-                        "description": "ID of the role ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    },
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission",
+                        "description": "ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -1007,16 +1074,43 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "permissions": {
+                                        "description": "List of permission IDs to revoke from the role",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "permission revoke to role successfully",
+                        "description": "Permissions revoked from role successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "permission revoke to role successfully"
+                                            "example": "Permissions revoked from role successfully"
+                                        },
+                                        "role": {
+                                            "description": "Details of the role",
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1025,14 +1119,54 @@
                         }
                     },
                     "404": {
-                        "description": "permission don't revoke to role ",
+                        "description": "Role or permission not found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "permission don't revoke to role "
+                                            "example": "Role or permission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error message"
                                         }
                                     },
                                     "type": "object"
@@ -1248,28 +1382,18 @@
                 ]
             }
         },
-        "/api/users/assignPermToUser/{id}/{permission}": {
+        "/api/users/assignPermsToUser/{id}": {
             "post": {
                 "tags": [
                     "ManageAccess"
                 ],
-                "summary": "ajouter une permission à un utilisateur",
-                "operationId": "75483fd2e7c474a3a485ac4392e64df1",
+                "summary": "Assign multiple permissions to a user",
+                "operationId": "7b7b7cdb4d2dc4c9257aef695d8e9fbb",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the user ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    },
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
+                        "description": "ID of the user",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -1277,6 +1401,29 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "permissions": {
+                                        "description": "List of permission IDs to assign to the role",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "permission grant to user successfully",
@@ -1318,28 +1465,18 @@
                 ]
             }
         },
-        "/api/users/revokePermToUser/{id}/{permission}": {
+        "/api/users/revokePermsToUser/{id}": {
             "post": {
                 "tags": [
                     "ManageAccess"
                 ],
-                "summary": "retirer une permission à un rôle",
-                "operationId": "9455336bf0b53e079a79d174b9bdfa92",
+                "summary": "retirer multiple permissions to a user",
+                "operationId": "32d452af59f4727519bcf0e3ab4b7653",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the user ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    },
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
+                        "description": "ID of the user",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -1347,6 +1484,29 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "permissions": {
+                                        "description": "List of permission IDs to assign to the role",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "permission revoked to user successfully",
@@ -1508,78 +1668,18 @@
                 ]
             }
         },
-        "/api/users/usersWithRoleCount/{role}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Nombre des utilisateurs ayant un rôle donné",
-                "operationId": "a0560fadb57f3426dcdd13c00b906e83",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "description": "ID of the role ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "number of users with role given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "count done successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "count not done",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "count not done"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/users/usersWithPerm/{permission}": {
             "get": {
                 "tags": [
                     "ManageAccess"
                 ],
-                "summary": "Liste des utilisateurs ayant une permission donné",
+                "summary": "Liste des utilisateurs ayant une permission donné ",
                 "operationId": "a9eec18b7ee3f1ef48e5ba5914d504a1",
                 "parameters": [
                     {
                         "name": "permission",
                         "in": "path",
-                        "description": "ID of the permission ",
+                        "description": "Id of the permission ",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -1628,306 +1728,6 @@
                 ]
             }
         },
-        "/api/users/usersWithPermCount/{permission}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "nombre des utilisateurs ayant une permission donné",
-                "operationId": "0b62499997cfc7eef4ce24ff8171b2a1",
-                "parameters": [
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "number of users without permissions given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "count done successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "count not done ",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "count not done "
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/usersWithoutRole/{role}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Liste des utilisateurs n'ayant pas un rôle donné",
-                "operationId": "747e47fe804f079e57f443ac331c4cfe",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "description": "ID of the role ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "list of users without role given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "list taked"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "list not taked",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "list not taked"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/usersWithoutRoleCount/{role}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Nombre des utilisateurs n'ayant pas un rôle donné",
-                "operationId": "83544c6e27290f9bf315861a709a7d4f",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "description": "ID of the role ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "number of users without role given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "list of permissions'roles"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": " not count",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": " not count"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/usersWithoutPerm/{permission}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Liste des utilisateurs n'ayant une permission donné",
-                "operationId": "4ec4fb90387fa0de0895946f75c980ca",
-                "parameters": [
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "list of users without permissions given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "list taked"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "list not taked ",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "list not taked "
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/usersWithoutPermCount/{permission}": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Nombre des utilisateurs n'ayant une permission donné",
-                "operationId": "416caca6ec0a32c5d7f627ba2f39bd7a",
-                "parameters": [
-                    {
-                        "name": "permission",
-                        "in": "path",
-                        "description": "ID of the permission ",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "count of users without permission given",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "count done successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "count done successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "count done successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/users/usersRoles": {
             "get": {
                 "tags": [
@@ -1938,25 +1738,6 @@
                 "responses": {
                     "200": {
                         "description": "list of users and their roles"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/usersPerms": {
-            "get": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "liste des utilisateurs et leur permissions",
-                "operationId": "402344274697145e5747d4716472663c",
-                "responses": {
-                    "200": {
-                        "description": "List of users and their permissions"
                     }
                 },
                 "security": [
@@ -2134,6 +1915,30 @@
                 "responses": {
                     "200": {
                         "description": "move to traveler"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/usersCountByRole": {
+            "get": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Recupère chaque role avec le nombre d'utilisateur associé",
+                "operationId": "2ae3e9c55df8a3fee9575ca17b7ea243",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -6988,22 +6793,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Erreur - Le logement est en cours de réservation et ne peut pas être désactivé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Le logement est en cours de réservation et ne peut pas être désactivé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
                     "403": {
                         "description": "Erreur - Seul le propriétaire du logement peut le désactiver",
                         "content": {
@@ -7374,7 +7163,7 @@
                             }
                         }
                     },
-                    "400": {
+                    "200": {
                         "description": "Erreur de validation",
                         "content": {
                             "application/json": {
@@ -9636,7 +9425,7 @@
                     "201": {
                         "description": " connected successfully"
                     },
-                    "401": {
+                    "200": {
                         "description": "Invalid credentials"
                     }
                 }
@@ -9672,7 +9461,7 @@
                             }
                         }
                     },
-                    "401": {
+                    "400": {
                         "description": "Unauthorized"
                     }
                 },
@@ -9709,7 +9498,7 @@
                     }
                 },
                 "responses": {
-                    "401": {
+                    "200": {
                         "description": "Échec de la vérification",
                         "content": {
                             "application/json": {
@@ -9718,7 +9507,7 @@
                                         "status_code": {
                                             "description": "Le code d'état de la réponse.",
                                             "type": "integer",
-                                            "example": 401
+                                            "example": 200
                                         },
                                         "message": {
                                             "description": "Le message indiquant que la vérification a échoué.",
@@ -9761,7 +9550,7 @@
                                         "status_code": {
                                             "description": "Le code d'état de la réponse.",
                                             "type": "integer",
-                                            "example": 401
+                                            "example": 200
                                         },
                                         "message": {
                                             "description": "Le message indiquant que la vérification a réussi.",
@@ -18172,6 +17961,11 @@
         }
     },
     "components": {
+        "responses": {
+            "500": {
+                "description": "Server error"
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",

@@ -13,185 +13,250 @@ use Spatie\Permission\Models\Role;
 use App\Models\Right;
 use App\Models\User_right;
 use validationException;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ConfirmationLoginEmail;
+use App\Mail\NotificationEmail;
+use App\Models\Notification;
+use App\Mail\NotificationEmailwithoutfile;
+
 class AuthController extends Controller
 {
 
 /**
  * @OA\Post(
- *     path="/api/users/assignPermToRole/{role}/{permission}",
- *     summary="ajouter une permission à un rôle",
+ *     path="/api/users/assignPermsToRole/{role}",
+ *     summary="Assign multiple permissions to a role",
  *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
- *         description="ID of the role ",
+ *         description="ID of the role",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
  *             format="int64"
  *         )
  *     ),
- * @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
+ *     @OA\RequestBody(
  *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions"},
+ *             @OA\Property(
+ *                 property="permissions",
+ *                 type="array",
+ *                 @OA\Items(type="integer", format="int64"),
+ *                 description="List of permission IDs to assign to the role"
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="permission assigned to role sucessfully",
+ *         description="Permissions assigned to role successfully",
  *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="permission assigned to role sucessfully")
+ *             @OA\Property(property="message", type="string", example="Permissions assigned to role successfully"),
+ *             @OA\Property(
+ *                 property="assigned_permissions",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="permission", type="string", description="Name of the permission"),
+ *                     @OA\Property(property="status", type="string", enum={"Assigned", "Already assigned"}, description="Status of the permission assignment")
+ *                 )
+ *             ),
+ *             @OA\Property(property="role", type="object", description="Details of the role assigned"),
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="permission not assigned to role",
+ *         description="Role or permission not found",
  *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="permission not assigned to role")
+ *             @OA\Property(property="error", type="string", example="Role or permission not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation failed",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Validation failed"),
+ *             @OA\Property(property="message", type="string", example="Validation error message")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="An error occurred"),
+ *             @OA\Property(property="message", type="string", example="Internal server error message")
  *         )
  *     )
  * )
  */
+
 
     //ajouter une permission à un rôle
-    public function assignPermToRole(Request $request, $r, $p){
-        // try{
+    public function assignPermsToRole(Request $request, $r){
+    try {
+        $role = Role::find($r);
 
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-                $role = Role::find($r);
-                $permission = Permission::find($p);
+        if (!$role) {
+            return response()->json('Role not found');
+        }
+        $requestData = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'integer|exists:permissions,id'
+        ]);
 
-                if (!$role) {
-                    return response()->json('role not found');
-                }
+        $assignedPermissions = [];
+        $permissions=$request->input('permissions');
 
-                if (!$permission) {
-                    return response()->json('permission not found');
-                }
+        foreach ($permissions as $permissionId) {
+            $permission = Permission::find($permissionId);
 
-                if($role->hasPermissionTo($permission->name)){
-                    return response()->json([
-                        'message' => 'Cette permission a déjà été assigné à ce role'
-                    ]);
-                }
+            if (!$permission) {
+                return response()->json('Permission not found');
+            }
 
-                
-                // $role->givePermissionTo($permission);
+            if ($role->hasPermissionTo($permission->name)) {
+                $assignedPermissions[] = [
+                    'permission' => $permission->name,
+                    'status' => 'Already assigned'
+                ];
+            } else {
+                $role->givePermissionTo($permission);
+                $assignedPermissions[] = [
+                    'permission' => $permission->name,
+                    'status' => 'Assigned'
+                ];
+            }
+        }
 
-                
-
-                if($permission->assignRole($role)){
-                    return response()->json([
-                        'message' => 'la permission '.$permission->name.' a ete accorde a '.$role->name,
-                        'permission' => $permission,
-                        'role' => $role
-                    ]);
-                }
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        return response()->json([
+            'message' => 'Permissions assigned to role successfully',
+            'assigned_permissions' => $assignedPermissions,
+            'role' => $role
+        ]);
+    } catch(ValidationException $e) {
+        return response()->json([
+            'error' => 'Validation failed',
+            'message' => $e->validator->errors()->first()
+        ], 422);
+    } catch(Exception $e) {
+        return response()->json([
+            'error' => 'An error occurred',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
-    /**
+
+   /**
  * @OA\Post(
- *     path="/api/users/RevokePermToRole/{role}/{permission}",
- *     summary="retirer une permission à un rôle",
+ *     path="/api/users/RevokePermsToRole/{role}",
+ *     summary="Revoke multiple permissions from a role",
  *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="role",
  *         in="path",
- *         description="ID of the role ",
+ *         description="ID of the role",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
  *             format="int64"
  *         )
  *     ),
- * @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission",
+ *     @OA\RequestBody(
  *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions"},
+ *             @OA\Property(
+ *                 property="permissions",
+ *                 type="array",
+ *                 @OA\Items(type="integer", format="int64"),
+ *                 description="List of permission IDs to revoke from the role"
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="permission revoke to role successfully",
+ *         description="Permissions revoked from role successfully",
  *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="permission revoke to role successfully")
+ *             @OA\Property(property="message", type="string", example="Permissions revoked from role successfully"),
+ *             @OA\Property(property="role", type="object", description="Details of the role"),
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="permission don't revoke to role ",
+ *         description="Role or permission not found",
  *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="permission don't revoke to role ")
+ *             @OA\Property(property="error", type="string", example="Role or permission not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation failed",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Validation failed"),
+ *             @OA\Property(property="message", type="string", example="Validation error message")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="An error occurred"),
+ *             @OA\Property(property="message", type="string", example="Internal server error message")
  *         )
  *     )
  * )
  */
 
-    //retirer la permission à un rôle
-    public function RevokePermToRole(Request $request, $r, $p){
-            try{
-                $role = Role::find($r);
-                $permission = Permission::find($p);
+// Retirer des permissions à un rôle
+public function RevokePermsToRole(Request $request, $r){
+    try {
+        $role = Role::find($r);
 
-                if (!$role) {
-                    return response()->json('role not found');
-                }
+        if (!$role) {
+            return response()->json('Role not found');
+        }
 
-                if (!$permission) {
-                    return response()->json('permission not found');
-                }
+        $requestData = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'integer|exists:permissions,id'
+        ]);
 
-                if(!$role->hasPermissionTo($permission->name)){
-                    return response()->json([
-                        'message' => 'Ce role n\'a pas la permission qu\'on veut lui retirer'
-                    ]);
-                }
-            // $role->revokePermissionTo($permission);
-            // $permission->removeRole($role)
-            if($role->revokePermissionTo($permission)){
-                return response()->json([
-                    'message' => 'la permission '.$permission->firstname.' a ete retire a '.$role->firstname,
-                    'permission' => $permission,
-                    'role' => $role
-                ]);
+        $revokedPermissions = [];
+
+        foreach ($requestData['permissions'] as $permissionId) {
+            $permission = Permission::find($permissionId);
+
+            if ($role->hasPermissionTo($permission->name)) {
+                $role->revokePermissionTo($permission);
+                $revokedPermissions[] = $permission->name;
             }
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
+        }
+
+        return response()->json([
+            'message' => 'Permissions revoked from role successfully',
+            'revoked_permissions' => $revokedPermissions,
+            'role' => $role
+        ]);
+    } catch(ValidationException $e) {
+        return response()->json([
+            'error' => 'Validation failed',
+            'message' => $e->validator->errors()->first()
+        ], 422);
+    } catch(Exception $e) {
+        return response()->json([
+            'error' => 'An error occurred',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
 /**
  * @OA\Get(
@@ -228,24 +293,25 @@ class AuthController extends Controller
 
     //Récupérer la liste des rôle assigner a un utilisateur
     public function getUserRoles($id){
-        try{
-
-            $users = User::find($id);
-            if (!$users) {
-                return response()->json('user not found');
+        try {
+            $user = User::find($id);
+                   
+            if (!$user) {
+                return response()->json('User not found');
             }
-
-            // $permissionNames = $users->getPermissionNames();
-            $roles = $users->getRoleNames();
-            if(!$roles){
-                    return response()->json([
-                        'message' => 'Role not found'
-                    ]);
+            
+            
+            $rights = $user->user_right()->with('right')->get();
+    
+            if($rights->isEmpty()) {
+                return response()->json(['message' => 'Roles not found']);
             }
-            return response()->json([
-                'data' => $roles
-            ]);
-        }catch(ValidationException $e) {
+    
+           
+            $roles = $rights->pluck('right.name')->unique()->toArray();
+    
+            return response()->json(['data' => $roles]);
+        } catch(ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
                 'message' => $e->validator->errors()->first()
@@ -254,9 +320,12 @@ class AuthController extends Controller
             return response()->json([
                 'error' => 'An error occurred',
                 'message' => $e->getMessage()
-            ],500);
-      };
+            ], 500);
+        }
     }
+    
+    
+    
 
        /**
  * @OA\Post(
@@ -324,22 +393,42 @@ class AuthController extends Controller
                 if (!$user) {
                     return response()->json('user not found');
                 }
+                if(User_right::where('user_id',$id)->where('right_id',$r)->exists()){
+                    return response()->json([
+                        'message' => 'Ce rôle a déjà été assigné à cet utilisateur'
+                    ]);
+                }
                 $u = User_right::where('user_id',$id)->get();
                 foreach($u as $utilisateur){
                     $roles = Role::where('id',$utilisateur->right_id)->first();
                     $user->removeRole($roles);
                 }
                 
-                if($user->hasRole($role->name) && User_right::where('user_id',$id)->where('right_id',$r)->exists()){
-                    return response()->json([
-                        'message' => 'Ce rôle a déjà été assigné à cet utilisateur'
-                    ]);
-                }
                 $user->assignRole($role);
                 $user_right = new User_right();
                 $user_right->user_id = $id;
                 $user_right->right_id = $r;
                 $user_right->save();
+                $permission_role = $role->permissions;
+                $permission_name="";
+                foreach($permission_role as $pr){
+                    $permission_name .= " " . $pr['name'] . ",";
+                }
+                $message_notification ="Vous avez maintenant le rôle de ". $role->name .". Avec ce rôle, vous bénéficiez de nouvelles autorisations sur le site, notamment : " . $permission_name . ".";
+                $notification = new Notification([
+                 'name' => $message_notification,
+                 'user_id' =>$id,
+                     ]);
+                    $notification->save();
+                    $mail = [
+                        'title' => "Attribution du role de".$role->name,
+                        'body' => $message_notification 
+                    ];
+                    try {
+                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                    } catch (\Exception $e) {
+                       
+                    }
 
                 return response()->json([
                     'message' => 'role assigné avec success',
@@ -443,18 +532,52 @@ class AuthController extends Controller
                 return response()->json('user not found');
             }
                 
-                if(!($user->hasRole($role->name)&& User_right::where('user_id',$id)->where('right_id',$r)->exists())){
+                if(!(User_right::where('user_id',$id)->where('right_id',$r)->exists())){
                     return response()->json([
-                        'message' => 'Cet utilisateur n\'a pas le rôle que vous voulez lui retirer'
+                        'message' => 'Cet utilisateur n\'a pas le rôle que vous voulez lui retirer.'
                     ]);
                 }
+            $count = User_right::where('user_id', $id)->count();
 
-                $user->removeRole($role);
+                if ($count == 1) {
+                    return response()->json([
+                        'error' => "L'utilisateur a un seul role dans le système actuellement qui est le role traveler;vous ne pouvez donc pas lui retirer ",
+                        'message' => 'Merci bien de lui bloquer donc au lieu de le retirer le seul role restant'
+                    ], 403);
+                } 
+                if ($user->hasRole($role->name)) {
+                    $user->removeRole($role);
+                }
+                
                 User_right::where('user_id',$id)->where('right_id',$r)->delete();
 
+                $u = User_right::where('user_id',$id)->get();
+                foreach($u as $utilisateur){
+                    $roles = Role::where('id',$utilisateur->right_id)->first();
+                    
+                }
+                
+                if($user->roles->count()!= 1){
+                    $user->assignRole($roles);
+                }
+                $message_notification ="Vous n'avez plus maintenant le rôle de ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
+                $notification = new Notification([
+                 'name' => $message_notification,
+                 'user_id' =>$id,
+                     ]);
+                    $notification->save();
+                    $mail = [
+                        'title' => "Retrait du role de".$role->name,
+                        'body' => $message_notification 
+                    ];
+                    try {
+                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                    } catch (\Exception $e) {
+                       
+                    }
                 return response()->json([
                     'message' => 'role retire avec success',
-                    'data' => [
+                     'data' => [
                         'id' => $user->id,
                         'lastname' => $user->lastname,
                         'firstname' => $user->firstname,
@@ -489,28 +612,31 @@ class AuthController extends Controller
 
            /**
  * @OA\Post(
- *     path="/api/users/assignPermToUser/{id}/{permission}",
- *     summary="ajouter une permission à un utilisateur",
+ *     path="/api/users/assignPermsToUser/{id}",
+ *     summary="Assign multiple permissions to a user",
  *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID of the user ",
+ *         description="ID of the user",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
  *             format="int64"
  *         )
  *     ),
- * @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
+ *     @OA\RequestBody(
  *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions"},
+ *             @OA\Property(
+ *                 property="permissions",
+ *                 type="array",
+ *                 @OA\Items(type="integer", format="int64"),
+ *                 description="List of permission IDs to assign to the role"
+ *             )
  *         )
  *     ),
  *     @OA\Response(
@@ -531,38 +657,77 @@ class AuthController extends Controller
  */
 
     //ajouter une permission à un utilisateur
-    public function assignPermToUser(Request $request,$id,$p){
+    public function assignPermsToUser(Request $request,$id,){
         try{
-            $permission = Permission::find($p);
+            $requestData = $request->validate([
+                'permissions' => 'required|array',
+                'permissions.*' => 'integer|exists:permissions,id'
+            ]);
+            
             $user = User::find($id);
+
+            $permissions=$request->input('permissions');
             
             if (!$user) {
                 return response()->json('user not found');
             }
 
+        $assignedPermissions =[];
+        $permission_name= "";
+        $permission_add=[];
+        $permissions=$request->input('permissions');
+
+        foreach ($permissions as $permissionId) {
+            $permission = Permission::find($permissionId);
+
             if (!$permission) {
-                return response()->json('permission not found');
+                return response()->json('Permission not found');
             }
 
-            if($user->hasPermissionTo($permission->name)){
-                return response()->json([
-                    'message' => 'Cet utilisateur a déjà la permission  que vous voulez lui assigner'
-                ]);
+            if ($user->hasPermissionTo($permission->name)) {
+                $assignedPermissions[] = [
+                    'permission' => $permission->name,
+                    'status' => 'Already assigned'
+                ];
+            } else {
+                $user->givePermissionTo($permission);
+                $assignedPermissions[] = [
+                    'permission' => $permission->name,
+                    'status' => 'Assigned'
+                ];
+                $permission_name .= " " .  $permission->name . ",";
             }
-
-            // if($user->hasDirectPermission($permission->name)){
-            //     return response()->json([
-            //         'message' => 'Cet utilisateur a déjà la permission que vous voulez lui assigner'
-            //     ]);
-            // }
-
+        }
             
-            
-            // hasDirectPermission('edit articles')
             $permissionsDirect = $user->getDirectPermissions();
-            $permissionsRole = $user->getPermissionsViaRoles();
-            // $user->syncPermissions($permissions);
-            $user->givePermissionTo($permission);
+            //$permissionsRole = $user->getPermissionsViaRoles();
+            $userRights = User_right::where('user_id', $id)->get();
+
+            $permissions = [];
+
+            foreach ($userRights as $userRight) {
+                $role = Role::find($userRight->right_id);
+                if ($role) {
+                    $permissions = array_merge($permissions, $role->permissions()->pluck('name')->toArray());
+                }
+            }
+
+            $uniquePermissions = array_unique($permissions);
+            $message_notification= "Vous avez maintenant les permissions suivantes: ". $permission_name . ".";
+                $notification = new Notification([
+                 'name' => $message_notification,
+                 'user_id' =>$id,
+                     ]);
+                    $notification->save();
+                    $mail = [
+                        'title' => "Notification sur les nouvelle permissions attribuées",
+                        'body' => $message_notification 
+                    ];
+                    try {
+                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                    } catch (\Exception $e) {
+                       
+                    }
             return response()->json([
                 'message'=>'permission add successfully',
                 'data' =>[
@@ -581,10 +746,10 @@ class AuthController extends Controller
                         'is_deleted' => $user->is_deleted,
                         'is_blocked' => $user->is_blocked,
                         'file_profil' => $user->file_profil,
-                        
-                        'permission' => [
+                        'bilan_permission_add' => $assignedPermissions,
+                        'permission_user' => [
                             'permissionDirect' => $permissionsDirect,
-                            'permissionRole' => $permissionsRole
+                            'permissionRole' => $uniquePermissions
                         ]
                 ]
             ]);
@@ -603,28 +768,31 @@ class AuthController extends Controller
 
                /**
  * @OA\Post(
- *     path="/api/users/revokePermToUser/{id}/{permission}",
- *     summary="retirer une permission à un rôle",
+ *     path="/api/users/revokePermsToUser/{id}",
+*     summary="retirer multiple permissions to a user",
  *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID of the user ",
+ *         description="ID of the user",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
  *             format="int64"
  *         )
  *     ),
- * @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
+ *     @OA\RequestBody(
  *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions"},
+ *             @OA\Property(
+ *                 property="permissions",
+ *                 type="array",
+ *                 @OA\Items(type="integer", format="int64"),
+ *                 description="List of permission IDs to assign to the role"
+ *             )
  *         )
  *     ),
  *     @OA\Response(
@@ -645,28 +813,74 @@ class AuthController extends Controller
  */
 
     //retirer une permission à un utilisateur
-    public function revokePermToUser(Request $request,$id,$p){
+    public function revokePermsToUser(Request $request,$id){
         try{
-            // $users = User::find($id);
-            $permission = Permission::find($p);
+            $requestData = $request->validate([
+                'permissions' => 'required|array',
+                'permissions.*' => 'integer|exists:permissions,id'
+            ]);
+            
+            $permissions=$request->input('permissions');
+            $assignedPermissions =[];
+            $permission_name= "";
             $user = User::find($id);
             if (!$user) {
                 return response()->json('user not found');
             }
-
-            if (!$permission) {
-                return response()->json('permission not found');
+            foreach ($permissions as $permissionId) {
+                $permission = Permission::find($permissionId);
+    
+                if (!$permission) {
+                    return response()->json('Permission not found');
+                }
+    
+                if (!$user->hasDirectPermission($permission->name)) {
+                    $retiredPermissions[] = [
+                        'permission' => $permission->name,
+                        'status' => 'Not retired because he has no this permission'
+                    ];
+                } else {
+                    $user->revokePermissionTo($permission);
+                    $retiredPermissions[] = [
+                        'permission' => $permission->name,
+                        'status' => 'retired'
+                    ];
+                    $permission_name .= " " .  $permission->name . ",";
+                    
+                }
             }
-
-            if(!$user->hasDirectPermission($permission->name)){
-                return response()->json([
-                    'message' => 'Cet utilisateur n\'a pas la permission  que vous voulez lui retirer'
-                ]);
-            }
-
+          
+            
             $permissionsDirect = $user->getDirectPermissions();
-            $permissionsRole = $user->getPermissionsViaRoles();
-            $user->revokePermissionTo($permission);
+
+            //permissionsRole = $user->getPermissionsViaRoles();
+            $userRights = User_right::where('user_id', $id)->get();
+            
+            $permissions = [];
+
+            foreach ($userRights as $userRight) {
+                $role = Role::find($userRight->right_id);
+                if ($role) {
+                    $permissions = array_merge($permissions, $role->permissions()->pluck('name')->toArray());
+                }
+            }
+
+            $uniquePermissions = array_unique($permissions);
+            $message_notification= "Vous n'avez plus les permissions suivantes: ". $permission_name . ".Elles vous ont été retiré par l'admin.";
+                $notification = new Notification([
+                 'name' => $message_notification,
+                 'user_id' =>$id,
+                     ]);
+                    $notification->save();
+                    $mail = [
+                        'title' => "Notification sur le retrait des permissions ",
+                        'body' => $message_notification 
+                    ];
+                    try {
+                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                    } catch (\Exception $e) {
+                       
+                    }
             return response()->json([
                 'message'=>'permission deny successfully',
                 'data' =>[
@@ -685,10 +899,10 @@ class AuthController extends Controller
                     'is_deleted' => $user->is_deleted,
                     'is_blocked' => $user->is_blocked,
                     'file_profil' => $user->file_profil,
-                    
+                    'bilan_permission_retired' => $retiredPermissions,
                     'permission' => [
                         'permissionDirect' => $permissionsDirect,
-                        'permissionRole' => $permissionsRole
+                        'permissionRole' => $uniquePermissions
                     ]
             ]
             ]);
@@ -746,14 +960,26 @@ class AuthController extends Controller
                     'message' => 'user not found'
                 ]);
             }
+             $userRights = User_right::where('user_id', $id)->get();
+
+            $permissions = [];
+
+            foreach ($userRights as $userRight) {
+                $role = Role::find($userRight->right_id);
+                if ($role) {
+                    $permissions = array_merge($permissions, $role->permissions()->pluck('name')->toArray());
+                }
+            }
+
+            $uniquePermissions = array_unique($permissions);
             // $permissionNames = $users->getPermissionNames();
             $permissionsDirect = $users->getDirectPermissions();
-            $permissionsRole = $users->getPermissionsViaRoles();
+            //$permissionsRole = $users->getPermissionsViaRoles();
 
             return response()->json([
                 'data' => [
                     'directPermissions' => $permissionsDirect,
-                    'indirectPermissions' => $permissionsRole
+                    'indirectPermissions' => $uniquePermissions
                 ]
             ]);
         }catch(ValidationException $e) {
@@ -803,21 +1029,19 @@ class AuthController extends Controller
  */
     //Liste des utilisateurs ayant un rôle donné
     public function usersWithRole($r){
-        // try{
-
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-            $role = Role::find($r);
-            $users = User::role($role->name)->get();
+        try {
+            // Recherche du rôle par son nom
+            $role = Right::where('id', $r)->first();
+            
             if (!$role) {
-                return response()->json('role not found');
+                return response()->json('Role not found');
             }
-            return response()->json([
-                'data' => $users
-            ]);
-        }catch(ValidationException $e) {
+    
+            // Obtenez tous les utilisateurs associés à ce rôle
+            $users = User_right::where('right_id', $role->id)->with('user')->get()->pluck('user');
+    
+            return response()->json(['data' => $users]);
+        } catch(ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
                 'message' => $e->validator->errors()->first()
@@ -826,84 +1050,22 @@ class AuthController extends Controller
             return response()->json([
                 'error' => 'An error occurred',
                 'message' => $e->getMessage()
-            ],500);
-      };
+            ], 500);
+        }
     }
-
-
-        /**
- * @OA\Get(
- *     path="/api/users/usersWithRoleCount/{role}",
- *     summary="Nombre des utilisateurs ayant un rôle donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="role",
- *         in="path",
- *         description="ID of the role ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="number of users with role given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="count done successfully")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="count not done",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="count not done")
- *         )
- *     )
- * )
- */
-
-    //Nombre des utilisateurs ayant un rôle donné
-    public function usersWithRoleCount($r){
-        // try{
-
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-            $role = Role::find($r);
-            $n = User::role($role->name)->count();
-
-            if (!$role) {
-                return response()->json('role not found');
-            }
-            return response()->json([
-                'data' => $n
-            ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
-    }
+    
+    
 
         /**
  * @OA\Get(
  *     path="/api/users/usersWithPerm/{permission}",
- *     summary="Liste des utilisateurs ayant une permission donné",
+ *     summary="Liste des utilisateurs ayant une permission donné ",
  *     tags={"ManageAccess"},
  * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="permission",
  *         in="path",
- *         description="ID of the permission ",
+ *         description="Id of the permission ",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
@@ -932,7 +1094,7 @@ class AuthController extends Controller
         // try{
 
         // }catch (Exception $e){
-        //     return response()->json($e);
+        //       return response()->json(['error' => $e->getMessage()], 500);
         // }
         try{
             $permission = permission::find($p);
@@ -956,295 +1118,9 @@ class AuthController extends Controller
       };
     }
 
-            /**
- * @OA\Get(
- *     path="/api/users/usersWithPermCount/{permission}",
- *     summary="nombre des utilisateurs ayant une permission donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="number of users without permissions given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="count done successfully")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="count not done ",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="count not done ")
- *         )
- *     )
- * )
- */
-    //nombre des utilisateurs ayant une permission donné
-    public function usersWithPermCount($p){
-        // try{
+              
 
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-            $permission = permission::find($p);
-            if (!$permission) {
-                return response()->json('permission not found');
-            }
-            $n = User::permission($permission->name)->count();
-            return response()->json([
-                'data' => $n
-            ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
-    }
-
-            /**
- * @OA\Get(
- *     path="/api/users/usersWithoutRole/{role}",
- *     summary="Liste des utilisateurs n'ayant pas un rôle donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="role",
- *         in="path",
- *         description="ID of the role ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="list of users without role given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="list taked")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="list not taked",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="list not taked")
- *         )
- *     )
- * )
- */
-    //Liste des utilisateurs n'ayant pas un rôle donné
-    public function usersWithoutRole($r){
-        // try{
-
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-            $role = Role::find($r);
-            $users = User::withoutRole($role->name)->get();
-            if (!$role) {
-                return response()->json('role not found');
-            }
-            return response()->json([
-                'data' => $users
-            ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
-    }
-
-            /**
- * @OA\Get(
- *     path="/api/users/usersWithoutRoleCount/{role}",
- *     summary="Nombre des utilisateurs n'ayant pas un rôle donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="role",
- *         in="path",
- *         description="ID of the role ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="number of users without role given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="list of permissions'roles")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description=" not count",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example=" not count")
- *         )
- *     )
- * )
- */
-    //Nombre des utilisateurs n'ayant pas un rôle donné
-    public function usersWithoutRoleCount($r){
-        // try{
-
-        // }catch (Exception $e){
-        //     return response()->json($e);
-        // }
-        try{
-            $role = Role::find($r);
-            if (!$role) {
-                return response()->json('role not found');
-            }
-            $n = User::withoutRole($role->name)->count();
-            return response()->json([
-                'data' => $n
-            ]);
-        }catch(ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'message' => $e->validator->errors()->first()
-            ], 422);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ],500);
-      };
-    }
-
-                /**
- * @OA\Get(
- *     path="/api/users/usersWithoutPerm/{permission}",
- *     summary="Liste des utilisateurs n'ayant une permission donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="list of users without permissions given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="list taked")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="list not taked ",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="list not taked ")
- *         )
- *     )
- * )
- */
-        //Liste des utilisateurs n'ayant une permission donné
-        public function usersWithoutPerm($p){
-            // try{
-    
-            // }catch (Exception $e){
-            //     return response()->json($e);
-            // }
-            try{
-                $permission = permission::find($p);
-                if (!$permission) {
-                    return response()->json('permission not found');
-                }
-                $users = User::withoutPermission($permission->name)->get();
-                return response()->json([
-                    'data' => $users
-                ]);
-            }catch (Exception $e){
-                return response()->json($e);
-            }
-        }
-
-                        /**
- * @OA\Get(
- *     path="/api/users/usersWithoutPermCount/{permission}",
- *     summary="Nombre des utilisateurs n'ayant une permission donné",
- *     tags={"ManageAccess"},
- * security={{"bearerAuth": {}}},
- *     @OA\Parameter(
- *         name="permission",
- *         in="path",
- *         description="ID of the permission ",
- *         required=true,
- *         @OA\Schema(
- *             type="integer",
- *             format="int64"
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="count of users without permission given",
- *         @OA\JsonContent(
- *             @OA\Property(property="data", type="string", example="count done successfully")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="count done successfully",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="count done successfully")
- *         )
- *     )
- * )
- */
-        //Nombre des utilisateurs n'ayant une permission donné
-        public function usersWithoutPermCount($p){
-            // try{
-    
-            // }catch (Exception $e){
-            //     return response()->json($e);
-            // }
-            try{
-                $permission = permission::find($p);
-                if (!$permission) {
-                    return response()->json('permission not found');
-                }
-                $users = User::withoutPermission($permission->name)->count();
-                return response()->json([
-                    'data' => $users
-                ]);
-            }catch (Exception $e){
-                return response()->json($e);
-            }
-        }
-
+                       
               /**
      * @OA\Get(
      *     path="/api/users/usersRoles",
@@ -1259,71 +1135,45 @@ class AuthController extends Controller
      * )
      */
 
-        //liste des utilisateurs et leur rôles
-        public function usersRoles(){
-             try{
-                    $data = User::with('roles')->get();
-                    return response()->json([
-                        'data' => $data
-                    ]);
-            }catch (Exception $e){
-                return response()->json($e);
+        //liste des utilisateurs et leur rôlespublic function usersRoles()
+        public function usersRoles()
+
+{
+    try {
+        // Récupérer tous les utilisateurs avec leurs rôles
+        $userRights = User_right::with('user', 'right')->get();
+
+        // Créer un tableau associatif pour stocker les rôles de chaque utilisateur
+        $data = [];
+
+        foreach ($userRights as $userRight) {
+            $userId = $userRight->user_id;
+            $roleName = $userRight->right->name;
+
+            // Vérifier si l'utilisateur existe déjà dans le tableau
+            if (!isset($data[$userId])) {
+                // Si l'utilisateur n'existe pas, le créer avec ses informations de base
+                $data[$userId] = [
+                    'user_id' => $userId,
+                    'user_info' => $userRight->user,
+                    'roles' => []
+                ];
             }
-           
+
+            // Ajouter le rôle à l'utilisateur
+            $data[$userId]['roles'][] = $roleName;
         }
 
-              /**
-     * @OA\Get(
-     *     path="/api/users/usersPerms",
-     *     summary="liste des utilisateurs et leur permissions",
-     *     tags={"ManageAccess"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of users and their permissions"
-     * 
-     *     )
-     * )
-     */
+        // Convertir le tableau associatif en un tableau numérique
+        $formattedData = array_values($data);
 
-        //liste des utilisateurs et leur permissions
-        public function usersPerms(){
-             try{
-                // $data = User::with('permissions')->get();
-                $users = User::where('is_deleted',false)->get();
-                $data = [];
-                foreach($users as $user){
-                    $data[] = [
-                        'id' => $user->id,
-                        'lastname' => $user->lastname,
-                        'firstname' => $user->firstname,
-                        'telephone' => $user->telephone,
-                        'email' => $user->email,
-                        'country' => $user->country,
-                        'city' => $user->city,
-                        'address' => $user->address,
-                        'sex' => $user->sexe,
-                        'postal_code' => $user->postal_code,
-                        'created_at' => $user->created_at,
-                        'updated_at' => $user->updated_at,
-                        'is_deleted' => $user->is_deleted,
-                        'is_blocked' => $user->is_blocked,
-                        'file_profil' => $user->file_profil,
-                        'permission' => [
-                            'permissionDirect' => $user->getDirectPermissions(),
-                            'permissionRole' => $user->getPermissionsViaRoles()
-                        ]
-                    ];
-                }
-                
-                return response()->json([
-                    'data' => $data
-                ]);
-            }catch (Exception $e){
-                return response()->json($e);
-            }
-           
-        }
+        return response()->json([
+            'data' => $formattedData
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 
                                 /**
  * @OA\Get(
@@ -1370,7 +1220,7 @@ class AuthController extends Controller
                     'data' => $data
                 ]);
             }catch (Exception $e){
-                return response()->json($e);
+                  return response()->json(['error' => $e->getMessage()], 500);
             }
         }
 
@@ -1419,7 +1269,7 @@ class AuthController extends Controller
                    'data' => count($data)
                ]);
            }catch (Exception $e){
-               return response()->json($e);
+                 return response()->json(['error' => $e->getMessage()], 500);
            }
        }
 
@@ -1466,7 +1316,7 @@ class AuthController extends Controller
                     ]
                 ]);
             }catch (Exception $e){
-                return response()->json($e);
+                  return response()->json(['error' => $e->getMessage()], 500);
             }
        }
 
@@ -1514,7 +1364,7 @@ class AuthController extends Controller
                 ]
             ]);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
    }
 
@@ -1562,8 +1412,43 @@ class AuthController extends Controller
                         ]
                     ]);
                 }catch (Exception $e){
-                    return response()->json($e);
+                      return response()->json(['error' => $e->getMessage()], 500);
                 }
            }
+
+
+/**
+ * @OA\Get(
+ *     path="/api/users/usersCountByRole",
+ *     tags={"ManageAccess"},
+* security={{"bearerAuth": {}}},
+ *     summary="Recupère chaque role avec le nombre d'utilisateur associé",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *     )
+ * )
+ */
+           public function usersCountByRole(){
+            try {
+               
+                $rolesCount = Right::withCount('user_right')->get()->pluck('user_right_count', 'name');
+                
+                return response()->json(['data' => $rolesCount]);
+            } catch(Exception $e) {
+                return response()->json([
+                    'error' => 'An error occurred',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
+        
 
 }

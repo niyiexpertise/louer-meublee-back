@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Exception;
-
+use Illuminate\Validation\Rule;
 class DocumentController extends Controller
 {
     /**
@@ -35,7 +35,7 @@ class DocumentController extends Controller
            
             return response()->json(['data' => $documents], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -122,6 +122,13 @@ class DocumentController extends Controller
     {
         try{
             $document = Document::find($id);
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('documents')->ignore($id),
+                ],
+            ]);
     
             if (!$document) {
                 return response()->json(['error' => 'Document non trouvé.'], 404);
@@ -129,7 +136,7 @@ class DocumentController extends Controller
     
             return response()->json(['data' => $document], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -185,7 +192,7 @@ class DocumentController extends Controller
             $document = Document::whereId($id)->update($data);
             return response()->json(['data' => 'Document  mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -224,7 +231,7 @@ class DocumentController extends Controller
             return response()->json(['data' => 'Document  supprimé avec succès.'], 200);
     
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
     }
 
@@ -273,7 +280,7 @@ security={{"bearerAuth": {}}},
             return response()->json(['data' => 'This document is block successfuly.'], 200);
     
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
     }
 
@@ -321,7 +328,7 @@ security={{"bearerAuth": {}}},
 
             return response()->json(['data' => 'this document is unblock successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
@@ -356,7 +363,7 @@ security={{"bearerAuth": {}}},
                 ]
             ], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -387,7 +394,7 @@ security={{"bearerAuth": {}}},
            
             return response()->json(['data' => $documents], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
   /**
@@ -434,7 +441,7 @@ public function active($id)
 
         return response()->json(['data' => 'this document is active successfuly.'], 200);
 } catch(Exception $e) {
-    return response()->json($e);
+      return response()->json(['error' => $e->getMessage()], 500);
 }
 }
 
@@ -482,7 +489,7 @@ try{
 
     return response()->json(['data' => 'this document is inactive successfuly.'], 200);
 } catch(Exception $e) {
-return response()->json($e);
+  return response()->json(['error' => $e->getMessage()], 500);
 }
 }
 

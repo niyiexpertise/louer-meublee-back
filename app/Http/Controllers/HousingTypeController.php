@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
+use Illuminate\Validation\Rule;
 /**
  * @OA\Info(
  *      title="Api de location des meubles",
@@ -36,7 +37,10 @@ class HousingTypeController extends Controller
     public function index()
     {
         try{
-                $housingTypes = HousingType::where('is_deleted', false)->where('is_blocked', false)->get();
+            $housingTypes = HousingType::where('is_deleted', false)
+            ->where('is_blocked', false)
+            ->orderBy('id', 'desc')
+            ->get();
 
                 return response()->json(['data' => $housingTypes], 200);
         } catch(Exception $e) {
@@ -105,7 +109,6 @@ class HousingTypeController extends Controller
     public function store(Request $request)
     {
         try{
-            return response()->json(['data' => 'Soyez les bienvenus  chers collègue!Que pouvons-nous faire pour vous? Pour chaque service,nous vous facturons 15fcfa'], 201);
                 $validatedData = $request->validate([
                     'name' => 'required|unique:housing_types|max:255',
                     'description' => 'required|string',
@@ -205,29 +208,46 @@ class HousingTypeController extends Controller
      *         description="Validation error"
      *     )
      * )
-     */
-    public function update(Request $request, $id)
-    {
-        try{
-            $housingType = HousingType::find($id);
+            */
+            public function update(Request $request, $id)
+        {
+            try {
+                
 
-            if (!$housingType) {
-                return response()->json(['error' => 'Type de logement  non trouvé.'], 404);
+                
+                $housingType = HousingType::find($id);
+
+                if (!$housingType) {
+                    return response()->json(['error' => 'Type de logement non trouvé.'], 404);
+                }
+
+                
+                
+                $validatedData = $request->validate([
+                    'name' => ['required', 'string', Rule::unique('housing_types')->ignore($id)],
+                    'description' => 'required|string',
+                ]);
+                
+
+               
+                
+                $existingHousingType = HousingType::where('name', $validatedData['name'])
+                    ->where('id', '!=', $id)
+                    ->first();
+
+                if ($existingHousingType) {
+                    return response()->json(['error' => 'Un autre type de logement avec le même nom existe déjà.'], 409);
+                }
+
+                $housingType->update($validatedData);
+
+                return response()->json(['data' => 'Type de logement mis à jour avec succès.'], 200);
+            } catch(Exception $e) {    
+                return response()->json(['error' => $e->getMessage()], 500);
             }
-
-            $validatedData = $request->validate([
-                'name' => 'string',
-                'description' => 'string',
-            ]);
-
-            $housingType->update($validatedData);
-
-            return response()->json(['data' => 'Type de logement  mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
-            return response()->json($e->getMessage());
         }
 
-    }
+
 
     /**
      * @OA\Post(

@@ -7,6 +7,7 @@ use App\Models\Commission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Validation\Rule;
 class CommissionController extends Controller
 {
 /**

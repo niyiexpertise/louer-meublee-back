@@ -32,7 +32,7 @@ class ReviewController extends Controller
             'data' => $reviews
         ], 200);
     } catch (Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
   }
 
@@ -85,7 +85,7 @@ public function store(Request $request)
             'data' => $review
         ],201);
     } catch (Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
@@ -123,7 +123,7 @@ public function store(Request $request)
                 'data' => $review
             ]);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -232,7 +232,7 @@ public function store(Request $request)
 
             return response()->json(['data' => 'Commentaire supprimé avec succès.'], 200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -279,7 +279,7 @@ public function store(Request $request)
 
             return response()->json(['data' => 'Commentaire bloqué avec succès.'], 200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -327,7 +327,7 @@ public function store(Request $request)
 
             return response()->json(['data' => 'Commentaire débloqué avec succès.'], 200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

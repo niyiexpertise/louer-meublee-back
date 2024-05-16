@@ -8,7 +8,7 @@ use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
-
+use Illuminate\Validation\Rule;
 
 class PropertyTypeController extends Controller
 {
@@ -34,7 +34,7 @@ class PropertyTypeController extends Controller
                 $propertyTypes = PropertyType::where('is_blocked', false)->where('is_deleted', false)->get();
                 return response()->json(['data' => $propertyTypes], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -61,7 +61,7 @@ class PropertyTypeController extends Controller
                  $propertyTypes = PropertyType::where('is_blocked', true)->where('is_deleted', false)->get();
                  return response()->json(['data' => $propertyTypes], 200);
          } catch(Exception $e) {
-             return response()->json($e);
+             return response()->json($e->getMessage());
          }
  
      }
@@ -125,7 +125,7 @@ class PropertyTypeController extends Controller
                 $propertyType->save();
                 return response()->json(['data' => 'Type de propriété created successfuly.', 'propertyType' => $propertyType], 201);
         } catch(Exception $e) {
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -165,7 +165,7 @@ class PropertyTypeController extends Controller
 
                 return response()->json(['data' => $propertyType], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
 
@@ -217,13 +217,17 @@ class PropertyTypeController extends Controller
     public function updateName(Request $request, string $id)
     {
         try{
-                $data = $request->validate([
-                    'name' =>'required | string'
-                ]);
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('property_types')->ignore($id),
+                ],
+            ]);
                 $propertyType = PropertyType::whereId($id)->update($data);
                 return response()->json(['data' => 'Type de propriété  mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
     }
@@ -359,7 +363,7 @@ class PropertyTypeController extends Controller
 
                 return response()->json(['data' => 'Type de propriété  supprimé avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+            return response()->json($e->getMessage());
         }
 
 
@@ -408,7 +412,7 @@ class PropertyTypeController extends Controller
 
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+        return response()->json($e->getMessage());
     }
 
 
@@ -457,7 +461,7 @@ public function unblock(string $id)
 
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+        return response()->json($e->getMessage());
     }
 
 

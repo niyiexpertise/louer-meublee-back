@@ -35,7 +35,7 @@ use App\Mail\NotificationEmailwithoutfile;
 use DateTime;
 use App\Mail\NotificationEmail;
 use Exception;
-
+use Illuminate\Validation\Rule;
 
 class ReservationController extends Controller
 {

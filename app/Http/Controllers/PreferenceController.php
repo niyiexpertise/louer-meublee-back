@@ -14,7 +14,7 @@ use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Validation\ValidationException ;
 use Exception;
-
+use Illuminate\Validation\Rule;
 
 
 class PreferenceController extends Controller
@@ -38,7 +38,7 @@ class PreferenceController extends Controller
                 return response()->json(['data' => $preferences], 200);
     
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
    
     }
@@ -62,7 +62,7 @@ class PreferenceController extends Controller
             return response()->json(['data' => $preferences], 200);
 
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -85,7 +85,7 @@ class PreferenceController extends Controller
             return response()->json(['data' => $preferences], 200);
 
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -108,7 +108,7 @@ class PreferenceController extends Controller
         return response()->json(['data' => $preferences], 200);
 
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -172,7 +172,7 @@ class PreferenceController extends Controller
                 $preference->save();
                 return response()->json(['data' => 'Type de preference créé avec succès.', 'preference' => $preference], 201);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -217,7 +217,7 @@ class PreferenceController extends Controller
                 }
                 return response()->json(['data' => $preference], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -268,6 +268,13 @@ class PreferenceController extends Controller
     {
         try{
             $preference = Preference::find($id);
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('preferences')->ignore($id),
+                ],
+            ]);
             if(!$preference){
                 return response()->json(['error' => 'Préférence non trouvé.'], 404);
             }
@@ -275,7 +282,7 @@ class PreferenceController extends Controller
                 Preference::whereId($id)->update(['name' => $request->name]);
                 return response()->json(['data' => 'Préférence mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -410,7 +417,7 @@ class PreferenceController extends Controller
 
                 return response()->json(['data' => 'Préférence supprimé avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -459,7 +466,7 @@ class PreferenceController extends Controller
 
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -509,7 +516,7 @@ class PreferenceController extends Controller
 
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 

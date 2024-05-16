@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -407,7 +408,7 @@ public function userLanguages()
 
         return response()->json(['data' => 'This user is block successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -456,7 +457,7 @@ public function unblock($id)
 
         return response()->json(['data' => 'User débloqué avec succès.'], 200);
     }catch (Exception $e){
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 /**

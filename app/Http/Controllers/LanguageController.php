@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Language;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Validation\Rule;
+
 
 class LanguageController extends Controller
 {
@@ -29,7 +31,7 @@ class LanguageController extends Controller
                     'data' => $languages
                 ]);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -137,7 +139,7 @@ class LanguageController extends Controller
 
                 return response()->json(['data' => $language], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -177,19 +179,26 @@ class LanguageController extends Controller
      *     )
      * )
      */
+    
     public function updateName(Request $request, string $id)
     {
-        try{
-                $data = $request->validate([
-                    'name' =>'required | string',
-                ]);
-                $language = Language::whereId($id)->update($data);
-                return response()->json(['data' => 'Logement mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
-            return response()->json($e);
+        try {
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('languages')->ignore($id),
+                ],
+            ]);
+    
+            $language = Language::whereId($id)->update($data);
+            
+            return response()->json(['data' => 'Langage mis à jour avec succès.'], 200);
+        } catch(Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
     }
+    
 
     /**
      * @OA\Post(
@@ -320,7 +329,7 @@ class LanguageController extends Controller
 
                 return response()->json(['data' => 'Logement supprimé avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -369,7 +378,7 @@ class LanguageController extends Controller
 
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
  }
 
@@ -416,7 +425,7 @@ class LanguageController extends Controller
             }
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 

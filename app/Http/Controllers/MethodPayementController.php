@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
-
+use Illuminate\Validation\Rule;
 class MethodPayementController extends Controller
 {
      /**
@@ -31,7 +31,7 @@ class MethodPayementController extends Controller
             $methodPayements = MethodPayement::all();
             return response()->json(['data' => $methodPayements], 200);
       } catch(Exception $e) {    
-      return response()->json($e);
+        return response()->json(['error' => $e->getMessage()], 500);
      }
 
   }  
@@ -143,7 +143,7 @@ class MethodPayementController extends Controller
 
         return response()->json(['data' => $methodPayement], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
   }
@@ -186,12 +186,16 @@ class MethodPayementController extends Controller
   {
     try{
         $data = $request->validate([
-            'name' =>'required | string'
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('method_payements')->ignore($id),
+            ],
         ]);
         $methodPayement = MethodPayement::whereId($id)->update($data);
         return response()->json(['data' => 'Nom du Méthode de payement mise à jour avec succès.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+        return response()->json($e->getMessage());
     }
 
   }
@@ -335,7 +339,7 @@ class MethodPayementController extends Controller
         return response()->json(['data' => 'Méthode de payement supprimé avec succès.'], 200);
 
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
   }

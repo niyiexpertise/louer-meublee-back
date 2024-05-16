@@ -175,7 +175,7 @@ public function login(Request $request){
  *         )
  *     ),
  *     @OA\Response(
- *         response=200,
+ *         response=400,
  *         description="Unauthorized"
  *     )
  * )

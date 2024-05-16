@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AdminHousingController extends Controller
 {

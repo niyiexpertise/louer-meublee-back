@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Models\Right;
-
+use App\Models\User_right;
 use Exception;
-
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
@@ -32,7 +32,7 @@ class RoleController extends Controller
                 'roles' => $roles
             ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
 
@@ -72,8 +72,19 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         try{
+            $data = $request->validate([
+                'name' => 'required|unique:roles|max:255',
+            ]);
+
+            $exist = Role::where('name',$request->name)->exists();
+            if($exist){
+                return response()->json([
+                    "message"=>"This name has already taken"
+                ]);
+            }
             $role = new Role();
             $role->name = $request->name;
+            $role->guard_name= "web";
             $role->save();
 
             $right = new Right();
@@ -84,7 +95,7 @@ class RoleController extends Controller
                 'role' => $role
             ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -120,7 +131,7 @@ class RoleController extends Controller
                     'data' => $role
                 ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -164,13 +175,21 @@ class RoleController extends Controller
                     'message' => 'role not found'
                 ]);
             }
+            $userWithRole = User_right::where('right_id', $id)->exists();
+
+            if ($userWithRole) {
+                return response()->json([
+                    'message' => 'Impossible de supprimer le rôle car il est utilisé par un ou plusieurs utilisateurs.',
+                ]);
+            }
+    
                 Role::find($id)->delete();
                 Right::find($id)->delete();
                 return response()->json([
                     'message' => ' role  deleted successfully ',
                 ]);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Criteria;
 use Illuminate\Http\Request;
 use Exception;
-
+use Illuminate\Validation\Rule;
 
 
 class CriteriaController extends Controller
@@ -29,7 +29,7 @@ class CriteriaController extends Controller
             $criterias = Criteria::all()->where('is_deleted', false);
                 return response()->json(['data' => $criterias], 200);
   } catch(Exception $e) {    
-      return response()->json($e);
+        return response()->json(['error' => $e->getMessage()], 500);
   }
 
   }
@@ -126,7 +126,7 @@ class CriteriaController extends Controller
 
         return response()->json(['data' => $criteria], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
   }
@@ -169,12 +169,16 @@ class CriteriaController extends Controller
   {
     try{
         $data = $request->validate([
-            'name' =>'required | string'
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('criterias')->ignore($id),
+            ],
         ]);
         $criteria = Criteria::whereId($id)->update($data);
         return response()->json(['data' => 'Nom du Critère mise à jour avec succès.'], 200);
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
   }
@@ -310,7 +314,7 @@ class CriteriaController extends Controller
             return response()->json(['data' => 'Critère supprimé avec succès.'], 200);
     
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
   }
@@ -360,7 +364,7 @@ class CriteriaController extends Controller
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
     
     } catch(Exception $e) {    
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -410,7 +414,7 @@ public function unblock(string $id)
 
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 

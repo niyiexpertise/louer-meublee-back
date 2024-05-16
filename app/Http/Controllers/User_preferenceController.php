@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User_preference;
 use App\Models\Preference;
 use Validator;
+use Illuminate\Validation\Rule;
 class User_preferenceController extends Controller
 {
 /**

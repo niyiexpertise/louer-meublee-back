@@ -10,6 +10,7 @@ use App\Models\File;
 use App\Models\Housing_category_file;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder as DatabaseEloquentBuilder;
 
 class CategorieController extends Controller
@@ -70,7 +71,7 @@ class CategorieController extends Controller
                 'data' => $data
             ], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -126,14 +127,14 @@ class CategorieController extends Controller
                 'data' => $data
             ], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
         /**
      * @OA\Get(
      *     path="/api/category/indexUnverified",
-     *     summary="Get all category for admin (blocked and not deleted)",
+     *     summary="Liste des catégories non encore validés par l'administrateur",
      *     tags={"Category"},
      *     security={{"bearerAuth": {}}},
      *     @OA\Response(
@@ -182,7 +183,7 @@ class CategorieController extends Controller
                 'data' => $data
             ], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -237,7 +238,7 @@ class CategorieController extends Controller
                 'data' => $data
             ], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -401,7 +402,7 @@ class CategorieController extends Controller
             ], 200);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     } 
@@ -454,12 +455,16 @@ class CategorieController extends Controller
     {
         try{
             $data = $request->validate([
-                'name' =>'required | string'
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('categories')->ignore($id),
+                ],
             ]);
             $category = Category::whereId($id)->update($data);
             return response()->json(['data' => 'Catégorie mise à jour avec succès.'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -594,7 +599,7 @@ class CategorieController extends Controller
                 return response()->json(['data' => 'Catégorie supprimé avec succès.'], 200);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -643,7 +648,7 @@ class CategorieController extends Controller
 
         return response()->json(['data' => 'This category is block successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -690,7 +695,7 @@ class CategorieController extends Controller
             }
             return response()->json(['data' => 'this category is unblock successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -739,7 +744,7 @@ class CategorieController extends Controller
 
                 return response()->json(['data' => 'Category vérifié avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }

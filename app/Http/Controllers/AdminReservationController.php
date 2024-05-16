@@ -26,7 +26,7 @@ use App\Models\Reservation;
 use App\Models\Payement;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Validation\Rule;
 
 class AdminReservationController extends Controller
 {

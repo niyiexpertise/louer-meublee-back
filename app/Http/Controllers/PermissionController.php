@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Exception;
-
+use Illuminate\Validation\Rule;
 class PermissionController extends Controller
 {
       /**
@@ -29,7 +29,7 @@ class PermissionController extends Controller
                 'permissions' => $permissions
             ],200);
             }catch (Exception $e){
-                return response()->json($e);
+                  return response()->json(['error' => $e->getMessage()], 500);
             }
         
 
@@ -69,15 +69,25 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         try{
+            $data = $request->validate([
+                'name' => 'required|unique:permissions|max:255',
+            ]);
+            $exist = Permission::where('name',$request->name)->exists();
+            if($exist){
+                return response()->json([
+                    "message"=>"This name has already taken"
+                ]);
+            }
                 $permission = new Permission();
                 $permission->name = $request->name;
+                $permission->guard_name= "web";
                 $permission->save();
                 return response()->json([
                     'message' =>'Successfully created',
                     'permission' => $permission
                 ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -113,7 +123,7 @@ class PermissionController extends Controller
                 'data' => $permission
             ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -163,7 +173,11 @@ class PermissionController extends Controller
     {
         try{
             $data = $request->validate([
-                'name' => 'required'
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('permissions')->ignore($id),
+                ],
             ]);
             Permission::whereId($id)->update($data);
             return response()->json([
@@ -171,7 +185,7 @@ class PermissionController extends Controller
                 'data' => $data
             ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -206,7 +220,7 @@ class PermissionController extends Controller
                 'message' => ' successfully deleted'
             ],200);
         }catch (Exception $e){
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

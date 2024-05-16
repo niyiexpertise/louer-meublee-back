@@ -568,7 +568,7 @@ public function makeVerifiedHousingEquipment(string $id)
 
         return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 

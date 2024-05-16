@@ -34,7 +34,7 @@ use App\Mail\NotificationEmailwithoutfile;
 use App\Models\UserVisiteHousing;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
-
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class HousingController extends Controller
@@ -95,8 +95,6 @@ class HousingController extends Controller
         'preferences.*' => 'integer',
         'Hotecharges' => 'nullable|array',
         'Hotecharges.*' => 'integer',
-        'Hotechargesvalue' => 'nullable|array',
-        'Hotechargesvalue.*' => 'numeric|min:0',
         'Travelercharges' => 'nullable|array',
         'Travelercharges.*' => 'integer',
         'Travelerchargesvalue' => 'nullable|array',
@@ -133,12 +131,11 @@ class HousingController extends Controller
     if ($validator->fails()) {
         return response()->json(['message' => 'Les données fournies ne sont pas valides.', 'errors' => $validator->errors()], 200);
     }
-    //debut validation hote charge
 
     if ($request->has('Hotecharges')) {
                
         if($request->has('Hotechargesvalue')){
-                   if (count($request->input('Hotecharges')) == count($request->input('Hotechargesvalue')) ) {
+                  
                     foreach ($request->Hotecharges as $HotechargesId) {
                         $HotechargesExists = Charge::where('id', $HotechargesId)->exists();
             
@@ -148,15 +145,11 @@ class HousingController extends Controller
                      
                     }
             
-                                 }   else{
-                                                return response()->json(['message' => 'Le nombre de valeurs de charges Hote ne correspond pas au nombre de charges.'], 200);
-                                        } 
                } else{
                     return response()->json(['message' => 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).'], 200);
                  }
        
        }   
-       //endvalidation
        //debut validation traveler charge    
 
        if ($request->has('Travelercharges')) {
@@ -492,7 +485,7 @@ class HousingController extends Controller
             $housingCharge->housing_id = $housing->id;
             $housingCharge->charge_id = $charge;
             $housingCharge->is_mycharge= true;
-            $housingCharge->valeur=$request->input('Hotechargesvalue')[$index];
+
             $housingCharge->save();
         }
      }
@@ -1974,13 +1967,6 @@ public function formatListingsData($listings)
  *          )
  *      ),
  *      @OA\Response(
- *          response=200,
- *          description="Erreur - Le logement est en cours de réservation et ne peut pas être désactivé",
- *          @OA\JsonContent(
- *              @OA\Property(property="error", type="string", example="Le logement est en cours de réservation et ne peut pas être désactivé")
- *          )
- *      ),
- *      @OA\Response(
  *          response=403,
  *          description="Erreur - Seul le propriétaire du logement peut le désactiver",
  *          @OA\JsonContent(
@@ -2123,7 +2109,7 @@ public function enableHousing($housingId)
             Housing::whereId($id)->update(['is_destroy' => 1]);
             return response()->json(['data' => 'Logement supprimé avec succès'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
     
@@ -2258,7 +2244,7 @@ public function enableHousing($housingId)
  *         ),
  *     ),
  *     @OA\Response(
- *         response=200,
+ *         response=400,
  *         description="Erreur de format de date",
  *         @OA\JsonContent(
  *             @OA\Property(property="message", type="string", example="Format de date invalide. Utilisez YYYY-MM-DD."),
@@ -2633,7 +2619,7 @@ public function validatePhoto(Request $request, $photoId)
  *         ),
  *     ),
  *     @OA\Response(
- *         response=200,
+ *         response=400,
  *         description="Erreur de format de date",
  *         @OA\JsonContent(
  *             @OA\Property(property="message", type="string", example="Format de date invalide. Utilisez YYYY-MM-DD."),
@@ -2784,8 +2770,6 @@ public function addHousingInProgress(Request $request)
         'preferences.*' => 'integer',
         'Hotecharges' => 'nullable|array',
         'Hotecharges.*' => 'integer',
-        'Hotechargesvalue' => 'nullable|array',
-        'Hotechargesvalue.*' => 'numeric|min:0',
         'Travelercharges' => 'nullable|array',
         'Travelercharges.*' => 'integer',
         'Travelerchargesvalue' => 'nullable|array',

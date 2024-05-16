@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use Illuminate\Validation\Rule;
 class HousingPreferenceController extends Controller
 {
 

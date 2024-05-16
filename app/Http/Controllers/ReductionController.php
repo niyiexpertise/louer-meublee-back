@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Exception;
 use Illuminate\Http\Response;
 use Carbon\Carbon;
-
+use Illuminate\Validation\Rule;
 class ReductionController extends Controller
 {
     /**

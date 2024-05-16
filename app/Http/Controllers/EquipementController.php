@@ -19,7 +19,7 @@ use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
-
+use Illuminate\Validation\Rule;
 class EquipementController extends Controller
 {
 
@@ -72,7 +72,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -121,7 +121,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -174,7 +174,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -224,7 +224,7 @@ class EquipementController extends Controller
             
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -312,7 +312,7 @@ class EquipementController extends Controller
                     "equipment" => $equipment
                 ],200);
                 } catch(Exception $e) {    
-                    return response()->json($e);
+                      return response()->json(['error' => $e->getMessage()], 500);
                 }
 
         }
@@ -358,7 +358,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => $equipment], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -417,14 +417,18 @@ class EquipementController extends Controller
                 }
 
                 $data = $request->validate([
-                    'name' => 'required',
+                    'name' => [
+                        'required',
+                        'string',
+                        Rule::unique('equipment')->ignore($id),
+                    ],
                 ]);
 
                Equipment::whereId($id)->update($data);
 
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -485,7 +489,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -624,7 +628,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
 
@@ -675,7 +679,7 @@ class EquipementController extends Controller
                 // Retourner une réponse JSON pour indiquer que l'équipement a été bloqué avec succès
                 return response()->json(['data' => 'Équipement bloqué avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -720,7 +724,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => 'Équipement débloqué avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
 

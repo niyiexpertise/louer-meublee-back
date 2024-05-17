@@ -190,14 +190,19 @@ return [
                             "scopes" => []
                         ],
                     ],
+                ],*/
+                'bearerAuth' => [ // Unique name of security
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
                 ],
-                'sanctum' => [ // Unique name of security
-                    'type' => 'apiKey', // Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'Enter token in format (Bearer <token>)',
-                    'name' => 'Authorization', // The name of the header or query parameter to be used.
-                    'in' => 'header', // The location of the API key. Valid values are "query" or "header".
-                ],
-                */
+                // 'sanctum' => [ // Unique name of security
+                //     'type' => 'apiKey', // Valid values are "basic", "apiKey" or "oauth2".
+                //     'description' => 'Enter token in format (Bearer <token>)',
+                //     'name' => 'Authorization', // The name of the header or query parameter to be used.
+                //     'in' => 'header', // The location of the API key. Valid values are "query" or "header".
+                // ],
+                
             ],
             'security' => [
                 /*
@@ -263,7 +268,7 @@ return [
                  * 'full' (expands the tags and operations),
                  * 'none' (expands nothing).
                  */
-                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'none'),
+                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'list'),
 
                 /**
                  * If set, enables filtering. The top bar will show an edit box that
@@ -280,7 +285,7 @@ return [
                 /*
                  * If set to true, it persists authorization data, and it would not be lost on browser close/refresh
                  */
-                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', false),
+                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', true),
 
                 'oauth2' => [
                     /*

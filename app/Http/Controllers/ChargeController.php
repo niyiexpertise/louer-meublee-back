@@ -32,7 +32,7 @@ class ChargeController extends Controller
      public function index()
      {
          try{
-                 $charges = Charge::where('is_deleted', false)->get();
+                 $charges = Charge::where('is_deleted', false)->orderBy('id', 'desc')->get();
                  return response()->json(['data' => $charges], 200);
          } catch(Exception $e) {
              return response()->json($e->getMessage());
@@ -139,7 +139,6 @@ class ChargeController extends Controller
     public function updateName(Request $request, string $id)
     {
         try{
-            
             $data = $request->validate([
                 'name' => [
                     'required',
@@ -244,7 +243,7 @@ class ChargeController extends Controller
                     
                     return response()->json(['data' => 'icône de la charge mis à jour avec succès.'], 200);
                 } else {
-                dd("h");
+                
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {
@@ -291,7 +290,8 @@ class ChargeController extends Controller
             $existingAssociation = Housing_charge::where('charge_id', $id)
             ->exists();
             if ($existingAssociation) {
-                return response()->json('cette charge a  déjà été associé à un/ou plusieurs logement(s), veuillez le leur retiré avant de la supprimé ');
+                return response()->json(['error' => "cette charge a déjà été associé à un/ou plusieurs logement(s), veuillez le leur retiré avant de la supprimer."], 200);
+
             }else{
                 $charge->delete();
                 return response()->json([

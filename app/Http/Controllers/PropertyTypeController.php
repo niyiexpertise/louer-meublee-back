@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PropertyType;
 use Illuminate\Http\Request;
 use Exception;
+use App\Models\Housing;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
@@ -358,10 +359,17 @@ class PropertyTypeController extends Controller
                 $propertyType = PropertyType::whereId($id)->update(['is_deleted' => true]);
 
                 if (!$propertyType) {
-                    return response()->json(['error' => 'Type de propriété  non trouvé.'], 404);
+                    return response()->json(['error' => 'Type de propriété  non trouvé.'], 200);
                 }
+                $nbexist= Housing::where('property_type_id', $id)->count(); 
+        
+                if ($nbexist > 0) {
+                    return response()->json(['error' => "Suppression impossible car ce type de propriété est déjà associé à un logement."], 200);
+        
+                }
+                
 
-                return response()->json(['data' => 'Type de propriété  supprimé avec succès.'], 200);
+                return response()->json(['data' => 'Type de propriété supprimé avec succès.'], 200);
         } catch(Exception $e) {    
             return response()->json($e->getMessage());
         }

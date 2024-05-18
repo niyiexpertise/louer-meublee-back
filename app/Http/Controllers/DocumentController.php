@@ -6,6 +6,7 @@ use App\Models\Document;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
+use App\Models\verification_document;
 class DocumentController extends Controller
 {
     /**
@@ -186,9 +187,14 @@ class DocumentController extends Controller
     {
         try{
             $data = $request->validate([
-                'name' =>'required | string',
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('documents')->ignore($id),
+                ],
                 'is_actif'=> 'required'
             ]);
+            
             $document = Document::whereId($id)->update($data);
             return response()->json(['data' => 'Document  mise à jour avec succès.'], 200);
         } catch(Exception $e) {    
@@ -222,10 +228,16 @@ class DocumentController extends Controller
     public function destroy($id)
     {
         try{
+
             $document = Document::whereId($id)->update(['is_deleted' => true]);
 
             if (!$document) {
-                return response()->json(['error' => 'Document  non trouvé.'], 404);
+                return response()->json(['error' => 'Document  non trouvé.'], 200);
+            }
+            $nbexist=verification_document::where('document_id', $id)->count(); 
+        
+            if ($nbexist > 0) {
+                return response()->json(['error' => "Suppression impossible car ce type de document a déjà été utilisé lors d'une soumission de la demande."],200);
             }
 
             return response()->json(['data' => 'Document  supprimé avec succès.'], 200);
@@ -240,7 +252,7 @@ class DocumentController extends Controller
 *     path="/api/document/block/{id}",
 *     summary="Block a document",
 *     tags={"Document"},
-security={{"bearerAuth": {}}},
+*     security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -289,7 +301,7 @@ security={{"bearerAuth": {}}},
 *     path="/api/document/unblock/{id}",
 *     summary="Unblock a document",
 *     tags={"Document"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -351,7 +363,7 @@ security={{"bearerAuth": {}}},
    */
     public function document_actif(){
         try{
-            $documents = Document::where('is_deleted', false)->where('is_actif', true)->get();
+            $documents = Document::where('is_deleted', false)->where('is_actif', true)->where('is_blocked',false)->get();
             if (!$documents) {
                 return response()->json(['error' => 'Document actif not found.'], 404);
             }
@@ -402,7 +414,7 @@ security={{"bearerAuth": {}}},
 *     path="/api/document/active/{id}",
 *     summary="active a document",
 *     tags={"Document"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -450,7 +462,7 @@ public function active($id)
 *     path="/api/document/inactive/{id}",
 *     summary="inactive a document",
 *     tags={"Document"},
-security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",

@@ -169,27 +169,28 @@ class RoleController extends Controller
      */
     public function destroy(string $id)
     {
-        try{
-            if (!(Right::find($id) && Role::find($id))) {
-                return response()->json([
-                    'message' => 'role not found'
-                ]);
+        try {
+            
+            $role = Role::find($id);
+            if (!$role) {
+                return response()->json(['message' => 'Rôle introuvable.']);
             }
-            $userWithRole = User_right::where('right_id', $id)->exists();
-
-            if ($userWithRole) {
+    
+            $usersWithRole = User_right::where('right_id', $id)->exists();
+            if ($usersWithRole) {
                 return response()->json([
-                    'message' => 'Impossible de supprimer le rôle car il est utilisé par un ou plusieurs utilisateurs.',
+                    'message' => 'Impossible de supprimer le rôle car il est utilisé par un ou plusieurs utilisateurs.'
                 ]);
             }
     
-                Role::find($id)->delete();
-                Right::find($id)->delete();
-                return response()->json([
-                    'message' => ' role  deleted successfully ',
-                ]);
-        }catch (Exception $e){
-              return response()->json(['error' => $e->getMessage()], 500);
+     
+            Role::destroy($id);
+            Right::destroy($id);
+    
+            return response()->json(['message' => 'Rôle supprimé avec succès.']);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    
 }

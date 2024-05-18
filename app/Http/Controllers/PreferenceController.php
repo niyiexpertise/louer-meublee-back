@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Housing;
-use App\Models\housing_preference;
 use App\Models\Preference;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -15,6 +14,8 @@ use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Validation\ValidationException ;
 use Exception;
 use Illuminate\Validation\Rule;
+use App\Models\housing_preference;
+use App\Models\User_preference;
 
 
 class PreferenceController extends Controller
@@ -412,8 +413,19 @@ class PreferenceController extends Controller
                 $preference = Preference::whereId($id)->update(['is_deleted' => true]);
 
                 if (!$preference) {
-                    return response()->json(['error' => 'Préférence non trouvé.'], 404);
+                    return response()->json(['error' => 'Préférence non trouvé.'],200);
                 }
+                $housingPreferences = housing_preference::where('preference_id', $id)->get();
+
+                if ($housingPreferences->isEmpty()) {
+                    return response()->json(['message' => 'Suppression impossible car la preference est déja associé à un logement.'], 200);
+                }
+                $existingPreference = User_preference::where('preference_id',  $id)->exists();
+
+                if ($existingPreference) {
+                    return response()->json(['message' => 'Suppression impossible car la preference est déja associé à un utilisateur.'], 200);
+
+                } 
 
                 return response()->json(['data' => 'Préférence supprimé avec succès.'], 200);
         } catch(Exception $e) {    

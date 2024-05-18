@@ -40,7 +40,7 @@ class CategorieController extends Controller
                 $a = [];
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
                 foreach ($categoryEquipment as $k) {
-                    $b = Equipment::where('id', $k->equipment_id)->get();
+                    $b = Equipment::where('id', $k->equipment_id)->where('is_verified',true)->get();
                         foreach ($b as $e) {
                             $a[] = [
                                 'id_equipement' => $e->id,
@@ -58,6 +58,7 @@ class CategorieController extends Controller
                 $data[] = [
                     'id_categorie' => $category->id,
                     'name' =>$category->name,
+                    'icone' => $category->icone,
                     'is_deleted' =>$category->id_deleted,
                     'is_blocked' =>$category->is_blocked,
                     'created_at' =>$category->created_at,
@@ -595,6 +596,12 @@ class CategorieController extends Controller
                 if (!$category) {
                     return response()->json(['error' => 'Catégorie non trouvé.'], 404);
                 }
+                $associatedHousing = Housing_category_file::where('categorie_id', $id)->count(); 
+        
+        if ($associatedHousing > 0) {
+            return response()->json(['error' => "Suppression impossible car la catégorie est déjà associé à un logement."], 200);
+
+        }
 
                 return response()->json(['data' => 'Catégorie supprimé avec succès.'], 200);
     

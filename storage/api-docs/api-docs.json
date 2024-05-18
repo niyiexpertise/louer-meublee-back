@@ -1991,7 +1991,7 @@
                 "tags": [
                     "Category"
                 ],
-                "summary": "Get all category for admin (blocked and not deleted)",
+                "summary": "Liste des catégories non encore validés par l'administrateur",
                 "operationId": "e3a0ce2f6b50049e5912f255dd6002b9",
                 "responses": {
                     "200": {
@@ -8863,6 +8863,46 @@
                 ]
             }
         },
+        "/api/housingtype/destroymultiple": {
+            "delete": {
+                "tags": [
+                    "HousingType"
+                ],
+                "summary": "Delete multiple housing types by IDs",
+                "operationId": "6b8da4172d519ca3eb9d3073642036dd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Housing types deleted and not deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/register": {
             "post": {
                 "tags": [
@@ -11349,86 +11389,16 @@
                 ]
             }
         },
-        "/api/permission/update/{id}": {
-            "put": {
+        "/api/permission/indexbycategorie": {
+            "get": {
                 "tags": [
                     "Permission"
                 ],
-                "summary": "Update a permission by ID",
-                "operationId": "10621bd1d3510464e7a1e4e7e3c77dfe",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the permission",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "permission_id"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "create"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
+                "summary": "Get all permissions groupe by categorie",
+                "operationId": "d6606b4331cf95c60b312c1d0977f8fa",
                 "responses": {
                     "200": {
-                        "description": "Permission updated successfully"
-                    },
-                    "404": {
-                        "description": "Permission not found"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/permission/destroy/{id}": {
-            "delete": {
-                "tags": [
-                    "Permission"
-                ],
-                "summary": "Delete a permission by ID",
-                "operationId": "1d26711ac0e6cd7a1fe89efc131e7404",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the permission",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Permission deleted successfully"
-                    },
-                    "404": {
-                        "description": "Permission not found"
+                        "description": "List of permissions groupe by category"
                     }
                 },
                 "security": [

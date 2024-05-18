@@ -6,7 +6,7 @@ use App\Models\Criteria;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
-
+use App\Models\Note;
 
 class CriteriaController extends Controller
 {
@@ -309,6 +309,11 @@ class CriteriaController extends Controller
 
             if (!$criteria) {
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
+            }
+            $nbexist=Note::where('critere_id', $id)->count(); 
+        
+            if ($nbexist > 0) {
+                return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);
             }
 
             return response()->json(['data' => 'Critère supprimé avec succès.'], 200);

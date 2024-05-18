@@ -6,7 +6,7 @@ use App\Models\Language;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
-
+use App\Models\User_language;
 
 class LanguageController extends Controller
 {
@@ -324,10 +324,16 @@ class LanguageController extends Controller
                 $language = Language::whereId($id)->update(['is_deleted' => true]);
 
                 if (!$language) {
-                    return response()->json(['error' => 'Logement non trouvé.'], 404);
+                    return response()->json(['error' => 'Language non trouvé.'], 200);
                 }
+                $nbexist= User_language::where('language_id', $id)->count(); 
+        
+            if ($nbexist > 0) {
+                return response()->json(['error' => "Suppression impossible car la langue est déjà associé à un utilisateur."],200);
+    
+            }
 
-                return response()->json(['data' => 'Logement supprimé avec succès.'], 200);
+                return response()->json(['data' => 'language supprimé avec succès.'], 200);
         } catch(Exception $e) {    
               return response()->json(['error' => $e->getMessage()], 500);
         }

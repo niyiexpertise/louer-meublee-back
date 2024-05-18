@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+
 class AddPermissionsToTable extends Migration
 {
     /**
@@ -18,9 +19,19 @@ class AddPermissionsToTable extends Migration
         $guardName = 'web';
     
         $allRoutes = Route::getRoutes();
+        $routeCount = 0; // Initialiser le compteur de routes
     
         foreach ($allRoutes as $route) {
             $routeName = $route->getName();
+            
+            // Incrémenter le compteur de routes
+            $routeCount++;
+    
+            // Ignorer l'insertion si le compteur de routes est égal à 9
+            if ($routeCount < 9) {
+                continue;
+            }
+    
             if ($routeName) {
                 DB::table('permissions')->insert([
                     'name' => 'Manage' . $routeName,
@@ -32,8 +43,27 @@ class AddPermissionsToTable extends Migration
                 foreach ($middlewares as $middleware) {
                     if (strpos($middleware, 'role_or_permission') !== false && strpos($middleware, 'admin') !== false) {
                         
-    
                         $role = Role::where('name', 'admin')->first();
+                        if ($role) {
+                            $permission = Permission::where('name', 'Manage' . $routeName)->first();
+                            if ($permission) {
+                                $role->givePermissionTo($permission);
+                            }
+                        }
+                    }
+                    if (strpos($middleware, 'role_or_permission') !== false && strpos($middleware, 'traveler') !== false) {
+                        
+                        $role = Role::where('name', 'traveler')->first();
+                        if ($role) {
+                            $permission = Permission::where('name', 'Manage' . $routeName)->first();
+                            if ($permission) {
+                                $role->givePermissionTo($permission);
+                            }
+                        }
+                    }
+                    if (strpos($middleware, 'role_or_permission') !== false && strpos($middleware, 'hote') !== false) {
+                        
+                        $role = Role::where('name', 'hote')->first();
                         if ($role) {
                             $permission = Permission::where('name', 'Manage' . $routeName)->first();
                             if ($permission) {
@@ -44,7 +74,6 @@ class AddPermissionsToTable extends Migration
                 }
             }
         }
-    
     }
     
     /**

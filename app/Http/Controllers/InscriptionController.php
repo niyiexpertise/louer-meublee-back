@@ -104,7 +104,7 @@ class InscriptionController extends Controller
              'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
          ],
          'code_pays' => 'required|string',
-         'telephone' => 'required|String|numeric|unique:users',
+         'telephone' => 'required|numeric|unique:users',
          'email' => 'required|email|unique:users',
          'pays' => 'required|string',
          'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

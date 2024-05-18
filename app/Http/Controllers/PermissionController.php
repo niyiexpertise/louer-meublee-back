@@ -35,13 +35,6 @@ class PermissionController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        
-    }
 
   /**
       * @OA\Post(
@@ -126,101 +119,49 @@ class PermissionController extends Controller
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
 /**
-     * @OA\Put(
-     *     path="/api/permission/update/{id}",
-     *     summary="Update a permission by ID",
+     * @OA\Get(
+     *     path="/api/permission/indexbycategorie",
+     *     summary="Get all permissions groupe by categorie",
      *     tags={"Permission"},
      * security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the permission",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *  @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","permission_id"},
-     *             @OA\Property(property="name", type="string", example="create"),
-     *         )
-     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Permission updated successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Permission not found"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error"
+     *         description="List of permissions groupe by category"
+     * 
      *     )
      * )
      */
-    public function update(Request $request, string $id)
-    {
-        try{
-            $data = $request->validate([
-                'name' => [
-                    'required',
-                    'string',
-                    Rule::unique('permissions')->ignore($id),
-                ],
-            ]);
-            Permission::whereId($id)->update($data);
-            return response()->json([
-                'message' => 'permission updated successfully',
-                'data' => $data
-            ],200);
-        }catch (Exception $e){
-              return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
+    public function indexbycategorie()
+{
+    try {
+        $permissions = Permission::all();
+        
+        // Initialiser un tableau vide pour stocker les permissions par catégorie
+        $categorizedPermissions = [];
 
- /**
-     * @OA\Delete(
-     *     path="/api/permission/destroy/{id}",
-     *     summary="Delete a permission by ID",
-     *     tags={"Permission"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the permission",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Permission deleted successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Permission not found"
-     *     )
-     * )
-     */
-    public function destroy(string $id)
-    {
-        try{
-            Permission::find($id)->delete();
-            return response()->json([
-                'message' => ' successfully deleted'
-            ],200);
-        }catch (Exception $e){
-              return response()->json(['error' => $e->getMessage()], 500);
+        // Parcourir toutes les permissions
+        foreach ($permissions as $permission) {
+            // Extraire le préfixe avant le point dans le nom de la permission
+            $prefix = explode('.', $permission->name)[0];
+
+            // Vérifier si la catégorie existe déjà dans le tableau
+            if (!isset($categorizedPermissions[$prefix])) {
+                // Si non, créer une nouvelle entrée dans le tableau
+                $categorizedPermissions[$prefix] = [];
+            }
+
+            // Ajouter la permission à la catégorie correspondante
+            $categorizedPermissions[$prefix][] = $permission;
         }
+
+        // Retourner les permissions catégorisées
+        return response()->json([
+            'categorized_permissions' => $categorizedPermissions
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
 }

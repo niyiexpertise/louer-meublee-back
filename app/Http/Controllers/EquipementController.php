@@ -54,12 +54,12 @@ class EquipementController extends Controller
                             $equipmentsWithCategories[] = [
                                 'id' => $equipment->id,
                                 'name' => $equipment->name,
+                                'icone' => $equipment->equipment->icone,
                                 'is_deleted' => $equipment->is_deleted,
                                 'is_blocked' => $equipment->is_blocked,
                                 'is_verified' => $equipment->is_verified,
                                 'updated_at' => $equipment->updated_at,
                                 'created_at' => $equipment->created_at,
-                                'description' => $equipment->icone,
                                  'equipment_category' => $equipment->equipment_category(),
                                 'categories' => [$category],
                             ];
@@ -104,11 +104,11 @@ class EquipementController extends Controller
                         $equipmentsWithCategories[] = [
                             'id' => $equipment->equipment->id,
                             'name' => $equipment->equipment->name,
+                            'icone' => $equipment->equipment->icone,
                             'is_deleted' => $equipment->equipment->is_deleted,
                             'is_blocked' => $equipment->equipment->is_blocked,
                             'updated_at' => $equipment->equipment->updated_at,
                             'created_at' => $equipment->equipment->created_at,
-                            'description' => $equipment->equipment->icone,
                             'category' => $equipment->category,
                             'equipmentCategory' => Equipment_category::where([
                                 'equipment_id' => $equipment->equipment->id,
@@ -158,10 +158,10 @@ class EquipementController extends Controller
                                 'name' => $equipment->name,
                                 'is_deleted' => $equipment->is_deleted,
                                 'is_blocked' => $equipment->is_blocked,
+                                'icone' => $equipment->equipment->icone,
                                 'is_verified' => $equipment->is_verified,
                                 'updated_at' => $equipment->updated_at,
                                 'created_at' => $equipment->created_at,
-                                'description' => $equipment->icone,
                                  'equipment_category' => $equipment->equipment_category(),
                                 'categories' => [$category],
                             ];
@@ -209,7 +209,7 @@ class EquipementController extends Controller
                         'is_blocked' => $equipment->equipment->is_blocked,
                         'updated_at' => $equipment->equipment->updated_at,
                         'created_at' => $equipment->equipment->created_at,
-                        'description' => $equipment->equipment->icone,
+                        
                         'category' => $equipment->category,
                         'equipmentCategory' => Equipment_category::where([
                             'equipment_id' => $equipment->equipment->id,
@@ -616,23 +616,28 @@ class EquipementController extends Controller
      * )
      */
     public function destroy(string $id)
-    {
-        try{
-                $equipment = Equipment::find($id);
+{
+    try {
+        $equipment = Equipment::find($id);
+        
+        if (!$equipment) {
+            return response()->json(['error' => 'Équipement non trouvé.'], 200);
+        }
+        
+        $associatedHousing = Housing_equipment::where('equipment_id', $id)->count(); 
+        
+        if ($associatedHousing > 0) {
+            return response()->json(['error' => "Suppression impossible car l'équipement est déjà associé à un logement."], 200);
 
-                if (!$equipment) {
-                    return response()->json(['error' => 'Équipement non trouvé.'], 404);
-                }
-
-                Equipment::whereId($id)->update(['is_deleted' => true]);
-
-                return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
-              return response()->json(['error' => $e->getMessage()], 500);
         }
 
-
+        $equipment->update(['is_deleted' => true]);
+        
+        return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     /**
      * @OA\Put(

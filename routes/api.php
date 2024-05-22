@@ -48,7 +48,10 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReductionController;
 use App\Http\Controllers\UserVisiteHousingController;
 use App\Http\Controllers\UserVisiteSiteController;
-
+use App\Http\Controllers\TypeDemandeController;
+use App\Http\Controllers\VerificationDocumentPartenaireController;
+use App\Http\Controllers\UserPartenaireController;
+use App\Http\Controllers\DashboardPartenaireController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -399,41 +402,32 @@ Route::middleware('auth:sanctum')->group(function () {
     // Gestion des utilisateurs du côté voyageur
 
     Route::prefix('users')->group(function () {
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.userReviews'])->group(function () {
-            Route::get('/userReviews', [UserController::class, 'userReviews'])->name('users.userReviews');
-        });
+        
+          Route::get('/userReviews', [UserController::class, 'userReviews'])->name('users.userReviews');
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.userLanguages'])->group(function () {
             Route::get('/userLanguages', [UserController::class, 'userLanguages'])->name('users.userLanguages');
-        });
-    
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.updateProfilePhoto'])->group(function () {
+
             Route::post('/update_profile_photo', [UserController::class, 'updateProfilePhoto'])->name('users.updateProfilePhoto');
-        });
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.updatePassword'])->group(function () {
             Route::put('/update_password', [UserController::class, 'updatePassword'])->name('users.updatePassword');
-        });
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.updateUser'])->group(function () {
             Route::put('/update', [UserController::class, 'updateUser'])->name('users.updateUser');
-        });
-    
-        Route::middleware(['role_or_permission:traveler|superAdmin|Manageusers.userVerificationRequests'])->group(function () {
+            
+             Route::get('/getUserReservationCount', [UserController::class, 'getUserReservationCount'])->name('users.getUserReservationCount');
+            
+
             Route::get('/result/demande', [VerificationDocumentController::class, 'userVerificationRequests'])->name('users.userVerificationRequests');
-        });
-    });
-    
-    Route::middleware(['role_or_permission:traveler|superAdmin|Manageverificationdocument.store'])->group(function () {
-        Route::post('/verificationdocument/store', [VerificationDocumentController::class, 'store'])->name('verificationdocument.store');
-    });
-    
-    Route::middleware(['role_or_permission:traveler|superAdmin|Managenotifications.getUserNotifications'])->group(function () {
-        Route::get('/notifications/users', [NotificationController::class, 'getUserNotifications'])->name('notifications.getUserNotifications');
-    });
-    
-    Route::middleware(['role_or_permission:traveler|superAdmin|Manageverificationdocument.changeDocument'])->group(function () {
-        Route::post('/verificationdocument/update', [VerificationDocumentController::class, 'changeDocument'])->name('verificationdocument.changeDocument');
+
+            Route::post('/verificationdocument/store', [VerificationDocumentController::class, 'store'])->name('verificationdocument.store');
+
+            Route::get('/notifications', [NotificationController::class, 'getUserNotifications'])->name('notifications.getUserNotifications');
+
+            Route::post('/verificationdocument/update', [VerificationDocumentController::class, 'changeDocument'])->name('verificationdocument.changeDocument');
+
+            Route::post('/verificationdocumentpartenaire/store', [VerificationDocumentPartenaireController::class, 'store'])->name('verificationdocument.store');
+            Route::post('/verificationdocumentpartenaire/update', [VerificationDocumentPartenaireController::class, 'changeDocument'])->name('verificationdocument.changeDocument');
+            Route::get('/result/demandepartenaire', [VerificationDocumentPartenaireController::class, 'userVerificationRequests'])->name('users.userVerificationRequests');
+
     });
     
 
@@ -466,14 +460,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersWithRoleHost'])->group(function () {
             Route::get('/hotes', [UserController::class, 'getUsersWithRoleHost'])->name('users.getUsersWithRoleHost');
         });
+        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersPartenaire'])->group(function () {
+            Route::get('/partenaires', [UserPartenaireController::class, 'getUsersPartenaire'])->name('users.getUsersPartenaire');
+        });
+    
     
         Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersWithRoleAdmin'])->group(function () {
             Route::get('/admins', [UserController::class, 'getUsersWithRoleAdmin'])->name('users.getUsersWithRoleAdmin');
         });
     
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUserDetails'])->group(function () {
-            Route::get('/detail/{userId}', [UserController::class, 'getUserDetails'])->name('users.getUserDetails');
-        });
+        
+        Route::get('/detail/{userId}', [UserController::class, 'getUserDetails'])->name('users.getUserDetails');
+        
     });
     
 
@@ -507,19 +505,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Gestion des commentaires
     Route::prefix('review')->group(function () {
-        Route::middleware(['role_or_permission:traveler|superAdmin|Managereview.store'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.store'])->group(function () {
             Route::post('/store', [ReviewController::class, 'store'])->name('review.store');
         });
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Managereview.show'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.show'])->group(function () {
             Route::get('/show/{id}', [ReviewController::class, 'show'])->name('review.show');
         });
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Managereview.update'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.update'])->group(function () {
             Route::put('/update/{id}', [ReviewController::class, 'update'])->name('review.update');
         });
     
-        Route::middleware(['role_or_permission:traveler|superAdmin|Managereview.destroy'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [ReviewController::class, 'destroy'])->name('review.destroy');
         });
     });
@@ -695,27 +693,47 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/document/document_actif', [DocumentController::class, 'document_actif']); 
 
-        //Gestion de la Verification des documents
+        //Gestion de la Verification des documents hote
         Route::prefix('verificationdocument')->group(function () {
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocument.index'])->group(function () {
-                Route::get('/index', [VerificationDocumentController::class, 'index'])->name('verificationdocument.index');
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.index'])->group(function () {
+                Route::get('/index', [VerificationDocumentController::class, 'index'])->name('verificationdocumenthote.index');
             });
         
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocument.show'])->group(function () {
-                Route::get('/show/{id}', [VerificationDocumentController::class, 'show'])->name('verificationdocument.show');
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.show'])->group(function () {
+                Route::get('/show/{id}', [VerificationDocumentController::class, 'show'])->name('verificationdocumenthote.show');
             });
         
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocument.validateDocuments'])->group(function () {
-                Route::post('/hote/valider/all', [VerificationDocumentController::class, 'validateDocuments'])->name('verificationdocument.validateDocuments');
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.validateDocuments'])->group(function () {
+                Route::post('/hote/valider/all', [VerificationDocumentController::class, 'validateDocuments'])->name('verificationdocumenthote.validateDocuments');
             });
         
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocument.validateDocument'])->group(function () {
-                Route::post('/hote/valider/one', [VerificationDocumentController::class, 'validateDocument'])->name('verificationdocument.validateDocument');
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.validateDocument'])->group(function () {
+                Route::post('/hote/valider/one', [VerificationDocumentController::class, 'validateDocument'])->name('verificationdocumenthote.validateDocument');
             });
+            
+        });
+        //Gestion de la Verification des documents partenaires
+        Route::prefix('verificationdocumentpartenaire')->group(function () {
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.index'])->group(function () {
+                Route::get('/index', [VerificationDocumentPartenaireController::class, 'index'])->name('verificationdocumentpartenaire.index');
+            });
+        
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.show'])->group(function () {
+                Route::get('/show/{id}', [VerificationDocumentPartenaireController::class, 'show'])->name('verificationdocumentpartenaire.show');
+            });
+        
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.validateDocuments'])->group(function () {
+                Route::post('/partenaire/valider/all', [VerificationDocumentPartenaireController::class, 'validateDocuments'])->name('verificationdocumentpartenaire.validateDocuments');
+            });
+        
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.validateDocument'])->group(function () {
+                Route::post('/partenaire/valider/one', [VerificationDocumentPartenaireController::class, 'validateDocument'])->name('verificationdocumentpartenaire.validateDocument');
+            });
+            
         });
         
 
-    //Gestion des commissions
+    //Gestion des commissions de l'hôte
     Route::prefix('commission')->group(function () {
         Route::middleware(['role:admin|superAdmin'])->group(function () {
             Route::get('/usersWithCommission/{commission}', [CommissionController::class, 'usersWithCommission']);
@@ -724,9 +742,42 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware(['role_or_permission:superAdmin|Managecommission.updateCommissionForSpecifiqueUser'])->group(function () {
             Route::post('/updateCommissionForSpecifiqueUser', [CommissionController::class, 'updateCommissionForSpecifiqueUser'])->name('commission.updateCommissionForSpecifiqueUser');
         });
-        Route::middleware(['role_or_permission:superAdmin|Managecommission.updateCommissionForSpecifiqueUser|Managecommission.updateCommissionValueByAnother'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecommission.updateCommissionValueByAnother'])->group(function () {
             Route::put('/updateCommissionValueByAnother', [CommissionController::class, 'updateCommissionValueByAnother'])->name('commission.updateCommissionValueByAnother');
         });
+    });
+
+    //Gestion des commissions de partenaire
+    Route::prefix('commissionpartenaire')->group(function () {
+    
+        Route::middleware(['role_or_permission:superAdmin|Managecommissionpartenaire.updateCommissionForSpecifiqueUser'])->group(function () {
+            Route::post('/updateCommissionForSpecifiqueUser', [UserPartenaireController::class, 'updateCommissionForSpecifiqueUser'])->name('commissionpartenaire.updateCommissionForSpecifiqueUser');
+        });
+        Route::middleware(['role_or_permission:superAdmin|Managecommissionpartenaire.updateCommissionValueByAnother'])->group(function () {
+            Route::put('/updateCommissionValueByAnother', [UserPartenaireController::class, 'updateCommissionValueByAnother'])->name('commissionpartenaire.updateCommissionValueByAnother');
+     });
+    });
+    
+    //Gestion des reduction de partenaire
+    Route::prefix('reductionpartenaire')->group(function () {
+    
+        Route::middleware(['role_or_permission:superAdmin|Managereductionpartenaire.updatereductionForSpecifiqueUser'])->group(function () {
+            Route::post('/updatereductionForSpecifiqueUser', [UserPartenaireController::class, 'updatereductionForSpecifiqueUser'])->name('reductionpartenaire.updatereductionForSpecifiqueUser');
+        });
+        Route::middleware(['role_or_permission:superAdmin|Managereductionpartenaire.updatereductionValueByAnother'])->group(function () {
+            Route::put('/updatereductionValueByAnother', [UserPartenaireController::class, 'updatereductionValueByAnother'])->name('reductionpartenaire.updatereductionValueByAnother');
+            });
+    });
+    
+    //Gestion des nombres de reservation reduction de partenaire
+    Route::prefix('numberreservationpartenaire')->group(function () {
+    
+        Route::middleware(['role_or_permission:superAdmin|Managenumberreservationpartenaire.updatenumberreservationForSpecifiqueUser'])->group(function () {
+            Route::post('/updatenumberreservationForSpecifiqueUser', [UserPartenaireController::class, 'updatenumberreservationForSpecifiqueUser'])->name('numberreservationpartenaire.updatenumberreservationForSpecifiqueUser');
+        });
+        Route::middleware(['role_or_permission:superAdmin|Managenumberreservationpartenaire.updatenumberreservationValueByAnother'])->group(function () {
+            Route::put('/updatenumberreservationValueByAnother', [UserPartenaireController::class, 'updatenumberreservationValueByAnother'])->name('numberreservationpartenaire.updatenumberreservationValueByAnother');
+          });
     });
     
   //Gestion des préférences des utilisateurs (Pas besoin de permission ,les roles font l'affaire)
@@ -945,31 +996,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // Gestion des logements en attente de validation ou de mise à jour pour être visible sur le site côté administrateur
     Route::get('/withoutvalidate', [AdminHousingController::class, 'indexHousingForValidationForadmin'])
         ->name('logement.indexHousingForValidationForadmin')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.indexHousingForValidationForadmin');
+        ->middleware('role_or_permission:superAdmin|Managelogement.indexHousingForValidationForadmin');
 
     Route::get('/HousingHoteInProgressForAdmin', [AdminHousingController::class, 'HousingHoteInProgressForAdmin'])
         ->name('logement.HousingHoteInProgressForAdmin')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.HousingHoteInProgressForAdmin');
+        ->middleware('role_or_permission:superAdmin|Managelogement.HousingHoteInProgressForAdmin');
 
     Route::get('/withoutupdate', [AdminHousingController::class, 'indexHousingForUpdateForadmin'])
         ->name('logement.indexHousingForUpdateForadmin')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.indexHousingForUpdateForadmin');
+        ->middleware('role_or_permission:superAdmin|Managelogement.indexHousingForUpdateForadmin');
 
     Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin'])
         ->name('logement.showHousingDetailForValidationForadmin')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.showHousingDetailForValidationForadmin');
+        ->middleware('role_or_permission:superAdmin|Managelogement.showHousingDetailForValidationForadmin');
 
     Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing'])
         ->name('logement.ValidateOneHousing')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.ValidateOneHousing');
+        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateOneHousing');
 
     Route::put('/validate/many/', [AdminHousingController::class, 'ValidateManyHousing'])
         ->name('logement.ValidateManyHousing')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.ValidateManyHousing');
+        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateManyHousing');
 
     Route::put('/update/one/{id}', [AdminHousingController::class, 'UpdateOneHousing'])
         ->name('logement.UpdateOneHousing')
-        ->middleware('role_or_permission:superAdmin|:Managelogement.UpdateOneHousing');
+        ->middleware('role_or_permission:superAdmin|Managelogement.UpdateOneHousing');
 });
 
 
@@ -1259,8 +1310,8 @@ Route::prefix('portefeuille')->group(function () {
             });
             
                   //  Gestion ajout promotion
-            Route::group(['middleware' => ['role:traveler']], function () {
-                Route::prefix('promotion')->group(function () {
+            
+        Route::prefix('promotion')->group(function () {
                    Route::post('/add', [PromotionController::class, 'addPromotion'])
                        ->name('promotion.add')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.add');
@@ -1277,8 +1328,7 @@ Route::prefix('portefeuille')->group(function () {
                        ->name('promotion.delete')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.delete');
                });
-            });
-            
+           
         Route::prefix('reduction')->group(function () {
                     Route::post('/add', [ReductionController::class, 'addReduction'])
                         ->name('reduction.add')
@@ -1296,6 +1346,41 @@ Route::prefix('portefeuille')->group(function () {
                         ->name('reduction.delete')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.delete');
                 });
+
+                //Crud de type de demande
+        Route::prefix('type_demande')->group(function () {
+            Route::post('/store', [TypeDemandeController::class, 'store'])
+                ->name('type_demande.store')
+                ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
+
+            Route::get('/index', [TypeDemandeController::class, 'index'])
+                ->name('type_demande.index')
+                ->middleware('role_or_permission:Managetype_demande.index|superAdmin|admin');
+
+            Route::get('/show/{id}', [TypeDemandeController::class, 'show'])
+                ->name('type_demande.show')
+                ->middleware('role_or_permission:Managetype_demande.show|superAdmin|admin');
+
+            Route::put('/updateName/{id}', [TypeDemandeController::class, 'updateName'])
+                ->name('type_demande.updateName')
+                ->middleware('role_or_permission:Managetype_demande.updateName|superAdmin|admin');
+
+            Route::delete('/destroy/{id}', [TypeDemandeController::class, 'destroy'])
+                ->name('type_demande.destroy')
+                ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+
+            
+        });
+
+
+       Route::prefix('partenaire')->group(function () {
+               Route::get('/users', [DashboardPartenaireController::class, 'getUsersForPartenaire'])
+                   ->name('partenaire.getUsersForPartenaire')
+                   ->middleware('role_or_permission:superAdmin|partenaire|Managepartenaire.getUsersForPartenaire');
+           });
+
+                
+       
 
             
 

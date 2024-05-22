@@ -5,18 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Document extends Model
-{protected $fillable = ['name','is_actif'];
+class type_demande extends Model
+{
+    protected $fillable = [
+        'name',
+    ];
     use HasFactory;
-    
-    public function verificationDocuments()
-    {
-        return $this->hasMany(VerificationDocument::class);
-    }
-
     public function document_type_demande()
     {
         return $this->hasMany(document_type_demande::class);
     }
-
 }

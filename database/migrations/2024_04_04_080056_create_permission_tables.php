@@ -75,6 +75,7 @@ return new class extends Migration
     ['name' => 'hote', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
     ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
     ['name' => 'superAdmin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+    ['name' => 'partenaire', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
    ]);
 
 

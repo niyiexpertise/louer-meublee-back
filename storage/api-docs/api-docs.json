@@ -1986,25 +1986,6 @@
                 ]
             }
         },
-        "/api/category/indexUnverified": {
-            "get": {
-                "tags": [
-                    "Category"
-                ],
-                "summary": "Liste des catégories non encore validés par l'administrateur",
-                "operationId": "e3a0ce2f6b50049e5912f255dd6002b9",
-                "responses": {
-                    "200": {
-                        "description": "List of category with categories"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/category/VerifiednotBlockDelete": {
             "get": {
                 "tags": [
@@ -2400,65 +2381,6 @@
                 ]
             }
         },
-        "/api/category/makeVerified/{id}": {
-            "put": {
-                "tags": [
-                    "Category"
-                ],
-                "summary": "make verified an category",
-                "operationId": "4cb8d1b7e5fa374cd6eddb126702af4e",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the category to verified",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "category successfully verified",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "category successfully verified"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "category not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "category not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/charge/index": {
             "get": {
                 "tags": [
@@ -2704,7 +2626,7 @@
         "/api/commission/updateCommissionValueByAnother": {
             "put": {
                 "tags": [
-                    "Commission"
+                    "Commission hote"
                 ],
                 "summary": "Remplacer la valeur d'une commission par défaut par une autre valeur",
                 "operationId": "feaeb0c7f0c7ab9676242398506632f0",
@@ -2792,7 +2714,7 @@
         "/api/commission/updateCommissionForSpecifiqueUser": {
             "post": {
                 "tags": [
-                    "Commission"
+                    "Commission hote"
                 ],
                 "summary": "Modifier la valeur de la commission pour un ou plusieurs utilisateurs donnés",
                 "operationId": "1d73235380f9f99c3348b602bbaca9d6",
@@ -2844,7 +2766,7 @@
         "/api/commission/usersWithCommission/{commission}": {
             "get": {
                 "tags": [
-                    "Commission"
+                    "Commission hote"
                 ],
                 "summary": "Récupérer les utilisateurs associés à une commission spécifique",
                 "operationId": "7a39912373a807839cf0e4f746d4d96c",
@@ -3269,6 +3191,63 @@
                 ]
             }
         },
+        "/api/partenaire/users": {
+            "get": {
+                "tags": [
+                    "Dashboard partenaire"
+                ],
+                "summary": "Liste des utilisateurs d'un partenaire connecté",
+                "description": "Récupère la liste de tous les utilisateurs qui appartiennent à un partenaire connecté.",
+                "operationId": "4f78c3a893316b0c3f0ab2c294086d5d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partenaire non trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/document/index": {
             "get": {
                 "tags": [
@@ -3309,8 +3288,14 @@
                                         "example": "piece d'identite, CIP, passport"
                                     },
                                     "is_actif": {
-                                        "type": "boolen",
-                                        "example": "0,1"
+                                        "type": "boolean",
+                                        "example": "1"
+                                    },
+                                    "type_demande_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -3395,11 +3380,17 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "pice of identity, CIP, passport"
+                                        "example": "piece of identity, CIP, passport"
                                     },
                                     "is_actif": {
-                                        "type": "booleen",
-                                        "example": "0,1"
+                                        "type": "boolean",
+                                        "example": "1"
+                                    },
+                                    "type_demande_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -8979,6 +8970,11 @@
                                         "type": "string",
                                         "example": "75001"
                                     },
+                                    "code_promo": {
+                                        "description": "code promo",
+                                        "type": "string",
+                                        "example": "codepromo"
+                                    },
                                     "language_id[]": {
                                         "type": "array",
                                         "items": {
@@ -10956,13 +10952,13 @@
                 ]
             }
         },
-        "/api/notifications/users": {
+        "/api/users/notifications": {
             "get": {
                 "tags": [
                     "Notification"
                 ],
                 "summary": "Récupérer la liste de notifications pour un utilisateur connecté",
-                "operationId": "3837af30e379118ab3830607350739c6",
+                "operationId": "70ed0f4638e037e5a5f00911fc4b1c71",
                 "responses": {
                     "200": {
                         "description": "Liste des notifications avec succès pour l'utilisateur",
@@ -12408,7 +12404,7 @@
         "/api/promotion/add": {
             "post": {
                 "tags": [
-                    "Promotion"
+                    "Promotion hote"
                 ],
                 "summary": "Ajouter une nouvelle promotion",
                 "operationId": "484877ccac081ba9952ebe7eaf5a3b76",
@@ -12561,7 +12557,7 @@
         "/api/promotion/user": {
             "get": {
                 "tags": [
-                    "Promotion"
+                    "Promotion hote"
                 ],
                 "summary": "Obtenir les promotions d'un utilisateur connecté(Dashboard hote)",
                 "operationId": "61ea1ab39e88b4a8c868f9a3aad5e5e2",
@@ -12660,7 +12656,7 @@
         "/api/promotion/housing/{housingId}": {
             "get": {
                 "tags": [
-                    "Promotion"
+                    "Promotion hote"
                 ],
                 "summary": "Obtenir toutes les promotions d'un logement donné",
                 "operationId": "5def71c386ad0cdd645ff053124afc15",
@@ -12763,7 +12759,7 @@
         "/api/promotion/all": {
             "get": {
                 "tags": [
-                    "Promotion"
+                    "Promotion hote"
                 ],
                 "summary": "Obtenir toutes les promotions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
                 "operationId": "a97c2cf22edcb590e73c6ddac0811427",
@@ -12864,7 +12860,7 @@
         "/api/promotion/delete/{id}": {
             "delete": {
                 "tags": [
-                    "Promotion"
+                    "Promotion hote"
                 ],
                 "summary": "Supprimer une promotion par ID",
                 "operationId": "c9c23ffa57c7684a6b194b8e45ee8e62",
@@ -13353,7 +13349,7 @@
         "/api/reduction/add": {
             "post": {
                 "tags": [
-                    "Reduction"
+                    "Reduction hote"
                 ],
                 "summary": "Ajouter une nouvelle réduction",
                 "operationId": "8dcdfd95ed65609ae0909e644bec634d",
@@ -13506,7 +13502,7 @@
         "/api/reduction/user": {
             "get": {
                 "tags": [
-                    "Reduction"
+                    "Reduction hote"
                 ],
                 "summary": "Obtenir les réductions de l'utilisateur connecté",
                 "operationId": "c151c5ac6549389cabfb0bdf6f2bced6",
@@ -13603,7 +13599,7 @@
         "/api/reduction/housing/{housingId}": {
             "get": {
                 "tags": [
-                    "Reduction"
+                    "Reduction hote"
                 ],
                 "summary": "Obtenir toutes les réductions d'un logement donné",
                 "operationId": "1619e9adb11d42846dd82e1170d5e1aa",
@@ -13706,7 +13702,7 @@
         "/api/reduction/all": {
             "get": {
                 "tags": [
-                    "Reduction"
+                    "Reduction hote"
                 ],
                 "summary": "Obtenir toutes les réductions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
                 "operationId": "54a86da1b3fd08f45f1f67f8f652eb08",
@@ -13807,7 +13803,7 @@
         "/api/reduction/delete/{id}": {
             "delete": {
                 "tags": [
-                    "Reduction"
+                    "Reduction hote"
                 ],
                 "summary": "Supprimer une réduction par ID",
                 "operationId": "73481fb655ac012b5130221866b00864",
@@ -14008,6 +14004,41 @@
                                     },
                                     "statut_paiement": {
                                         "description": "Statut du paiement",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "valeur_reduction_hote": {
+                                        "description": "valeur_reduction_hote",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "valeur_promotion_hote": {
+                                        "description": "valeur_promotion_hote",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "valeur_reduction_code_promo": {
+                                        "description": "valeur_reduction_code_promo",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "valeur_reduction_staturp": {
+                                        "description": "valeur_reduction_staturp",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "montant_charge": {
+                                        "description": "montant_charge",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "montant_housing": {
+                                        "description": "montant_housing",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "montant_a_paye": {
+                                        "description": "montant_a_paye",
                                         "type": "integer",
                                         "example": 1
                                     }
@@ -15533,6 +15564,184 @@
                 ]
             }
         },
+        "/api/type_demande/index": {
+            "get": {
+                "tags": [
+                    "type_demande"
+                ],
+                "summary": "Get all type_demandes",
+                "operationId": "7681c4016747a51e89de02e45902e7b5",
+                "responses": {
+                    "200": {
+                        "description": "List of type_demandes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/type_demande/store": {
+            "post": {
+                "tags": [
+                    "type_demande"
+                ],
+                "summary": "Create a new type_demande ",
+                "operationId": "519bb64ea190020c0e998f0e9fbaca93",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "hote , partenaire"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "type_demande  created successfully"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/type_demande/show/{id}": {
+            "get": {
+                "tags": [
+                    "type_demande"
+                ],
+                "summary": "Get a specific type_demande by ID",
+                "operationId": "893814578b97685958fed14e0c175c8d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the type_demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "type_demande details"
+                    },
+                    "404": {
+                        "description": "type_demande not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/type_demande/updateName/{id}": {
+            "put": {
+                "tags": [
+                    "type_demande"
+                ],
+                "summary": "Update a type_demande name by ID",
+                "operationId": "b6fdec0fbffb1e9bd1aac67c21bd21ae",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the type_demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "hote,partenaire,etc"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "type_demande updated successfully"
+                    },
+                    "404": {
+                        "description": "type_demande not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/type_demande/destroy/{id}": {
+            "delete": {
+                "tags": [
+                    "type_demande"
+                ],
+                "summary": "Delete a type_demande by ID",
+                "operationId": "246ddc749305a92de6a0e0c9496539a0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the type_demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "type_demande deleted successfully"
+                    },
+                    "404": {
+                        "description": "type_demande not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/index": {
             "get": {
                 "tags": [
@@ -16472,6 +16681,516 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/getUserReservationCount": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Récupérer le nombre de réservations de l'utilisateur connecté,etc.en gros il s'agit des informations utiles avant de faire une reservation que vous devrez recuperer sur l'utilisateur connecté.",
+                "description": "Récupère le nombre de réservations effectuées par l'utilisateur actuellement connecté.",
+                "operationId": "31f02b1668f87db05cf252d696dfa6a4",
+                "responses": {
+                    "200": {
+                        "description": "Nombre de réservations récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "count": {
+                                            "description": "Nombre de réservations",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/partenaires": {
+            "get": {
+                "tags": [
+                    "Utilisateurs partenaires"
+                ],
+                "summary": "Liste des utilisateurs partenaires",
+                "description": "Récupère la liste de tous les utilisateurs partenaires.",
+                "operationId": "9342406b297b3598667fd2ec23d66d85",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs partenaires récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/commissionpartenaire/updateCommissionValueByAnother": {
+            "put": {
+                "tags": [
+                    "Commission partenaire"
+                ],
+                "summary": "Remplacer la valeur d'une commission par défaut par une autre valeur",
+                "operationId": "1b4ea508d318c52a36cbaf918cf23c9f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "commission",
+                                    "valeur_commission"
+                                ],
+                                "properties": {
+                                    "commission": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "valeur_commission": {
+                                        "type": "integer",
+                                        "example": 20
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Commission successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Commissions updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Commission not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Commission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid input data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/commissionpartenaire/updateCommissionForSpecifiqueUser": {
+            "post": {
+                "tags": [
+                    "Commission partenaire"
+                ],
+                "summary": "Modifier la valeur de la commission pour un ou plusieurs utilisateurs donnés",
+                "operationId": "236864a5ec35d5fafa71fdf2bb914ffb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "commission_percentage",
+                                    "user_ids"
+                                ],
+                                "properties": {
+                                    "commission_percentage": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "user_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": "[1, 2, ...]"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Commission updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input data"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reductionpartenaire/updatereductionValueByAnother": {
+            "put": {
+                "tags": [
+                    "Reduction partenaire"
+                ],
+                "summary": "Remplacer la valeur d'une reduction par défaut par une autre valeur",
+                "operationId": "b67885c8b87395d15101330e6f6fa540",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reduction",
+                                    "valeur_reduction"
+                                ],
+                                "properties": {
+                                    "reduction": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "valeur_reduction": {
+                                        "type": "integer",
+                                        "example": 20
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reduction updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Reduction not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid input data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reductionpartenaire/updatereductionForSpecifiqueUser": {
+            "post": {
+                "tags": [
+                    "Reduction partenaire"
+                ],
+                "summary": "Modifier la valeur de la reduction pour un ou plusieurs utilisateurs donnés",
+                "operationId": "dfa4ef0fa0a3e85b298111560b26bc8c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reduction_percentage",
+                                    "user_ids"
+                                ],
+                                "properties": {
+                                    "reduction_percentage": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "user_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": "[1, 2, ...]"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "reduction updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input data"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/numberreservationpartenaire/updatenumberreservationValueByAnother": {
+            "put": {
+                "tags": [
+                    "Reduction partenaire"
+                ],
+                "summary": "Remplacer la valeur du nombre de reservation  par défaut par une autre valeur",
+                "operationId": "b0458e1f6d2499890c960ef854ea982d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "numberreservation",
+                                    "valeur_numberreservation"
+                                ],
+                                "properties": {
+                                    "numberreservation": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "valeur_numberreservation": {
+                                        "type": "integer",
+                                        "example": 20
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Number of reservation successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Number of reservation updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Number of reservation not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Number of reservation not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid input data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/numberreservationpartenaire/updatenumberreservationForSpecifiqueUser": {
+            "post": {
+                "tags": [
+                    "Reduction partenaire"
+                ],
+                "summary": "Modifier la valeur de nombre de reservation pour un ou plusieurs utilisateurs donnés",
+                "operationId": "be93df30ad93ae94bd1569719cd08386",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "numberreservation_percentage",
+                                    "user_ids"
+                                ],
+                                "properties": {
+                                    "numberreservation_percentage": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "user_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": "[1, 2, ...]"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "numberreservation updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input data"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 },
                 "security": [
@@ -17488,7 +18207,7 @@
         "/api/verificationdocument/index": {
             "get": {
                 "tags": [
-                    "verification_document"
+                    "Demande_hote"
                 ],
                 "summary": "Récupérer la liste des documents de vérification par utilisateur",
                 "description": "Récupère la liste des documents de vérification groupés par utilisateur avec leur statut.",
@@ -17526,14 +18245,14 @@
                 ]
             }
         },
-        "/api/verificationdocument/store": {
+        "/api/users/verificationdocument/store": {
             "post": {
                 "tags": [
-                    "verification_document"
+                    "Demande_hote"
                 ],
                 "summary": "Ajouter des Documents de Vérification",
                 "description": "Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
-                "operationId": "e6999abc11a25c6d95936d686a0563a2",
+                "operationId": "f3b9d67107e7c3a04ca9abaa9d3322cd",
                 "requestBody": {
                     "description": "Requête avec des fichiers à uploader",
                     "required": true,
@@ -17645,7 +18364,7 @@
         "/api/verificationdocument/show/{id}": {
             "get": {
                 "tags": [
-                    "verification_document"
+                    "Demande_hote"
                 ],
                 "summary": "Afficher les detail d'une demande pour être hôte",
                 "operationId": "382104a8b7a63c05ac443b592c9bfd78",
@@ -17824,7 +18543,7 @@
         "/api/users/result/demande": {
             "get": {
                 "tags": [
-                    "verification_document"
+                    "Demande_hote"
                 ],
                 "summary": "Affiche pour un utiliateur connecté,le statut de ses documents soumis et le statut de sa demande",
                 "operationId": "093281058feacc15f5160fd22c7e7e4e",
@@ -17878,13 +18597,462 @@
                 ]
             }
         },
-        "/api/verificationdocument/update": {
+        "/api/users/verificationdocument/update": {
             "post": {
                 "tags": [
-                    "verification_document"
+                    "Demande_hote"
                 ],
                 "summary": "Changer un document de vérification",
-                "operationId": "1a305c842f1cb92f87adb26f283ea16e",
+                "operationId": "00290402208364bb5c6443ebbdd92183",
+                "requestBody": {
+                    "description": "Données pour changer le document de vérification",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "verification_document_id",
+                                    "new_document"
+                                ],
+                                "properties": {
+                                    "verification_document_id": {
+                                        "description": "ID du document de vérification à changer",
+                                        "type": "integer"
+                                    },
+                                    "new_document": {
+                                        "description": "Nouveau document à téléverser",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document changé avec succès"
+                    },
+                    "400": {
+                        "description": "Impossible de changer le document"
+                    },
+                    "500": {
+                        "description": "Erreur lors du changement de document"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/verificationdocumentpartenaire/index": {
+            "get": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Récupérer la liste des documents de vérification par utilisateur",
+                "description": "Récupère la liste des documents de vérification groupés par utilisateur avec leur statut.",
+                "operationId": "b9c222d54144190812eb52b45bad3298",
+                "responses": {
+                    "200": {
+                        "description": "Liste des documents de vérification par utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur est survenue lors de la récupération des documents de vérification."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/verificationdocumentpartenaire/store": {
+            "post": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Ajouter des Documents de Vérification",
+                "description": "Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
+                "operationId": "903473de3942e17acc0f96be5f59ad8b",
+                "requestBody": {
+                    "description": "Requête avec des fichiers à uploader",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id_document",
+                                    "image_piece",
+                                    "code_promo"
+                                ],
+                                "properties": {
+                                    "id_document": {
+                                        "description": "Liste des IDs des documents",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "image_piece": {
+                                        "description": "Liste des fichiers image",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "code_promo": {
+                                        "description": "Code promotionnel unique pour l'utilisateur",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Documents créés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Documents de vérification créés avec succès."
+                                        },
+                                        "verification_documents": {
+                                            "description": "Documents de vérification créés",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "document_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "path": {
+                                                        "type": "string",
+                                                        "format": "uri"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Mauvaise requête",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Les tableaux id_document et image_piece doivent avoir la même longueur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/verificationdocumentpartenaire/show/{id}": {
+            "get": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Afficher les detail d'une demande pour être partenaire",
+                "operationId": "b0ae8ab86cad397c7d316d2d758ab409",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information detaillée e la demande pour être partenaire"
+                    },
+                    "404": {
+                        "description": "verification_document not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/verificationdocumentpartenaire/partenaire/valider/all": {
+            "post": {
+                "tags": [
+                    "Validation documents pour etre partenaire"
+                ],
+                "summary": "Valider les documents en un coup ,bref valider tout en un clic",
+                "description": "Valide les documents de vérification pour un utilisateur .",
+                "operationId": "ac8b33a967267f8f61f14b2090f71b7d",
+                "requestBody": {
+                    "description": "Données requises pour la validation des documents",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "verification_document_ids"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "L'identifiant de l'utilisateur",
+                                        "type": "integer"
+                                    },
+                                    "verification_document_ids": {
+                                        "description": "Les identifiants des documents de vérification à valider",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Succès. Les documents ont été validés avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de succès",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation. Vérifiez les données d'entrée.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/verificationdocumentpartenaire/partenaire/valider/one": {
+            "post": {
+                "tags": [
+                    "Validation documents pour etre partenaire"
+                ],
+                "summary": "Valider un document de vérification pour devenir partenaire(ici on valide document par document)",
+                "operationId": "007375cb13b4fb0671d62dae479c1bd1",
+                "requestBody": {
+                    "description": "Données pour valider un document de vérification",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "verification_document_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur",
+                                        "type": "integer"
+                                    },
+                                    "verification_document_id": {
+                                        "description": "ID du document de vérification à valider",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Document de vérification validé avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données"
+                    },
+                    "404": {
+                        "description": "Document de vérification non trouvé"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/result/demandepartenaire": {
+            "get": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Affiche pour un utiliateur connecté,le statut de ses documents soumis et le statut de sa demande",
+                "operationId": "c131bc2e74606f997c171829820744a0",
+                "responses": {
+                    "200": {
+                        "description": "Demandes de vérification récupérées avec succès pour l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "verification_documents": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "document_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "document_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "path": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "request_status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des documents de vérification"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/verificationdocumentpartenaire/update": {
+            "post": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Changer un document de vérification",
+                "operationId": "644e27782d2cb436ddcf7b6848cef2cb",
                 "requestBody": {
                     "description": "Données pour changer le document de vérification",
                     "required": true,

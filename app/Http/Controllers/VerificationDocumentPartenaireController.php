@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\verification_document;
-use App\Models\verification_statut;
+use App\Models\verification_document_partenaire;
+use App\Models\verification_statut_partenaire;
 use App\Models\User;
 use App\Models\Document;
-use App\Models\Commission;
+use App\Models\user_partenaire;
 use App\Models\Right;
 use Spatie\Permission\Models\Role;
 use App\Models\User_right;
@@ -19,16 +19,17 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\DB;
-class VerificationDocumentController extends Controller
+
+class VerificationDocumentPartenaireController extends Controller
 {
+
 
 /**
  * @OA\Get(
- *     path="/api/verificationdocument/index",
+ *     path="/api/verificationdocumentpartenaire/index",
  *     summary="Récupérer la liste des documents de vérification par utilisateur",
  *     description="Récupère la liste des documents de vérification groupés par utilisateur avec leur statut.",
- *     operationId="listVerificationDocumentsByUser",
- *     tags={"Demande_hote"},
+ *     tags={"Demande_partenaire"},
  * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
@@ -49,12 +50,12 @@ class VerificationDocumentController extends Controller
 public function index()
 {
     try {
-        $users = User::whereHas('verificationDocuments', function ($query) {
-                         $query->whereHas('verificationStatut', function ($query) {
+        $users = User::whereHas('verificationDocumentspartenaire', function ($query) {
+                         $query->whereHas('verificationStatutpartenaire', function ($query) {
                              $query->where('status', 0);
                          });
                      })
-                     ->with('verificationDocuments', 'verificationDocuments.verificationStatut', 'verificationDocuments.document')
+                     ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
                      ->get();
         if ($users->isEmpty()) {
             return response()->json(['message' => 'Aucun utilisateur avec des documents de vérification en attente trouvé.'], 404);
@@ -63,13 +64,14 @@ public function index()
         $verificationDocumentsByUser = [];
 
         foreach ($users as $user) {
-            $verificationDocuments = $user->verificationDocuments->map(function ($verificationDocument) {
+            $verificationDocumentspartenaire = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
                 return [
                     'id_verification_document' => $verificationDocument->id,
                     'document_id' => $verificationDocument->document_id,
                     'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
                     'path' => $verificationDocument->path,
-                    'status' => $verificationDocument->verificationStatut ? $verificationDocument->verificationStatut->status : null,
+                    'code_promo' => $verificationDocument->code_promo,
+                    'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
                 ];
             });
 
@@ -86,7 +88,7 @@ public function index()
                 'postal_code' => $user->postal_code,
                 'sexe' => $user->sexe,
                 'is_hote' => $user->is_hote,
-                'verification_documents' => $verificationDocuments,
+                'verification_documents' => $verificationDocumentspartenaire,
             ];
 
             $verificationDocumentsByUser[] = $userInfo;
@@ -94,206 +96,211 @@ public function index()
 
         return response()->json(['data' => $verificationDocumentsByUser], 200);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la récupération des documents de vérification.'], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 
 }
-
-    /**
-     * @OA\Post(
-     *   path="/api/users/verificationdocument/store",
-     *   summary="Ajouter des Documents de Vérification",
-     *   description="Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
-     *   tags={"Demande_hote"},
-    *  security={{"bearerAuth": {}}},
-     *   @OA\RequestBody(
-     *     required=true,
-     *     description="Requête avec des fichiers à uploader",
-     *     @OA\MediaType(
-     *       mediaType="multipart/form-data",
-     *       @OA\Schema(
-     *         type="object",
-     *         required={"id_document", "image_piece"},
-     *         properties={
-     *           @OA\Property(
-     *             property="id_document",
-     *             type="array",
-     *             description="Liste des IDs des documents",
-     *             @OA\Items(type="integer")
-     *           ),
-     *           @OA\Property(
-     *             property="image_piece",
-     *             type="array",
-     *             description="Liste des fichiers image",
-     *             @OA\Items(type="string", format="binary")
-     *           ),
-     *         }
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=201,
-     *     description="Documents créés avec succès",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       properties={
-     *         @OA\Property(
-     *           property="data",
-     *           type="string",
-     *           example="Verification documents créés avec succès."
-     *         ),
-     *         @OA\Property(
-     *           property="verification_documents",
-     *           type="array",
-     *           description="Documents de vérification créés",
-     *           @OA\Items(
-     *             type="object",
-     *             properties={
-     *               @OA\Property(property="user_id", type="integer"),
-     *               @OA\Property(property="document_id", type="integer"),
-     *               @OA\Property(property="path", type="string", format="uri"),
-     *             }
-     *           )
-     *         ),
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=400,
-     *     description="Mauvaise requête",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       properties={
-     *         @OA\Property(
-     *           property="error",
-     *           type="string",
-     *           example="Les tableaux id_document et image_piece doivent avoir la même longueur."
-     *         ),
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=500,
-     *     description="Erreur du serveur",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       properties={
-     *         @OA\Property(
-     *           property="error",
-     *           type="string",
-     *           example="Erreur interne du serveur."
-     *         ),
-     *       }
-     *     )
-     *   )
-     * )
-     */
+/**
+ * @OA\Post(
+ *   path="/api/users/verificationdocumentpartenaire/store",
+ *   summary="Ajouter des Documents de Vérification",
+ *   description="Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
+ *   tags={"Demande_partenaire"},
+ *   security={{"bearerAuth": {}}},
+ *   @OA\RequestBody(
+ *     required=true,
+ *     description="Requête avec des fichiers à uploader",
+ *     @OA\MediaType(
+ *       mediaType="multipart/form-data",
+ *       @OA\Schema(
+ *         type="object",
+ *         required={"id_document", "image_piece", "code_promo"},
+ *         properties={
+ *           @OA\Property(
+ *             property="id_document",
+ *             type="array",
+ *             description="Liste des IDs des documents",
+ *             @OA\Items(type="integer")
+ *           ),
+ *           @OA\Property(
+ *             property="image_piece",
+ *             type="array",
+ *             description="Liste des fichiers image",
+ *             @OA\Items(type="string", format="binary")
+ *           ),
+ *           @OA\Property(
+ *             property="code_promo",
+ *             type="string",
+ *             description="Code promotionnel unique pour l'utilisateur"
+ *           )
+ *         }
+ *       )
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=201,
+ *     description="Documents créés avec succès",
+ *     @OA\JsonContent(
+ *       type="object",
+ *       properties={
+ *         @OA\Property(
+ *           property="message",
+ *           type="string",
+ *           example="Documents de vérification créés avec succès."
+ *         ),
+ *         @OA\Property(
+ *           property="verification_documents",
+ *           type="array",
+ *           description="Documents de vérification créés",
+ *           @OA\Items(
+ *             type="object",
+ *             properties={
+ *               @OA\Property(property="user_id", type="integer"),
+ *               @OA\Property(property="document_id", type="integer"),
+ *               @OA\Property(property="path", type="string", format="uri"),
+ *             }
+ *           )
+ *         ),
+ *       }
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=400,
+ *     description="Mauvaise requête",
+ *     @OA\JsonContent(
+ *       type="object",
+ *       properties={
+ *         @OA\Property(
+ *           property="error",
+ *           type="string",
+ *           example="Les tableaux id_document et image_piece doivent avoir la même longueur."
+ *         ),
+ *       }
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=500,
+ *     description="Erreur du serveur",
+ *     @OA\JsonContent(
+ *       type="object",
+ *       properties={
+ *         @OA\Property(
+ *           property="error",
+ *           type="string",
+ *           example="Erreur interne du serveur."
+ *         ),
+ *       }
+ *     )
+ *   )
+ * )
+ */
 
 
 
      public function store(Request $request)
-     {
-         try {
-             $user = auth()->user();
-             $user_id = $user->id;
-             $user_name = $user->lastname;
-             $user_firstname = $user->firstname;
-             $idDocuments = $request->id_document;
-             $imagePieces = $request->file('image_piece');     
-             if (count($idDocuments) !== count($imagePieces)) {
-                 return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
-             }
-     
-             $verificationDocuments = [];
-     
-             foreach ($idDocuments as $key => $idDocument) {
+{
+    try {
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'id_document' => 'required|array',
+            'image_piece' => 'required|array',
+            'code_promo' => 'required|unique:verification_document_partenaires,code_promo',
+        ]);
 
-                 $existingDocument = verification_document::where('user_id', $user_id)
-                     ->where('document_id', $idDocument)
-                     ->first();
-     
-                 if ($existingDocument) {
-                     return response()->json([
-                         'error' => "Le document avec l'identifiant $idDocument a déjà été soumis par cet utilisateur."
-                     ], 400);
-                 }
-     
-                 $imagePiece = $imagePieces[$key];
-     
-                 $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-                 $path_url = url('/image/document_verification/' . $path_name);
-     
-                 $verificationDocument = new verification_document();
-                 $verificationDocument->user_id = $user_id; 
-                 $verificationDocument->document_id = $idDocument;
-                 $verificationDocument->path = $path_url;
-                 $verificationDocument->save();
-                 
-                 $verificationStatut = new verification_statut();
-                 $verificationStatut->verification_document_id = $verificationDocument->id;
-                 $verificationStatut->save();
-     
-                 $imagePiece->move(public_path('image/document_verification'), $path_name);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
 
-                 $filePath = public_path('image/document_verification/' . $path_name);
-                 $filePaths[] = $filePath;
-                 $verificationDocuments[] = $verificationDocument;
-     
+        $user = auth()->user();
+        $user_id = $user->id;
+        $user_name = $user->lastname;
+        $user_firstname = $user->firstname;
+        $idDocuments = $request->id_document;
+        $codePromo = $request->code_promo;
+        $imagePieces = $request->file('image_piece');
 
-             }
-             $adminRole = DB::table('rights')->where('name', 'admin')->first();
+        if (count($idDocuments) !== count($imagePieces)) {
+            return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
+        }
 
-             if (!$adminRole) {
-                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
-             }
-         
-             $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
-                 $query->where('right_id', $adminRole->id);
-             })
-             ->get();
-         
-             foreach ($adminUsers as $adminUser) {
-                 $notification = new Notification();
-                 $notification->user_id = $adminUser->id;
-                 $notification->name = "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname.";
-                 $notification->save();
-         
-                 $mail = [
-                     'title' => 'Demande d\'être hôte',
-                     'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
-                 ];
+        $verificationDocuments = [];
+        $filePaths = [];
 
-                 try {
-                    Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
-                } catch (\Exception $e) {
+        foreach ($idDocuments as $key => $idDocument) {
+            $existingDocument = verification_document_partenaire::where('user_id', $user_id)
+                ->where('document_id', $idDocument)
+                ->first();
+
+            if ($existingDocument) {
+                return response()->json([
+                    'error' => "Le document avec l'identifiant $idDocument a déjà été soumis par cet utilisateur."
+                ], 400);
+            }
+
+            $imagePiece = $imagePieces[$key];
+
+            $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
+            $path_url = url('/image/document_verification/' . $path_name);
+
+            $verificationDocument = new verification_document_partenaire();
+            $verificationDocument->user_id = $user_id;
+            $verificationDocument->document_id = $idDocument;
+            $verificationDocument->path = $path_url;
+            $verificationDocument->code_promo = $codePromo;
+            $verificationDocument->save();
+
+            $verificationStatut = new verification_statut_partenaire();
+            $verificationStatut->vpdocument_id = $verificationDocument->id;
+            $verificationStatut->save();
+
+            $imagePiece->move(public_path('image/document_verification'), $path_name);
+
+            $filePath = public_path('image/document_verification/' . $path_name);
+            $filePaths[] = $filePath;
+            $verificationDocuments[] = $verificationDocument;
+        }
+
+        $adminRole = DB::table('rights')->where('name', 'admin')->first();
+
+        if (!$adminRole) {
+            return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+        }
+
+        $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+            $query->where('right_id', $adminRole->id);
+        })
+        ->get();
+
+        foreach ($adminUsers as $adminUser) {
+            $notification = new Notification();
+            $notification->user_id = $adminUser->id;
+            $notification->name = "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname.";
+            $notification->save();
+
+            $mail = [
+                'title' => 'Demande d\'être partenaire',
+                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
+            ];
+
+            try {
+                Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
+            } catch (\Exception $e) {
                    
-                }
-         
-                 
+            }
+        } 
 
-                } 
-     
-             return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
-         } catch (Exception $e) {
-             return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
-         }
-     }
-     
+        return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
+    } catch (Exception $e) {
+        return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
+    }
+}
 
- 
-    /**
-     * Display the specified resource.
-     */
-
-         /**
-     * Display the specified resource.
-     */
 
      /**
    * @OA\Get(
-   *     path="/api/verificationdocument/show/{id}",
-   *     summary="Afficher les detail d'une demande pour être hôte",
-   *     tags={"Demande_hote"},
+   *     path="/api/verificationdocumentpartenaire/show/{id}",
+   *     summary="Afficher les detail d'une demande pour être partenaire",
+   *     tags={"Demande_partenaire"},
    * security={{"bearerAuth": {}}},
    *     @OA\Parameter(
    *         name="id",
@@ -304,7 +311,7 @@ public function index()
    *     ),
    *     @OA\Response(
    *         response=200,
-   *         description="Information detaillée e la demande pour être hote"
+   *         description="Information detaillée e la demande pour être partenaire"
    *     ),
    *     @OA\Response(
    *         response=404,
@@ -318,16 +325,17 @@ public function index()
         try {
             
             $user = User::where('id', $userId)
-                        ->whereHas('verificationDocuments')
-                        ->with('verificationDocuments', 'verificationDocuments.verificationStatut', 'verificationDocuments.document')
+                        ->whereHas('verificationDocumentspartenaire')
+                        ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
                         ->firstOrFail();
-            $verificationDocuments = $user->verificationDocuments->map(function ($verificationDocument) {
+            $verificationDocuments = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
                 return [
                     'id_verification_document' => $verificationDocument->id,
                     'document_id' => $verificationDocument->document_id,
                     'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
                     'path' => $verificationDocument->path,
-                    'status' => $verificationDocument->verificationStatut ? $verificationDocument->verificationStatut->status : null,
+                    'code_promo' => $verificationDocument->code_promo,
+                    'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
                 ];
             });
     
@@ -361,10 +369,10 @@ public function index()
      * Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.
      * 
      * @OA\Post(
-     *     path="/api/verificationdocument/hote/valider/all",
+     *     path="/api/verificationdocumentpartenaire/partenaire/valider/all",
      *     summary="Valider les documents en un coup ,bref valider tout en un clic",
-     *     description="Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.",
-     *     tags={"Validation documents pour etre hôte"},
+     *     description="Valide les documents de vérification pour un utilisateur .",
+     *     tags={"Validation documents pour etre partenaire"},
       * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -408,8 +416,9 @@ public function validateDocuments(Request $request)
     ]);
 
     $user_id = $data['user_id'];
+
     $verification_document_ids = $data['verification_document_ids'];
-    $verificationDocumentsExist = verification_statut::whereIn('verification_document_id', $verification_document_ids)->exists();
+    $verificationDocumentsExist = verification_statut_partenaire::whereIn('vpdocument_id', $verification_document_ids)->exists();
     if (!$verificationDocumentsExist) {
         return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
     }
@@ -423,42 +432,45 @@ public function validateDocuments(Request $request)
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
-            $verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
+            $verificationStatut = verification_statut_partenaire::where('vpdocument_id', $verification_document_id)->first();
             if ($verificationStatut) {
                 $verificationStatut->update(['status' => 1]);
             }
         }
-
+        $verificationDocumentsExist = verification_statut_partenaire::whereIn('vpdocument_id', $verification_document_ids)->get();
         $user = User::findOrFail($user_id);
-        $role = Role::where('name','hote')->first();
+        $role = Role::where('name','partenaire')->first();
         $grant = new AuthController();
         $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
         $notification = new Notification();
         $notification->user_id = $user_id;
-        $notification->name = "Votre demande d'être hôte a été validée avec succès.";
+        $notification->name = "Votre demande d'être partenaire a été validée avec succès.";
         $notification->save();
-        $commission=new Commission();
+        $commission=new user_partenaire();
         $commission->user_id=$user->id;
-        $commission->valeur=5;
+        $commission->commission=5;
+        $commission->reduction_traveler=3;
+        $commission->number_of_reservation=3;
+        $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
         $commission->save();
         $mail = [
-            'title' => 'Demande d\'être hôte',
-            'body' => "Votre demande d'être hôte a été validée avec succès."
+            'title' => 'Demande d\'être partenaire',
+            'body' => "Votre demande d'être partenaire a été validée avec succès."
         ];
          Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la validation des documents.'], 500);
+        return response()->json(['error' =>  $e->getMessage()], 500);
     }
 }
 
 
 /**
  * @OA\Post(
- *     path="/api/verificationdocument/hote/valider/one",
- *     summary="Valider un document de vérification pour devenir hôte(ici on valide document par document)",
- *     tags={"Validation documents pour etre hôte"},
+ *     path="/api/verificationdocumentpartenaire/partenaire/valider/one",
+ *     summary="Valider un document de vérification pour devenir partenaire(ici on valide document par document)",
+ *     tags={"Validation documents pour etre partenaire"},
  *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -510,7 +522,7 @@ public function validateDocument(Request $request)
     $verification_document_id = $data['verification_document_id'];
 
     try {
-        $verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
+        $verificationStatut = verification_statut_partenaire::where('vpdocument_id', $verification_document_id)->first();
         if (!$verificationStatut) {
             return response()->json(['error' => 'Le document de vérification spécifié n\'existe pas.'], 404);
         }
@@ -526,29 +538,32 @@ public function validateDocument(Request $request)
         $verificationStatut->update(['status' => 1]);
 
         $user = User::findOrFail($user_id);
-        $allDocumentsValidated = $user->verificationDocuments()->whereHas('verificationStatut', function ($query) {
+        $allDocumentsValidated = $user->verificationDocumentspartenaire()->whereHas('verificationStatutpartenaire', function ($query) {
             $query->where('status', 0);
         })->count() === 0;
 
         if ($allDocumentsValidated) {
 
-            $role = Role::where('name','hote')->first();
+            $role = Role::where('name','partenaire')->first();
             $grant = new AuthController();
             $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
             
             $notification = new Notification();
             $notification->user_id = $user_id;
-            $notification->name = "Votre demande d'être hôte a été validée avec succès.";
+            $notification->name = "Votre demande d'être partenaire a été validée avec succès.";
             $notification->save();
             
-            $commission=new Commission();
-            $commission->user_id=$user->id;
-            $commission->valeur=5;
+            $commission=new user_partenaire();
+                $commission->user_id=$user->id;
+                $commission->commission=5;
+                $commission->reduction_traveler=3;
+                $commission->number_of_reservation=3;
+                $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
             $commission->save();
             // dd('salut');
             $mail = [
                 'title' => 'Demande d\'être hôte',
-                'body' => "Votre demande d'être hôte a été validée avec succès."
+                'body' => "Votre demande d'être partenaire a été validée avec succès."
             ];
              Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
             
@@ -557,15 +572,15 @@ public function validateDocument(Request $request)
 
         return response()->json(['message' => 'Document validé avec succès.'], 200);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la validation du document.'], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
 /**
  * @OA\Get(
- *     path="/api/users/result/demande",
+ *     path="/api/users/result/demandepartenaire",
  *     summary="Affiche pour un utiliateur connecté,le statut de ses documents soumis et le statut de sa demande",
- *     tags={"Demande_hote"},
+ *     tags={"Demande_partenaire"},
  * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
@@ -600,19 +615,19 @@ public function userVerificationRequests()
 {
     try {
         $userId = Auth::id();
-        $user = User::with(['verificationDocuments' => function ($query) {
-            $query->with('verificationStatut');
+        $user = User::with(['verificationDocumentspartenaire' => function ($query) {
+            $query->with('verificationStatutpartenaire');
         }])->findOrFail($userId);
 
-        $right = Right::where('name','hote')->first();
+        $right = Right::where('name','partenaire')->first();
         $exist = User_right::where('user_id',$userId)->where('right_id',$right->id)->exists();
-
-        $verificationDocumentsWithStatus = $user->verificationDocuments->map(function ($verificationDocument) {
+        $verificationDocumentsWithStatus = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
             return [
                 'document_id' => $verificationDocument->id,
                 'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
                 'path' => $verificationDocument->path,
-                'status' => $verificationDocument->verificationStatut ? $verificationDocument->verificationStatut->status : null,
+                'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
+                'status' => $verificationDocument->code_promo,
             ];
         });
 
@@ -623,15 +638,15 @@ public function userVerificationRequests()
             'Statut_demande' => $requestStatus
         ], 200);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la récupération des documents de vérification.'], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
 /**
  * @OA\Post(
- *     path="/api/users/verificationdocument/update",
+ *     path="/api/users/verificationdocumentpartenaire/update",
  *     summary="Changer un document de vérification",
- *     tags={"Demande_hote"},
+ *     tags={"Demande_partenaire"},
  * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -682,9 +697,9 @@ public function changeDocument(Request $request)
     $new_document = $data['new_document'];
 
     try {
-        $verificationDocument = verification_document::findOrFail($verification_document_id);
+        $verificationDocument = verification_document_partenaire::findOrFail($verification_document_id);
         
-        if ($verificationDocument->verificationStatut->status === 0) {
+        if ($verificationDocument->verificationStatutpartenaire->status === 0) {
             $filename = basename($verificationDocument->path);
             $oldDocumentPath = public_path('image/document_verification/' . $filename);
                   if (file_exists($oldDocumentPath)) {
@@ -703,9 +718,11 @@ public function changeDocument(Request $request)
             return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);
         }
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors du changement de document.'], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 
 
 }
+
+

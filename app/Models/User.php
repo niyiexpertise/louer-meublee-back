@@ -19,22 +19,35 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'lastname',
-        'firstname',
-        'password',
-        'telephone',
+        'user_id',
+        'housing_id',
+        'date_of_reservation',
+        'date_of_starting',
+        'date_of_end',
+        'number_of_adult',
+        'number_of_child',
+        'number_of_domestical_animal',
+        'number_of_baby',
+        'message_to_hote',
         'code_pays',
-        'email',
-        'country',
-        'file_profil',
-        'city',
-        'address',
-        'sexe',
-        'postal_code',
-        'is_admin',
-        'is_traveller',
-        'is_hote'
-        
+        'telephone_traveler',
+        'heure_arrivee_max',
+        'heure_arrivee_min',
+        'is_tranche_paiement',
+        'montant_total',
+        'valeur_payee',
+        'is_confirmed_hote',
+        'is_integration',
+        'is_rejected_traveler',
+        'is_rejected_hote',
+        'photo',
+        'valeur_reduction_hote',
+        'valeur_promotion_hote',
+        'valeur_reduction_code_promo',
+        'valeur_reduction_staturp',
+        'montant_charge',
+        'montant_housing',
+        'montant_a_paye'
     ];
 
     /**
@@ -121,6 +134,18 @@ class User extends Authenticatable
     public function visites()
     {
         return $this->hasMany(UserVisiteHousing::class);
+    }
+    public function user_partenaire()
+    {
+        return $this->hasOne(user_partnaire::class);
+    }
+    public function verificationDocumentspartenaire()
+    {
+        return $this->hasMany(verification_document_partenaire::class);
+    }
+    public function Partenaire()
+    {
+        return $this->belongsTo(user_partnaire::class, 'partenaire_id', 'id');
     }
 
 }

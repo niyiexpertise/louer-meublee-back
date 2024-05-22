@@ -259,6 +259,49 @@ class ReservationController extends Controller
  *                     example=1,
  *                     description="Statut du paiement"
  *                 ),
+ *                 @OA\Property(
+ *                     property="valeur_reduction_hote",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="valeur_reduction_hote"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="valeur_promotion_hote",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="valeur_promotion_hote"
+ *                 ),
+ *                @OA\Property(
+ *                     property="valeur_reduction_code_promo",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="valeur_reduction_code_promo"
+ *                 ),
+ *               @OA\Property(
+ *                     property="valeur_reduction_staturp",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="valeur_reduction_staturp"
+ *                 ),
+ *               @OA\Property(
+ *                     property="montant_charge",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="montant_charge"
+ *                 ),
+ *               @OA\Property(
+ *                     property="montant_housing",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="montant_housing"
+ *                 ),
+ *              @OA\Property(
+ *                     property="montant_a_paye",
+ *                      type="integer",
+ *                     example=1,
+ *                     description="montant_a_paye"
+ *                 ),
+ * 
  *             )
  *         )
  *     ),
@@ -309,6 +352,14 @@ class ReservationController extends Controller
             'id_transaction' => 'required|string',
             'statut_paiement' =>'required',
             'photo' => 'file|mimes:jpg,jpeg,png|max:2048',
+            'valeur_reduction_hote' => 'nullable|numeric',
+            'valeur_reduction_hote' => 'nullable|numeric',
+            'valeur_promotion_hote' => 'nullable|numeric',
+            'valeur_reduction_code_promo' => 'nullable|numeric',
+            'valeur_reduction_staturp' => 'nullable|numeric',
+            'montant_charge' => 'nullable|numeric',
+            'montant_housing' => 'nullable|numeric',
+            'montant_a_paye' => 'nullable|numeric',
         ]);
         $user_id=Auth::id();
     
@@ -340,6 +391,13 @@ class ReservationController extends Controller
             'is_rejected_hote' => false,
             'user_id'=> $user_id,
             'photo'=> 'defaut',
+            'valeur_reduction_hote' => $validatedData['valeur_reduction_hote'] ?? 0,
+            'valeur_promotion_hote' => $validatedData['valeur_promotion_hote'] ?? 0,
+            'valeur_reduction_code_promo' => $validatedData['valeur_reduction_code_promo'] ?? 0,
+            'valeur_reduction_staturp' => $validatedData['valeur_reduction_staturp'] ?? 0,
+            'montant_charge' => $validatedData['montant_charge'] ?? 0,
+            'montant_housing' => $validatedData['montant_housing'] ?? 0,
+            'montant_a_paye' => $validatedData['montant_a_paye'] ?? 0,
         ]);
     
         if ($request->hasFile('photo')) {

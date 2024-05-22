@@ -135,8 +135,6 @@ public function login(Request $request){
                    
                 }
                 
-                
-                
                 // dd('salut');
               unset($user->code);
               return response()->json([

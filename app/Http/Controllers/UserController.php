@@ -29,6 +29,7 @@ use App\Models\Category;
 use App\Models\Housing_charge;
 use App\Models\Review_reservation;
 use App\Models\Portfeuille;
+use App\Models\user_partenaire;
 use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -1094,6 +1095,56 @@ public function getUserDetails($userId) {
         'data' => $user_details
     ], 200);
 }
+/**
+     * @OA\Get(
+     *     path="/api/users/getUserReservationCount",
+     *     summary="Récupérer le nombre de réservations de l'utilisateur connecté,etc.en gros il s'agit des informations utiles avant de faire une reservation que vous devrez recuperer sur l'utilisateur connecté.",
+     *     description="Récupère le nombre de réservations effectuées par l'utilisateur actuellement connecté.",
+     *     tags={"User"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Nombre de réservations récupéré avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             properties={
+     *                 @OA\Property(property="count", type="integer", description="Nombre de réservations")
+     *             }
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+    public function getUserReservationCount(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $userId = $user->id;
+
+            $reservationCount = Reservation::where('user_id', $userId)->count();
+            
+            $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
+            $codePromoDetails = $userPartenaire ? [
+                'id'=> $userPartenaire->id,
+                'code_promo' => $userPartenaire->code_promo,
+                'reduction_traveler' => $userPartenaire->reduction_traveler,
+                'number_of_reservation' => $userPartenaire->number_of_reservation,
+            ] : null;
+
+            return response()->json([
+                'count_reservation' => $reservationCount,
+                'code_promo' => $codePromoDetails
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' =>$e->getMessage()], 500);
+        }
+    }
 
 
 }

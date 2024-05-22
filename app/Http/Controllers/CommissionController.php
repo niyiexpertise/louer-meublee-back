@@ -14,7 +14,7 @@ class CommissionController extends Controller
 * @OA\Put(
 *     path="/api/commission/updateCommissionValueByAnother",
 *     summary="Remplacer la valeur d'une commission par défaut par une autre valeur",
-*     tags={"Commission"},
+*     tags={"Commission hote"},
 *security={{"bearerAuth": {}}},
 *     @OA\RequestBody(
 *         required=true,
@@ -61,15 +61,18 @@ public function updateCommissionValueByAnother(Request $request)
                 'error' => 'Invalid input data',
             ], 422);
         }
-        $commission = Commission::where('valeur', $request->commission)->first();
+        $commission = Commission::where('valeur', $request->commission)->get();
 
         if (!$commission) {
             return response()->json([
                 'error' => 'Commission not found',
             ], 404);
         }
+        foreach($commission as $com){
+            $com->update(['valeur' => $request->valeur_commission]);
+        }
 
-        $commission->update(['valeur' => $request->valeur_commission]);
+        
 
         return response()->json(['message' => 'Commissions updated successfully']);
     } catch (Exception $e) {
@@ -85,7 +88,7 @@ public function updateCommissionValueByAnother(Request $request)
  * @OA\Post(
  *     path="/api/commission/updateCommissionForSpecifiqueUser",
  *     summary="Modifier la valeur de la commission pour un ou plusieurs utilisateurs donnés",
- *     tags={"Commission"},
+ *     tags={"Commission hote"},
  * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -142,7 +145,7 @@ public function updateCommissionForSpecifiqueUser(Request $request)
  * @OA\Get(
  *     path="/api/commission/usersWithCommission/{commission}",
  *     summary="Récupérer les utilisateurs associés à une commission spécifique",
- *     tags={"Commission"},
+ *     tags={"Commission hote"},
  * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="commission",

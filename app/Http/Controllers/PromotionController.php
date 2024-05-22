@@ -38,7 +38,7 @@ class PromotionController extends Controller
  * @OA\Post(
  *     path="/api/promotion/add",
  *     summary="Ajouter une nouvelle promotion",
- *     tags={"Promotion"},
+ *     tags={"Promotion hote"},
  *     security={{"bearerAuth": {}}}, 
  *     @OA\RequestBody(
  *         required=true,
@@ -143,7 +143,7 @@ class PromotionController extends Controller
  * @OA\Get(
  *     path="/api/promotion/user",
  *     summary="Obtenir les promotions d'un utilisateur connecté(Dashboard hote)",
- *     tags={"Promotion"},
+ *     tags={"Promotion hote"},
  *     security={{"bearerAuth": {}}}, 
  *     @OA\Response(
  *         response=200,
@@ -215,7 +215,7 @@ class PromotionController extends Controller
  * @OA\Get(
  *     path="/api/promotion/housing/{housingId}",
  *     summary="Obtenir toutes les promotions d'un logement donné",
- *     tags={"Promotion"},
+ *     tags={"Promotion hote"},
  *     security={{"bearerAuth": {}}}, 
  *     @OA\Parameter(
  *         name="housingId",
@@ -282,7 +282,7 @@ class PromotionController extends Controller
  * @OA\Get(
  *     path="/api/promotion/all",
  *     summary="Obtenir toutes les promotions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
- *     tags={"Promotion"},
+ *     tags={"Promotion hote"},
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
@@ -338,7 +338,7 @@ class PromotionController extends Controller
  * @OA\Delete(
  *     path="/api/promotion/delete/{id}",
  *     summary="Supprimer une promotion par ID",
- *     tags={"Promotion"},
+ *     tags={"Promotion hote"},
  *     security={{"bearerAuth": {}}}, 
  *     @OA\Parameter(
  *         name="id",

@@ -16,7 +16,7 @@ class ReductionController extends Controller
      * @OA\Post(
      *     path="/api/reduction/add",
      *     summary="Ajouter une nouvelle réduction",
-     *     tags={"Reduction"},
+     *     tags={"Reduction hote"},
      *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -113,7 +113,7 @@ class ReductionController extends Controller
      * @OA\Get(
      *     path="/api/reduction/user",
      *     summary="Obtenir les réductions de l'utilisateur connecté",
-     *     tags={"Reduction"},
+     *     tags={"Reduction hote"},
      *     security={{"bearerAuth": {}}}, 
      *     @OA\Response(
  *         response=200,
@@ -185,7 +185,7 @@ class ReductionController extends Controller
      * @OA\Get(
      *     path="/api/reduction/housing/{housingId}",
      *     summary="Obtenir toutes les réductions d'un logement donné",
-     *     tags={"Reduction"},
+     *     tags={"Reduction hote"},
      *     security={{"bearerAuth": {}}}, 
      *     @OA\Parameter(
      *         name="housingId",
@@ -252,7 +252,7 @@ class ReductionController extends Controller
  * @OA\Get(
  *     path="/api/reduction/all",
  *     summary="Obtenir toutes les réductions sur le site avec détails du logement et de l'utilisateur(Dashboard Admin)",
- *     tags={"Reduction"},
+ *     tags={"Reduction hote"},
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
@@ -308,7 +308,7 @@ class ReductionController extends Controller
  * @OA\Delete(
  *     path="/api/reduction/delete/{id}",
  *     summary="Supprimer une réduction par ID",
- *     tags={"Reduction"},
+ *     tags={"Reduction hote"},
  *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",

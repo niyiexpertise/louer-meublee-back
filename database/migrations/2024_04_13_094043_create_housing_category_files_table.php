@@ -17,6 +17,7 @@ return new class extends Migration
                 $table->foreignId('category_id')->references('id')->on('categories')->onDelete('cascade');
                 $table->foreignId('file_id')->references('id')->on('files')->onDelete('cascade');
                 $table->integer('number');
+                $table->boolean('is_verified');
                 $table->timestamps();
         });
     }

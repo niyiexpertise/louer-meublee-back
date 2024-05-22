@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class housing_preference extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'is_verified',
+    ];
     public function preference()
     {
         return $this->belongsTo(Preference::class);

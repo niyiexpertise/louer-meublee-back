@@ -4,19 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Equipment;
+use App\Models\Notification;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\EquipmentCategory;
-use App\Models\Housing;
-use App\Models\Notification;
-use App\Models\User;
 use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Builder as DatabaseEloquentBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 use Exception;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
 
@@ -276,6 +276,10 @@ class EquipementController extends Controller
                     'name' => 'required|max:255',
                     // 'icone' => 'image|mimes:jpeg,jpg,png,gif'
                 ]);
+                $existingequipment = Equipment::where('name', $request->name)->first();
+          if ($existingequipment) {
+            return response()->json(['error' => 'Le nom de l\'équipement existe déjà par défaut'], 400);
+            }
 
                 $equipment  = new Equipment();
                 if ($request->hasFile('icone')) {
@@ -313,98 +317,7 @@ class EquipementController extends Controller
 
         }
 
-      
-
-         /**
-         * @OA\Post(
-         *     path="/api/equipment/storeUnexist/{housingId}",
-         *     summary="Create a new equipment what don't exist ",
-         *     tags={"HousingEquipment"},
-         * security={{"bearerAuth": {}}},
-         *     @OA\Parameter(
-     *         name="housingId",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the housing ",
-     *         @OA\Schema(type="integer")
-     *     ),
- * @OA\RequestBody(
- *     required=true,
- *     @OA\MediaType(
- *       mediaType="multipart/form-data",
- *       @OA\Schema(
- *         type="object",
- *         @OA\Property(property="name", type="string", example="climatiseur"),
- *         @OA\Property(property="category_id", type="string", example="5"),
- *       )
- *     )
- *   ),
-         *     @OA\Response(
-         *         response=200,
-         *         description="Equipment  created successfully"
-         *     ),
-         *     @OA\Response(
-         *         response=401,
-         *         description="Invalid credentials"
-         *     )
-         * )
-         */
-        public function storeUnexist(Request $request,$housingId)
-        {
-            try{
-                    $request->validate([
-                        'name' => 'required|max:255',
-                        // 'icone' => 'image|mimes:jpeg,jpg,png,gif'
-                    ]);
-                    $equipment  = new Equipment();
-                    $equipment->name = $request->name;
-                    $equipment->is_verified = false;
-                    $equipment->save();
-                    $equipment = Equipment::where('name', $request->name)->first();
-
-                $existingAssociation = Equipment_category::where('equipment_id', $equipment->id)
-                ->where('category_id', $request->category_id)
-                ->exists();
-                if ($existingAssociation) {
-                    return response()->json([
-                        "message" =>"L'equipement existe déjà et a été affecté à la catégorie indiquée",
-                    ],200);
-                }
-                    $equipment_category = new Equipment_category();
-                    $equipment_category->equipment_id = $equipment->id;
-                    $equipment_category->category_id = $request->category_id;
-                    $equipment_category->save();
-                    $housingEquipment = new Housing_equipment();
-                    $housingEquipment->equipment_id = $equipment->id;
-                    $housingEquipment->housing_id = $housingId;
-                    $housingEquipment->is_verified = false;
-                    $housingEquipment->save();
-                    $
-
-                    $userId = Auth::id();
-                    $notification = new Notification([
-                        'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
-                        'user_id' => $userId,
-                       ]);
-                       $notification->save();
-                     $adminUsers = User::where('is_admin', 1)->get();
-                            foreach ($adminUsers as $adminUser) {
-                                $notification = new Notification();
-                                $notification->user_id = $adminUser->id;
-                                $notification->name = "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider";
-                                $notification->save();
-                            }
-
-                    return response()->json([
-                        "message" =>"save successfully",
-                        "equipment" => $equipment
-                    ],200);
-            } catch(Exception $e) {
-                return response()->json($e->getMessage());
-            }
-
-        }
-
+         
         /**
      * @OA\Get(
      *     path="/api/equipment/show/{id}",
@@ -636,10 +549,6 @@ class EquipementController extends Controller
             if (!$equipment) {
                 return response()->json(['error' => 'Equipement non trouvé.'], 404);
             }
-            
-            // $request->validate([
-            //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
-            //     ]);
 
             $oldProfilePhotoUrl = $equipment->icone;
             if ($oldProfilePhotoUrl) {
@@ -819,7 +728,7 @@ class EquipementController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/equipment/makeVerified/{id}/{housingId}",
+     *     path="/api/equipment/makeVerified/{id}",
      *     summary="make verified an equipment",
      *     tags={"Equipment"},
      * security={{"bearerAuth": {}}},
@@ -827,13 +736,6 @@ class EquipementController extends Controller
      *         name="id",
      *         in="path",
      *         description="ID of the equipment to verified",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *   @OA\Parameter(
-     *         name="housingId",
-     *         in="path",
-     *         description="ID of the housing to verified",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -848,48 +750,50 @@ class EquipementController extends Controller
      *         response=404,
      *         description="Equipment not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Equipment not 
-     * found")
+     *             @OA\Property(property="error", type="string", example="Equipment not found")
      *         )
      *     )
      * )
      */
-    public function makeVerified(string $id, $housingId)
-    {
-        try {
-            $equipment = Equipment::find($id);
-            $housingEquipment = Housing_equipment::where('housing_id', $housingId)
-                ->where('equipment_id', $id)
-                ->first();
-    
-            if (!$equipment || !$housingEquipment) {
-                return response()->json(['data' => 'Équipement ou association équipement logement non trouvé.'], 200);
-            }
-    
-            if ($equipment->is_verified == true) {
-                return response()->json(['data' => 'Équipement déjà vérifié.'], 200);
-            }
-    
-            if ($housingEquipment->is_verified == true) {
-                return response()->json(['data' => 'Association équipement logement déjà vérifié.'], 404);
-            }
-    
-            Equipment::whereId($id)->update(['is_verified' => true]);
-    
-            Housing_equipment::where('housing_id', $housingId)
-                ->where('equipment_id', $equipment->id)
-                ->update(['is_verified' => true]);
-    
-                $notification = new Notification([
-                    'name' => "L'enregistrement de cet équipement : ".Equipment::find($id)->name." a été validé par l'administrateur",
-                    'user_id' =>$housingEquipment->housing->user_id ,
-                   ]);
-                   $notification->save();
-            return response()->json(['data' => 'Équipement vérifié avec succès.'], 200);
-        } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+    public function makeVerified(string $id)
+{
+    try {
+
+        $equipment = Equipment::find($id);
+        
+        if (!$equipment) {
+            return response()->json(['error' => 'Équipement non trouvé.'], 404);
         }
+
+        if ($equipment->is_verified) {
+            return response()->json(['data' => 'Équipement déjà vérifié.'], 200);
+        }
+
+        $equipment->update(['is_verified' => true]);
+
+        $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
+        
+        if ($housingEquipment) {
+            $housingEquipment->update(['is_verified' => true]);
+            
+            $notification = new Notification([
+                'name' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
+                'user_id' => $housingEquipment->housing->user_id,
+            ]);
+            $notification->save();
+
+            $mail = [
+                'title' => "Validation du nouvel équipement ajouté au logement",
+                'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
+            ];
+            Mail::to($housingEquipment->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+        }
+
+        return response()->json(['data' => 'Équipement vérifié avec succès.'], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
 
 

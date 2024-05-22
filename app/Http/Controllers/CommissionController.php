@@ -14,7 +14,7 @@ class CommissionController extends Controller
 *     path="/api/commission/updateCommissionValueByAnother",
 *     summary="Remplacer la valeur d'une commission par défaut par une autre valeur",
 *     tags={"Commission"},
-*      security={{"bearerAuth": {}}},
+*security={{"bearerAuth": {}}},
 *     @OA\RequestBody(
 *         required=true,
 *         @OA\JsonContent(
@@ -85,7 +85,7 @@ public function updateCommissionValueByAnother(Request $request)
  *     path="/api/commission/updateCommissionForSpecifiqueUser",
  *     summary="Modifier la valeur de la commission pour un ou plusieurs utilisateurs donnés",
  *     tags={"Commission"},
- * *       security={{"bearerAuth": {}}},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -142,7 +142,7 @@ public function updateCommissionForSpecifiqueUser(Request $request)
  *     path="/api/commission/usersWithCommission/{commission}",
  *     summary="Récupérer les utilisateurs associés à une commission spécifique",
  *     tags={"Commission"},
- * *       security={{"bearerAuth": {}}},
+ * security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="commission",
  *         in="path",

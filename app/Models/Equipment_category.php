@@ -19,4 +19,5 @@ class Equipment_category extends Model
     {
         return $this->belongsTo(Equipment::class);
     }
+    
 }

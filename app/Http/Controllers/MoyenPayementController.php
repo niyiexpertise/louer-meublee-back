@@ -34,18 +34,40 @@ class MoyenPayementController extends Controller
  * )
  */
 public function ListeMoyenPayement()
-{
-    try {
-        $moyenPayement = MoyenPayement::with('user')->where('is_blocked', 0)->where('is_deleted', 0)->get();
-        return response()->json([
-            'data' => $moyenPayement        ], 200);
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => 'An error occurred',
-            'message' => $e->getMessage()
-        ], 500);
+    {
+        try {
+            // Récupérer tous les moyens de paiement non bloqués et non supprimés
+            $moyenPayement = MoyenPayement::with(['user', 'methodPayement'])
+                ->where('is_blocked', 0)
+                ->where('is_deleted', 0)
+                ->get();
+            
+            $data = $moyenPayement->map(function ($item) {
+                return [
+                    'moyen_payement_id' => $item->id,
+                    'user_id' => $item->user->id,
+                    'user_detail' => $item->user,
+                    
+                    'method_payement_id' => $item->methodPayement->id,
+                    'method_payement_name' => $item->methodPayement->name,
+                    'valeur_method_payement' => $item->valeur_method_payement,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+            
+            return response()->json([
+                'data' => $data,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
-}
+
 
 
 /**
@@ -89,16 +111,41 @@ public function ListeMoyenPayement()
 
 public function ListeMoyenPayementUserAuth()
 {
-    try {
-        $moyenPayement = MoyenPayement::with('user')->where('is_blocked', 0)->where('is_deleted', 0)->where('user_id', Auth::user()->id)->get();
-        return response()->json([
-            'data' => $moyenPayement        ], 200);
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => 'An error occurred',
-            'message' => $e->getMessage()
-        ], 500);
+    {
+        try {
+            // Récupérer tous les moyens de paiement non bloqués et non supprimés
+            $moyenPayement = MoyenPayement::with(['user', 'methodPayement'])
+                ->where('is_blocked', 0)
+                ->where('is_deleted', 0)
+                ->where('user_id', Auth::user()->id)
+                ->get();
+            
+            $data = $moyenPayement->map(function ($item) {
+                return [
+                    'moyen_payement_id' => $item->id,
+                    'user_id' => $item->user->id,
+                    'user_detail' => $item->user,
+                    
+                    'method_payement_id' => $item->methodPayement->id,
+                    'method_payement_name' => $item->methodPayement->name,
+                    'valeur_method_payement' => $item->valeur_method_payement,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+            
+            return response()->json([
+                'data' => $data,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
+
 }
 
 /**
@@ -124,17 +171,38 @@ public function ListeMoyenPayementUserAuth()
  */
     public function ListeMoyenPayementBlocked()
     {
-         try{
-                $moyenPayement = MoyenPayement::with('user')->where('is_blocked',1)->where('is_deleted',0)->get();
-                return response()->json([
-                    'data' => $moyenPayement
-                ], 200);
-            } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
+         
+        try {
+            // Récupérer tous les moyens de paiement non bloqués et non supprimés
+            $moyenPayement = MoyenPayement::with(['user', 'methodPayement'])
+                ->where('is_blocked', 1)
+                ->where('is_deleted', 0)
+                ->get();
+            
+            $data = $moyenPayement->map(function ($item) {
+                return [
+                    'moyen_payement_id' => $item->id,
+                    'user_id' => $item->user->id,
+                    'user_detail' => $item->user,
+                    
+                    'method_payement_id' => $item->methodPayement->id,
+                    'method_payement_name' => $item->methodPayement->name,
+                    'valeur_method_payement' => $item->valeur_method_payement,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+            
+            return response()->json([
+                'data' => $data,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -170,17 +238,38 @@ public function ListeMoyenPayementUserAuth()
 
     public function ListeMoyenPayementDeleted()
     {
-         try{
-                $moyenPayement = MoyenPayement::with('user')->where('is_blocked',0)->where('is_deleted',1)->get();
-                return response()->json([
-                    'data' => $moyenPayement
-                ], 200);
-            } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
+         
+        try {
+            // Récupérer tous les moyens de paiement non bloqués et non supprimés
+            $moyenPayement = MoyenPayement::with(['user', 'methodPayement'])
+                ->where('is_blocked', 0)
+                ->where('is_deleted', 1)
+                ->get();
+            
+            $data = $moyenPayement->map(function ($item) {
+                return [
+                    'moyen_payement_id' => $item->id,
+                    'user_id' => $item->user->id,
+                    'user_detail' => $item->user,
+                    
+                    'method_payement_id' => $item->methodPayement->id,
+                    'method_payement_name' => $item->methodPayement->name,
+                    'valeur_method_payement' => $item->valeur_method_payement,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+            
+            return response()->json([
+                'data' => $data,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 

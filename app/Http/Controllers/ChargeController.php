@@ -295,9 +295,4 @@ class ChargeController extends Controller
         }
 
     }
-    
-
-  
-
-
 }

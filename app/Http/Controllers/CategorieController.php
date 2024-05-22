@@ -40,10 +40,10 @@ class CategorieController extends Controller
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
                 foreach ($categoryEquipment as $k) {
                     $b = Equipment::where('id', $k->equipment_id)->get();
-                
                         foreach ($b as $e) {
                             $a[] = [
-                                'id' => $e->id,
+                                'id_equipement' => $e->id,
+                                'id_equipement_category' => $k->id,
                                 'name' => $e->name,
                                 'icone' => $e->icone,
                                 'is_deleted' => $e->is_deleted,
@@ -51,22 +51,21 @@ class CategorieController extends Controller
                                 'created_at' => $e->created_at,
                                 'updated_at' => $e->updated_at,
                             ];
-
                         }
                 }
                 
                 $data[] = [
-                    'id' => $category->id,
+                    'id_categorie' => $category->id,
                     'name' =>$category->name,
                     'is_deleted' =>$category->id_deleted,
                     'is_blocked' =>$category->is_blocked,
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
-                    'equipments'  => $a
+                    'equipments'  => $a,
+                    
                 ];
 
             }
-
             return response()->json([
                 'data' => $data
             ], 200);
@@ -243,52 +242,65 @@ class CategorieController extends Controller
     }
 
 /**
-     * @OA\Post(
-     *     path="/api/category/store",
-     *     summary="create new category",
-     *     tags={"Category"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="cuisine,etc")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="category add successfuly",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="piscine,cuisine,etc")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Invalid credentials"
-     *     )
-     * )
-     */
+         * @OA\Post(
+         *     path="/api/category/store",
+         *     summary="Create a new category ",
+         *     tags={"Category"},
+         * security={{"bearerAuth": {}}},
+ * @OA\RequestBody(
+ *     required=true,
+ *     @OA\MediaType(
+ *       mediaType="multipart/form-data",
+ *       @OA\Schema(
+ *         type="object",
+ *         @OA\Property(property="name", type="string", example="Bureau,..."),
+ *         @OA\Property(
+ *           property="icone",
+ *           type="string",
+ *           format="binary",
+ *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
+ *         ),
+ *       )
+ *     )
+ *   ),
+         *     @OA\Response(
+         *         response=200,
+         *         description="Category  created successfully"
+         *     ),
+         *     @OA\Response(
+         *         response=401,
+         *         description="Invalid credentials"
+         *     )
+         * )
+         */
 
-    public function store(Request $request)
-    {
-        try{
-                $request->validate([
-                    'name' => 'required|unique:categories|max:255',
-                ]);
-                $category = new Category();
-                $category->name = $request->name;
-                $category->is_verified = true;
-                $category->save();
-                return response()->json([
-                    'message' => 'Category is successfully created',
-                    'data' => $category
-                ]);
-    
-        } catch(Exception $e) {
-            return response()->json($e);
-        }
-
-    }
+         public function store(Request $request)
+         {
+             try{
+                     $request->validate([
+                         'name' => 'required|unique:categories|max:255',
+                     ]);
+                     $category = new Category();
+                     if ($request->hasFile('icone')) {
+                         $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
+                         $identity_profil_path = $request->file('icone')->move(public_path('image/iconeCategory'), $icone_name);
+                         $base_url = url('/');
+                         $icone_url = $base_url . '/image/iconeCategory/' . $icone_name;
+                         $category->icone = $icone_url;
+                         }
+                     $category->name = $request->name;
+                     $category->is_verified = true;
+                     $category->save();
+                     return response()->json([
+                         'message' => 'Category is successfully created',
+                         'data' => $category
+                     ]);
+         
+             } catch(Exception $e) {
+                 return response()->json($e->getMessage());
+             }
+     
+         }
 
     public function storeDefault(Request $request,$housingId){
         $request->validate([
@@ -405,7 +417,7 @@ class CategorieController extends Controller
 
   /**
      * @OA\Put(
-     *     path="/api/category/update/{id}",
+     *     path="/api/category/updateName/{id}",
      *     summary="Update category by ID",
      *     tags={"Category"},
      * security={{"bearerAuth": {}}},
@@ -438,14 +450,9 @@ class CategorieController extends Controller
      * )
      */
 
-    public function update(Request $request, string $id)
+    public function updateName(Request $request, string $id)
     {
-
         try{
-            $category = Category::find($id);
-            if (!$category) {
-                return response()->json(['data' => 'Category not found.'], 404);
-            }
             $data = $request->validate([
                 'name' =>'required | string'
             ]);
@@ -455,6 +462,101 @@ class CategorieController extends Controller
             return response()->json($e);
         }
 
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/category/updateIcone/{id}",
+     *     summary="Update a category icone by ID",
+     *     tags={"Category"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the category to update",
+     *         @OA\Schema(type="integer")
+     *     ),
+ * @OA\RequestBody(
+ *     required=true,
+ *     @OA\MediaType(
+ *       mediaType="multipart/form-data",
+ *       @OA\Schema(
+ *         type="object",
+ *         @OA\Property(
+ *           property="icone",
+ *           type="string",
+ *           format="binary",
+ *           description="Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)"
+ *         ),
+ *       )
+ *     )
+ *   ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="string", example="Category updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="The given data was invalid.")
+     *         )
+     *     )
+     * )
+     */
+    public function updateIcone(Request $request, string $id)
+    {
+        
+        try {
+            $category = Category::find($id);
+            
+            if (!$category) {
+                return response()->json(['error' => 'Category non trouvé.'], 404);
+            }
+            
+            // $request->validate([
+            //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
+            //     ]);
+
+            $oldProfilePhotoUrl = $category->icone;
+            if ($oldProfilePhotoUrl) {
+                $parsedUrl = parse_url($oldProfilePhotoUrl);
+                $oldProfilePhotoPath = public_path($parsedUrl['path']);
+                if (F::exists($oldProfilePhotoPath)) {
+                    F::delete($oldProfilePhotoPath);
+                }
+            }
+                
+                if ($request->hasFile('icone')) {
+                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
+                    $icone_path = $request->file('icone')->move(public_path('image/iconeCategory'), $icone_name);
+                    $base_url = url('/');
+                    $icone_url = $base_url . '/image/iconeCategory/' . $icone_name;
+                    
+                    Category::whereId($id)->update(['icone' => $icone_url]);
+                    
+                    return response()->json(['data' => 'icône de la catégorie mis à jour avec succès.'], 200);
+                } else {
+                return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
+            }
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Erreur de requête SQL: ' . $e->getMessage()], 500);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
    /**

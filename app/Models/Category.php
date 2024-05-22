@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory;
-    
+    protected $fillable = [
+        'is_verified','name'
+    ];
+
     public function equipment_category()
     {
       return $this->hasMany(equipment_category::class);

@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Housing;
 use App\Models\housing_preference;
-use App\Models\Notification;
 use App\Models\Preference;
-use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Validation\ValidationException ;
 use Exception;
-use Illuminate\Support\Facades\Auth;
+
+
 
 class PreferenceController extends Controller
 {
@@ -175,74 +178,10 @@ class PreferenceController extends Controller
     }
 
 
-       /**
- * @OA\Post(
- *     path="/api/preference/storeUnexist/{housingId}",
- *     summary="Create a new preference",
- *     tags={"HousingPreference"},
- * security={{"bearerAuth": {}}},
- * @OA\Parameter(
-     *         name="housingId",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the housing",
-     *         @OA\Schema(type="integer")
-     *     ),
- *      @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="proche de la plage,etc")
-     *         )
-     *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Preference created successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Invalid credentials"
- *     )
- * )
- */
-    public function storeUnexist(Request $request,$housingId)
-    {
-        try{
-                $request->validate([
-                    'name' => 'required|unique:preferences|max:255',
-                ]);
-                $preference = new Preference();
-                $preference->name = $request->name;
-                $preference->is_verified = false;
-                $preference->save();
-                $housingPreference = new housing_preference();
-                $housingPreference->housing_id = $housingId;
-                $housingPreference->preference_id = $preference->id;
-                $housingPreference->is_verified = false;
-                // return response()->json('ok');
-                $housingPreference->save();
-                $userId = Auth::id();
-                    $notification = new Notification([
-                        'name' => "L'enregistrement de cette nouvelle  préférence a été pris en compte. l'administrateur validera dans moin de 48h",
-                        'user_id' => $userId,
-                       ]);
-                       $notification->save();
-                     $adminUsers = User::where('is_admin', 1)->get();
-                            foreach ($adminUsers as $adminUser) {
-                                $notification = new Notification();
-                                $notification->user_id = $adminUser->id;
-                                $notification->name = "Un hôte  vient d'enregistrer une nouvelle préférence'.Veuilez vous connecter pour valider";
-                                $notification->save();
-                            }
-                return response()->json(['data' => 'Type de preference créé avec succès.', 'preference' => $preference], 201);
-        } catch(Exception $e) {
-            return response()->json($e);
-        }
-
-    }
+      
 
 
-         
+        
     
 
  /**
@@ -423,7 +362,7 @@ class PreferenceController extends Controller
                     
                     Preference::whereId($id)->update(['icone' => $icone_url]);
                     
-                    return response()->json(['data' => 'icône de la préférence mis à jour avec succès.'], 200);
+                    return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
@@ -463,14 +402,13 @@ class PreferenceController extends Controller
     public function destroy(string $id)
     {
         try{
-            $preference = Preference::find($id);
+                $preference = Preference::whereId($id)->update(['is_deleted' => true]);
 
-            if (!$preference) {
-                return response()->json(['error' => 'preference non trouvé.'], 404);
-            }
-                $preference->delete();
+                if (!$preference) {
+                    return response()->json(['error' => 'Préférence non trouvé.'], 404);
+                }
 
-                return response()->json(['data' => 'preference supprimé avec succès.'], 200);
+                return response()->json(['data' => 'Préférence supprimé avec succès.'], 200);
         } catch(Exception $e) {    
             return response()->json($e);
         }
@@ -580,7 +518,7 @@ class PreferenceController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/preference/makeVerified/{id}/{housingId}",
+     *     path="/api/preference/makeVerified/{id}",
      *     summary="make verified an preference",
      *     tags={"Preference"},
      * security={{"bearerAuth": {}}},
@@ -588,13 +526,6 @@ class PreferenceController extends Controller
      *         name="id",
      *         in="path",
      *         description="ID of the preference to verified",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *    @OA\Parameter(
-     *         name="housingId",
-     *         in="path",
-     *         description="ID of the housing to verified",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
@@ -614,44 +545,48 @@ class PreferenceController extends Controller
      *     )
      * )
      */
-    public function makeVerified(string $id,$housingId)
-    {
-        try{
-            $preference = Preference::find($id);
-            $housingPreference = housing_preference::where('housing_id',$housingId)
-            ->where('preference_id',$id)->first();
+    public function makeVerified($id)
+{
+    try {
+        // Récupérer la préférence par son ID, ou échouer si elle n'existe pas
+        $preference = Preference::findOrFail($id);
 
-            // return response()->json($housingPreference);
-            if (!$preference || !$housingPreference) {
-                return response()->json(['data' => 'preference ou association préférence logement non trouvé.'], 200);
-            }
+        if ($preference->is_verified) {
+            return response()->json(['data' => 'Préférence déjà vérifiée.'], 200);
+        }
 
-            if ($preference->is_verified == true ) {
-                return response()->json(['data' => 'preference déjà vérifié.'], 200);
-            }
+        // Mettre à jour le statut de vérification
+        $preference->is_verified = true;
+        $preference->save();  // Assurez-vous de sauvegarder les changements
 
-            if ($housingPreference->is_verified == true) {
-                return response()->json(['data' => 'association preference logement déjà vérifié.'], 404);
-            }
+        // Récupérer la relation Housing_preference et la mettre à jour si elle existe
+        $housingPreference = Housing_preference::where('preference_id', $id)->first();
 
-            Preference::whereId($id)->update(['is_verified' => true]);
+        if ($housingPreference) {
+            $housingPreference->update(['is_verified' => true]);
 
-            housing_preference::where('housing_id',$housingId)
-            ->where('preference_id',$preference->id)
-            ->update(['is_verified' => true]);
-
+            // Créer une notification
             $notification = new Notification([
-                'name' => "L'enregistrement de cette préférence : ".Preference::find($id)->name." a été validé par l'administrateur",
-                'user_id' =>$housingPreference->housing->user_id ,
-               ]);
-               $notification->save();
+                'name' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
+                'user_id' => $housingPreference->housing->user_id,
+            ]);
+            $notification->save();
 
-            return response()->json(['data' => 'Preference vérifié avec succès.'], 200);
-    } catch(Exception $e) {    
-        return response()->json($e->getMessage(), 500);
+            // Envoyer un e-mail de notification
+            $mail = [
+                'title' => "Validation de la nouvelle préférence ajoutée au logement",
+                'body' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
+            ];
+
+            Mail::to($housingPreference->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+        }
+
+        return response()->json(['data' => 'Préférence vérifiée avec succès.'], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
 
-    }
 
 }

@@ -25,19 +25,19 @@ class HousingChargeController extends Controller
  *             mediaType="application/json",
  *             @OA\Schema(
  *                 type="object",
- *                 @OA\Property(property="housingId", type="string", example="1"),
+ *                 @OA\Property(property="housingId", type="integer", example="1"),
  *                 @OA\Property(
  *                     property="hote",
  *                     type="object",
- *                     @OA\Property(property="id", type="array", @OA\Items(type="string")),
- *                     @OA\Property(property="valeur", type="array", @OA\Items(type="string")),
+ *                     @OA\Property(property="idCharge", type="array", @OA\Items(type="integer")),
+ *                     @OA\Property(property="valeurCharge", type="array", @OA\Items(type="integer")),
  *                     description="Informations sur les charges de l'hôte"
  *                 ),
  *                 @OA\Property(
  *                     property="traveler",
  *                     type="object",
- *                     @OA\Property(property="id", type="array", @OA\Items(type="string")),
- *                     @OA\Property(property="valeur", type="array", @OA\Items(type="string")),
+ *                     @OA\Property(property="idCharge", type="array", @OA\Items(type="integer")),
+ *                     @OA\Property(property="valeurCharge", type="array", @OA\Items(type="integer")),
  *                     description="Informations sur les charges du voyageur"
  *                 ),
  *             )
@@ -67,13 +67,13 @@ class HousingChargeController extends Controller
                 $hote = $request->input('hote');
                 $traveler = $request->input('traveler');
         
-                $hoteRepeatedInTraveler = array_intersect($hote['id'], $traveler['id']);
-                $travelerRepeatedInHote = array_intersect($traveler['id'], $hote['id']);
+                $hoteRepeatedInTraveler = array_intersect($hote['idCharge'], $traveler['idCharge']);
+                $travelerRepeatedInHote = array_intersect($traveler['idCharge'], $hote['idCharge']);
         
                 if (!empty($hoteRepeatedInTraveler) || !empty($travelerRepeatedInHote)) {
                     return response()->json(['message' => 'Element se répète'], 404);
                 } else {
-                    foreach ($hote['id'] as $index => $chargeId) {
+                    foreach ($hote['idCharge'] as $index => $chargeId) {
                         if (!Charge::find($chargeId)) {
                             return response()->json(['message' => 'Une ou plusieurs charges non trouvées'], 404);
                         }
@@ -93,7 +93,7 @@ class HousingChargeController extends Controller
                             $housingCharge->housing_id = $request->housingId;
                             $housingCharge->is_mycharge = true;
                             $housingCharge->charge_id = $chargeId;
-                            $housingCharge->valeur = $hote['valeur'][$index];
+                            $housingCharge->valeur = $hote['valeurCharge'][$index];
                             $housingCharge->save();
         
                             $charge = Charge::find($housingCharge->charge_id);
@@ -108,7 +108,7 @@ class HousingChargeController extends Controller
                         }
                     }
         
-                    foreach ($traveler['id'] as $index => $chargeId) {
+                    foreach ($traveler['idCharge'] as $index => $chargeId) {
                         if (!Charge::find($chargeId)) {
                             return response()->json(['message' => 'Charge non trouvée'], 404);
                         }
@@ -128,7 +128,7 @@ class HousingChargeController extends Controller
                             $housingCharge->housing_id = $request->housingId;
                             $housingCharge->is_mycharge = false;
                             $housingCharge->charge_id = $chargeId;
-                            $housingCharge->valeur = $traveler['valeur'][$index];
+                            $housingCharge->valeur = $traveler['valeurCharge'][$index];
                             $housingCharge->save();
         
                             $charge = Charge::find($housingCharge->charge_id);
@@ -163,7 +163,7 @@ class HousingChargeController extends Controller
     
     /**
      * @OA\Get(
-     *     path="/api/charge/listelogementcharge/{housingId}",
+     *     path="/api/logement/charge/listelogementcharge/{housingId}",
      *     summary="Get all charges for a specific housing",
      *     tags={"Housing Charge"},
      * security={{"bearerAuth": {}}},
@@ -184,49 +184,106 @@ class HousingChargeController extends Controller
      *     )
      * )
      */
-    public function listelogementcharge($housingId){
-        try {
-            $hoteCharge_id = [];
-            $travelerCharge_id = [];
-            $housingCharges = Housing_charge::where('housing_id', $housingId)->get();
-            if ($housingCharges->isEmpty()) {
-                return response()->json(['message' => 'Aucune charge associé à ce logement'], 404);
-            }
-            
-            foreach ($housingCharges as $housingCharge) {
-                $charge = Charge::find($housingCharge->charge_id);
-                // return response()->json($charge);
-                if ($housingCharge->is_mycharge == true) {
-                    $hoteCharge_id[] = [
-                        'id_housing_charge' => $housingCharge->id,
-                        'housing_id' => $housingCharge->housing_id,
-                        'valeur_chageur' => $housingCharge->valeur,
-                        'id_charge' => $charge->id,
-                        'charge_name' => $charge->name,
-                        'is_mycharge' => $housingCharge->is_mycharge
-                    ];
-                }else{
-                    $travelerCharge_id[] = [
-                        'id_housing_charge' => $housingCharge->id,
-                        'housing_id' => $housingCharge->housing_id,
-                        'valeur_chageur' => $housingCharge->valeur,
-                        'id_charge' => $charge->id,
-                        'charge_name' => $charge->name,
-                        'is_mycharge' => $housingCharge->is_mycharge
-                    ];
-                }
-            }
-            return response()->json([
-                'data' => [
-                    'charge_hote' => $hoteCharge_id,
-                    'charge_traveler' => $travelerCharge_id
-                ]
-            ], 200);
-        } catch(Exception $e) {
-            return response()->json($e->getMessage());
+    public function listelogementcharge($housingId)
+{
+    try {
+        $hoteCharge_id = [];
+        $travelerCharge_id = [];
+        $totalHoteCharge = 0;
+        $totalTravelerCharge = 0;
+
+        $housingCharges = Housing_charge::where('housing_id', $housingId)->get();
+
+        if ($housingCharges->isEmpty()) {
+            return response()->json(['message' => 'Aucune charge associée à ce logement'], 404);
         }
+
+        foreach ($housingCharges as $housingCharge) {
+            $charge = Charge::find($housingCharge->charge_id);
+            $chargeData = [
+                'id_housing_charge' => $housingCharge->id,
+                'housing_id' => $housingCharge->housing_id,
+                'valeur_charge' => $housingCharge->valeur,
+                'id_charge' => $charge->id,
+                'charge_name' => $charge->name,
+                'is_mycharge' => $housingCharge->is_mycharge
+            ];
+
+            if ($housingCharge->is_mycharge) {
+                $hoteCharge_id[] = $chargeData;
+                $totalHoteCharge += $housingCharge->valeur;
+            } else {
+                $travelerCharge_id[] = $chargeData;
+                $totalTravelerCharge += $housingCharge->valeur;
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'charge_hote' => [
+                    'charges' => $hoteCharge_id,
+                    'total_charge_hote' => $totalHoteCharge
+                ],
+                'charge_traveler' => [
+                    'charges' => $travelerCharge_id,
+                    'total_charge_traveler' => $totalTravelerCharge
+                ],
+                'total_charge' => $totalHoteCharge + $totalTravelerCharge
+            ]
+        ], 200);
+    } catch(Exception $e) {
+        return response()->json($e->getMessage(), 500);
     }
+}
 
+/**
+ * @OA\Delete(
+ *     path="/api/logement/charge",
+ *     tags={"Housing Charge"},
+ *     summary="Supprime des charges associés à un logement",
+ *     description="Supprime l'association entre plusieurs charges et un logement à partir des IDs des associations.",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"housingChargeIds"},
+ *                 @OA\Property(
+ *                     property="housingChargeIds",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     description="Tableau contenant les IDs des charges du logement à supprimer"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Les charges du logement ont été retirés avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Les charges du logement ont été retirés avec succès")
+ *         )
+ *     ),
+ * )
+ */
+public function DeleteChargeHousing(Request $request)
+{
+    try {
+        $request->validate([
+            'housingChargeIds' => 'required|array',
+            'housingChargeIds.*' => 'integer|exists:housing_charges,id',
+        ]);
 
+        $housingChargeIds = $request->input('housingChargeIds');
+
+        Housing_charge::whereIn('id', $housingChargeIds)->delete();
+
+        return response()->json(['message' => 'Les charges du logement ont été retirés avec succès'], 200);
+    } catch (ValidationException $e) {
+        return response()->json(['message' => 'Un ou plusieurs charges du logement à retirer n\'existent pas'], 404);
+    }
+}
 
 }

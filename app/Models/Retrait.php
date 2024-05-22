@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Retrait extends Model
 {
     use HasFactory;
+    use HasFactory;
     protected $fillable = [
         'payment_method',
         'libelle',
@@ -23,5 +24,4 @@ class Retrait extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 }

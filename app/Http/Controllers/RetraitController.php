@@ -10,6 +10,8 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmailwithoutfile;
 
 class RetraitController extends Controller
 {
@@ -56,7 +58,7 @@ class RetraitController extends Controller
         ], 200);
     }
 
-                             /**
+    /**
      * @OA\Get(
      *     path="/api/retrait/ListRetraitConfirmedByAdmin",
      *     summary="Liste des retraits déjà confirmé par l'admin la plateforme(admin)",
@@ -230,21 +232,44 @@ class RetraitController extends Controller
 
                 $portfeuille = Portfeuille::where('user_id',$retrait->user_id)->first();
                 $portfeuille->update(['solde' => $portfeuille->solde - $montant]);
+                $previous_transactions = Portfeuille_transaction::all();
+   
+                $solde_total = $previous_transactions->sum('amount');
+                $solde_commission = $previous_transactions->sum('montant_commission');
+                $solde_restant = $previous_transactions->sum('montant_restant');
 
-                $transaction = new portfeuille_transaction();
-                $transaction->portfeuille_id = $portfeuille->id;
-                $transaction->amount = $montant;
-                $transaction->debit = 1;
-                $transaction->credit =0;
+                $new_solde_total = $solde_total + $montant;
+                $new_solde_commission = $solde_commission + 0;
+                $new_solde_restant = $solde_restant + 0;
+
+                $transaction = new Portfeuille_transaction();
+                $transaction->debit = true;
+                $transaction->credit = false;
+                $transaction->amount = $montant;;
+                $transaction->valeur_commission =0;
+                $transaction->montant_commission =0 ;
+                $transaction->montant_restant=0;
+                $transaction->solde_total = $new_solde_total;
+                $transaction->solde_commission = $new_solde_commission;
+                $transaction->solde_restant = $new_solde_restant;
+                $transaction->portfeuille_id =  $portfeuille->id;
                 $transaction->id_transaction = $retrait->identifiant_payement_method;
                 $transaction->payment_method = $retrait->payment_method;
-                $transaction->motif = "Demande de retrait";
+                $transaction->motif = "Virement sur le compte après une demande de retrait";
                 $transaction->save();
 
                 $notification = new Notification();
                 $notification->user_id = $retrait->user_id;
-                $notification->name = 'Votre demande de retrait a été validé par l\'administrateur,  montant transféré: '.$montant.' fcfa. Votre solde est de '.$portfeuille->solde.' fcfa';
+                $notification->name = 'Votre demande de retrait a été validé par l\'administrateur,  montant transféré: '.$montant.' fcfa. Votre nouveau solde est de '.$portfeuille->solde.' fcfa';
                 $notification->save();
+                $mail = [
+                    'title' => 'Confirmation de la demande de retrait',
+                    'body' => "Votre demande de retrait a été validée par l'administrateur. Le montant transféré est de {$montant} FCFA. Votre nouveau solde est de {$portfeuille->solde} FCFA."
+                ];
+                
+                 Mail::to($retrait->user->email)->send(new NotificationEmailwithoutfile($mail));
+                
+                
 
             return response()->json([
                 'message' => 'Retraits successfully validated',
@@ -327,15 +352,6 @@ class RetraitController extends Controller
         public function rejectRetraitByAdmin(Request $request, $retraitId)
         {
 
-            // try{
-          
-            // } catch(Exception $e) {
-            //     return response()->json([
-            //         'error' => 'An error occurred',
-            //         'message' => $e->getMessage()
-            //     ], 500);
-            // }
-
             
             try{
                 $retrait = Retrait::find($retraitId);
@@ -371,6 +387,12 @@ class RetraitController extends Controller
                         'user_id' => $retrait->user_id,
                        ]);
                        $notification->save();
+                       $mail = [
+                        'title' => 'Rejet de la demande de retrait',
+                        'body' => "Votre demande de retrait a été rejeté pour le motif suivant <<".$request->input('motif').">>. Pour plus d'informations vous pouvez contactez l'administrateur"
+                    ];
+                    
+                     Mail::to($retrait->user->email)->send(new NotificationEmailwithoutfile($mail));
                     return response()->json([
                     'message' => 'Retrait successfully rejected',
                  ]);
@@ -467,12 +489,25 @@ class RetraitController extends Controller
                         'user_id' => $userId,
                        ]);
                        $notification->save();
-                     $adminUsers = User::where('is_admin', 1)->get();
+                       $mail = [
+                        'title' => 'Demande de retrait',
+                        'body' => "Votre demande de retrait a été pris en compte, patientez un moment pour recevoir le paiement."
+                       ];
+                    
+                     Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+
+                       $adminUsers = User::where('is_admin', 1)->get();
                             foreach ($adminUsers as $adminUser) {
                                 $notification = new Notification();
                                 $notification->user_id = $adminUser->id;
-                                $notification->name = "Un utilisateur  vient d'enregistrer une demande de retrait.";
+                                $notification->name = "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter.";
                                 $notification->save();
+                                $mail = [
+                                    'title' => 'Demande de retrait',
+                                    'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
+                                   ];
+                                
+                                 Mail::to( $adminUser->email)->send(new NotificationEmailwithoutfile($mail));
                             }
         return response()->json([
             'message' => 'save successfuly',

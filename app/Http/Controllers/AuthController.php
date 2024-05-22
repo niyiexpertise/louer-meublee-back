@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Exception;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\Right;
+use App\Models\User_right;
 use validationException;
 class AuthController extends Controller
 {
@@ -302,10 +304,18 @@ class AuthController extends Controller
     //assigner un rôle à un utilisateur
     public function assignRoleToUser(Request $request,$id,$r){
         try{
+                
                 $role = Role::find($r);
+
+                $right = Right::find($r);
                
                 $user = User::find($id);
                 if (!$role) {
+                    return response()->json([
+                        'message' => 'role not found',
+                    ]);
+                }
+                if (!$right) {
                     return response()->json([
                         'message' => 'role not found',
                     ]);
@@ -314,13 +324,22 @@ class AuthController extends Controller
                 if (!$user) {
                     return response()->json('user not found');
                 }
+                $u = User_right::where('user_id',$id)->get();
+                foreach($u as $utilisateur){
+                    $roles = Role::where('id',$utilisateur->right_id)->first();
+                    $user->removeRole($roles);
+                }
                 
-                if($user->hasRole($role->name)){
+                if($user->hasRole($role->name) && User_right::where('user_id',$id)->where('right_id',$r)->exists()){
                     return response()->json([
                         'message' => 'Ce rôle a déjà été assigné à cet utilisateur'
                     ]);
                 }
                 $user->assignRole($role);
+                $user_right = new User_right();
+                $user_right->user_id = $id;
+                $user_right->right_id = $r;
+                $user_right->save();
 
                 return response()->json([
                     'message' => 'role assigné avec success',
@@ -341,8 +360,7 @@ class AuthController extends Controller
                         'is_deleted' => $user->is_deleted,
                         'is_blocked' => $user->is_blocked,
                         'file_profil' => $user->file_profil,
-                        
-                        'role' => User::find($id)->getRoleNames()
+                        'role' => User::find($id)->getRoleNames(),
                     ]
                 ]);
         }catch(ValidationException $e) {
@@ -405,26 +423,34 @@ class AuthController extends Controller
     //retirer un rôle à un utilisateur
     public function RevokeRoleToUser(Request $request,$id,$r){
         try{
-                $role = Role::find($r);
-                $user = User::find($id);
-               
-                if (!$role) {
-                    return response()->json([
-                        'message' => 'role not found',
-                    ]);
-                }
+            $role = Role::find($r);
 
-                if (!$user) {
-                    return response()->json('user not found');
-                }
+            $right = Right::find($r);
+           
+            $user = User::find($id);
+            if (!$role) {
+                return response()->json([
+                    'message' => 'role not found',
+                ]);
+            }
+            if (!$right) {
+                return response()->json([
+                    'message' => 'role not found',
+                ]);
+            }
+
+            if (!$user) {
+                return response()->json('user not found');
+            }
                 
-                if(!$user->hasRole($role->name)){
+                if(!($user->hasRole($role->name)&& User_right::where('user_id',$id)->where('right_id',$r)->exists())){
                     return response()->json([
                         'message' => 'Cet utilisateur n\'a pas le rôle que vous voulez lui retirer'
                     ]);
                 }
 
                 $user->removeRole($role);
+                User_right::where('user_id',$id)->where('right_id',$r)->delete();
 
                 return response()->json([
                     'message' => 'role retire avec success',
@@ -445,7 +471,6 @@ class AuthController extends Controller
                         'is_deleted' => $user->is_deleted,
                         'is_blocked' => $user->is_blocked,
                         'file_profil' => $user->file_profil,
-                        
                         'role' => User::find($id)->getRoleNames()
                     ]
                 ]);
@@ -1414,8 +1439,8 @@ class AuthController extends Controller
         //quitter le role voyageur au role hote
        public function switchToHote(){
             try{
-                // $id = auth()->id();
-                $id = 4;
+             $id = auth()->id();
+                
                 $user = User::find($id)->assignRole("hote");
                 $user = User::find($id)->removeRole("traveler");
                 return response()->json([

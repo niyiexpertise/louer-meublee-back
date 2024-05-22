@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('housing_equipments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('equipment_id')->references('id')->on('equipment')->onDelete('cascade');
+            $table->foreignId('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->foreignId('housing_id')->references('id')->on('housings')->onDelete('cascade');
+            $table->boolean('is_verified');
             $table->timestamps();
         });
     }

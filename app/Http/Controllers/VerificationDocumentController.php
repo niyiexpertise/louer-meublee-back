@@ -7,11 +7,17 @@ use App\Models\verification_statut;
 use App\Models\User;
 use App\Models\Document;
 use App\Models\Commission;
+use App\Models\Right;
+use App\Models\User_right;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificationEmail;
+use App\Mail\NotificationEmailwithoutfile;
+use Illuminate\Support\Facades\DB;
 class VerificationDocumentController extends Controller
 {
 
@@ -93,93 +99,180 @@ public function index()
 
 }
 
+    /**
+     * @OA\Post(
+     *   path="/api/verificationdocument/store",
+     *   summary="Ajouter des Documents de Vérification",
+     *   description="Ajoute des documents de vérification avec des fichiers joints (images). Envoie des notifications aux administrateurs lorsqu'un document est ajouté.",
+     *   tags={"verification_document"},
+    *  security={{"bearerAuth": {}}},
+     *   @OA\RequestBody(
+     *     required=true,
+     *     description="Requête avec des fichiers à uploader",
+     *     @OA\MediaType(
+     *       mediaType="multipart/form-data",
+     *       @OA\Schema(
+     *         type="object",
+     *         required={"id_document", "image_piece"},
+     *         properties={
+     *           @OA\Property(
+     *             property="id_document",
+     *             type="array",
+     *             description="Liste des IDs des documents",
+     *             @OA\Items(type="integer")
+     *           ),
+     *           @OA\Property(
+     *             property="image_piece",
+     *             type="array",
+     *             description="Liste des fichiers image",
+     *             @OA\Items(type="string", format="binary")
+     *           ),
+     *         }
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Documents créés avec succès",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="data",
+     *           type="string",
+     *           example="Verification documents créés avec succès."
+     *         ),
+     *         @OA\Property(
+     *           property="verification_documents",
+     *           type="array",
+     *           description="Documents de vérification créés",
+     *           @OA\Items(
+     *             type="object",
+     *             properties={
+     *               @OA\Property(property="user_id", type="integer"),
+     *               @OA\Property(property="document_id", type="integer"),
+     *               @OA\Property(property="path", type="string", format="uri"),
+     *             }
+     *           )
+     *         ),
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=400,
+     *     description="Mauvaise requête",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="error",
+     *           type="string",
+     *           example="Les tableaux id_document et image_piece doivent avoir la même longueur."
+     *         ),
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erreur du serveur",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       properties={
+     *         @OA\Property(
+     *           property="error",
+     *           type="string",
+     *           example="Erreur interne du serveur."
+     *         ),
+     *       }
+     *     )
+     *   )
+     * )
+     */
 
 
 
-/**
- * @OA\Post(
- *     path="/api/verificationdocument/store",
- *     summary="Enregistrer des documents de vérification avec des images",
- *     tags={"verification_document"},
- * security={{"bearerAuth": {}}},
- *     @OA\RequestBody(
- *         required=true,
- *         description="Données pour enregistrer les documents de vérification",
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 @OA\Property(
- *                     property="id_document[]",
- *                     description="ID du document",
- *                     type="array",
- *                     @OA\Items(type="integer"),
- *                 ),
- *                 @OA\Property(
- *                     property="image_piece[]",
- *                     description="Image de la pièce",
- *                     type="array",
- *                     @OA\Items(type="string", format="binary"),
- *                 ),
- *                 required={"id_document", "image_piece"}
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Documents de vérification créés avec succès"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Erreur de validation"
- *     )
- * )
- */
-public function store(Request $request)
-{
-    try {
-        $verificationDocuments = [];
-        $user_id = auth()->user()->id;
-        $idDocuments =$request->id_document;
-        $imagePieces = $request->file('image_piece');     
-        if (count($idDocuments) !== count($imagePieces)) {
-            return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
-        }
+     public function store(Request $request)
+     {
+         try {
+             $user = auth()->user();
+             $user_id = $user->id;
+             $user_name = $user->lastname;
+             $user_firstname = $user->firstname;
+             $idDocuments = $request->id_document;
+             $imagePieces = $request->file('image_piece');     
+             if (count($idDocuments) !== count($imagePieces)) {
+                 return response()->json(['error' => 'Les tableaux id_document et image_piece doivent avoir la même longueur.'], 400);
+             }
+     
+             $verificationDocuments = [];
+     
+             foreach ($idDocuments as $key => $idDocument) {
 
-        foreach ($idDocuments as $key => $idDocument) {
-            $imagePiece = $imagePieces[$key];
+                 $existingDocument = verification_document::where('user_id', $user_id)
+                     ->where('document_id', $idDocument)
+                     ->first();
+     
+                 if ($existingDocument) {
+                     return response()->json([
+                         'error' => "Le document avec l'identifiant $idDocument a déjà été soumis par cet utilisateur."
+                     ], 400);
+                 }
+     
+                 $imagePiece = $imagePieces[$key];
+     
+                 $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
+                 $path_url = url('/image/document_verification/' . $path_name);
+     
+                 $verificationDocument = new verification_document();
+                 $verificationDocument->user_id = $user_id; 
+                 $verificationDocument->document_id = $idDocument;
+                 $verificationDocument->path = $path_url;
+                 $verificationDocument->save();
+                 
+                 $verificationStatut = new verification_statut();
+                 $verificationStatut->verification_document_id = $verificationDocument->id;
+                 $verificationStatut->save();
+     
+                 $imagePiece->move(public_path('image/document_verification'), $path_name);
 
-            $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-            
-            $base_url = url('/');
-            $path_url = $base_url . '/image/document_verification/' . $path_name;
-            
-            $verificationDocument = new verification_document();
-            $verificationDocument->user_id = $user_id; 
+                 $filePath = public_path('image/document_verification/' . $path_name);
+                 $filePaths[] = $filePath;
+                 $verificationDocuments[] = $verificationDocument;
+     
 
-            $verificationDocument->document_id = $idDocument;
-            $verificationDocument->path = $path_url;
-            $verificationDocument->save();
-            
-            $verificationStatut = new verification_statut();
-            $verificationStatut->verification_document_id = $verificationDocument->id;
-            $verificationStatut->save();
-            $path_path = $imagePiece->move(public_path('image/document_verification'), $path_name);
-            $verificationDocuments[] = $verificationDocument;
+             }
+             $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
-            $adminUsers = User::where('is_admin', 1)->get();
-            foreach ($adminUsers as $adminUser) {
-                $notification = new Notification();
-                $notification->user_id = $adminUser->id;
-                $notification->name = "Une demande d'être hôte vient d'être envoyée.";
-                $notification->save();
-            }
-        }
+             if (!$adminRole) {
+                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
+             }
+         
+             $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
+                 $query->where('right_id', $adminRole->id);
+             })
+             ->get();
+         
+             foreach ($adminUsers as $adminUser) {
+                 $notification = new Notification();
+                 $notification->user_id = $adminUser->id;
+                 $notification->name = "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname.";
+                 $notification->save();
+         
+                 $mail = [
+                     'title' => 'Demande d\'être hôte',
+                     'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
+                 ];
+         
+                 Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
 
-        return response()->json(['data' => 'Verification documents crees avec succes.', 'verification_documents' => $verificationDocuments], 201);
-    } catch (Exception $e) {
-        return response()->json($e);
-    }
-}
+                } 
+     
+             return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
+         } catch (Exception $e) {
+             return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
+         }
+     }
+     
 
  
     /**
@@ -268,6 +361,7 @@ public function store(Request $request)
      *     summary="Valider les documents en un coup ,bref valider tout en un clic",
      *     description="Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.",
      *     tags={"Validation documents pour etre hôte"},
+      * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         description="Données requises pour la validation des documents",
@@ -315,6 +409,13 @@ public function validateDocuments(Request $request)
     if (!$verificationDocumentsExist) {
         return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
     }
+    $user_exist = User::where('id', $user_id )->exists();
+    if (!$user_exist) {
+        return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+    }
+    if (!$verificationDocumentsExist) {
+        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
+    }
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
@@ -325,7 +426,11 @@ public function validateDocuments(Request $request)
         }
 
         $user = User::findOrFail($user_id);
-        $user->update(['is_hote' => 1]);
+        $right = Right::where('name','hote')->first();
+        $user_right = new User_right();
+        $user_right->user_id = $user_id;
+        $user_right->right_id = $right->id;
+        $user_right->save();
         $notification = new Notification();
         $notification->user_id = $user_id;
         $notification->name = "Votre demande d'être hôte a été validée avec succès.";
@@ -334,6 +439,11 @@ public function validateDocuments(Request $request)
         $commission->user_id=$user->id;
         $commission->valeur=5;
         $commission->save();
+        $mail = [
+            'title' => 'Demande d\'être hôte',
+            'body' => "Votre demande d'être hôte a été validée avec succès."
+        ];
+         Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
@@ -347,6 +457,7 @@ public function validateDocuments(Request $request)
  *     path="/api/verificationdocument/hote/valider/one",
  *     summary="Valider un document de vérification pour devenir hôte(ici on valide document par document)",
  *     tags={"Validation documents pour etre hôte"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         description="Données pour valider un document de vérification",
@@ -402,6 +513,11 @@ public function validateDocument(Request $request)
             return response()->json(['error' => 'Le document de vérification spécifié n\'existe pas.'], 404);
         }
 
+        $user_exist = User::where('id', $user_id )->exists();
+        if (!$user_exist) {
+            return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+        }
+
         $verificationStatut->update(['status' => 1]);
 
         $user = User::findOrFail($user_id);
@@ -410,7 +526,11 @@ public function validateDocument(Request $request)
         })->count() === 0;
 
         if ($allDocumentsValidated) {
-            $user->update(['is_hote' => 1]);
+            $right = Right::where('name','hote')->first();
+            $user_right = new User_right();
+            $user_right->user_id = $user_id;
+            $user_right->right_id = $right->id;
+            $user_right->save();
             $notification = new Notification();
             $notification->user_id = $user_id;
             $notification->name = "Votre demande d'être hôte a été validée avec succès.";
@@ -419,6 +539,12 @@ public function validateDocument(Request $request)
             $commission->user_id=$user->id;
             $commission->valeur=5;
             $commission->save();
+            $mail = [
+                'title' => 'Demande d\'être hôte',
+                'body' => "Votre demande d'être hôte a été validée avec succès."
+            ];
+             Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
+            
 
         }
 
@@ -466,14 +592,13 @@ public function validateDocument(Request $request)
 public function userVerificationRequests()
 {
     try {
-        //$userId = Auth::id();
-        $userId = 2;
-
+        $userId = Auth::id();
         $user = User::with(['verificationDocuments' => function ($query) {
             $query->with('verificationStatut');
         }])->findOrFail($userId);
 
-        $is_hote = $user->is_hote;
+        $right = Right::where('name','hote')->first();
+        $exist = User_right::where('user_id',$userId)->where('right_id',$right->id)->exists();
 
         $verificationDocumentsWithStatus = $user->verificationDocuments->map(function ($verificationDocument) {
             return [
@@ -484,7 +609,7 @@ public function userVerificationRequests()
             ];
         });
 
-        $requestStatus = $is_hote ? 'Validé' : 'Non validé';
+        $requestStatus = $exist ? 'Validé' : 'Non validé';
 
         return response()->json([
             'verification_documents' => $verificationDocumentsWithStatus,
@@ -566,7 +691,7 @@ public function changeDocument(Request $request)
 
             $verificationDocument->path = $path_url;
             $verificationDocument->save();
-
+                     
             return response()->json(['message' => 'Document changé avec succès.'], 200);
         } else {
             return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);

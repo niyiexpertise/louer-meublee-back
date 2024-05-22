@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('preference_id')->references('id')->on('preferences')->onDelete('cascade');
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_blocked')->default(false);
+            $table->boolean('is_verified');
             $table->timestamps();
             
         });

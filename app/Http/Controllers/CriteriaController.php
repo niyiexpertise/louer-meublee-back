@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Criteria;
 use Illuminate\Http\Request;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
-use Illuminate\Validation\ValidationException ;
+
 use Exception;
-use Illuminate\Support\Facades\Auth;
 
 
 
@@ -96,8 +94,6 @@ class CriteriaController extends Controller
       
         }
 
- 
-
 /**
    * @OA\Get(
    *     path="/api/criteria/show/{id}",
@@ -135,14 +131,6 @@ class CriteriaController extends Controller
         return response()->json($e);
     }
 
-  }
-
-  /**
-   * Show the form for editing the specified resource.
-   */
-  public function edit(string $id)
-  {
-      //
   }
 
 /**

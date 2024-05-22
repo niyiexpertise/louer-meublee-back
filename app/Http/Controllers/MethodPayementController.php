@@ -29,20 +29,12 @@ class MethodPayementController extends Controller
   {
     try{
             $methodPayements = MethodPayement::all();
-                return response()->json(['data' => $methodPayements], 200);
-  } catch(Exception $e) {    
+            return response()->json(['data' => $methodPayements], 200);
+      } catch(Exception $e) {    
       return response()->json($e);
-  }
+     }
 
-  }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        
-    }
+  }  
 
 
 /**
@@ -193,16 +185,10 @@ class MethodPayementController extends Controller
   public function updateName(Request $request, string $id)
   {
     try{
-
-        $methodPayement = MethodPayement::find($id);
-
-        if (!$methodPayement) {
-            return response()->json(['error' => 'Méthode de payementnon trouvé.'], 404);
-        }
         $data = $request->validate([
             'name' =>'required | string'
         ]);
-        MethodPayement::whereId($id)->update($data);
+        $methodPayement = MethodPayement::whereId($id)->update($data);
         return response()->json(['data' => 'Nom du Méthode de payement mise à jour avec succès.'], 200);
     } catch(Exception $e) {    
         return response()->json($e);

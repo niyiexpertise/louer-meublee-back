@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use App\Models\Right;
 
 use Exception;
 
@@ -50,7 +51,7 @@ class RoleController extends Controller
       *     path="/api/role/store",
       *     summary="Create a new role ",
       *     tags={"Role"},
-      security={{"bearerAuth": {}}},
+      *security={{"bearerAuth": {}}},
       *     @OA\RequestBody(
       *         required=true,
       *         @OA\JsonContent(
@@ -74,6 +75,10 @@ class RoleController extends Controller
             $role = new Role();
             $role->name = $request->name;
             $role->save();
+
+            $right = new Right();
+            $right->name = $request->name;
+            $right->save();
             return response()->json([
                 'message' =>'Successfully created',
                 'role' => $role
@@ -154,7 +159,13 @@ class RoleController extends Controller
     public function destroy(string $id)
     {
         try{
+            if (!(Right::find($id) && Role::find($id))) {
+                return response()->json([
+                    'message' => 'role not found'
+                ]);
+            }
                 Role::find($id)->delete();
+                Right::find($id)->delete();
                 return response()->json([
                     'message' => ' role  deleted successfully ',
                 ]);

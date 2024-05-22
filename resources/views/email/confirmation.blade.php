@@ -49,8 +49,7 @@
                     <hr style="margin-top: -15px;">
                 </div>
                 <div style="margin-top: -20px; color: #1e272e; font-size: 24px;">  <center> <p> {{ $mail ['title'] }} </p>  </center></div> 
-{{--                 <div>  <center> <h6 class="before"> Before you sign in, we need to verify your identity. Enter the following code on the sign-in page. </h6>  </center> </div>
- --}}                <center>  <div class="body"> <div class="span"> {{$mail ['body'] }} </div> </div> </center> 
+              <center>  <div class="body"> <div class="span"> {{$mail ['body'] }} </div> </div> </center> 
                <center> <p class="margin: 3px" style="font-size: 20px; color: #1e272e;"> Soyez prudent <span style="color: red"> NE PARTAGEZ PAS CE CODE </span>. </center>  
                 </p>
                 <p style="font-weight: bold; font-size: 22px; color: #ff7900;  margin-left: 490px;"> Louer meublée </p>

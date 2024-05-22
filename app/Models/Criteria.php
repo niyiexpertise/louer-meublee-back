@@ -9,7 +9,7 @@ class Criteria extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name',
+        'name','icone'
     ];
 
     public function note()

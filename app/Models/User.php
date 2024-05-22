@@ -45,6 +45,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'code'
     ];
 
     /**
@@ -56,7 +57,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-
+    public function user_role()
+    {
+        return $this->hasMany(User_role::class);
+    }
     
 
     public function user_language()
@@ -91,17 +95,32 @@ class User extends Authenticatable
         return $this->hasMany(verification_document::class);
     }
 
-    public function portfeuille()
+    public function favorites()
+   {
+    return $this->hasMany(Favoris::class);
+   }
+
+   public function portfeuille()
     {
         return $this->hasOne(Portfeuille::class);
     }
-    public function retrait()
+    public function commission()
     {
-        return $this->hasMany(Retrait::class);
+        return $this->hasOne(Commission::class);
+    }
+    public function MoyenPayement()
+    {
+        return $this->hasMany(MoyenPayement::class);
     }
 
-    public function moyenPayement()
+    public function user_right()
     {
-        return $this->hasMany(moyenPayement::class);
+        return $this->hasMany(User_right::class);
     }
+
+    public function visites()
+    {
+        return $this->hasMany(UserVisiteHousing::class);
+    }
+
 }

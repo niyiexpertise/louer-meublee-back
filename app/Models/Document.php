@@ -11,7 +11,7 @@ class Document extends Model
     
     public function verificationDocuments()
     {
-        return $this->hasMany(VerificationDocument::class);
+        return $this->hasMany(Verification_document::class);
     }
 
 }

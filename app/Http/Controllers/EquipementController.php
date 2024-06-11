@@ -280,7 +280,16 @@ class EquipementController extends Controller
           if ($existingequipment) {
             return response()->json(['error' => 'Le nom de l\'équipement existe déjà par défaut'], 400);
             }
+            $equipment = Equipment::where('name', $request->name)->first();
 
+            $existingcategory = Category::where('id',$request->category_id)
+            ->exists();
+            if (!$existingcategory) {
+                return response()->json([
+                    "message" =>"La catégorie associée à l'équipement n'existe pas ou a déjà été supprimée",
+                ],200);
+            }
+            
                 $equipment  = new Equipment();
                 if ($request->hasFile('icone')) {
                     $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
@@ -295,14 +304,6 @@ class EquipementController extends Controller
                 $equipment->save();
                 $equipment = Equipment::where('name', $request->name)->first();
 
-                $existingAssociation = Equipment_category::where('equipment_id', $equipment->id)
-                ->where('category_id', $request->category_id)
-                ->exists();
-                if ($existingAssociation) {
-                    return response()->json([
-                        "message" =>"L'equipement existe déjà et a été affecté à la catégorie indiquée",
-                    ],200);
-                }
                 $equipment_category = new equipment_category();
                 $equipment_category->equipment_id = $equipment->id;
                 $equipment_category->category_id = $request->category_id;

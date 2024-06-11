@@ -335,7 +335,7 @@ public function ListeMoyenPayementUserAuth()
             ->exists();
             if ($exist) {
                 return response()->json([
-                    "message" =>" la valeur du moyen de payement doit être unique par moyen de payement",
+                    "error" =>" la valeur du moyen de payement doit être unique par moyen de payement",
                 ],200);
             }
                 $moyenPayement = new MoyenPayement();
@@ -346,8 +346,7 @@ public function ListeMoyenPayementUserAuth()
                 return response()->json(['message' =>'moyen de payement enregistré avec succcès']);
             } catch(Exception $e) {
                 return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
+                    'error' => $e->getMessage()
                 ], 500);
             }
      
@@ -567,8 +566,7 @@ public function ListeMoyenPayementUserAuth()
              MoyenPayement::whereId($idMoyenPayement)->update(['is_deleted' => true]);
             } catch(Exception $e) {
                 return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
+                    'error' =>$e->getMessage()
                 ], 500);
             }
     }

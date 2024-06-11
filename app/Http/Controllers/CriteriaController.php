@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\Note;
-
+use Illuminate\Support\Facades\File as F ;
 class CriteriaController extends Controller
 {
     /**
@@ -417,7 +417,7 @@ public function unblock(string $id)
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
             }
 
-            return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
+            return response()->json(['data' => 'this type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }

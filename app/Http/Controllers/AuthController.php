@@ -421,7 +421,7 @@ public function RevokePermsToRole(Request $request, $r){
                      ]);
                     $notification->save();
                     $mail = [
-                        'title' => "Attribution du role de".$role->name,
+                        'title' => "Attribution du role de ".$role->name,
                         'body' => $message_notification 
                     ];
                     try {
@@ -560,14 +560,14 @@ public function RevokePermsToRole(Request $request, $r){
                 if($user->roles->count()!= 1){
                     $user->assignRole($roles);
                 }
-                $message_notification ="Vous n'avez plus maintenant le rôle de ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
+                $message_notification ="Vous n'avez plus maintenant le rôle de  ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
                 $notification = new Notification([
                  'name' => $message_notification,
                  'user_id' =>$id,
                      ]);
                     $notification->save();
                     $mail = [
-                        'title' => "Retrait du role de".$role->name,
+                        'title' => "Retrait du role de ".$role->name,
                         'body' => $message_notification 
                     ];
                     try {

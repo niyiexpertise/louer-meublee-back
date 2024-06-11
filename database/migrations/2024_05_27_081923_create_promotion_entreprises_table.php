@@ -6,20 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('promotion_entreprises', function (Blueprint $table) {
             $table->id();
-            $table->text('name');
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->float('valeur');
+            $table->boolean('is_encours');
+            $table->date('date_debut')->nullable();
+            $table->date('date_fin')->nullable();
             $table->timestamps();
         });
     }
 
-
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('promotion_entreprises');
     }
 };

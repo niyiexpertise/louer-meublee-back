@@ -19,36 +19,21 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id',
-        'housing_id',
-        'date_of_reservation',
-        'date_of_starting',
-        'date_of_end',
-        'number_of_adult',
-        'number_of_child',
-        'number_of_domestical_animal',
-        'number_of_baby',
-        'message_to_hote',
+        'lastname',
+        'firstname',
+        'password',
+        'telephone',
         'code_pays',
-        'telephone_traveler',
-        'heure_arrivee_max',
-        'heure_arrivee_min',
-        'is_tranche_paiement',
-        'montant_total',
-        'valeur_payee',
-        'is_confirmed_hote',
-        'is_integration',
-        'is_rejected_traveler',
-        'is_rejected_hote',
-        'photo',
-        'valeur_reduction_hote',
-        'valeur_promotion_hote',
-        'valeur_reduction_code_promo',
-        'valeur_reduction_staturp',
-        'montant_charge',
-        'montant_housing',
-        'montant_a_paye'
+        'email',
+        'country',
+        'city',
+        'address',
+        'sexe',
+        'postal_code',
+        'file_profil',
+        'partenaire_id'
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.

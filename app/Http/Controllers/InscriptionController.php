@@ -120,7 +120,7 @@ class InscriptionController extends Controller
 
      if ($validator->fails()) {
         // return response()->json(['message' => 'User registered successfully'], 201);
-         return response()->json(['data' => $validator->errors()], 400);
+         return response()->json(['error' => $validator->errors()], 200);
      }
 
      $identity_profil_url ='';
@@ -132,22 +132,21 @@ class InscriptionController extends Controller
      $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
      }
      
-     $user = new User([
-         'lastname' => strtoupper($request->nom),
-         'firstname' => $request->prenom,
-         'password' => bcrypt($request->password),
-         'telephone' => $request->telephone,
-         'code_pays' => $request->code_pays,
-         'email' => $request->email,
-         'country' => $request->pays,
-         'city' => $request->ville,
-         'address' => $request->addresse,
-         'sexe' => $request->sexe,
-         'postal_code' => $request->postal_code,
-         'file_profil' => $identity_profil_url
-         
-     ]);
-     if ($request->has('code_promo')) {
+     $user = new User();
+     $user->lastname = strtoupper($request->nom);
+     $user->firstname = $request->prenom;
+     $user->password = bcrypt($request->password);
+     $user->telephone = $request->telephone;
+     $user->code_pays = $request->code_pays;
+     $user->email = $request->email;
+     $user->country = $request->pays;
+     $user->city = $request->ville;
+     $user->address = $request->addresse;
+     $user->sexe = $request->sexe;
+     $user->postal_code = $request->postal_code;
+     $user->file_profil = $identity_profil_url;
+     
+     if ($request->has('code_promo') and !empty($request->code_promo)) {
         $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->first();
         if (!$user_partenaire) {
             return response()->json([

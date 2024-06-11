@@ -294,7 +294,13 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         $code = User::where('code', $verification)->first();
-        $code->code=0;
+        if ($code == null) {
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Check failed',
+            ]);
+        }
+        $code->code=0;  
         $code->save();
         if ($code !== null) {
             return response()->json([

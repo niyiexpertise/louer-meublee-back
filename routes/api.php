@@ -65,6 +65,7 @@ use App\Http\Controllers\DashboardPartenaireController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [LoginController::class, 'checkAuth']);
+    Route::post('/users/logout', [LogoutController::class, 'logout']);
     
 });
 
@@ -72,7 +73,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('users')->group(function () {
     Route::post('/register', [InscriptionController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
-    Route::post('/logout', [LogoutController::class, 'logout']);
     Route::post('/verification_code', [LoginController::class, 'verification_code']);
     Route::post('/new_code/{id}', [LoginController::class, 'new_code']);
     Route::post('/password_recovery_start_step', [LoginController::class, 'password_recovery_start_step']);
@@ -87,9 +87,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Gestion des catégories.
     Route::prefix('category')->group(function () {
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.indexUnverified'])->group(function () {
-            Route::get('/indexUnverified', [CategorieController::class, 'indexUnverified'])->name('category.indexUnverified');
-        });
     
         Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.VerifiednotBlockDelete'])->group(function () {
             Route::get('/VerifiednotBlockDelete', [CategorieController::class, 'VerifiednotBlockDelete'])->name('category.VerifiednotBlockDelete');
@@ -424,9 +421,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::post('/verificationdocument/update', [VerificationDocumentController::class, 'changeDocument'])->name('verificationdocument.changeDocument');
 
-            Route::post('/verificationdocumentpartenaire/store', [VerificationDocumentPartenaireController::class, 'store'])->name('verificationdocument.store');
-            Route::post('/verificationdocumentpartenaire/update', [VerificationDocumentPartenaireController::class, 'changeDocument'])->name('verificationdocument.changeDocument');
-            Route::get('/result/demandepartenaire', [VerificationDocumentPartenaireController::class, 'userVerificationRequests'])->name('users.userVerificationRequests');
+            Route::post('/verificationdocumentpartenaire/store', [VerificationDocumentPartenaireController::class, 'store'])->name('verificationdocumentpartenaire.store');
+            Route::post('/verificationdocumentpartenaire/update', [VerificationDocumentPartenaireController::class, 'changeDocument'])->name('verificationdocumentpartenaire.changeDocument');
+            Route::get('/result/demandepartenaire', [VerificationDocumentPartenaireController::class, 'userVerificationRequests'])->name('users.userVerificationRequestspartenaire');
 
     });
     
@@ -1144,8 +1141,7 @@ Route::prefix('portefeuille')->group(function () {
         ->middleware('role_or_permission:superAdmin|admin|hote|traveler|Manageportefeuille.credit');
 
     Route::get('/user/transaction', [PortfeuilleTransactionController::class, 'getPortfeuilleDetails'])
-        ->name('portefeuille.user.transaction')
-        ->middleware('superAdmin|admin|hote|traveler|Manageportefeuille.user.transaction');
+        ->name('portefeuille.user.transaction');
 
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
@@ -1220,16 +1216,13 @@ Route::prefix('portefeuille')->group(function () {
 
     // Another user
     Route::post('/store', [RetraitController::class, 'store'])
-        ->name('retrait.store')
-        ->middleware('role_or_permission:admin|superAdmin|traveler|hote|Manageretrait.storeRetrait');
-
+        ->name('retrait.store');
     Route::get('/ListRetraitOfUserAuth', [RetraitController::class, 'ListRetraitOfUserAuth'])
-        ->name('retrait.ListRetraitOfUserAuth')
-        ->middleware('role_or_permission:admin|superAdmin|traveler|hote|Manageretrait.ListRetraitOfUserAuth');
+        ->name('retrait.ListRetraitOfUserAuth');
 
     Route::get('/ListRetraitRejectOfUserAuth', [RetraitController::class, 'ListRetraitRejectOfUserAuth'])
-        ->name('retrait.ListRetraitRejectOfUserAuth')
-        ->middleware('role_or_permission:admin|superAdmin|traveler|hote|Manageretrait.ListRetraitRejectOfUserAuth');
+        ->name('retrait.ListRetraitRejectOfUserAuth');
+
     });
 
 
@@ -1240,8 +1233,7 @@ Route::prefix('portefeuille')->group(function () {
                 ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.ListeMoyenPayement');
     
             Route::get('/ListeMoyenPayementUserAuth', [MoyenPayementController::class, 'ListeMoyenPayementUserAuth'])
-                ->name('moyenPayement.ListeMoyenPayementUserAuth')
-                ->middleware('role_or_permission:traveler|superAdmin|admin|hote|ManagemoyenPayement.ListeMoyenPayementUserAuth');
+                ->name('moyenPayement.ListeMoyenPayementUserAuth');
     
             Route::get('/ListeMoyenPayementBlocked', [MoyenPayementController::class, 'ListeMoyenPayementBlocked'])
                 ->name('moyenPayement.ListeMoyenPayementBlocked')
@@ -1252,20 +1244,16 @@ Route::prefix('portefeuille')->group(function () {
                 ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.ListeMoyenPayementDeleted');
     
             Route::post('/store', [MoyenPayementController::class, 'store'])
-                ->name('moyenPayement.store')
-                ->middleware('role_or_permission:traveler|superAdmin|admin|hote|ManagemoyenPayement.store');
+                ->name('moyenPayement.store');
     
             Route::get('/show/{idMoyenPayement}', [MoyenPayementController::class, 'show'])
-                ->name('moyenPayement.show')
-                ->middleware('role_or_permission:traveler|superAdmin|admin|hote|ManagemoyenPayement.show');
+                ->name('moyenPayement.show');
     
             Route::put('/update/{idMoyenPayement}', [MoyenPayementController::class, 'update'])
-                ->name('moyenPayement.update')
-                ->middleware('role_or_permission:traveler|superAdmin|admin|hote|ManagemoyenPayement.update');
+                ->name('moyenPayement.update');
     
             Route::delete('/destroy/{idMoyenPayement}', [MoyenPayementController::class, 'destroy'])
-                ->name('moyenPayement.destroy')
-                ->middleware('role_or_permission:traveler|superAdmin|admin|hote|ManagemoyenPayement.destroy');
+                ->name('moyenPayement.destroy');
     
             Route::put('/block/{idMoyenPayement}', [MoyenPayementController::class, 'block'])
                 ->name('moyenPayement.block')
@@ -1289,11 +1277,10 @@ Route::prefix('portefeuille')->group(function () {
     
         
     
-        Route::middleware('role:admin|superAdmin|hote')->group(function() {
-                Route::prefix('charge')->group(function() {
+
+        Route::prefix('charge')->group(function() {
                     Route::get('index', [ChargeController::class, 'index'])
-                        ->name('charge.index')
-                        ->middleware('role_or_permission:admin|superAdmin|Managecharge.index');
+                        ->name('charge.index');
                     Route::post('store', [ChargeController::class, 'store'])
                         ->name('charge.store')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.store');
@@ -1307,7 +1294,7 @@ Route::prefix('portefeuille')->group(function () {
                         ->name('charge.destroy')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.destroy');
                 });
-            });
+   
             
                   //  Gestion ajout promotion
             

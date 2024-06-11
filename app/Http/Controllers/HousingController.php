@@ -571,7 +571,7 @@ class HousingController extends Controller
             $photoModel = new File();
             $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
             $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
-                $photoUrl = url('/image/photo_category/' . $photoName);
+        //$photoUrl = url('/image/photo_category/' . $photoName);
                         $ip='http://192.168.100.158:8000';
                  $photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photoModel->path = $photoUrl;

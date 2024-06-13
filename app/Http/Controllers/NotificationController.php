@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use Exception;
 
 class NotificationController extends Controller
 {
@@ -93,7 +94,7 @@ class NotificationController extends Controller
             'title' => 'Notification',
             'body' =>$notificationName
                  ];
-    
+
         Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
 
         return response()->json([
@@ -171,7 +172,7 @@ class NotificationController extends Controller
  *     path="/api/notifications/unread",
  *     summary="Obtenir les notifications non lues pour un utilisateur connecté",
  *     tags={"Notification"},
- *     security={{"bearerAuth": {}}},  
+ *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Notifications non lues pour l'utilisateur connecté",
@@ -232,7 +233,7 @@ class NotificationController extends Controller
      *     path="/api/notifications/read",
      *     summary="Obtenir les notifications lues pour un utilisateur connecté",
      *     tags={"Notification"},
-     *     security={{"bearerAuth": {}}},  
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Notifications lues pour l'utilisateur connecté",
@@ -293,7 +294,7 @@ class NotificationController extends Controller
      *     path="/api/notifications/{id}/markread",
      *     summary="Marquer une notification comme lue",
      *     tags={"Notification"},
-     *     security={{"bearerAuth": {}}},  
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -342,10 +343,9 @@ class NotificationController extends Controller
             }
 
             if ($notification->is_read) {
-                return response()->json(['error' => 'Notification déjà lue.'], Response::HTTP_CONFLICT);
+                return response()->json(['error' => 'Ne surchage pas notre serveur stp. Notification déjà lue.'], Response::HTTP_CONFLICT);
             }
-
-            Notification::whereId($notificationId)->update(['is_read' => true]);
+          Notification::whereId($notificationId)->update(['is_read' => true]);
 
             return response()->json(['message' => 'Notification marquée comme lue.'], Response::HTTP_OK);
 

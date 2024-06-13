@@ -36,7 +36,7 @@ use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
 class LoginController extends Controller
 {
-    
+
 /**
  * @OA\Post(
  *     path="/api/users/login",
@@ -97,28 +97,28 @@ public function login(Request $request){
           'email' => 'required|email',
           'password' => 'required',
         ]);
-  
+
         $user = User::where('email', $request->email)->first();
         if($user !=null){
             if (Hash::check($request->password, $user->password)) {
-                $token = $user->createToken('auth_token')->plainTextToken;  
+                $token = $user->createToken('auth_token')->plainTextToken;
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 $user->code = $codes;
                 $user->save();
-                
-                
+
+
                 $mail = [
                     'title' => 'Entrez le code suivant pour finaliser votre authentification.',
                     'body' => $codes
                 ];
-                
+
                 $userRights = User_right::where('user_id', $user->id)->get();
-                
+
                 $rightsDetails = [];
-                
+
                 foreach ($userRights as $userRight) {
                     $right = Right::find($userRight->right_id);
-                    
+
                     if ($right) {
                         $rightsDetails[] = [
                             'right_id' => $right->id,
@@ -132,9 +132,9 @@ public function login(Request $request){
                 try {
                     Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
                 } catch (\Exception $e) {
-                   
+
                 }
-                
+
                 // dd('salut');
               unset($user->code);
               return response()->json([
@@ -146,13 +146,13 @@ public function login(Request $request){
           } else {
               return response()->json(['error' => 'Mot de passe invalide.'], 200);
         }
-  
-  
+
+
       }else {
           return response()->json(['error' => 'Adresse email invalide.'], 200);
       }
-  
-     } catch(Exception $e) {    
+
+     } catch(Exception $e) {
       return response()->json($e->getMessage());
       }
 }
@@ -184,10 +184,10 @@ public function checkAuth(Request $request){
         $userRights = User_right::where('user_id', Auth::user()->id)->get();
 
         $rightsDetails = [];
-        
+
         foreach ($userRights as $userRight) {
             $right = Right::find($userRight->right_id);
-            
+
             if ($right) {
                 $rightsDetails[] = [
                     'right_id' => $right->id,
@@ -210,129 +210,7 @@ public function checkAuth(Request $request){
  * @OA\Post(
  *     path="/api/users/verification_code",
  *     tags={"Authentication"},
- *     summary="Vérification du code de vérification",
- *     description="Vérifie le code de vérification envoyé par l'utilisateur.",
- *     requestBody={
- *         "required": true,
- *         "content": {
- *             "application/json": {
- *                 "schema": {
- *                     "type": "object",
- *                     "properties": {
- *                         "code": {
- *                             "type": "string",
- *                             "description": "Le code de vérification à vérifier."
- *                         }
- *                     },
- *                     "required": "code"
- *                 }
- *             }
- *         }
- *     },
- *     @OA\Response(
- *         response="200",
- *         description="Échec de la vérification",
- *         @OA\JsonContent(
- *             @OA\Property(
- *                 property="status_code",
- *                 type="integer",
- *                 example=200,
- *                 description="Le code d'état de la réponse."
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Check failed",
- *                 description="Le message indiquant que la vérification a échoué."
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response="500",
- *         description="Erreur interne du serveur",
- *         @OA\JsonContent(
- *             @OA\Property(
- *                 property="status_code",
- *                 type="integer",
- *                 example=500,
- *                 description="Le code d'état de la réponse."
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 description="Le message d'erreur détaillé."
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response="default",
- *         description="Réponse par défaut pour les autres cas",
- *         @OA\JsonContent(
- *             @OA\Property(
- *                 property="status_code",
- *                 type="integer",
- *                 example=200,
- *                 description="Le code d'état de la réponse."
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Verification passed",
- *                 description="Le message indiquant que la vérification a réussi."
- *             ),
- *             @OA\Property(
- *                 property="verification",
- *                 type="string",
- *                 description="Le code de vérification vérifié."
- *             )
- *         )
- *     )
- * )
- */
-public function verification_code(Request $request)
-{
-    try {
-        $verification = $request->code;
-        $code = User::where('code', $verification)->first();
-        if ($code == null) {
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Check failed',
-            ]);
-        }
-        $code->code=0;  
-        $code->save();
-        if ($code !== null) {
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Verification passed',
-            ]);
-        }
-
-        return response()->json([
-            'status_code' => 200,
-            'message' => 'Check failed',
-        ]);
-
-    } catch (Exception $e) {
-        return response()->json([
-            'status_code' => 500,
-            'message' => $e->getMessage(),
-        ]);
-    }
-}
-
-
-/**
- * @OA\Post(
- *     path="/api/users/new_code/{id}",
- *     summary="Generate a new code for user",
- *     tags={"Authentication"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="User ID",
+ *     summary="Vérification du code
  *         @OA\Schema(
  *             type="integer"
  *         )
@@ -377,12 +255,12 @@ public function new_code($id) {
                 'body' => $user->code
             ];
             Mail::to($email)->send(new ConfirmationLoginEmail($mail) );
-            
+
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Code sent successfully',
             ]);
-        } 
+        }
         return response()->json([
             'status_code' => 404,
             'message' => 'This id does not exist'
@@ -452,9 +330,9 @@ public function password_recovery_start_step(Request $request){
                 'body' => 'Clique sur ce lien : https://quotidishop.com/page/account/change-password pour reinitialiser votre mot de passe'
             ];
 
-            
+
             Mail::to($request->email)->send(new NotificationEmail($mail) );
-        
+
             return response()->json([
                 'status_code' => 200,
                 'message' => "Email sent successfully"

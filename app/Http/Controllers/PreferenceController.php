@@ -410,14 +410,14 @@ class PreferenceController extends Controller
     public function destroy(string $id)
     {
         try{
-                $preference = Preference::whereId($id)->update(['is_deleted' => true]);
-
+           
+                 $preference = Preference::whereId($id)->first();
                 if (!$preference) {
                     return response()->json(['error' => 'Préférence non trouvé.'],200);
                 }
-                $housingPreferences = housing_preference::where('preference_id', $id)->get();
+                $housingPreferences = housing_preference::where('preference_id', $id)->exists();
 
-                if ($housingPreferences->isEmpty()) {
+                if ($housingPreferences) {
                     return response()->json(['message' => 'Suppression impossible car la preference est déja associé à un logement.'], 200);
                 }
                 $existingPreference = User_preference::where('preference_id',  $id)->exists();
@@ -426,6 +426,7 @@ class PreferenceController extends Controller
                     return response()->json(['message' => 'Suppression impossible car la preference est déja associé à un utilisateur.'], 200);
 
                 } 
+                $preferences = Preference::whereId($id)->update(['is_deleted' => true]);        
 
                 return response()->json(['data' => 'Préférence supprimé avec succès.'], 200);
         } catch(Exception $e) {    

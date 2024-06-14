@@ -267,7 +267,7 @@ class CriteriaController extends Controller
                     
                     return response()->json(['data' => 'icône du critère mis à jour avec succès.'], 200);
                 } else {
-                dd("h");
+                
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {
@@ -305,17 +305,19 @@ class CriteriaController extends Controller
   public function destroy(string $id)
   {
     try{
+        $criteria = Criteria::whereId($id)->first();
+        if (!$criteria) {
+            return response()->json(['error' => 'Critère non trouvé.'], 404);
+        }
+        $nbexist=Note::where('critere_id', $id)->count(); 
+    
+        if ($nbexist > 0) {
+            return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);
+        }
+
             $criteria = Criteria::whereId($id)->update(['is_deleted' => true]);
 
-            if (!$criteria) {
-                return response()->json(['error' => 'Critère non trouvé.'], 404);
-            }
-            $nbexist=Note::where('critere_id', $id)->count(); 
-        
-            if ($nbexist > 0) {
-                return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);
-            }
-
+            
             return response()->json(['data' => 'Critère supprimé avec succès.'], 200);
     
     } catch(Exception $e) {    

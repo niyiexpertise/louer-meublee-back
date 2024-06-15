@@ -29,12 +29,15 @@ use App\Models\Category;
 use App\Models\Housing_charge;
 use App\Models\Review_reservation;
 use App\Models\Portfeuille;
+use App\Models\user_partenaire;
 use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
+use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -128,9 +131,6 @@ class UserController extends Controller
             'address' => $user->address,
             'sexe' => $user->sexe,
             'postal_code' => $user->postal_code,
-            'is_hote' => $user->is_hote,
-            'is_traveller' => $user->is_traveller,
-            'is_admin' => $user->is_admin,
             'is_deleted' => $user->is_deleted,
             'is_blocked' => $user->is_blocked,
             'email_verified_at' => $user->email_verified_at,
@@ -284,39 +284,7 @@ public function userLanguages()
     ]);
 }
 
-/**
- * @OA\Get(
- *     path="/api/users/userPreferences",
- *     tags={"User"},
- * security={{"bearerAuth": {}}},
- *     summary="Afficher les préférences de l'utilisateur connecté",
- *     description="Récupère les préférences de l'utilisateur connecté.",
- *     security={{"bearerAuth": {}}},
- *     @OA\Response(
- *         response=200,
- *         description="Liste des préférences de l'utilisateur connecté",
- *         @OA\JsonContent(
- *         
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Non autorisé"
- *     )
- * )
- */
-public function showUserPreferences()
-    {
-        
-        $userId = Auth::id();
-        $user = User::findOrFail($userId);
 
-        $userPreferences = $user->user_preference()->with('preference')->get();
-
-        return response()->json([
-            'data' => $userPreferences,
-        ]);
-    }
 
     /**
  * @OA\Post(
@@ -442,7 +410,7 @@ public function showUserPreferences()
 
         return response()->json(['data' => 'This user is block successfuly.'], 200);
     } catch(Exception $e) {
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 
 
@@ -491,7 +459,7 @@ public function unblock($id)
 
         return response()->json(['data' => 'User débloqué avec succès.'], 200);
     }catch (Exception $e){
-        return response()->json($e);
+          return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 /**
@@ -1128,6 +1096,56 @@ public function getUserDetails($userId) {
         'data' => $user_details
     ], 200);
 }
+/**
+     * @OA\Get(
+     *     path="/api/users/getUserReservationCount",
+     *     summary="Récupérer le nombre de réservations de l'utilisateur connecté,etc.en gros il s'agit des informations utiles avant de faire une reservation que vous devrez recuperer sur l'utilisateur connecté.",
+     *     description="Récupère le nombre de réservations effectuées par l'utilisateur actuellement connecté.",
+     *     tags={"User"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Nombre de réservations récupéré avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             properties={
+     *                 @OA\Property(property="count", type="integer", description="Nombre de réservations")
+     *             }
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur. Veuillez réessayer ultérieurement.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+    public function getUserReservationCount(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $userId = $user->id;
+
+            $reservationCount = Reservation::where('user_id', $userId)->count();
+            
+            $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
+            $codePromoDetails = $userPartenaire ? [
+                'id'=> $userPartenaire->id,
+                'code_promo' => $userPartenaire->code_promo,
+                'reduction_traveler' => $userPartenaire->reduction_traveler,
+                'number_of_reservation' => $userPartenaire->number_of_reservation,
+            ] : null;
+
+            return response()->json([
+                'count_reservation' => $reservationCount,
+                'code_promo' => $codePromoDetails
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' =>$e->getMessage()], 500);
+        }
+    }
 
 
 }

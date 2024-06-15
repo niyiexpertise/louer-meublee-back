@@ -19,7 +19,7 @@ use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
-
+use Illuminate\Validation\Rule;
 class EquipementController extends Controller
 {
 
@@ -54,12 +54,12 @@ class EquipementController extends Controller
                             $equipmentsWithCategories[] = [
                                 'id' => $equipment->id,
                                 'name' => $equipment->name,
+                                'icone' => $equipment->equipment->icone,
                                 'is_deleted' => $equipment->is_deleted,
                                 'is_blocked' => $equipment->is_blocked,
                                 'is_verified' => $equipment->is_verified,
                                 'updated_at' => $equipment->updated_at,
                                 'created_at' => $equipment->created_at,
-                                'description' => $equipment->icone,
                                  'equipment_category' => $equipment->equipment_category(),
                                 'categories' => [$category],
                             ];
@@ -72,7 +72,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -104,11 +104,11 @@ class EquipementController extends Controller
                         $equipmentsWithCategories[] = [
                             'id' => $equipment->equipment->id,
                             'name' => $equipment->equipment->name,
+                            'icone' => $equipment->equipment->icone,
                             'is_deleted' => $equipment->equipment->is_deleted,
                             'is_blocked' => $equipment->equipment->is_blocked,
                             'updated_at' => $equipment->equipment->updated_at,
                             'created_at' => $equipment->equipment->created_at,
-                            'description' => $equipment->equipment->icone,
                             'category' => $equipment->category,
                             'equipmentCategory' => Equipment_category::where([
                                 'equipment_id' => $equipment->equipment->id,
@@ -121,7 +121,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -158,10 +158,10 @@ class EquipementController extends Controller
                                 'name' => $equipment->name,
                                 'is_deleted' => $equipment->is_deleted,
                                 'is_blocked' => $equipment->is_blocked,
+                                'icone' => $equipment->equipment->icone,
                                 'is_verified' => $equipment->is_verified,
                                 'updated_at' => $equipment->updated_at,
                                 'created_at' => $equipment->created_at,
-                                'description' => $equipment->icone,
                                  'equipment_category' => $equipment->equipment_category(),
                                 'categories' => [$category],
                             ];
@@ -174,7 +174,7 @@ class EquipementController extends Controller
                     ]);
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -209,7 +209,7 @@ class EquipementController extends Controller
                         'is_blocked' => $equipment->equipment->is_blocked,
                         'updated_at' => $equipment->equipment->updated_at,
                         'created_at' => $equipment->equipment->created_at,
-                        'description' => $equipment->equipment->icone,
+                        
                         'category' => $equipment->category,
                         'equipmentCategory' => Equipment_category::where([
                             'equipment_id' => $equipment->equipment->id,
@@ -224,7 +224,7 @@ class EquipementController extends Controller
             
     
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
         
     }
@@ -312,7 +312,7 @@ class EquipementController extends Controller
                     "equipment" => $equipment
                 ],200);
                 } catch(Exception $e) {    
-                    return response()->json($e);
+                      return response()->json(['error' => $e->getMessage()], 500);
                 }
 
         }
@@ -358,7 +358,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => $equipment], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -417,14 +417,18 @@ class EquipementController extends Controller
                 }
 
                 $data = $request->validate([
-                    'name' => 'required',
+                    'name' => [
+                        'required',
+                        'string',
+                        Rule::unique('equipment')->ignore($id),
+                    ],
                 ]);
 
                Equipment::whereId($id)->update($data);
 
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -485,7 +489,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -569,7 +573,7 @@ class EquipementController extends Controller
                     
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
-                dd("h");
+                // dd("h");
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {
@@ -612,23 +616,28 @@ class EquipementController extends Controller
      * )
      */
     public function destroy(string $id)
-    {
-        try{
-                $equipment = Equipment::find($id);
+{
+    try {
+        $equipment = Equipment::find($id);
+        
+        if (!$equipment) {
+            return response()->json(['error' => 'Équipement non trouvé.'], 200);
+        }
+        
+        $associatedHousing = Housing_equipment::where('equipment_id', $id)->count(); 
+        
+        if ($associatedHousing > 0) {
+            return response()->json(['error' => "Suppression impossible car l'équipement est déjà associé à un logement."], 200);
 
-                if (!$equipment) {
-                    return response()->json(['error' => 'Équipement non trouvé.'], 404);
-                }
-
-                Equipment::whereId($id)->update(['is_deleted' => true]);
-
-                return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
-            return response()->json($e);
         }
 
-
+        $equipment->update(['is_deleted' => true]);
+        
+        return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     /**
      * @OA\Put(
@@ -675,7 +684,7 @@ class EquipementController extends Controller
                 // Retourner une réponse JSON pour indiquer que l'équipement a été bloqué avec succès
                 return response()->json(['data' => 'Équipement bloqué avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
@@ -720,7 +729,7 @@ class EquipementController extends Controller
 
                 return response()->json(['data' => 'Équipement débloqué avec succès.'], 200);
         } catch(Exception $e) {    
-            return response()->json($e);
+              return response()->json(['error' => $e->getMessage()], 500);
         }
 
 

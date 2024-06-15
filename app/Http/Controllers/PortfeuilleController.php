@@ -30,7 +30,7 @@ use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
-
+use Illuminate\Validation\Rule;
 class PortfeuilleController extends Controller
 {
     /**
@@ -85,7 +85,7 @@ class PortfeuilleController extends Controller
  * )
  */
 
-   
+
     public function creditPortfeuille(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -93,25 +93,25 @@ class PortfeuilleController extends Controller
             'paiement_methode' => 'required|string', 
             'transaction_id' => 'required|string',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Données de requête invalides.',
                 'errors' => $validator->errors(),
             ], 400);
         }
-    
-        $userId = Auth::id(); 
+
+        $userId = Auth::id();
         if (is_null($userId)) {
             return response()->json([
                 'message' => 'Utilisateur non authentifié.',
             ], 401);
         }
-    
+
         $amount = $request->input('amount');
-    
+
         $portefeuille = Portfeuille::where('user_id', $userId)->first();
-    
+
         if (!$portefeuille) {
             return response()->json([
                 'message' => 'Portefeuille non trouvé pour cet utilisateur.',
@@ -121,10 +121,10 @@ class PortfeuilleController extends Controller
         $soldeTotal = Portfeuille_transaction::sum('amount');
         $soldeCommission = Portfeuille_transaction::sum('montant_commission');
         $soldeRestant = Portfeuille_transaction::sum('montant_restant');
-    
+
         $portefeuille->solde += $amount;
         $portefeuille->save();
-    
+
         $portefeuilleTransaction = new Portfeuille_transaction();
         $portefeuilleTransaction->debit = false;
         $portefeuilleTransaction->credit = true;
@@ -138,9 +138,9 @@ class PortfeuilleController extends Controller
         $portefeuilleTransaction->montant_restant = 0;
         $portefeuilleTransaction->solde_total = $soldeTotal  + $amount;
         $portefeuilleTransaction->solde_commission = $soldeCommission  + 0;
-        $portefeuilleTransaction->solde_restant = $soldeRestant  + 0; 
+        $portefeuilleTransaction->solde_restant = $soldeRestant  + 0;
         $portefeuilleTransaction->save();
-    
+
 
         $notification = new Notification([
             'name' => "Votre portefeuille a été crédité de {$amount} FCFA Nouveau solde : {$portefeuille->solde} FCFA",
@@ -152,8 +152,7 @@ class PortfeuilleController extends Controller
             "title" => "Confirmation de dépôt sur votre portefeuille",
             "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
         ];
-        
-        
+
   Mail::to(User::find($userId)->email)->send(new NotificationEmailwithoutfile($mail) );
     
         return response()->json([

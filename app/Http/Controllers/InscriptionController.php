@@ -31,6 +31,7 @@ use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use App\Models\User_language;
+use App\Models\user_partenaire;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
@@ -61,6 +62,7 @@ class InscriptionController extends Controller
  *                 @OA\Property(property="addresse", type="string", example="123 Rue de la Paix", description="Adresse de l'utilisateur"),
  *                 @OA\Property(property="sexe", type="string", example="Masculin", description="Sexe de l'utilisateur"),
  *                 @OA\Property(property="postal_code", type="string", example="75001", description="Code postal de l'utilisateur"),
+ *                @OA\Property(property="code_promo", type="string", example="codepromo", description="code promo"),
  *                 @OA\Property(
  *                     property="language_id[]",
  *                     type="array",
@@ -104,7 +106,7 @@ class InscriptionController extends Controller
              'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
          ],
          'code_pays' => 'required|string',
-         'telephone' => 'required|String|numeric|unique:users',
+         'telephone' => 'required|numeric|unique:users',
          'email' => 'required|email|unique:users',
          'pays' => 'required|string',
          'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -112,13 +114,16 @@ class InscriptionController extends Controller
          'addresse' => 'required|string',
          'sexe' => 'required|string',
          'password_confirmation' => 'required|string',
+         'code_promo' => 'nullable|string',
          
      ]);
 
      if ($validator->fails()) {
         // return response()->json(['message' => 'User registered successfully'], 201);
-         return response()->json(['error' => $validator->errors()], 200);
+         return response()->json(['data' => $validator->errors()], 400);
      }
+
+     $identity_profil_url ='';
      
      if ($request->hasFile('identity_profil')) {
      $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
@@ -126,6 +131,7 @@ class InscriptionController extends Controller
      $base_url = url('/');
      $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
      }
+     
      $user = new User([
          'lastname' => strtoupper($request->nom),
          'firstname' => $request->prenom,
@@ -138,9 +144,20 @@ class InscriptionController extends Controller
          'address' => $request->addresse,
          'sexe' => $request->sexe,
          'postal_code' => $request->postal_code,
+         'file_profil' => $identity_profil_url
          
      ]);
-
+     if ($request->has('code_promo')) {
+        $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->first();
+        if (!$user_partenaire) {
+            return response()->json([
+                'error' => "Le code promo que vous avez entré n'existe pas.",
+            ], 200);
+        }else{
+            $user->partenaire_id=$user_partenaire->id;
+           
+        }
+     }
      $user->save();
      $right = Right::where('name','traveler')->first();
      $user->assignRole('traveler');
@@ -174,9 +191,32 @@ class InscriptionController extends Controller
      $mail = [
         'title' => 'Inscription',
         'body' => "Compte créé avec succès le ". $date_creation
-    ];
+     ];
     
-    Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail) );
+    try {
+        Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail));
+        
+     if ($request->has('code_promo')) {
+        $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->get();
+        $mailpartenaire = [
+            'title' => 'Inscription via votre code promo',
+            'body' => "Compte créé avec succès le ". $date_creation."via votre code promo"
+         ];
+         $message_notification = "Compte créé avec succès le ". $date_creation."via votre code promo";
+
+        $notification = new Notification([
+         'name' => $message_notification,
+         'user_id' =>$user_partenaire->user_id,
+         
+          ]);
+        $notification->save();
+         
+         Mail::to($user_partenaire->user->email)->send(new NotificationEmailwithoutfile($mailpartenaire));
+     }
+    } catch (\Exception $e) {
+       
+    }
+    
 
      $portfeuille= new Portfeuille([
          'solde' =>0,

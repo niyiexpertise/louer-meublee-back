@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\HousingType;
+use App\Models\Housing;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
+use Illuminate\Validation\Rule;
 /**
  * @OA\Info(
  *      title="Api de location des meubles",
@@ -36,7 +38,10 @@ class HousingTypeController extends Controller
     public function index()
     {
         try{
-                $housingTypes = HousingType::where('is_deleted', false)->where('is_blocked', false)->get();
+            $housingTypes = HousingType::where('is_deleted', false)
+            ->where('is_blocked', false)
+            ->orderBy('id', 'desc')
+            ->get();
 
                 return response()->json(['data' => $housingTypes], 200);
         } catch(Exception $e) {
@@ -204,29 +209,40 @@ class HousingTypeController extends Controller
      *         description="Validation error"
      *     )
      * )
-     */
-    public function update(Request $request, $id)
-    {
-        try{
-            $housingType = HousingType::find($id);
+            */
+            public function update(Request $request, $id)
+        {
+            try {
+            
 
-            if (!$housingType) {
-                return response()->json(['error' => 'Type de logement  non trouvé.'], 404);
+                $housingType = HousingType::find($id);
+
+                if (!$housingType) {
+                    return response()->json(['error' => 'Type de logement non trouvé.'], 404);
+                }
+                
+                $validatedData = $request->validate([
+                    'name' => ['required', 'string', Rule::unique('housing_types')->ignore($id)],
+                    'description' => 'required|string',
+                ]);
+                
+                $existingHousingType = HousingType::where('name', $validatedData['name'])
+                    ->where('id', '!=', $id)
+                    ->first();
+
+                if ($existingHousingType) {
+                    return response()->json(['error' => 'Un autre type de logement avec le même nom existe déjà.'], 409);
+                }
+
+                $housingType->update($validatedData);
+
+                return response()->json(['data' => 'Type de logement mis à jour avec succès.'], 200);
+            } catch(Exception $e) {    
+                return response()->json(['error' => $e->getMessage()], 200);
             }
-
-            $validatedData = $request->validate([
-                'name' => 'string',
-                'description' => 'string',
-            ]);
-
-            $housingType->update($validatedData);
-
-            return response()->json(['data' => 'Type de logement  mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
-            return response()->json($e->getMessage());
         }
 
-    }
+
 
     /**
      * @OA\Post(
@@ -353,7 +369,13 @@ class HousingTypeController extends Controller
             $housingType = HousingType::find($id);
 
             if (!$housingType) {
-                return response()->json(['error' => 'Type de logement  non trouvé.'], 404);
+                return response()->json(['error' => 'Type de logement  non trouvé.'], 200);
+            }
+            $nbexist= Housing::where('housing_type_id', $id)->count(); 
+        
+            if ($nbexist > 0) {
+                return response()->json(['error' => "Suppression impossible car ce type de logement est déjà associé à un logement."],200);
+    
             }
 
             $housingType->is_deleted = true;
@@ -467,4 +489,77 @@ class HousingTypeController extends Controller
         }
 
     }
+
+    /**
+ * @OA\Delete(
+ *     path="/api/housingtype/destroymultiple",
+ *     summary="Delete multiple housing types by IDs",
+ *     tags={"HousingType"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(type="integer", format="int64")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Housing types deleted and not deleted",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function destroymultiple(Request $request)
+{
+    try{
+        $ids = $request->json()->all();
+
+        if (empty($ids)) {
+            return response()->json(['error' => 'No IDs provided'], 400);
+        }
+
+        $deleted = [];
+        $notDeleted = [];
+        foreach ($ids as $id) {
+            $housingType = HousingType::find($id);
+
+            if (!$housingType) {
+                return response()->json("housing_type with id: {$id} not found");
+            }
+        }
+        foreach ($ids as $id) {
+            $housingType = HousingType::find($id);
+
+            if (!$housingType) {
+                continue; 
+            }
+
+            $nbexist = Housing::where('housing_type_id', $id)->count(); 
+
+            if ($nbexist > 0) {
+                $notDeleted[] = $housingType->name;
+                continue; 
+            }
+
+            $housingType->is_deleted = true;
+            $housingType->save();
+
+            $deleted[] = $housingType->name; 
+        }
+
+        $response = [
+            'deleted' => $deleted,
+            'not_deleted(car il est déjà associé à un logement' => $notDeleted
+        ];
+
+        return response()->json($response, 200);
+    } catch(Exception $e) {    
+        return response()->json($e->getMessage());
+    }
+}
+
 }

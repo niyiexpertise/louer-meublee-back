@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Reduction extends Model
 {
     use HasFactory;
+    public function housing()
+    {
+        return $this->belongsTo(Housing::class);
+    }
 }

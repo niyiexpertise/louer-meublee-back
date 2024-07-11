@@ -275,8 +275,8 @@ public function update(Request $request, $id)
     {
         try{
 
-            $document = Document::whereId($id)->update(['is_deleted' => true]);
-
+            
+            $document = Document::whereId($id)->first();
             if (!$document) {
                 return response()->json(['error' => 'Document  non trouvé.'], 200);
             }
@@ -285,6 +285,7 @@ public function update(Request $request, $id)
             if ($nbexist > 0) {
                 return response()->json(['error' => "Suppression impossible car ce type de document a déjà été utilisé lors d'une soumission de la demande."],200);
             }
+            $document = Document::whereId($id)->update(['is_deleted' => true]);
 
             return response()->json(['data' => 'Document  supprimé avec succès.'], 200);
     

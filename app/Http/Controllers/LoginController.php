@@ -36,7 +36,7 @@ use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
 class LoginController extends Controller
 {
-    
+
 /**
  * @OA\Post(
  *     path="/api/users/login",
@@ -97,28 +97,28 @@ public function login(Request $request){
           'email' => 'required|email',
           'password' => 'required',
         ]);
-  
+
         $user = User::where('email', $request->email)->first();
         if($user !=null){
             if (Hash::check($request->password, $user->password)) {
-                $token = $user->createToken('auth_token')->plainTextToken;  
+                $token = $user->createToken('auth_token')->plainTextToken;
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 $user->code = $codes;
                 $user->save();
-                
-                
+
+
                 $mail = [
                     'title' => 'Entrez le code suivant pour finaliser votre authentification.',
                     'body' => $codes
                 ];
-                
+
                 $userRights = User_right::where('user_id', $user->id)->get();
-                
+
                 $rightsDetails = [];
-                
+
                 foreach ($userRights as $userRight) {
                     $right = Right::find($userRight->right_id);
-                    
+
                     if ($right) {
                         $rightsDetails[] = [
                             'right_id' => $right->id,
@@ -132,9 +132,9 @@ public function login(Request $request){
                 try {
                     Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
                 } catch (\Exception $e) {
-                   
+
                 }
-                
+
                 // dd('salut');
               unset($user->code);
               return response()->json([
@@ -146,13 +146,13 @@ public function login(Request $request){
           } else {
               return response()->json(['error' => 'Mot de passe invalide.'], 200);
         }
-  
-  
+
+
       }else {
           return response()->json(['error' => 'Adresse email invalide.'], 200);
       }
-  
-     } catch(Exception $e) {    
+
+     } catch(Exception $e) {
       return response()->json($e->getMessage());
       }
 }
@@ -184,10 +184,10 @@ public function checkAuth(Request $request){
         $userRights = User_right::where('user_id', Auth::user()->id)->get();
 
         $rightsDetails = [];
-        
+
         foreach ($userRights as $userRight) {
             $right = Right::find($userRight->right_id);
-            
+
             if ($right) {
                 $rightsDetails[] = [
                     'right_id' => $right->id,
@@ -294,7 +294,13 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         $code = User::where('code', $verification)->first();
-        $code->code=0;
+        if ($code == null) {
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Check failed',
+            ]);
+        }
+        $code->code=0;  
         $code->save();
         if ($code !== null) {
             return response()->json([
@@ -446,9 +452,9 @@ public function password_recovery_start_step(Request $request){
                 'body' => 'Clique sur ce lien : https://quotidishop.com/page/account/change-password pour reinitialiser votre mot de passe'
             ];
 
-            
+
             Mail::to($request->email)->send(new NotificationEmail($mail) );
-        
+
             return response()->json([
                 'status_code' => 200,
                 'message' => "Email sent successfully"

@@ -71,8 +71,7 @@ class ReviewReservationController extends Controller
          'criteria_notes.*.note' => 'required|numeric|min:0|max:10',
          'general_comment' => 'nullable|string',
      ]);
-     $userId = 11;
-     //$userId = Auth::id();
+     $userId = Auth::id();
  
      $criteriaIds = [];
      $duplicateCriteriaIds = [];

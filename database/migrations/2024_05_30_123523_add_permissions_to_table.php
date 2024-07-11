@@ -19,15 +19,13 @@ class AddPermissionsToTable extends Migration
         $guardName = 'web';
     
         $allRoutes = Route::getRoutes();
-        $routeCount = 0; // Initialiser le compteur de routes
+        $routeCount = 0; 
     
         foreach ($allRoutes as $route) {
             $routeName = $route->getName();
             
-            // Incrémenter le compteur de routes
             $routeCount++;
     
-            // Ignorer l'insertion si le compteur de routes est égal à 9
             if ($routeCount < 9) {
                 continue;
             }
@@ -64,6 +62,16 @@ class AddPermissionsToTable extends Migration
                     if (strpos($middleware, 'role_or_permission') !== false && strpos($middleware, 'hote') !== false) {
                         
                         $role = Role::where('name', 'hote')->first();
+                        if ($role) {
+                            $permission = Permission::where('name', 'Manage' . $routeName)->first();
+                            if ($permission) {
+                                $role->givePermissionTo($permission);
+                            }
+                        }
+                    }
+                    if (strpos($middleware, 'role_or_permission') !== false && strpos($middleware, 'partenaire') !== false) {
+                        
+                        $role = Role::where('name', 'partenaire')->first();
                         if ($role) {
                             $permission = Permission::where('name', 'Manage' . $routeName)->first();
                             if ($permission) {

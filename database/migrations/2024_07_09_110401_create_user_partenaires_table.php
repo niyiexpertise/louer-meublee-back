@@ -6,20 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('user_partenaires', function (Blueprint $table) {
             $table->id();
-            $table->text('name');
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->text('code_promo');
+            $table->float('commission');
+            $table->float('reduction_traveler');
+            $table->integer('number_of_reservation');
             $table->timestamps();
         });
     }
 
-
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('user_partenaires');
     }
 };

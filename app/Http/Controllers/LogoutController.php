@@ -59,19 +59,48 @@ class LogoutController extends Controller
  *     )
  * )
  */
-public function logout(Request $request){
-    try{
-        $accessToken = $request->bearerToken();
-        $token = PersonalAccessToken::findToken($accessToken);
-        $token->delete();
+public function logout(Request $request) {
+    try {
+        
+        if (Auth::check()) {
+            
+            $accessToken = $request->bearerToken();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'You are disconnected'
-        ]);
+            
+            if ($accessToken) {
+                $token = PersonalAccessToken::findToken($accessToken);
 
+                if ($token) {
+                    
+                    $token->delete();
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'You are disconnected'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid token'
+                    ], 200);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token not provided'
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not authenticated'
+            ], 200);
+        }
     } catch (Exception $e) {
-        return response()->json($e->getMessage());
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 }
 

@@ -7246,11 +7246,7 @@
                             }
                         }
                     },
-<<<<<<< HEAD
-                    "400": {
-=======
                     "200": {
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                         "description": "Erreur de validation",
                         "content": {
                             "application/json": {
@@ -7276,8 +7272,6 @@
                 ]
             }
         },
-<<<<<<< HEAD
-=======
         "/api/logement/photos/unverified": {
             "get": {
                 "tags": [
@@ -7598,7 +7592,6 @@
                 ]
             }
         },
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
@@ -18351,34 +18344,6 @@
                 ]
             }
         },
-<<<<<<< HEAD
-        "/api/valeurRemboursement/index": {
-            "get": {
-                "tags": [
-                    "Valeur Remboursement"
-                ],
-                "summary": "Get all valeurs remboursement",
-                "operationId": "8dd81d99988eac347936be9902be681d",
-                "responses": {
-                    "200": {
-                        "description": "List of valeur remboursement"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/valeurRemboursement/store": {
-            "post": {
-                "tags": [
-                    "Valeur Remboursement"
-                ],
-                "summary": "Ajouter un nouveau champ pour une valeur remboursement",
-                "operationId": "ffa895933e289f143febdf98a9af18a2",
-=======
         "/api/users/preference/remove": {
             "post": {
                 "tags": [
@@ -18387,25 +18352,12 @@
                 "summary": "Supprimer les préférences d'un utilisateur",
                 "description": "Supprimer les préférences sélectionnées par un utilisateur.",
                 "operationId": "7173aae80108eccc85250b528b18e3ea",
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-<<<<<<< HEAD
-                                    "valeur_integral_remboursement"
-                                ],
-                                "properties": {
-                                    "valeur_integral_remboursement": {
-                                        "type": "string",
-                                        "example": "10"
-                                    },
-                                    "valeur_partiel_remboursement": {
-                                        "type": "string",
-                                        "example": "20"
-=======
                                     "preferences"
                                 ],
                                 "properties": {
@@ -18415,7 +18367,6 @@
                                         "items": {
                                             "type": "integer"
                                         }
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                                     }
                                 },
                                 "type": "object"
@@ -18424,26 +18375,15 @@
                     }
                 },
                 "responses": {
-<<<<<<< HEAD
-                    "201": {
-                        "description": "Nouvelle valeur de remboursement créée avec succès",
-=======
                     "200": {
                         "description": "Succès",
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-<<<<<<< HEAD
-                                        "data": {
-                                            "type": "string",
-                                            "example": "Nouvelle valeur de remboursement créée avec succès"
-=======
                                         "message": {
                                             "type": "string",
                                             "example": "Les préférences de l'utilisateur ont été mises à jour avec succès"
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                                         }
                                     },
                                     "type": "object"
@@ -18451,56 +18391,6 @@
                             }
                         }
                     },
-<<<<<<< HEAD
-                    "401": {
-                        "description": "Identifiants invalides"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/valeurRemboursement/update/{id}": {
-            "put": {
-                "tags": [
-                    "Valeur Remboursement"
-                ],
-                "summary": "Modifier une valeur de remboursement",
-                "operationId": "155ed0039613ae1458c5a0dd93722cc8",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la valeur de remboursement",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "valeur_integral_remboursement"
-                                ],
-                                "properties": {
-                                    "valeur_integral_remboursement": {
-                                        "type": "string",
-                                        "example": "10"
-                                    },
-                                    "valeur_partiel_remboursement": {
-                                        "type": "string",
-                                        "example": "20"
-                                    }
-                                },
-                                "type": "object"
-=======
                     "400": {
                         "description": "Erreur de validation",
                         "content": {
@@ -18528,55 +18418,10 @@
                                     },
                                     "type": "object"
                                 }
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                             }
                         }
                     }
                 },
-<<<<<<< HEAD
-                "responses": {
-                    "200": {
-                        "description": "Valeur de remboursement mise à jour avec succès"
-                    },
-                    "404": {
-                        "description": "Valeur de remboursement non trouvée"
-                    },
-                    "422": {
-                        "description": "Erreur de validation"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/valeurRemboursement/destroy/{id}": {
-            "delete": {
-                "tags": [
-                    "Valeur Remboursement"
-                ],
-                "summary": "Supprimé une valeur de remboursement",
-                "operationId": "e7ae784bbd309c92d468863c516e5b70",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "IId de la valeur de remboursement",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "valeur de remboursement supprimé avec succès"
-                    },
-                    "404": {
-                        "description": "valeur de remboursement non trouvé"
-=======
                 "security": [
                     {
                         "bearerAuth": []
@@ -18603,7 +18448,6 @@
                     },
                     "401": {
                         "description": "Non autorisé"
->>>>>>> 8d9ae410e5f72c690c0f86579812b298c0a321a2
                     }
                 },
                 "security": [

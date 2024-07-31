@@ -9,6 +9,834 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/logement/store_step_1": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement, enregistrement de type de propriété",
+                "operationId": "92cbb6c482537750f3f3a00809097b70",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "property_type_id"
+                                ],
+                                "properties": {
+                                    "property_type_id": {
+                                        "description": "ID du type de propriété",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 1 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Type de propriété non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_2/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 2), enregistrement de type de logement",
+                "operationId": "1f7f3f61dcbb235444de7de399467684",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housing_type_id"
+                                ],
+                                "properties": {
+                                    "housing_type_id": {
+                                        "description": "ID du type de logement",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 2 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Type de logement ou le nombre de voyageur doit avoir pour valeur minimale 1",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_4/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 4), enregistrement du pays, du département, de la ville, du numéro de téléphone et de l'adresse",
+                "operationId": "db7d66d20101d12c242ebb33d5b9ba8b",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "country",
+                                    "department",
+                                    "city",
+                                    "telephone",
+                                    "address"
+                                ],
+                                "properties": {
+                                    "country": {
+                                        "description": "Pays",
+                                        "type": "string"
+                                    },
+                                    "department": {
+                                        "description": "Département",
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "description": "Ville",
+                                        "type": "string"
+                                    },
+                                    "telephone": {
+                                        "description": "Téléphone",
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "description": "Adresse",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 4 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le nombre de voyageur doit avoir pour valeur minimale 1",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_5/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 5), enregistrement du nombre de voyageurs, du nombre de lits et de la surface",
+                "operationId": "9a195d42dfbdea5dbd3ffd4d9592c298",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "number_of_traveller",
+                                    "number_of_bed",
+                                    "surface"
+                                ],
+                                "properties": {
+                                    "number_of_traveller": {
+                                        "description": "Nombre de voyageurs",
+                                        "type": "integer"
+                                    },
+                                    "number_of_bed": {
+                                        "description": "Nombre de lits",
+                                        "type": "integer"
+                                    },
+                                    "surface": {
+                                        "description": "Surface",
+                                        "type": "number",
+                                        "format": "double"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 5 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le nombre de voyageur doit avoir pour valeur minimale 1",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_6/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 6), enregistrement des acceptations et des règles",
+                "operationId": "edfc6af90bfa5e56b22aaf408698edf9",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_accept_chill",
+                                    "is_accept_smoking",
+                                    "is_accept_noise",
+                                    "is_accept_alccol",
+                                    "is_camera",
+                                    "is_accept_arm",
+                                    "is_accepted_animal",
+                                    "is_animal_exist"
+                                ],
+                                "properties": {
+                                    "is_accept_chill": {
+                                        "description": "Acceptation du calme",
+                                        "type": "boolean"
+                                    },
+                                    "is_accept_smoking": {
+                                        "description": "Acceptation du tabagisme",
+                                        "type": "boolean"
+                                    },
+                                    "is_accept_noise": {
+                                        "description": "Acceptation du bruit",
+                                        "type": "boolean"
+                                    },
+                                    "is_accept_alccol": {
+                                        "description": "Acceptation de l'alcool",
+                                        "type": "boolean"
+                                    },
+                                    "is_camera": {
+                                        "description": "Présence de caméras",
+                                        "type": "boolean"
+                                    },
+                                    "is_accept_arm": {
+                                        "description": "Acceptation des armes",
+                                        "type": "boolean"
+                                    },
+                                    "is_accepted_animal": {
+                                        "description": "Acceptation des animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_animal_exist": {
+                                        "description": "Existence d'animaux",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 6 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "field_name": {
+                                                        "description": "Nom du champ",
+                                                        "type": "string"
+                                                    },
+                                                    "errors": {
+                                                        "description": "Liste des erreurs pour ce champ",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_3/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Etape3: Ajouter des coordonnées géographiques à un logement",
+                "operationId": "40c25f9603beabec21c0ac3a5a356c27",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sit_geo_lat",
+                                    "sit_geo_lng"
+                                ],
+                                "properties": {
+                                    "sit_geo_lat": {
+                                        "description": "Latitude géographique",
+                                        "type": "number"
+                                    },
+                                    "sit_geo_lng": {
+                                        "description": "Longitude géographique",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 3 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_7/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter les règlements intérieurs à un logement",
+                "operationId": "ede987dd08c7396f6dccc6c4916c02c9",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "interior_regulation": {
+                                        "description": "Règlement intérieur",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "interior_regulation_pdf": {
+                                        "description": "Fichier PDF du règlement intérieur",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "interior_regulation": "Sample interior regulation text",
+                                "interior_regulation_pdf": "file.pdf"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 7 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou fichier PDF non valide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/withoutvalidate": {
             "get": {
                 "tags": [
@@ -1955,6 +2783,25 @@
                 ],
                 "summary": "Get all category for admin (not blocked and not deleted)",
                 "operationId": "05aff89055eedef2c690a88476dfef9f",
+                "responses": {
+                    "200": {
+                        "description": "List of category with categories"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/category/index": {
+            "get": {
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Get all category for admin (not blocked and not deleted)",
+                "operationId": "e928062edfb5962200236704e2bf3f51",
                 "responses": {
                     "200": {
                         "description": "List of category with categories"
@@ -11897,6 +12744,25 @@
                 ],
                 "summary": "Get all preferences (verified, not blocked, not deleted)",
                 "operationId": "47b543fe6e93580a5ff50cff9fe6b918",
+                "responses": {
+                    "200": {
+                        "description": "List of preferences"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/preference/index": {
+            "get": {
+                "tags": [
+                    "Preference"
+                ],
+                "summary": "Get all preferences (verified, not blocked, not deleted)",
+                "operationId": "ec31b4b38ff959b0b21448784f346949",
                 "responses": {
                     "200": {
                         "description": "List of preferences"

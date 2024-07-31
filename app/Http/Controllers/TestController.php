@@ -11,9 +11,6 @@ class TestController extends Controller
 {
     public function verifyEmail($email)
     {
-        // dd('a');
-     
-
         $client = new Client();
 
         try {

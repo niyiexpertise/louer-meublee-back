@@ -387,7 +387,7 @@ public function DeletePromotion($id)
 
         return response()->json(['message' => 'Promotion supprimée avec succès.'], Response::HTTP_OK);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

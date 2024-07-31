@@ -44,6 +44,30 @@ class PreferenceController extends Controller
    
     }
 
+          /**
+     * @OA\Get(
+     *     path="/api/preference/index",
+     *     summary="Get all preferences (verified, not blocked, not deleted)",
+     *     tags={"Preference"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of preferences"
+     *     )
+     * )
+     */
+    public function index()
+    {
+        try{
+                $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
+                return response()->json(['data' => $preferences], 200);
+    
+        } catch(Exception $e) {
+              return response()->json(['error' => $e->getMessage()], 500);
+        }
+   
+    }
+
             /**
      * @OA\Get(
      *     path="/api/preference/VerifiedBlocknotDelete",

@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Charge;
 use App\Models\Equipment_category;
 use App\Models\Housing;
+use App\Models\Housing_charge;
+use App\Models\housing_preference;
 use App\Models\HousingType;
+use App\Models\photo;
 use App\Models\PropertyType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -450,7 +454,6 @@ class AddHousingController extends Controller
             $validator = Validator::make($request->all(), [
                 'number_of_traveller' =>'required|integer',
                 'number_of_bed' => 'required|integer',
-                'surface' => 'required|numeric',
             ]);
 
             $message = [];
@@ -466,6 +469,17 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
+            if($request->has('surface')){
+                if(!is_numeric($request->surface)){
+                    return (new ServiceController())->apiResponse(404,[], "La valeur de l'aire de surface doit être un nombre");
+                }
+                if($request->surface <= 15){
+                    {
+                        return (new ServiceController())->apiResponse(404,[], "L'aire de la surface ne peut être inférieur à 15m², ni négatif");
+                    }
+                }
+            }
+
             if($request->number_of_traveller <= 0){
                 {
                     return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
@@ -478,11 +492,7 @@ class AddHousingController extends Controller
                 }
             }
 
-            if($request->surface <= 15){
-                {
-                    return (new ServiceController())->apiResponse(404,[], "L'aire de la surface ne peut ni être null, ni négatif et doit avoir pour valeur  minimal 15");
-                }
-            }
+           
 
             $housing->number_of_traveller = $request->number_of_traveller;
             $housing->number_of_bed = $request->number_of_bed;
@@ -651,9 +661,7 @@ class AddHousingController extends Controller
                 'is_accept_smoking' => 'required|boolean',
                 'is_accept_noise' => 'required|boolean',
                 'is_accept_alccol' => 'required|boolean',
-                'is_camera' => 'required|boolean',
                 'is_accept_arm' => 'required|boolean',
-                'is_accepted_animal' => 'required|boolean',
                 'is_animal_exist' => 'required|boolean',
             ]);
 
@@ -691,31 +699,87 @@ class AddHousingController extends Controller
     }
 
 
-
-    public function  addHousing_step_8(Request $request,$housingId){
+    /**
+ * @OA\Post(
+ *     path="/api/logement/store_step_9/{housingId}",
+ *     summary="Ajouter des photos au logement (étape 9)",
+ *     tags={"Ajout de logement"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"photos"},
+ *                 @OA\Property(
+ *                     property="photos",
+ *                     description="Photos à télécharger",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="string",
+ *                         format="binary"
+ *                     )
+ *                 ),
+ *                
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Étape 9 terminée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="housing_id",
+ *                 description="ID du logement",
+ *                 type="integer"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Message d'erreur",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Message d'erreur",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     security={
+ *         {"bearerAuth": {}}
+ *     }
+ * )
+ */
+    public function  addHousing_step_9(Request $request,$housingId){
         try {
 
-            $validator = Validator::make($request->all(), [
-                'equipment_housing' => 'nullable|array',
-                'equipment_housing.*' => 'integer',
-                'category_equipment_housing' => 'required|array',
-                'category_equipment_housing.*' => 'integer',
-                'category_id' => 'required|array',
-                'category_id.*' => 'integer',
-                'number_category' => 'required|array',
-                'photo_categories.*' => 'required|file|image|max:2048',
-                'new_categories' => 'nullable|array',
-                'new_categories_numbers' => 'nullable|array',
-                 'new_category_photos_.*' => 'nullable|array',
-                'new_category_photos_.*.*' => 'file|image|max:2048',
+            $request->validate([
+                'photos' => 'required'
             ]);
-
-            $message = [];
-
-            if ($validator->fails()) {
-                $message[] = $validator->errors();
-                return (new ServiceController())->apiResponse(505,[],$message);
-            }
 
             $housing = Housing::whereId($housingId)->first();
 
@@ -723,42 +787,482 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
+            foreach ($request->file('photos') as $index => $photo) {
+                $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
+                $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
 
-            if ($request->has('equipment_housing')) {
+                if(env('MODE') == 'PRODUCTION'){
+                    $photoUrl = url('/image/photo_logement/' . $photoName);
+                }
+
+                if(env('MODE') == 'DEVELOPPEMENT'){
+                    $ip= env('LOCAL_ADDRESS');
+                    $photoUrl = $ip.'/image/photo_logement/' . $photoName;
+                }
                
-                if($request->has('category_equipment_housing')){
-                           if (count($request->input('equipment_housing')) == count($request->input('category_equipment_housing')) ) {
-                            foreach ($request->equipment_housing as $index=> $equipmentId) {
-                                $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
-                                            ->where('category_id', $request->input('category_equipment_housing')[$index])
-                                                ->exists();
-                    
-                                if (!$EquipmentCategorieExists) {
-                                    return response()->json(['message' => "Revoyez les id de catégorie et équipement que vous renvoyez.L equipement $equipmentId n est pas associé à la catégorie ".$request->category_equipment_housing[$index]], 200);
-                                    } 
-                             
-                            }
-                    
-                    }   else{
-                        return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
-                                                } 
-                       } else{
-                            return response()->json(['message' => 'Renseigner les catégories des équipements s il vous plaît).'], 200);
-                         }
-               
-               }  
+                $type = $photo->getClientOriginalExtension();
+                $photoModel = new photo();
+                $photoModel->path = $photoUrl;
+                $photoModel->extension = $type;
+                $photoModel->housing_id = $housingId;;
+                $photoModel->save();
+            }
 
-
-            $housing->step = 8;
+            $housing->step = 9;
             $housing->save();
 
-            $data =["housing_id" => $housingId];
+            $data = ["housing_id" => $housingId];
+            
 
-            return (new ServiceController())->apiResponse(200,$data, 'Etape 8 terminée avec succès');
+            return (new ServiceController())->apiResponse(200,$data, 'Etape 9 terminée avec succès');
 
         } catch(\Exception $e) {
             return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
     }
+
+
+    /**
+ * @OA\Post(
+ *      path="/api/logement/store_step_10/{housingId}",
+ *      summary="Ajouter une étape de logement (étape 10), enregistrement de la photo de couverture",
+ *      tags={"Ajout de logement"},
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\RequestBody(
+ *          required=true,
+ *          @OA\MediaType(
+ *              mediaType="application/json",
+ *              @OA\Schema(
+ *                  type="object",
+ *                  required={"profile_photo_id"},
+ *                  @OA\Property(
+ *                      property="profile_photo_id",
+ *                      description="ID de la photo à définir comme couverture",
+ *                      type="integer"
+ *                  )
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Étape 10 terminée avec succès",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="housing_id",
+ *                  description="ID du logement",
+ *                  type="integer"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Logement ou photo non trouvés",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur serveur",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      security={
+ *          {"bearerAuth": {}}
+ *      }
+ * )
+ */
+
+    public function  addHousing_step_10(Request $request,$housingId){
+        try {
+
+            $request->validate([
+                'profile_photo_id' => 'required'
+            ]);
+
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+           $photo = Photo::whereId($request->profile_photo_id)->first();
+
+           if(!$photo){
+            return (new ServiceController())->apiResponse(404,[], 'Photo non trouvé');
+            }
+
+            if($photo->housing_id != $housingId){
+                return (new ServiceController())->apiResponse(404,[], "Cette photo n'est pas associer à ce logement");
+            }
+
+            $existPhoto = Photo::where('is_couverture',true)->first();
+            if($existPhoto){
+                $existPhoto->update(['is_couverture' => false]);
+            }
+
+            $photo->is_couverture = true;
+            $photo->save();
+
+            $housing->step = 10;
+            $housing->save();
+
+            $data =[
+                "housing_id" => $housingId,
+                "housing_files" => photo::where('housing_id',$housingId)->where('is_deleted', false)->get()
+            ];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Etape 10 terminée avec succès');
+
+        } catch(\Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    }
+
+    
+    /**
+ * @OA\Post(
+ *      path="/api/logement/store_step_11/{housingId}",
+ *      summary="Ajouter une étape de logement (étape 11), enregistrement des préférences, des nom et des descriptions",
+ *      tags={"Ajout de logement"},
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\RequestBody(
+ *          required=false,
+ *          @OA\MediaType(
+ *              mediaType="application/json",
+ *              @OA\Schema(
+ *                  type="object",
+ *                  @OA\Property(
+ *                      property="name",
+ *                      description="Nom du logement",
+ *                      type="string"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="description",
+ *                      description="Description du logement",
+ *                      type="string"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="preferences",
+ *                      description="Liste des préférences associées au logement",
+ *                      type="array",
+ *                      @OA\Items(
+ *                          type="integer"
+ *                      )
+ *                  )
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Étape 11 terminée avec succès",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="housing_id",
+ *                  description="ID du logement",
+ *                  type="integer"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Logement non trouvé",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur serveur",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      security={
+ *          {"bearerAuth": {}}
+ *      }
+ * )
+ */
+
+    public function  addHousing_step_11(Request $request,$housingId){
+        try {
+
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+            $housing->name = $request->name??null;
+            $housing->description = $request->description??null;
+
+            if ($request->has('preferences')) {
+                foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
+                    $exist->delete();
+                }
+                foreach ($request->input('preferences') as $preference) {
+                    if(!housing_preference::where('housing_id',$housingId)->where('preference_id',$preference)->exists()){
+                        $housingPreference = new housing_preference();
+                        $housingPreference->housing_id = $housing->id;
+                        $housingPreference->preference_id = $preference;
+                        $housingPreference->is_verified = true;
+                        $housingPreference->save();
+                    }
+             }
+            }
+
+            $housing->step = 11;
+            $housing->save();
+
+            $data =[
+                "housing_id" => $housingId,
+            ];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Etape 11 terminée avec succès');
+
+        } catch(\Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    }
+
+    private function areAllValuesNumeric(array $values): bool
+    {
+        foreach ($values as $value) {
+            if (!is_numeric($value)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function areAllValuesPositif(array $values): bool
+    {
+        foreach ($values as $value) {
+            if ($value<0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+ * @OA\Post(
+ *      path="/api/logement/store_step_12/{housingId}",
+ *      summary="Ajouter une étape de logement (étape 12), enregistrement des charges",
+ *      tags={"Ajout de logement"},
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\RequestBody(
+ *          required=true,
+ *          @OA\MediaType(
+ *              mediaType="application/json",
+ *              @OA\Schema(
+ *                  type="object",
+ *                  required={
+ *                      "Hotecharges",
+ *                      "Travelercharges",
+ *                      "Travelerchargesvalue"
+ *                  },
+ *                  @OA\Property(
+ *                      property="Hotecharges",
+ *                      description="Liste des identifiants des charges pour l'hôte",
+ *                      type="array",
+ *                      @OA\Items(
+ *                          type="integer"
+ *                      )
+ *                  ),
+ *                  @OA\Property(
+ *                      property="Travelercharges",
+ *                      description="Liste des identifiants des charges pour le voyageur",
+ *                      type="array",
+ *                      @OA\Items(
+ *                          type="integer"
+ *                      )
+ *                  ),
+ *                  @OA\Property(
+ *                      property="Travelerchargesvalue",
+ *                      description="Valeurs associées aux charges pour le voyageur",
+ *                      type="array",
+ *                      @OA\Items(
+ *                          type="number",
+ *                          format="float"
+ *                      )
+ *                  )
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Étape 12 terminée avec succès",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="housing_id",
+ *                  description="ID du logement",
+ *                  type="integer"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Logement ou charge non trouvé",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur serveur",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      security={
+ *          {"bearerAuth": {}}
+ *      }
+ * )
+ */
+
+    public function  addHousing_step_12(Request $request,$housingId){
+        try {
+
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+            if ($request->has('Hotecharges')) {
+
+                    foreach ($request->Hotecharges as $HotechargesId) {
+                    $HotechargesExists = Charge::where('id', $HotechargesId)->exists();
+
+                    if (!$HotechargesExists) {
+                        return (new ServiceController())->apiResponse(404,[], 'Revoyez les id de charges que vous renvoyez;précisement la variable HoteCharge.');
+                        }
+                }
+            }
+            if ($request->has('Travelercharges')) {
+                if($request->has('Travelerchargesvalue')){
+                    if (count($request->input('Travelercharges')) == count($request->input('Travelerchargesvalue')) ) {
+
+                        if (!$this->areAllValuesNumeric($request->input('Travelerchargesvalue'))) {
+                            return (new ServiceController())->apiResponse(404,[], 'Les valeurs des charges doivent être des nombres.');
+                        }
+                        if (!$this->areAllValuesPositif($request->input('Travelerchargesvalue'))) {
+                            return (new ServiceController())->apiResponse(404,[], 'Les valeurs des charges doivent être positive.');
+                        }
+                            foreach ($request->Travelercharges as $TravelerchargesId) {
+                                $TravelerchargesExists = Charge::where('id', $TravelerchargesId)->exists();
+
+                                if (!$TravelerchargesExists) {
+                                    return (new ServiceController())->apiResponse(404,[], 'Revoyez les id de charges que vous renvoyez;précisement la variable TravelerCharge.');
+                                }
+                            }
+
+                        }   else{
+                                return (new ServiceController())->apiResponse(404,[], 'Le nombre de valeurs de charges Traveler ne correspond pas au nombre de charges.');
+                            }
+                       } else{
+                            return (new ServiceController())->apiResponse(404,[], 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).');
+                         }
+               }
+               foreach(Housing_charge::where('housing_id',$housingId)->get() as $exist){
+                $exist->delete();
+            }
+            if ($request->has('Hotecharges')) {
+                foreach ($request->input('Hotecharges') as $index => $charge) {
+                    if(!Housing_charge::where('housing_id',$housingId)->where('charge_id',$charge)->exists()){
+                        $housingCharge = new Housing_charge();
+                        $housingCharge->housing_id = $housing->id;
+                        $housingCharge->charge_id = $charge;
+                        $housingCharge->is_mycharge= true;
+                        $housingCharge->save();
+                    }
+                }
+             }
+             if ($request->has('Travelercharges')) {
+                foreach ($request->input('Travelercharges') as $index => $charge) {
+                    if(!Housing_charge::where('housing_id',$housingId)->where('charge_id',$charge)->exists()){
+                        $housingCharge = new Housing_charge();
+                        $housingCharge->housing_id = $housing->id;
+                        $housingCharge->charge_id = $charge;
+                        $housingCharge->is_mycharge= false;
+                        $housingCharge->valeur=$request->input('Travelerchargesvalue')[$index];
+                        $housingCharge->save();
+                    }
+                }
+             }
+
+            $housing->step = 12;
+
+            $housing->save();
+
+            $data =["housing_id" => $housingId];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Etape 12 terminée avec succès');
+
+        } catch(\Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    }
+
 
 }

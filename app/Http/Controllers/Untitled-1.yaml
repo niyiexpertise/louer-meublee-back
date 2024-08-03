@@ -1,0 +1,102 @@
+Step1:
+
+Champ requis : property_type_id
+Verification 
+Existence du champs
+
+
+Step:2
+housing_type_id
+
+
+Step3:
+Champs requis : sit_geo_lat, sit_geo_lng
+
+
+Step4:
+Champs requis : country, department, city, telephone, address, 
+
+
+step5:
+number_of_traveller
+number_of_bed
+surface
+
+
+
+Remarque:vous aurez à enlever animaux dangereux,nombre de chambre,cameras surveillance sur cette page;  
+
+step6 : 
+Champs requis : is_accept_chill, is_accept_noise, is_accept_smoking, is_accept_alccol, is_camera, is_accept_arm, is_accepted_animal, is_animal_exist 
+Remarque : is_animal_exist (oublié par le front)
+
+step7  : 
+Champs requis : interior_regulation, interior_regulation_pdf
+
+
+step8:
+champs requis:
+equipment_housing :id des équipements cochés(c’est un tableau)
+category_equipment_housing": id des catégories(pièces) des équipements
+category_id: id des pièces choisies
+number_category: nombre de chaque pièces respectives(tableau)
+photo_categories:ici c’est des trucs concaténés(tableau)
+new_equipment: juste les nouveaux noms des nouveaux equipements(tableau)
+new_categories: les nouveaux noms de catégorie(tableau)
+new_categories_numbers:Nombres des nouvelles catégories(tableau) 
+new_category_photos: des concatenations bizarre
+
+step9  : 
+Champs requis : photos
+
+step10  : 
+Champs requis : profile_photo_id
+
+step11  : 
+Champs requis : name, preferences, description
+
+
+step12  :
+champs requis:
+Hotecharges
+Travelercharges
+Travelerchargesvalue
+
+step13:
+champs requis:
+   -price
+
+step14  : 
+Champs requis : is_accept_anulation, delai_partiel_remboursement, delai_integral_remboursement, valeur_integral_remboursement, valeur_partiel_remboursement, cancelation_condition
+
+
+Step15:
+champs requis:
+-minimum_duration
+-time_before_reservation
+- departure_instruction
+
+Step16:
+reduction_night_number: (c’est un tableau)
+reduction_value_night_number:(c’est un tableau)
+
+
+
+
+step17  : 
+Champs requis : promotion_date_debut, promotion_date_fin, promotion_number_of_reservation, promotion_value
+
+
+Nb:
+Champs nullable:
+  surface
+   name
+   is_camera
+   is_accepted_animal
+   icone
+   time_before_reservation
+   departure_instruction
+   description
+
+---------------------------------------------------------------------
+

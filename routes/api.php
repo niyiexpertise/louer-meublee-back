@@ -818,7 +818,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('logement')->group(function () {
 
             //Gestion des logements (CRUD)
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.store']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.store']], function () {
                 Route::post('/store', [HousingController::class, 'addHousing'])->name('logement.store');
                 Route::post('/store_step_1', [AddHousingController::class, 'addHousing_step_1'])->name('logement.store_step_1');
                 Route::post('/store_step_2/{housingId}', [AddHousingController::class, 'addHousing_step_2'])->name('logement.store_step_2');
@@ -827,7 +827,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/store_step_5/{housingId}', [AddHousingController::class, 'addHousing_step_5'])->name('logement.store_step_5');
                 Route::post('/store_step_6/{housingId}', [AddHousingController::class, 'addHousing_step_6'])->name('logement.store_step_6');
                 Route::post('/store_step_7/{housingId}', [AddHousingZController::class, 'addHousing_step_7'])->name('logement.store_step_7');
-                Route::post('/store_step_8/{housingId}', [AddHousingController::class, 'addHousing_step_8'])->name('logement.store_step_8');
+                Route::post('/store_step_8/{housingId}', [AddHousingZController::class, 'addHousing_step_8'])->name('logement.store_step_8');
                 Route::post('/store_step_9/{housingId}', [AddHousingController::class, 'addHousing_step_9'])->name('logement.store_step_9');
                 Route::post('/store_step_10/{housingId}', [AddHousingController::class, 'addHousing_step_10'])->name('logement.store_step_10');
                 Route::post('/store_step_11/{housingId}', [AddHousingController::class, 'addHousing_step_11'])->name('logement.store_step_11');

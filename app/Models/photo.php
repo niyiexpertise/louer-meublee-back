@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class photo extends Model
 {
+    protected $fillable = [
+        'is_couverture'
+    ];
     use HasFactory;
     public function housing()
     {

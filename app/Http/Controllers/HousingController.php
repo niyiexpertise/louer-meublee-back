@@ -142,7 +142,6 @@ class HousingController extends Controller
                         if (!$HotechargesExists) {
                             return response()->json(['message' => 'Revoyez les id de charges que vous renvoyez;précisement la variable HoteCharge.'], 200);
                             } 
-                     
                     }
             
                } else{
@@ -196,7 +195,7 @@ class HousingController extends Controller
                         }
                 
                                      }   else{
-                                                    return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
+                                        return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
                                             } 
                    } else{
                         return response()->json(['message' => 'Renseigner les catégories des équipements s il vous plaît).'], 200);
@@ -215,7 +214,6 @@ class HousingController extends Controller
     // }
 
     if ($request->has('new_equipment')) {
-               
         if($request->has('new_equipment_category')){
                    if (count($request->input('new_equipment')) == count($request->input('new_equipment_category')) ) {
                     foreach ($request->new_equipment as $index=> $equipmentId) {
@@ -572,7 +570,7 @@ class HousingController extends Controller
             $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
             $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
         //$photoUrl = url('/image/photo_category/' . $photoName);
-                        $ip='http://192.168.100.158:8000';
+                        $ip='http://192.168.100.15:8000';
                  $photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photoModel->path = $photoUrl;
             $photoModel->save();

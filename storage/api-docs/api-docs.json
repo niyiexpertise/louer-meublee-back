@@ -604,6 +604,414 @@
                 ]
             }
         },
+        "/api/logement/store_step_9/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter des photos au logement (étape 9)",
+                "operationId": "b8b1ad60a5d2580a9c88ead8d1be6587",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "photos"
+                                ],
+                                "properties": {
+                                    "photos": {
+                                        "description": "Photos à télécharger",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 9 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_10/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 10), enregistrement de la photo de couverture",
+                "operationId": "02c18da1ccfff744681ebaf31efdaa52",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "profile_photo_id"
+                                ],
+                                "properties": {
+                                    "profile_photo_id": {
+                                        "description": "ID de la photo à définir comme couverture",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 10 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou photo non trouvés",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_11/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 11), enregistrement des préférences, des nom et des descriptions",
+                "operationId": "00b0cb9d42b7994abf21f5468a368c7b",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "Nom du logement",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Description du logement",
+                                        "type": "string"
+                                    },
+                                    "preferences": {
+                                        "description": "Liste des préférences associées au logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 11 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_12/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 12), enregistrement des charges",
+                "operationId": "fff44aca4d8c88b7a3ac8e6ebe3f763e",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "Hotecharges",
+                                    "Travelercharges",
+                                    "Travelerchargesvalue"
+                                ],
+                                "properties": {
+                                    "Hotecharges": {
+                                        "description": "Liste des identifiants des charges pour l'hôte",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "Travelercharges": {
+                                        "description": "Liste des identifiants des charges pour le voyageur",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "Travelerchargesvalue": {
+                                        "description": "Valeurs associées aux charges pour le voyageur",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "number",
+                                            "format": "float"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 12 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou charge non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/store_step_3/{housingId}": {
             "post": {
                 "tags": [
@@ -815,6 +1223,237 @@
                     },
                     "505": {
                         "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_8/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter des équipements et des catégories à un logement",
+                "operationId": "c9090fa3b26a4689ba284b55a166465f",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "equipment_housing",
+                                    "category_equipment_housing",
+                                    "category_id",
+                                    "number_category"
+                                ],
+                                "properties": {
+                                    "equipment_housing": {
+                                        "description": "Liste des ID d'équipements existants pour le logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "category_equipment_housing": {
+                                        "description": "Liste des ID de catégories associées aux équipements",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "category_id": {
+                                        "description": "Liste des ID de catégories existantes pour le logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "number_category": {
+                                        "description": "Liste des nombres associés à chaque catégorie",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "new_categories": {
+                                        "description": "Liste des nouvelles catégories à ajouter",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "new_categories_numbers": {
+                                        "description": "Liste des nombres associés aux nouvelles catégories",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "new_equipment": {
+                                        "description": "Liste des nouveaux équipements à ajouter",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "new_equipment_category": {
+                                        "description": "Liste des catégories associées aux nouveaux équipements",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "photo_categories{id}": {
+                                        "description": "Photos des catégories existantes, où {id} est remplacé par l'ID de la catégorie",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "new_category_photos_{name}": {
+                                        "description": "Photos des nouvelles catégories, où {name} est remplacé par le nom de la nouvelle catégorie",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "equipment_housing": [
+                                    1,
+                                    2,
+                                    3
+                                ],
+                                "category_equipment_housing": [
+                                    10,
+                                    20,
+                                    30
+                                ],
+                                "category_id": [
+                                    100,
+                                    200
+                                ],
+                                "number_category": [
+                                    2,
+                                    3
+                                ],
+                                "new_categories": [
+                                    "Salle de jeux",
+                                    "Bureau"
+                                ],
+                                "new_categories_numbers": [
+                                    1,
+                                    1
+                                ],
+                                "new_equipment": [
+                                    "Projecteur",
+                                    "Scanner"
+                                ],
+                                "new_equipment_category": [
+                                    100,
+                                    200
+                                ],
+                                "photo_categories100": [
+                                    "cat100_photo1.jpg",
+                                    "cat100_photo2.jpg"
+                                ],
+                                "new_category_photos_Salle_de_jeux": [
+                                    "salle_photo1.jpg",
+                                    "salle_photo2.jpg"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 8 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Données invalides ou logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
                         "content": {
                             "application/json": {
                                 "schema": {

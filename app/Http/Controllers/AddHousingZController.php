@@ -595,12 +595,32 @@ public function addHousing_step_7(Request $request, $housingId){
      {
         foreach($request->input('new_categories') as $categoryName)
         {
+                $items = $request->input('new_categories');
+
+                $uniqueItems = array_unique($items);
+
+                if (count($uniqueItems) < count($items)) {
+                     return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez ajouter deux nouvelles catégories avec le même nom.");
+                }
                $category = Category::all();
                foreach($category as $e)
                {
-                if($categoryName == $e->name)
+                // return !($categoryName == $e->name && Category::whereName($categoryName)->first()->isverified == 1);
+                if($categoryName == $e->name && Category::whereName($categoryName)->first()->is_verified == 1)
                     {
                     return (new ServiceController())->apiResponse(404,[], "Une autre catégorie ayant le même nom existe déjà dans la base de donnée ou a été exclu.$categoryName existe déjà comme nom de pièce");
+                    }
+
+                    // return !($categoryName == $e->name && Category::whereName($categoryName)->first()->isverified == 0);
+                if($categoryName == $e->name && Category::whereName($categoryName)->first()->is_verified == 0)
+                    {
+                        $existCategoryFile = Housing_category_file::where('housing_id',$housingId)->where('category_id',Category::whereName($categoryName)->first()->id)->first();
+                        if(File::whereId($existCategoryFile->file_id)->exits()){
+                            File::whereId($existCategoryFile->file_id)->delete();
+                        }
+                       
+                        $existCategoryFile->delete();
+                        Category::whereName($categoryName)->delete();
                     }
                }
         }
@@ -644,7 +664,6 @@ public function addHousing_step_7(Request $request, $housingId){
 
 
     if ($request->has('new_equipment')) {
-        $new_equipment_id = [];
         foreach ($request->new_equipment as $index=> $equipmentId)
          {
             $CategorieExists = Category::where('id', $request->input('new_equipment_category')[$index])
@@ -657,8 +676,12 @@ public function addHousing_step_7(Request $request, $housingId){
                 }
                 $equipments = Equipment::all();
                 foreach($equipments as $e){
-                    if($equipmentId == $e->name){
+                    if($equipmentId == $e->name && Equipment::whereName($equipmentId)->first()->is_verified == 1){
                     return (new ServiceController())->apiResponse(404,[], "Un autre équipement ayant le même nom existe déjà dans la base de donnée ou a été exclu.$e->name existe déjà comme nom d'équiment");
+                    }
+                    
+                    if($equipmentId == $e->name && Equipment::whereName($equipmentId)->first()->is_verified == 0){
+                        Equipment::whereName($equipmentId)->delete();
                     }
                 }
             }
@@ -683,14 +706,15 @@ public function addHousing_step_7(Request $request, $housingId){
 
        $fileID= [];
        foreach(Housing_category_file::where('housing_id',$housingId)->get() as $existEquipment){
+        //    return 1;
             $fileID[] = $existEquipment->file_id;
 
             foreach ($fileID as $file){
-                // File::whereId($file)->delete();
+                File::whereId($file)->delete();
             }
         }
 
-        return $fileID;
+        // return $fileID;
 
        foreach(Housing_category_file::where('housing_id',$housingId)->get() as $existEquipment){
         $existEquipment->delete();
@@ -717,6 +741,9 @@ public function addHousing_step_7(Request $request, $housingId){
         $newEquipmentCategories = $request->input('new_equipment_category');
 
         foreach ($newEquipments as $index => $newEquipment) {
+            if(Equipment::whereName($newEquipment)->exists()){
+                return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajoutez deux nouveaux équipements avec le même nom");
+            }
             $equipment = new Equipment();
             $equipment->name = $newEquipment;
             $equipment->is_verified=false;

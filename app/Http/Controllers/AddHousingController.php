@@ -1224,7 +1224,7 @@ class AddHousingController extends Controller
                             return (new ServiceController())->apiResponse(404,[], 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).');
                          }
                }
-               foreach(Housing_charge::where('housing_id',$housingId)->get() as $exist){
+               foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
                 $exist->delete();
             }
             if ($request->has('Hotecharges')) {

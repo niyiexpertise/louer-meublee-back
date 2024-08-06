@@ -12,8 +12,11 @@ class reduction extends Model
         'housing_id', 
         'night_number',
         'value',
-        'is_encours', 
-        'is_deleted', 
+        'is_encours',
+        'is_deleted'
+    ];
+
+    protected $hidden = [
         'date_debut',
         'date_fin',
     ];

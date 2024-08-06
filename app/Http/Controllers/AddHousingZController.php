@@ -168,7 +168,7 @@ class AddHousingZController extends Controller
             return (new ServiceController())->apiResponse(404, [], 'La longitude doit être comprise entre -180 et 180.');
         }
 
-        
+
 
         $housing->sit_geo_lat = $request->sit_geo_lat;
         $housing->sit_geo_lng = $request->sit_geo_lng;
@@ -308,7 +308,7 @@ public function addHousing_step_7(Request $request, $housingId){
             return (new ServiceController())->apiResponse(404, [], 'Au moins un des champs doit être renseigné.');
         }
 
-        
+
 
         if ($request->hasFile('interior_regulation_pdf')) {
             $pdfFile = $request->file('interior_regulation_pdf');
@@ -544,7 +544,7 @@ public function addHousing_step_7(Request $request, $housingId){
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            
+
 
 
             // Reinitialisation de la donnée
@@ -736,7 +736,7 @@ public function addHousing_step_7(Request $request, $housingId){
                 $housingEquipment->housing_id = $housing->id;
                 $housingEquipment->is_verified = true;
                 $housingEquipment->save();
-            } 
+            }
         }
     }
     // Debut de Mise à jours pour les équipements inexistants associés aux pièces pour un logement donné
@@ -896,45 +896,45 @@ public function addHousing_step_7(Request $request, $housingId){
             $equipmentIds = DB::table('housing_equipments')
                             ->where('housing_id', $housingId)
                             ->pluck('equipment_id');
-    
+
             // Step 2: Delete entries from housing_equipment
             DB::table('housing_equipments')
                 ->where('housing_id', $housingId)
                 ->delete();
-    
+
             // Step 3: Delete non-verified equipment
             DB::table('equipment')
                 ->whereIn('id', $equipmentIds)
                 ->where('is_verified', false)
                 ->delete();
-    
+
             // Step 4: Get all category_ids and file_ids from housing_category_file
             $categoryFileData = DB::table('housing_category_files')
                                 ->where('housing_id', $housingId)
                                 ->get(['category_id', 'file_id']);
-    
+
             // Step 5: Delete entries from housing_category_file
             DB::table('housing_category_files')
                 ->where('housing_id', $housingId)
                 ->delete();
-    
+
             // Step 6: Delete non-verified categories and associated files
             foreach ($categoryFileData as $data) {
                 $categoryId = $data->category_id;
                 $fileId = $data->file_id;
-    
+
                 // Delete non-verified category
                 DB::table('categories')
                     ->where('id', $categoryId)
                     ->where('is_verified', false)
                     ->delete();
-    
+
                 // Delete associated file
                 DB::table('files')
                     ->where('id', $fileId)
                     ->delete();
             }
-    
+
         });
     }
 
@@ -1053,7 +1053,7 @@ public function addHousing_step_13(Request $request, $housingId) {
             return (new ServiceController())->apiResponse(404, [], 'Le prix doit être supérieur à 0.');
         }
 
-        
+
 
         $housing->price = $price;
         $housing->step = 13;
@@ -1193,7 +1193,7 @@ public function addHousing_step_15(Request $request, $housingId) {
             return (new ServiceController())->apiResponse(505, [], $message);
         }
 
-        
+
         $minimumDuration = $request->input('minimum_duration');
         $timeBeforeReservation = $request->input('time_before_reservation');
 
@@ -1205,12 +1205,12 @@ public function addHousing_step_15(Request $request, $housingId) {
             return (new ServiceController())->apiResponse(404, [], 'Le temps avant la réservation ne peut pas être négatif.');
         }
 
-        
 
-       
+
+
         $housing->minimum_duration = $minimumDuration;
         $housing->time_before_reservation = $timeBeforeReservation;
-        if ($request->has('departure_instruction')) 
+        if ($request->has('departure_instruction'))
         {
         $housing->departure_instruction = $request->input('departure_instruction');
         }
@@ -1369,12 +1369,12 @@ public function addHousing_step_16(Request $request, $housingId) {
             }
         }
 
-        
+
 
         $reductionsDeleted = Reduction::where('housing_id', $housingId)->delete();
 
         foreach ($nightNumbers as $index => $nightNumber) {
-            $reduction = new Reduction(); 
+            $reduction = new Reduction();
             $reduction->night_number = $nightNumber;
             $reduction->value = $values[$index];
             $reduction->housing_id = $housing->id;
@@ -1514,27 +1514,27 @@ public function addHousing_step_16(Request $request, $housingId) {
         if ($validationResponse) {
             return $validationResponse;
         }
-         
- 
+
+
          // Initialiser les messages d'erreur
          $messages = [];
- 
+
          // Vérifier si un des champs de promotion est présent
          $promotionFields = ['promotion_date_debut', 'promotion_date_fin', 'promotion_number_of_reservation', 'promotion_value'];
          $promotionProvided = array_filter($promotionFields, fn($field) => $request->has($field));
- 
+
          // Si un champ est présent, tous les autres doivent l'être aussi
          if (!empty($promotionProvided) && count($promotionProvided) !== count($promotionFields)) {
              return (new ServiceController())->apiResponse(400, [], 'Tous les champs de promotion doivent être présents ou absents.');
          }
- 
+
          // Valider les champs de promotion s'ils sont présents
          if (!empty($promotionProvided)) {
              $promotionDateDebut = $request->input('promotion_date_debut');
              $promotionDateFin = $request->input('promotion_date_fin');
              $promotionNumberOfReservation = $request->input('promotion_number_of_reservation');
              $promotionValue = $request->input('promotion_value');
- 
+
              if (!strtotime($promotionDateDebut)) {
                  return (new ServiceController())->apiResponse(404, [], 'La date de début de la promotion doit être une date valide.');
              }
@@ -1550,10 +1550,10 @@ public function addHousing_step_16(Request $request, $housingId) {
              if (!is_numeric($promotionValue) || $promotionValue <= 0) {
                  return (new ServiceController())->apiResponse(404, [], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
              }
- 
+
              // Supprimer les promotions existantes pour ce logement
              Promotion::where('housing_id', $housingId)->delete();
- 
+
              // Ajouter la nouvelle promotion
              $promotion = new Promotion();
              $promotion->date_debut = $promotionDateDebut;
@@ -1564,70 +1564,70 @@ public function addHousing_step_16(Request $request, $housingId) {
              $promotion->is_encours = true;
              $promotion->save();
          }
- 
+
          // Mettre à jour le logement à l'étape 17
          $housing->step = 17;
          $housing->is_updated=0;
         $housing->is_actif=1;
-        $housing->is_destroy=0;     
+        $housing->is_destroy=0;
         $housing->is_finished=1;
          $housing->save();
- 
+
          // Notifications
          $userId = auth()->user()->id;
          $notificationName = "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur.";
- 
+
          $notification = new Notification([
              'name' => $notificationName,
              'user_id' => $userId,
          ]);
          $notification->save();
- 
+
          $mail = [
              'title' => "Ajout d'un logement",
              'body' => "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur."
          ];
- 
+
          Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail));
- 
+
          $adminRole = DB::table('rights')->where('name', 'admin')->first();
- 
+
          if (!$adminRole) {
              return (new ServiceController())->apiResponse(404, [], 'Le rôle d\'admin n\'a pas été trouvé.');
          }
- 
+
          $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
              $query->where('right_id', $adminRole->id);
          })->get();
- 
+
          foreach ($adminUsers as $adminUser) {
              $notification = new Notification();
              $notification->user_id = $adminUser->id;
              $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
              $notification->save();
- 
+
              $mail = [
                  'title' => "Notification d'ajout d'un logement",
                  'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
              ];
- 
+
              Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
          }
- 
+
          return (new ServiceController())->apiResponse(200, ["housing_id" => $housing->id], 'Étape 17 terminée avec succès');
- 
+
      } catch (\Exception $e) {
          return (new ServiceController())->apiResponse(500, [], $e->getMessage());
      }
  }
- 
+
 
 
  public function validateStepOrder($currentStep, $housingId)
     {
         $housing = Housing::find($housingId);
-       
-        
+
+
         if ($housing->step < $currentStep - 1) {
             return (new ServiceController())->apiResponse(404, [], 'Vous devez compléter l\'étape ' . ($currentStep - 1) . ' avant de passer à l\'étape ' . $currentStep . '.');
         }

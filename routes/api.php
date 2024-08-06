@@ -76,7 +76,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 Route::prefix('users')->group(function () {
     Route::post('/register', [InscriptionController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
-    Route::post('/verification_code', [LoginController::class, 'verification_code']);
+    Route::post('/verification_code', [LoginController::class, 'verification_code'])->middleware(['auth:sanctum']);
     Route::post('/new_code/{id}', [LoginController::class, 'new_code']);
     Route::post('/password_recovery_start_step', [LoginController::class, 'password_recovery_start_step']);
     Route::post('/password_recovery_end_step', [LoginController::class, 'password_recovery_end_step']);
@@ -1352,6 +1352,12 @@ Route::prefix('portefeuille')->group(function () {
                     Route::delete('/delete/{id}', [ReductionController::class, 'DeleteReduction'])
                         ->name('reduction.delete')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.delete');
+                        Route::delete('/active/{reductionId}/{housingId}', [ReductionController::class, 'activeReduction'])
+                        ->name('reduction.activeReduction')
+                        ->middleware('role_or_permission:superAdmin|hote|Managereduction.activeReduction');
+                        Route::delete('/desactive/{reductionId}/{housingId}', [ReductionController::class, 'desactiveReduction'])
+                        ->name('reduction.desactiveReduction')
+                        ->middleware('role_or_permission:superAdmin|hote|Managereduction.desactiveReduction');
                 });
 
                 //Crud de type de demande

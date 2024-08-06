@@ -108,7 +108,7 @@ class AddHousingController extends Controller
 
     public function checkOwner($housingId){
         if(Auth::user()->id != Housing::whereId($housingId)->first()->user_id){
-            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas modifier un logement que vous n'avez pas ajouter. Veuillez ne pas procéder à de telles modifications sans remplir les critères c'est sincère.");
+            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas modifier un logement que vous n'avez pas ajouter. Veuillez ne pas procéder à de telles modifications sans remplir les critères, que la personne se confesse!!!");
         }
     }
 
@@ -190,7 +190,7 @@ class AddHousingController extends Controller
             $housing = Housing::whereId($housingId)->first();
 
             if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
            $errorcheckOwner= $this->checkOwner($housingId);
@@ -338,7 +338,7 @@ class AddHousingController extends Controller
             $housing = Housing::whereId($housingId)->first();
 
             if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
            $errorcheckOwner= $this->checkOwner($housingId);

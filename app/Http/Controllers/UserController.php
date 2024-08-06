@@ -117,7 +117,6 @@ class UserController extends Controller
      
     $formattedUsers = [];
     foreach ($users as $user) {
-
         $formattedUser = [
             'id' => $user->id,
             'lastname' => $user->lastname,
@@ -137,7 +136,7 @@ class UserController extends Controller
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
-            'solde_portfeuille' => Portfeuille::where('user_id',$user->id)->first()->solde,
+            'solde_portfeuille' => $user->portfeuille->solde,
             'user_role' => User::find($user->id)->getRoleNames(),
             'user_language' => [],
             'user_preference' => [], 

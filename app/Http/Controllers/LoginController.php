@@ -210,6 +210,7 @@ public function checkAuth(Request $request){
  * @OA\Post(
  *     path="/api/users/verification_code",
  *     tags={"Authentication"},
+ *     security={{"bearerAuth": {}}},
  *     summary="Vérification du code de vérification",
  *     description="Vérifie le code de vérification envoyé par l'utilisateur.",
  *     requestBody={
@@ -293,8 +294,8 @@ public function verification_code(Request $request)
 {
     try {
         $verification = $request->code;
-        $code = User::where('code', $verification)->first();
-        // $code =User::whereId(Auth::user()->id)->whereCode($verification)->first();
+        // $code = User::where('code', $verification)->first();
+        $code =User::whereId(Auth::user()->id)->whereCode($verification)->first();
         if ($code == null) {
             return response()->json([
                 'status_code' => 200,

@@ -57,20 +57,23 @@ public function index()
                      })
                      ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
                      ->get();
+
         if ($users->isEmpty()) {
             return response()->json(['message' => 'Aucun utilisateur avec des documents de vérification en attente trouvé.'], 404);
-                    }
+        }
 
         $verificationDocumentsByUser = [];
 
         foreach ($users as $user) {
-            $verificationDocumentspartenaire = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
+            $code_promo = ""; // Initialiser le code promo pour chaque utilisateur
+            $verificationDocumentspartenaire = $user->verificationDocumentspartenaire->map(function ($verificationDocument) use (&$code_promo) {
+                $code_promo = $verificationDocument->code_promo;
+
                 return [
                     'id_verification_document' => $verificationDocument->id,
                     'document_id' => $verificationDocument->document_id,
                     'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
                     'path' => $verificationDocument->path,
-                    'code_promo' => $verificationDocument->code_promo,
                     'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
                 ];
             });
@@ -89,6 +92,7 @@ public function index()
                 'sexe' => $user->sexe,
                 'is_hote' => $user->is_hote,
                 'verification_documents' => $verificationDocumentspartenaire,
+                'code_promo' => $code_promo
             ];
 
             $verificationDocumentsByUser[] = $userInfo;
@@ -98,8 +102,8 @@ public function index()
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
-
 }
+
 /**
  * @OA\Post(
  *   path="/api/users/verificationdocumentpartenaire/store",
@@ -260,7 +264,7 @@ public function index()
             $verificationDocuments[] = $verificationDocument;
         }
 
-        $adminRole = DB::table('rights')->where('name', 'admin')->first();
+        $adminRole = DB::table('rights')->where('name', 'superAdmin')->first();
 
         if (!$adminRole) {
             return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
@@ -319,47 +323,49 @@ public function index()
    *     )
    * )
    */
-    public function show($userId)
-    {
-        
-        try {
-            
-            $user = User::where('id', $userId)
-                        ->whereHas('verificationDocumentspartenaire')
-                        ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
-                        ->firstOrFail();
-            $verificationDocuments = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
-                return [
-                    'id_verification_document' => $verificationDocument->id,
-                    'document_id' => $verificationDocument->document_id,
-                    'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
-                    'path' => $verificationDocument->path,
-                    'code_promo' => $verificationDocument->code_promo,
-                    'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
-                ];
-            });
-    
-            $userInfo = [
-                'id_user' => $user->id,
-                'lastname' => $user->lastname,
-                'firstname' => $user->firstname,
-                'email' => $user->email,
-                'code_pays' => $user->code_pays,
-                'telephone' => $user->telephone,
-                'country' => $user->country,
-                'city' => $user->city,
-                'address' => $user->address,
-                'postal_code' => $user->postal_code,
-                'sexe' => $user->sexe,
-                'photo_profile'=> $user->file_profil,
-                'verification_documents' => $verificationDocuments,
-            ];
-    
-            return response()->json(['data' => $userInfo], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de l\'utilisateur.'], 500);
-        }
-    }
+  public function show($userId)
+  {
+      try {
+          $user = User::where('id', $userId)
+                      ->whereHas('verificationDocumentspartenaire')
+                      ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
+                      ->firstOrFail();
+          
+          $verificationDocuments = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
+              return [
+                  'id_verification_document' => $verificationDocument->id,
+                  'document_id' => $verificationDocument->document_id,
+                  'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
+                  'path' => $verificationDocument->path,
+                  'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
+              ];
+          });
+  
+          $code_promo = $user->verificationDocumentspartenaire->first()->code_promo;
+  
+          $userInfo = [
+              'id_user' => $user->id,
+              'lastname' => $user->lastname,
+              'firstname' => $user->firstname,
+              'email' => $user->email,
+              'code_pays' => $user->code_pays,
+              'telephone' => $user->telephone,
+              'country' => $user->country,
+              'city' => $user->city,
+              'address' => $user->address,
+              'postal_code' => $user->postal_code,
+              'sexe' => $user->sexe,
+              'photo_profile' => $user->file_profil,
+              'verification_documents' => $verificationDocuments,
+              'code_promo' => $code_promo
+          ];
+  
+          return response()->json(['data' => $userInfo], 200);
+      } catch (\Exception $e) {
+          return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de l\'utilisateur.'], 500);
+      }
+  }
+  
 
  
 
@@ -611,36 +617,43 @@ public function validateDocument(Request $request)
  */
 
 
-public function userVerificationRequests()
-{
-    try {
-        $userId = Auth::id();
-        $user = User::with(['verificationDocumentspartenaire' => function ($query) {
-            $query->with('verificationStatutpartenaire');
-        }])->findOrFail($userId);
-
-        $right = Right::where('name','partenaire')->first();
-        $exist = User_right::where('user_id',$userId)->where('right_id',$right->id)->exists();
-        $verificationDocumentsWithStatus = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
-            return [
-                'document_id' => $verificationDocument->id,
-                'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
-                'path' => $verificationDocument->path,
-                'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
-                'status' => $verificationDocument->code_promo,
-            ];
-        });
-
-        $requestStatus = $exist ? 'Validé' : 'Non validé';
-
-        return response()->json([
-            'verification_documents' => $verificationDocumentsWithStatus,
-            'Statut_demande' => $requestStatus
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
+ public function userVerificationRequests()
+ {
+     try {
+         $userId = Auth::id();
+         $user = User::with(['verificationDocumentspartenaire' => function ($query) {
+             $query->with('verificationStatutpartenaire');
+         }])->findOrFail($userId);
+ 
+         $right = Right::where('name', 'partenaire')->first();
+         $exist = User_right::where('user_id', $userId)->where('right_id', $right->id)->exists();
+ 
+         
+         $code_promo = "";
+ 
+         $verificationDocumentsWithStatus = $user->verificationDocumentspartenaire->map(function ($verificationDocument) use (&$code_promo) {
+             
+             $code_promo = $verificationDocument->code_promo;
+             return [
+                 'document_id' => $verificationDocument->id,
+                 'document_name' => $verificationDocument->document ? $verificationDocument->document->name : null,
+                 'path' => $verificationDocument->path,
+                 'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
+             ];
+         });
+ 
+         $requestStatus = $exist ? 'Validé' : 'Non validé';
+ 
+         return response()->json([
+             'verification_documents' => $verificationDocumentsWithStatus,
+             'Statut_demande' => $requestStatus,
+             'code_promo' => $code_promo, 
+         ], 200);
+     } catch (\Exception $e) {
+         return response()->json(['error' => $e->getMessage()], 500);
+     }
+ }
+ 
 
 /**
  * @OA\Post(

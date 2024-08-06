@@ -16,8 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->text('code_promo');
             $table->float('commission');
-            $table->float('reduction_traveler');
-            $table->integer('number_of_reservation');
             $table->timestamps();
         });
     }

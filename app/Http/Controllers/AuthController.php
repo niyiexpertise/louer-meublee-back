@@ -414,7 +414,7 @@ public function RevokePermsToRole(Request $request, $r){
                 foreach($permission_role as $pr){
                     $permission_name .= " " . $pr['name'] . ",";
                 }
-                $message_notification ="Vous avez maintenant le rôle de ". $role->name .". Avec ce rôle, vous bénéficiez de nouvelles autorisations sur le site, notamment : " . $permission_name . ".";
+                $message_notification ="Vous avez maintenant le rôle de ". $role->name .".";
                 $notification = new Notification([
                  'name' => $message_notification,
                  'user_id' =>$id,

@@ -1294,6 +1294,9 @@ public function RevokePermsToRole(Request $request, $r){
                 
                 
                 $role =  User::find($id)->getRoleNames();
+                if (count($role) == 0) {
+                    return (new ServiceController())->apiResponse(200,[], "Vous n'avez aucun rôle");
+                }
                 $role_actif = $role[0];
                 // dd($role_actif);
                 $r = Right::where('name','hote')->first();
@@ -1450,5 +1453,80 @@ public function RevokePermsToRole(Request $request, $r){
             }
         }
         
+
+   /**
+ * @OA\Post(
+ *     path="/api/users/switchToAnotherRole/{roleId}",
+ *     tags={"ManageAccess"},
+ *     summary="Switch to another role",
+ *     operationId="switchToAnotherRole",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="roleId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successfully switched to another role",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="role",
+ *                 type="array",
+ *                 @OA\Items()
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="User has no roles or role does not exist",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="boolean", example=false),
+ *             @OA\Property(property="message", type="string", example="You have no roles or the role you want to switch to does not exist")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal Server Error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="An error occurred")
+ *         )
+ *     )
+ * )
+ */
+
+
+
+        public function switchToAnotherRole($roleId){
+            try{
+             $id = auth()->id();
+             $roleName = Role::whereId($roleId)->first()->name;
+
+
+                $role =  User::find($id)->getRoleNames();
+                if (count($role) == 0) {
+                    return (new ServiceController())->apiResponse(404,[], "Vous n'avez aucun rôle");
+                }
+                $role_actif = $role[0];
+                $r = Right::where('name',$roleName)->first();
+            $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
+                    if(!$exist){
+                        return (new ServiceController())->apiResponse(404,[], "Vous n'avez pas le rôle auquel vous voulez switcher!");
+                    }
+                $user = User::find($id)->removeRole($role_actif);
+                $user = User::find($id)->assignRole($roleName);
+                return (new ServiceController())->apiResponse(200,
+                [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => User::find($id)->getRoleNames()
+                ],
+                 "Switch vers le rôle $roleName effectué avec succès");
+            }catch (Exception $e){
+                  return response()->json(['error' => $e->getMessage()], 500);
+            }
+       }
 
 }

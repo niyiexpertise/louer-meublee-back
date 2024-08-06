@@ -4013,6 +4013,84 @@
                 ]
             }
         },
+        "/api/users/switchToAnotherRole/{roleId}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Switch to another role",
+                "operationId": "switchToAnotherRole",
+                "parameters": [
+                    {
+                        "name": "roleId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully switched to another role",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "role": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User has no roles or role does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You have no roles or the role you want to switch to does not exist"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/category/VerifiednotBlocknotDelete": {
             "get": {
                 "tags": [
@@ -15469,9 +15547,7 @@
                                 "required": [
                                     "housing_id",
                                     "night_number",
-                                    "value",
-                                    "date_debut",
-                                    "date_fin"
+                                    "value"
                                 ],
                                 "properties": {
                                     "housing_id": {
@@ -15486,16 +15562,6 @@
                                         "description": "Valeur de la réduction",
                                         "type": "number",
                                         "format": "float"
-                                    },
-                                    "date_debut": {
-                                        "description": "Date de début de la réduction",
-                                        "type": "string",
-                                        "format": "date"
-                                    },
-                                    "date_fin": {
-                                        "description": "Date de fin de la réduction",
-                                        "type": "string",
-                                        "format": "date"
                                     }
                                 },
                                 "type": "object"
@@ -15528,14 +15594,6 @@
                                                 },
                                                 "is_encours": {
                                                     "type": "boolean"
-                                                },
-                                                "date_debut": {
-                                                    "type": "string",
-                                                    "format": "date"
-                                                },
-                                                "date_fin": {
-                                                    "type": "string",
-                                                    "format": "date"
                                                 }
                                             },
                                             "type": "object"
@@ -16172,6 +16230,128 @@
                                             "description": "Error message",
                                             "type": "string",
                                             "example": "Server error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/update/{reductionId}": {
+            "post": {
+                "tags": [
+                    "Reduction hote"
+                ],
+                "summary": "Update a reduction for a housing",
+                "operationId": "914b20edbd5e0a0f70d5f52cff9e84b2",
+                "parameters": [
+                    {
+                        "name": "reductionId",
+                        "in": "path",
+                        "description": "ID of the reduction to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "value"
+                                ],
+                                "properties": {
+                                    "value": {
+                                        "description": "New value for the reduction",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "night_number": {
+                                        "description": "Number of nights for the reduction",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reduction updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "reductions": {
+                                            "description": "Details of the updated reduction",
+                                            "properties": {
+                                                "id": {
+                                                    "description": "ID of the reduction",
+                                                    "type": "integer"
+                                                },
+                                                "value": {
+                                                    "description": "Value of the reduction",
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "night_number": {
+                                                    "description": "Number of nights for the reduction",
+                                                    "type": "integer"
+                                                },
+                                                "housing_id": {
+                                                    "description": "ID of the housing associated with the reduction",
+                                                    "type": "integer"
+                                                },
+                                                "is_encours": {
+                                                    "description": "Status of the reduction",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction or housing not found or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Error message",
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"

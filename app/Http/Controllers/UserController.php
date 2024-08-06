@@ -164,7 +164,7 @@ class UserController extends Controller
         $formattedUsers[] = $formattedUser;
     }
 
-    return response()->json(['date' => $formattedUsers], 200);
+    return response()->json(['data' => $formattedUsers], 200);
 }
 
 

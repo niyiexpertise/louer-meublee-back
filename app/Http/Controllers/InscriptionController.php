@@ -201,10 +201,8 @@ class InscriptionController extends Controller
         'title' => 'Inscription',
         'body' => "Compte créé avec succès le ". $date_creation
      ];
-    
     try {
         Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail));
-        
      if ($request->has('code_promo')) {
         $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->get();
         $mailpartenaire = [
@@ -216,7 +214,6 @@ class InscriptionController extends Controller
         $notification = new Notification([
          'name' => $message_notification,
          'user_id' =>$user_partenaire->user_id,
-         
           ]);
         $notification->save();
          

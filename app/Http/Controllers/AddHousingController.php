@@ -95,6 +95,7 @@ class AddHousingController extends Controller
                 $housing->property_type_id = $request->property_type_id;
                 $housing->user_id = Auth::user()->id;
                 $housing->step = 1;
+                $housing->status = "Unverified";
                 $housing->save();
 
                 $data =["housing_id" => $housing->id];

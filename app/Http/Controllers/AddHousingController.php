@@ -9,6 +9,7 @@ use App\Models\Housing_charge;
 use App\Models\housing_preference;
 use App\Models\HousingType;
 use App\Models\photo;
+use App\Models\Preference;
 use App\Models\PropertyType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -105,6 +106,14 @@ class AddHousingController extends Controller
         }
     }
 
+    public function checkOwner($housingId){
+        if(Auth::user()->id != Housing::whereId($housingId)->first()->user_id){
+            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas modifier un logement que vous n'avez pas ajouter. Veuillez ne pas procéder à de telles modifications sans remplir les critères c'est sincère.");
+        }
+    }
+
+    
+
     /**
  * @OA\Post(
  *    path="/api/logement/store_step_2/{housingId}",
@@ -178,6 +187,22 @@ class AddHousingController extends Controller
     public function  addHousing_step_2(Request $request,$housingId){
         try {
 
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(2, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
                 $request->validate([
                     'housing_type_id' => 'required|integer'
                 ]);
@@ -186,11 +211,7 @@ class AddHousingController extends Controller
                     return (new ServiceController())->apiResponse(404,[], 'Type de le nombre de voyageur doit avoir pour valeur minimale 1');
                 }
 
-                $housing = Housing::whereId($housingId)->first();
-
-                if(!$housing){
-                    return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
-                }
+               
 
                 $housing->housing_type_id = $request->housing_type_id;
                 $housing->step = 2;
@@ -314,6 +335,22 @@ class AddHousingController extends Controller
     public function  addHousing_step_4(Request $request,$housingId){
         try {
 
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(4, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
             $validator = Validator::make($request->all(), [
                 'country' => 'required|string',
                 'department' => 'required|string',
@@ -329,11 +366,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            $housing = Housing::whereId($housingId)->first();
-
-            if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Le nombre de voyageur doit avoir pour valeur minimale 1');
-            }
+           
 
             $housing->country = $request->country;
             $housing->department = $request->department;
@@ -451,6 +484,22 @@ class AddHousingController extends Controller
     public function  addHousing_step_5(Request $request,$housingId){
         try {
 
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(5, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
             $validator = Validator::make($request->all(), [
                 'number_of_traveller' =>'required|integer',
                 'number_of_bed' => 'required|integer',
@@ -463,19 +512,15 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            $housing = Housing::whereId($housingId)->first();
-
-            if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
-            }
+           
 
             if($request->has('surface')){
                 if(!is_numeric($request->surface)){
                     return (new ServiceController())->apiResponse(404,[], "La valeur de l'aire de surface doit être un nombre");
                 }
-                if($request->surface <= 15){
+                if($request->surface <= 0){
                     {
-                        return (new ServiceController())->apiResponse(404,[], "L'aire de la surface ne peut être inférieur à 15m², ni négatif");
+                        return (new ServiceController())->apiResponse(404,[], "L'aire de la surface ne peut pas être négatif");
                     }
                 }
             }
@@ -656,6 +701,22 @@ class AddHousingController extends Controller
     public function  addHousing_step_6(Request $request,$housingId){
         try {
 
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(6, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
             $validator = Validator::make($request->all(), [
                 'is_accept_chill' =>'required|boolean',
                 'is_accept_smoking' => 'required|boolean',
@@ -672,11 +733,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            $housing = Housing::whereId($housingId)->first();
-
-            if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
-            }
+           
 
             $housing->is_accept_chill = $request->is_accept_chill;
             $housing->is_accept_smoking = $request->is_accept_smoking;
@@ -777,14 +834,41 @@ class AddHousingController extends Controller
     public function  addHousing_step_9(Request $request,$housingId){
         try {
 
-            $request->validate([
-                'photos' => 'required'
-            ]);
-
             $housing = Housing::whereId($housingId)->first();
 
             if(!$housing){
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(9, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
+            $request->validate([
+                'photos' => 'nullable|array',
+                'photos.*' => 'file'
+            ]);
+
+            $extensions = ['jpg','jpeg','png','gif','mp4','mov','avi','mkv'];
+
+           
+
+            foreach ($request->file('photos') as $file) {
+                $extension = $file->getClientOriginalExtension();
+                if (!in_array($extension, $extensions)) {
+                    $allowedExtensions = implode(', ', $extensions);
+                    return (new ServiceController())->apiResponse(404,[], "Les fichiers doivent avoir une des extensions suivantes : $allowedExtensions. Le fichier fourni a l'extension : $extension.");
+                }
+            }
+
+            foreach(photo::where('housing_id',$housingId)->get() as $exist){
+                $exist->delete();
             }
 
             foreach ($request->file('photos') as $index => $photo) {
@@ -811,7 +895,9 @@ class AddHousingController extends Controller
             $housing->step = 9;
             $housing->save();
 
-            $data = ["housing_id" => $housingId];
+            $data = ["housing_id" => $housingId,
+            "housing_files" => photo::where('housing_id',$housingId)->where('is_deleted', false)->get()
+        ];
             
 
             return (new ServiceController())->apiResponse(200,$data, 'Etape 9 terminée avec succès');
@@ -896,15 +982,27 @@ class AddHousingController extends Controller
     public function  addHousing_step_10(Request $request,$housingId){
         try {
 
-            $request->validate([
-                'profile_photo_id' => 'required'
-            ]);
-
             $housing = Housing::whereId($housingId)->first();
 
             if(!$housing){
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(10, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
+            $request->validate([
+                'profile_photo_id' => 'required'
+            ]);
+
+            
 
            $photo = Photo::whereId($request->profile_photo_id)->first();
 
@@ -916,7 +1014,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], "Cette photo n'est pas associer à ce logement");
             }
 
-            $existPhoto = Photo::where('is_couverture',true)->first();
+            $existPhoto = Photo::where('is_couverture',true)->where('housing_id',$housingId)->first();
             if($existPhoto){
                 $existPhoto->update(['is_couverture' => false]);
             }
@@ -929,7 +1027,7 @@ class AddHousingController extends Controller
 
             $data =[
                 "housing_id" => $housingId,
-                "housing_files" => photo::where('housing_id',$housingId)->where('is_deleted', false)->get()
+               
             ];
 
             return (new ServiceController())->apiResponse(200,$data, 'Etape 10 terminée avec succès');
@@ -1032,23 +1130,58 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
+            
+            $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+            
+            $validationResponse =(new AddHousingZController)->validateStepOrder(11, $housingId);
+            // return $validationResponse;
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
+            
+
             $housing->name = $request->name??null;
             $housing->description = $request->description??null;
 
-            if ($request->has('preferences')) {
-                foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
-                    $exist->delete();
-                }
-                foreach ($request->input('preferences') as $preference) {
-                    if(!housing_preference::where('housing_id',$housingId)->where('preference_id',$preference)->exists()){
-                        $housingPreference = new housing_preference();
-                        $housingPreference->housing_id = $housing->id;
-                        $housingPreference->preference_id = $preference;
-                        $housingPreference->is_verified = true;
-                        $housingPreference->save();
+            if($request->has('preferences')){
+                foreach($request->input('preferences') as $existPreference){
+                    if(!Preference::find($existPreference)){
+                        return (new ServiceController())->apiResponse(404,[], "La préférence n'existe pas");
                     }
-             }
+                }
+    
+                $items = $request->input('preferences');
+    
+                    $uniqueItems = array_unique($items);
+        
+                    if (count($uniqueItems) < count($items)) {
+                         return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  préférences existants avec le même id.");
+                    }
+    
+                if ($request->has('preferences')) {
+                    foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
+                        $exist->delete();
+                    }
+    
+                    
+                    
+                    foreach ($request->input('preferences') as $preference) {
+                        if(!housing_preference::where('housing_id',$housingId)->where('preference_id',$preference)->exists()){
+                            $housingPreference = new housing_preference();
+                            $housingPreference->housing_id = $housing->id;
+                            $housingPreference->preference_id = $preference;
+                            $housingPreference->is_verified = true;
+                            $housingPreference->save();
+                        }
+                 }
+                }
             }
+
+            
 
             $housing->step = 11;
             $housing->save();
@@ -1083,6 +1216,19 @@ class AddHousingController extends Controller
         }
         return true;
     }
+
+    private function isValuesPositif($value): bool
+    {
+
+            if (!is_numeric($value)) {
+                return 0;
+            }
+            if (floatval($value)<=0) {
+                return 0;
+            }
+        return 1;
+    }
+
 
 
     /**
@@ -1189,6 +1335,19 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(12, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
+            
+
+            // return response()->json($request->Travelercharges) ;
             if ($request->has('Hotecharges')) {
 
                     foreach ($request->Hotecharges as $HotechargesId) {
@@ -1224,9 +1383,24 @@ class AddHousingController extends Controller
                             return (new ServiceController())->apiResponse(404,[], 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).');
                          }
                }
-               foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
+               $items = $request->input('Hotecharges');
+
+               $uniqueItems = array_unique($items);
+   
+               if (count($uniqueItems) < count($items)) {
+                    return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Hotecharges existants avec le même id.");
+               }
+
+               $items = $request->input('Travelercharges');
+
+               $uniqueItems = array_unique($items);
+   
+               if (count($uniqueItems) < count($items)) {
+                    return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Travelercharges existants avec le même id.");
+               }
+               foreach(Housing_charge::where('housing_id',$housingId)->get() as $exist){
                 $exist->delete();
-            }
+                }
             if ($request->has('Hotecharges')) {
                 foreach ($request->input('Hotecharges') as $index => $charge) {
                     if(!Housing_charge::where('housing_id',$housingId)->where('charge_id',$charge)->exists()){
@@ -1258,6 +1432,185 @@ class AddHousingController extends Controller
             $data =["housing_id" => $housingId];
 
             return (new ServiceController())->apiResponse(200,$data, 'Etape 12 terminée avec succès');
+
+        } catch(\Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    }
+
+
+  /**
+ * @OA\Post(
+ *      path="/api/logement/store_step_14/{housingId}",
+ *      summary="Ajouter une étape de logement (étape 14)",
+ *      tags={"Ajout de logement"},
+ *      @OA\Parameter(
+ *          name="housingId",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
+ *      @OA\RequestBody(
+ *          required=false,
+ *          @OA\MediaType(
+ *              mediaType="application/json",
+ *              @OA\Schema(
+ *                  type="object",
+ *                  required={
+ *                      "is_accept_anulation"
+ *                  },
+ *                  @OA\Property(
+ *                      property="is_accept_anulation",
+ *                      description="Indique si l'acceptation de l'annulation est requise",
+ *                      type="boolean"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="delai_partiel_remboursement",
+ *                      description="Délai pour le remboursement partiel en jours",
+ *                      type="integer"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="delai_integral_remboursement",
+ *                      description="Délai pour le remboursement intégral en jours",
+ *                      type="integer"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="valeur_partiel_remboursement",
+ *                      description="Valeur du remboursement partiel",
+ *                      type="number",
+ *                      format="float"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="valeur_integral_remboursement",
+ *                      description="Valeur du remboursement intégral",
+ *                      type="number",
+ *                      format="float"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="cancelation_condition",
+ *                      description="Conditions d'annulation",
+ *                      type="string"
+ *                  )
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Étape 13 terminée avec succès",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="housing_id",
+ *                  description="ID du logement",
+ *                  type="integer"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Logement non trouvé ou données invalides",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur serveur",
+ *          @OA\JsonContent(
+ *              type="object",
+ *              @OA\Property(
+ *                  property="message",
+ *                  description="Message d'erreur",
+ *                  type="string"
+ *              )
+ *          )
+ *      ),
+ *      security={
+ *          {"bearerAuth": {}}
+ *      }
+ * )
+ */
+
+
+    public function  addHousing_step_14(Request $request,$housingId){
+        try {
+
+            $housing = Housing::whereId($housingId)->first();
+
+            if(!$housing){
+                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+            }
+
+           $errorcheckOwner= $this->checkOwner($housingId);
+            if($errorcheckOwner){
+                return $errorcheckOwner;
+            }
+
+            $validationResponse =(new AddHousingZController)->validateStepOrder(14, $housingId);
+            if ($validationResponse) {
+                return $validationResponse;
+            }
+
+            
+
+           if($request->has('is_accept_anulation')){
+
+            if($request->input('is_accept_anulation') == true){
+                $validator = Validator::make($request->all(), [
+                    'delai_partiel_remboursement' => 'required|numeric',
+                    'delai_integral_remboursement' => 'required|numeric',
+                    'valeur_integral_remboursement' => 'required|numeric',
+                    'valeur_partiel_remboursement' =>  'required|numeric',
+                    'cancelation_condition' => 'required|string',
+                ]);
+    
+                $message = [];
+    
+                if ($validator->fails()) {
+                    $message[] = $validator->errors();
+                    return (new ServiceController())->apiResponse(505,[],$message);
+                }
+    
+                // return $this->isValuesPositif($request->input('delai_partiel_remboursement'));
+    
+                if ($this->isValuesPositif($request->input('delai_partiel_remboursement') == 0)) {
+                    return (new ServiceController())->apiResponse(404,[], 'La valeur du délai du remboursement partiel doit être positif et non null.');
+                }
+                if ($this->isValuesPositif($request->input('delai_integral_remboursement') == 0)) {
+                    return (new ServiceController())->apiResponse(404,[], 'La valeur du délai du remboursement intégral doit être positif et non null.');
+                }
+                if ($this->isValuesPositif($request->input('valeur_integral_remboursement') == 0)) {
+                    return (new ServiceController())->apiResponse(404,[], 'La valeur du  remboursement intégral doit être positif et non null.');
+                }
+                if ($this->isValuesPositif($request->input('valeur_partiel_remboursement')) == 0) {
+                    return (new ServiceController())->apiResponse(404,[], 'La valeur du  remboursement partiel doit être positif et non null.');
+                }
+                    $housing->delai_partiel_remboursement = $request->input('delai_partiel_remboursement');
+                    $housing->delai_integral_remboursement = $request->input('delai_integral_remboursement');
+                    $housing->valeur_integral_remboursement = $request->input('valeur_integral_remboursement');
+                    $housing->valeur_partiel_remboursement = $request->input('valeur_partiel_remboursement');
+                    $housing->cancelation_condition = $request->input('cancelation_condition');
+                    $housing->save();
+            }
+
+            
+           }
+
+            $housing->step = 14;
+
+            $housing->save();
+
+            $data =["housing_id" => $housingId];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Etape 14 terminée avec succès');
 
         } catch(\Exception $e) {
             return (new ServiceController())->apiResponse(500,[],$e->getMessage());

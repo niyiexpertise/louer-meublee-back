@@ -66,7 +66,7 @@ use App\Http\Controllers\AddHousingZController;
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::get('/user', [LoginController::class, 'checkAuth']);
     Route::post('/users/logout', [LogoutController::class, 'logout']);
 
@@ -86,7 +86,7 @@ Route::prefix('users')->group(function () {
 
 /**route nécéssitant l'authentification */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     //Gestion des catégories.
     Route::prefix('category')->group(function () {
@@ -832,11 +832,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/store_step_10/{housingId}', [AddHousingController::class, 'addHousing_step_10'])->name('logement.store_step_10');
                 Route::post('/store_step_11/{housingId}', [AddHousingController::class, 'addHousing_step_11'])->name('logement.store_step_11');
                 Route::post('/store_step_12/{housingId}', [AddHousingController::class, 'addHousing_step_12'])->name('logement.store_step_12');
-                Route::post('/store_step_13/{housingId}', [AddHousingController::class, 'addHousing_step_13'])->name('logement.store_step_13');
+                Route::post('/store_step_13/{housingId}', [AddHousingZController::class, 'addHousing_step_13'])->name('logement.store_step_13');
                 Route::post('/store_step_14/{housingId}', [AddHousingController::class, 'addHousing_step_14'])->name('logement.store_step_14');
-                Route::post('/store_step_15/{housingId}', [AddHousingController::class, 'addHousing_step_15'])->name('logement.store_step_15');
-                Route::post('/store_step_16/{housingId}', [AddHousingController::class, 'addHousing_step_16'])->name('logement.store_step_16');
-                Route::post('/store_step_17/{housingId}', [AddHousingController::class, 'addHousing_step_17'])->name('logement.store_step_17');
+                Route::post('/store_step_15/{housingId}', [AddHousingZController::class, 'addHousing_step_15'])->name('logement.store_step_15');
+                Route::post('/store_step_16/{housingId}', [AddHousingZController::class, 'addHousing_step_16'])->name('logement.store_step_16');
+                Route::post('/store_step_17/{housingId}', [AddHousingZController::class, 'addHousing_step_17'])->name('logement.store_step_17');
             });
 
             Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.storeInProgress']], function () {
@@ -1432,7 +1432,7 @@ Route::prefix('logement')->group(function () {
 
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('site')->group(function () {
         Route::get('/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatistics'])
             ->name('site.getSiteVisitStatistics')
@@ -1459,7 +1459,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('logement')->group(function () {
         Route::get('{housing_id}/date/visit_statistics', [UserVisiteHousingController::class, 'getVisitStatisticsDate'])
             ->name('logement.getVisitStatisticsDate')

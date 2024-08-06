@@ -341,7 +341,7 @@ class HousingController extends Controller
                                 'message' => "Aucune photo trouvée pour la catégorie $categoryId."
                             ], 200);
                         }
-                        // dd(count($request->file($photoCategoryKey)));
+                        // return(($request->file("photo_categories1")));
                         if(count($request->file($photoCategoryKey)) == 0){
                                     return response()->json([
                                         'message' => " Il doit y avoir au moins une photo pour la catégorie "

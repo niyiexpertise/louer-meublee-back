@@ -1012,6 +1012,122 @@
                 ]
             }
         },
+        "/api/logement/store_step_14/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Ajouter une étape de logement (étape 14)",
+                "operationId": "fd0e725bba3ce3a8637cb80dd2d8933f",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_accept_anulation"
+                                ],
+                                "properties": {
+                                    "is_accept_anulation": {
+                                        "description": "Indique si l'acceptation de l'annulation est requise",
+                                        "type": "boolean"
+                                    },
+                                    "delai_partiel_remboursement": {
+                                        "description": "Délai pour le remboursement partiel en jours",
+                                        "type": "integer"
+                                    },
+                                    "delai_integral_remboursement": {
+                                        "description": "Délai pour le remboursement intégral en jours",
+                                        "type": "integer"
+                                    },
+                                    "valeur_partiel_remboursement": {
+                                        "description": "Valeur du remboursement partiel",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "valeur_integral_remboursement": {
+                                        "description": "Valeur du remboursement intégral",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "cancelation_condition": {
+                                        "description": "Conditions d'annulation",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 13 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/store_step_3/{housingId}": {
             "post": {
                 "tags": [
@@ -1454,6 +1570,488 @@
                     },
                     "500": {
                         "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_13/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Étape 13: Ajouter le prix d'un logement",
+                "operationId": "8fd70fa95644a8d48f49500d0eda5d24",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "price"
+                                ],
+                                "properties": {
+                                    "price": {
+                                        "description": "Prix du logement",
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 13 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou prix invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_15/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Étape 15: Ajouter des informations sur la réservation d'un logement",
+                "operationId": "2d991a01e9aab919e1805eae82319ab8",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "minimum_duration",
+                                    "time_before_reservation"
+                                ],
+                                "properties": {
+                                    "minimum_duration": {
+                                        "description": "Durée minimale de réservation en heures (doit être supérieur à 0)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "time_before_reservation": {
+                                        "description": "Temps requis avant la réservation en heures (peut être 0)",
+                                        "type": "integer",
+                                        "example": 24
+                                    },
+                                    "departure_instruction": {
+                                        "description": "Instructions de départ (optionnel)",
+                                        "type": "string",
+                                        "example": "Veuillez laisser les clés sur la table de la cuisine."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 15 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_16/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Étape 16: Ajouter des réductions basées sur le nombre de nuits pour un logement",
+                "operationId": "54f50e05ccdf3b7af50db3fddbaa7ad8",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reduction_night_number",
+                                    "reduction_value_night_number"
+                                ],
+                                "properties": {
+                                    "reduction_night_number": {
+                                        "description": "Tableau des nombres de nuits pour les réductions (doivent être des entiers supérieurs à zéro)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "reduction_value_night_number": {
+                                        "description": "Tableau des valeurs des réductions pour les nombres de nuits (doivent être des nombres non négatifs)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 10.5
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 16 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé ou données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "505": {
+                        "description": "Donnée invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/store_step_17/{housingId}": {
+            "post": {
+                "tags": [
+                    "Ajout de logement"
+                ],
+                "summary": "Étape 17: Ajouter une promotion à un logement",
+                "operationId": "71c60f12b82f6db8ab27e3a0da8e6640",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "promotion_date_debut": {
+                                        "description": "Date de début de la promotion",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "promotion_date_fin": {
+                                        "description": "Date de fin de la promotion",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "promotion_number_of_reservation": {
+                                        "description": "Nombre de réservations pour la promotion",
+                                        "type": "integer"
+                                    },
+                                    "promotion_value": {
+                                        "description": "Valeur de la promotion",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Étape 17 terminée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message de succès",
+                                            "type": "string"
+                                        },
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Tous les champs de promotion doivent être présents ou absents",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé, Rôle d'admin non trouvé ou erreur de validation de la promotion",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
                         "content": {
                             "application/json": {
                                 "schema": {

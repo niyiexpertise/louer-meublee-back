@@ -152,7 +152,7 @@ public function login(Request $request){
           return response()->json(['error' => 'Adresse email invalide.'], 200);
       }
 
-     } catch(Exception $e) {
+     } catch(\Exception $e) {
       return response()->json($e->getMessage());
       }
 }
@@ -201,7 +201,7 @@ public function checkAuth(Request $request){
             'user_roles'=>$rightsDetails
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json($e->getMessage());
     }
 }
@@ -294,6 +294,7 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         $code = User::where('code', $verification)->first();
+        // $code =User::whereId(Auth::user()->id)->whereCode($verification)->first();
         if ($code == null) {
             return response()->json([
                 'status_code' => 200,
@@ -301,6 +302,7 @@ public function verification_code(Request $request)
             ]);
         }
         $code->code=0;  
+        $code->is_double_authentification = true;
         $code->save();
         if ($code !== null) {
             return response()->json([
@@ -314,7 +316,7 @@ public function verification_code(Request $request)
             'message' => 'Check failed',
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json([
             'status_code' => 500,
             'message' => $e->getMessage(),
@@ -388,7 +390,7 @@ public function new_code($id) {
             'message' => 'This id does not exist'
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['message' => 'Internal Server Error'], 500);
     }
 }
@@ -466,7 +468,7 @@ public function password_recovery_start_step(Request $request){
              ]);
         }
 
-    } catch(Exception $e) {
+    } catch(\Exception $e) {
         return response()->json($e->getMessage());
     }
 }
@@ -545,7 +547,7 @@ public function password_recovery_end_step(Request $request){
                 ]);
         }
 
-          } catch(Exception $e) {
+          } catch(\Exception $e) {
             return response()->json($e->getMessage());
             }
 }

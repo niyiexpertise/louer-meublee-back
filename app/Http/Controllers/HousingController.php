@@ -963,7 +963,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  public function ShowDetailLogementAcceuil(Request $request)
  {
 
-      
+     
        $id= $request->input('housing_id');
        $user_id= $request->input('user_id');
           $housing = Housing::where('id', $id)->get();
@@ -971,6 +971,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         if($housing->isEmpty()) {
             return response()->json(['message' => " L\'ID du logement spécifié n\'existe pas"], 404);
         }
+        (new PromotionController())->actionRepetitif($id);
 
      $listing = Housing::with([
          'photos',

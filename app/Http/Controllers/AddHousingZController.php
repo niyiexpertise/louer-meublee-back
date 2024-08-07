@@ -1638,6 +1638,11 @@ public function addHousing_step_16(Request $request, $housingId) {
     {
         $housing = Housing::find($housingId);
 
+        if($housing->step != 17){
+            $housing->is_finished = 0;
+            $housing->save();
+        }
+
 
         if ($housing->step < $currentStep - 1) {
             return (new ServiceController())->apiResponse(404, [], 'Vous devez compléter l\'étape ' . ($currentStep - 1) . ' avant de passer à l\'étape ' . $currentStep . '.');

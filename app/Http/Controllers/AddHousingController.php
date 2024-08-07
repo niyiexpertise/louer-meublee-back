@@ -116,6 +116,7 @@ class AddHousingController extends Controller
                     $housing->user_id = Auth::user()->id;
                     $housing->step = 1;
                     $housing->status = "Unverified";
+                    $housing->is_finished = 0;
                     $housing->save();
                     $data =["housing_id" => $housing->id];
                     return (new ServiceController())->apiResponse(200,$data, 'Etape 1 terminée avec succès');
@@ -126,6 +127,7 @@ class AddHousingController extends Controller
                 $housing->user_id = Auth::user()->id;
                 $housing->step = 1;
                 $housing->status = "Unverified";
+                $housing->is_finished = 0;
                 $housing->save();
 
                 $data =["housing_id" => $housing->id];

@@ -1339,6 +1339,18 @@ Route::prefix('portefeuille')->group(function () {
                     Route::post('/active/{promotionId}/{housingId}', [PromotionController::class, 'activePromotion'])
                        ->name('promotion.activePromotion')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.activePromotion');
+
+                       Route::post('/activatePromotionsForHousing/{housingId}', [PromotionController::class, 'activatePromotionsForHousing'])
+                       ->name('promotion.activatePromotionsForHousing')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.activatePromotionsForHousing');
+
+                       Route::post('/desactive/{promotionId}/{housingId}', [PromotionController::class, 'desactivePromotion'])
+                       ->name('promotion.desactivePromotion')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.desactivePromotion');
+
+                       Route::post('/desactivePromotionByJob/{housingId}', [PromotionController::class, 'desactivePromotionByJob'])
+                       ->name('promotion.desactivePromotionByJob')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.desactivePromotionByJob');
                });
 
         Route::prefix('reduction')->group(function () {

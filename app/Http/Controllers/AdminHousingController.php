@@ -262,6 +262,7 @@ class AdminHousingController extends Controller
  */
 public function showHousingDetailForValidationForadmin($id)
 {
+
     $listing = Housing::with([
         'photos',
         'housing_preference.preference',
@@ -352,6 +353,10 @@ public function showHousingDetailForValidationForadmin($id)
     $totalCharge = $totalHoteCharge + $totalTravelerCharge;
 
 //    return $listing;
+
+   if(!$listing->is_finished){
+    return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas voir les détails de ce logement car il n'est pas entièrement rempli");
+   }
 
     $data = [
         'id_housing' => $listing->id,

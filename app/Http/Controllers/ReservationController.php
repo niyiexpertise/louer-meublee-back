@@ -362,6 +362,9 @@ class ReservationController extends Controller
             'montant_a_paye' => 'nullable|numeric',
         ]);
         $user_id=Auth::id();
+
+
+        (new PromotionController())->actionRepetitif($validatedData['housing_id']);
     
     $validation_result =$this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'],$validatedData['date_of_end'], $validatedData['number_of_domestical_animal'],$validatedData['valeur_payee'],$validatedData['montant_total'],$validatedData['id_transaction'],$validatedData['is_tranche_paiement'],$validatedData['payment_method']);
     if (!$validation_result['is_allowed']) {

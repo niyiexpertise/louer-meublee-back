@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\UserVisiteHousing;
+use DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -1551,8 +1552,18 @@ public function addHousing_step_16(Request $request, $housingId) {
                  return (new ServiceController())->apiResponse(404, [], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
              }
 
+             $dateToday = new DateTime();
+
+             $debutDate = new DateTime($request->promotion_date_debut);
+             if ($debutDate->format('Y-m-d') < $dateToday->format('Y-m-d')) {
+                return (new ServiceController())->apiResponse(404, [], 'La date de début est déjà passée.');
+            }
+
              // Supprimer les promotions existantes pour ce logement
              Promotion::where('housing_id', $housingId)->delete();
+             $dateToday = new DateTime();
+            $debutDate = new DateTime($request->promotion_date_debut);
+            $isEncours = $debutDate->format('Y-m-d') === $dateToday->format('Y-m-d');
 
              // Ajouter la nouvelle promotion
              $promotion = new Promotion();
@@ -1561,7 +1572,7 @@ public function addHousing_step_16(Request $request, $housingId) {
              $promotion->number_of_reservation = $promotionNumberOfReservation;
              $promotion->value = $promotionValue;
              $promotion->housing_id = $housing->id;
-             $promotion->is_encours = true;
+             $promotion->is_encours = $isEncours;
              $promotion->save();
          }
 

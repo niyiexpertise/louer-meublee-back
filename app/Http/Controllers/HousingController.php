@@ -1937,7 +1937,7 @@ public function formatListingsData($listings)
                         }),
                     ];
                 })->values(),
-                
+                "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average']
             ];
         });
     }

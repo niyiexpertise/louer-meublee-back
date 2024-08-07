@@ -74,8 +74,12 @@ class ReductionController extends Controller
             'value' => 'required|numeric',
         ]);
 
-        if(intval($request->night_number) <=0 || floatval($request->night_number)<= 0){
-            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit ainsi que la valeur de sa commission soient positive et non nulle");
+        if(intval($request->night_number) <=0){
+            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit  soit positive et non nulle");
+        }
+
+        if(floatval($request->value)<= 0){
+            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission du nombre de nuit soit positive et non nulle");
         }
 
         $message = [];

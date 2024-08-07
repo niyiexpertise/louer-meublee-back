@@ -822,7 +822,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             //Gestion des logements (CRUD)
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.store']], function () {
                 Route::post('/store', [HousingController::class, 'addHousing'])->name('logement.store');
-                Route::post('/store_step_1', [AddHousingController::class, 'addHousing_step_1'])->name('logement.store_step_1');
+                Route::post('/store_step_1/{housingId}', [AddHousingController::class, 'addHousing_step_1'])->name('logement.store_step_1');
                 Route::post('/store_step_2/{housingId}', [AddHousingController::class, 'addHousing_step_2'])->name('logement.store_step_2');
                 Route::post('/store_step_3/{housingId}', [AddHousingZController::class, 'addHousing_step_3'])->name('logement.store_step_3');
                 Route::post('/store_step_4/{housingId}', [AddHousingController::class, 'addHousing_step_4'])->name('logement.store_step_4');
@@ -1336,6 +1336,9 @@ Route::prefix('portefeuille')->group(function () {
                    Route::delete('/delete/{id}', [PromotionController::class, 'DeletePromotion'])
                        ->name('promotion.delete')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.delete');
+                    Route::post('/active/{promotionId}/{housingId}', [PromotionController::class, 'activePromotion'])
+                       ->name('promotion.activePromotion')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.activePromotion');
                });
 
         Route::prefix('reduction')->group(function () {

@@ -9,13 +9,24 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/api/logement/store_step_1": {
+        "/api/logement/store_step_1/{housingId}": {
             "post": {
                 "tags": [
                     "Ajout de logement"
                 ],
                 "summary": "Ajouter une étape de logement, enregistrement de type de propriété",
-                "operationId": "92cbb6c482537750f3f3a00809097b70",
+                "operationId": "b8caf77aaadc19b8728c4fd59c8141dc",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -15103,6 +15114,102 @@
                                         "error": {
                                             "type": "string",
                                             "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/active/{promotionId}/{housingId}": {
+            "post": {
+                "tags": [
+                    "Promotion hote"
+                ],
+                "summary": "Active une promotion pour un logement",
+                "operationId": "91eb73cf7a88e8ea22cc33d14c7c4e65",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement pour lequel activer la promotion",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion activée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "description": "Statut de la réponse",
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "description": "Message de succès",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou promotion non trouvés ou promotion déjà activée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "description": "Statut de la réponse",
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "description": "Statut de la réponse",
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"

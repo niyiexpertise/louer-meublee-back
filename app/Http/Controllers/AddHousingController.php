@@ -20,9 +20,18 @@ class AddHousingController extends Controller
 
     /**
  * @OA\Post(
- *     path="/api/logement/store_step_1",
+ *     path="/api/logement/store_step_1/{housingId}",
  *     summary="Ajouter une étape de logement, enregistrement de type de propriété",
  *     tags={"Ajout de logement"},
+ *  @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\MediaType(
@@ -80,7 +89,7 @@ class AddHousingController extends Controller
  * )
  */
 
-    public function  addHousing_step_1(Request $request){
+    public function  addHousing_step_1(Request $request,$housingId){
         try {
 
                 $request->validate([
@@ -89,6 +98,27 @@ class AddHousingController extends Controller
 
                 if(!PropertyType::whereId($request->property_type_id)->first()){
                     return (new ServiceController())->apiResponse(404,[], 'Type de propriété non trouvé');
+                }
+
+                if($housingId != 0){
+                    $housing =  Housing::whereId($housingId)->first();
+
+                    if(!$housing){
+                        return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+                    }
+
+                   $errorcheckOwner= $this->checkOwner($housingId);
+                    if($errorcheckOwner){
+                        return $errorcheckOwner;
+                    }
+
+                    $housing->property_type_id = $request->property_type_id;
+                    $housing->user_id = Auth::user()->id;
+                    $housing->step = 1;
+                    $housing->status = "Unverified";
+                    $housing->save();
+                    $data =["housing_id" => $housing->id];
+                    return (new ServiceController())->apiResponse(200,$data, 'Etape 1 terminée avec succès');
                 }
 
                 $housing = new Housing();

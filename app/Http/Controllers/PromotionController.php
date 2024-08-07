@@ -30,6 +30,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use DateTime;
+use Exception;
 use Illuminate\Http\Response;
 
 class PromotionController extends Controller
@@ -99,16 +101,46 @@ class PromotionController extends Controller
         'number_of_reservation' => 'required|integer',
         'value' => 'required|numeric',
         'date_debut' => 'required|date',
-        'date_fin' => 'required|date|after:date_debut',
+        'date_fin' => 'required|date',
     ]);
 
+    $message = [];
+
     if ($validator->fails()) {
-        return response()->json(['error' => $validator->errors()], 422);
+        $message[] = $validator->errors();
+        return (new ServiceController())->apiResponse(505,[],$message);
+    }
+
+    if(intval($request->number_of_reservation) <=0){
+        return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de réservation  soit positive et non nulle");
+    }
+
+    if(floatval($request->value)<= 0){
+        return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission du  soit positive et non nulle");
+    }
+
+    if (!strtotime($request->date_debut)) {
+        return (new ServiceController())->apiResponse(404, [], 'La date de début de la promotion doit être une date valide.');
+    }
+    if (!strtotime($request->date_fin)) {
+        return (new ServiceController())->apiResponse(404, [], 'La date de fin de la promotion doit être une date valide.');
+    }
+
+    $dateDebut = new DateTime($request->date_debut);
+    $dateFin = new DateTime($request->date_fin);
+
+    if ($dateFin <= $dateDebut) {
+        return (new ServiceController())->apiResponse(404, [], "La date de fin doit être postérieure à la date de début.");
     }
 
     $housingId = $request->housing_id;
-    $dateDebut = $request->date_debut;
-    $dateFin = $request->date_fin;
+
+    $dateToday = new DateTime();
+
+    if ($dateDebut->format('Y-m-d') < $dateToday->format('Y-m-d')) {
+        return (new ServiceController())->apiResponse(404, [], 'La date de début est déjà passée.');
+    }
+
     $existingPromotion = Promotion::where('housing_id', $housingId)
         ->where('is_deleted', false)
         ->where('is_blocked', false)
@@ -116,27 +148,23 @@ class PromotionController extends Controller
         ->first();
 
     if ($existingPromotion) {
-        return response()->json([
-            'error' => 'Chevauchement de dates avec une promotion existante.Il ne peut pas avoir deux promotions pendant la même periode pour un logement donné',
-            'existing_promotion' => $existingPromotion,
-        ], 409);
+        return (new ServiceController())->apiResponse(404, [$existingPromotion], "Chevauchement de dates avec une promotion existante.Il ne peut pas avoir deux promotions pendant la même periode pour un logement donné ");
     }
+
+    $isEncours = $dateDebut->format('Y-m-d') === $dateToday->format('Y-m-d');
 
     $promotion = new Promotion([
         'housing_id' => $request->housing_id,
         'number_of_reservation' => $request->number_of_reservation,
         'value' => $request->value,
-        'is_encours' => false,
+        'is_encours' => $isEncours,
         'date_debut' => $dateDebut,
         'date_fin' => $dateFin,
     ]);
 
     $promotion->save();
 
-    return response()->json([
-        'message' => 'Promotion ajoutée avec succès.',
-        'promotion' => $promotion,
-    ], 201);
+    return (new ServiceController())->apiResponse(200, [$promotion], "Promotion ajoutée avec succès.");
 }
 
 /**
@@ -399,7 +427,7 @@ public function activatePromotionsForHousing($housingId)
     $currentDate = Carbon::now(); // Date et heure actuelles
 
     $promotions = Promotion::where('housing_id', $housingId)
-        ->where('is_encours', false) 
+        ->where('is_encours', false)
         ->where('is_deleted', false)
         ->where('is_blocked', false)
         ->get();
@@ -425,5 +453,120 @@ public function activatePromotionsForHousing($housingId)
         'activated_promotions' => $activatedPromotions,
     ], 200);
 }
+
+
+/**
+ * @OA\Post(
+ *     path="/api/promotion/active/{promotionId}/{housingId}",
+ *     summary="Active une promotion pour un logement",
+ *     tags={"Promotion hote"},
+ *     @OA\Parameter(
+ *         name="promotionId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la promotion à activer",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement pour lequel activer la promotion",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Promotion activée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="status",
+ *                 description="Statut de la réponse",
+ *                 type="integer"
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Message de succès",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement ou promotion non trouvés ou promotion déjà activée",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="status",
+ *                 description="Statut de la réponse",
+ *                 type="integer"
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Message d'erreur",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="status",
+ *                 description="Statut de la réponse",
+ *                 type="integer"
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Message d'erreur",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     security={
+ *         {"bearerAuth": {}}
+ *     }
+ * )
+ */
+
+public function activePromotion($promotionId, $housingId) {
+        try {
+            $housing = Housing::find($housingId);
+            if (!$housing) {
+                return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé.');
+            }
+
+            $promotion = Promotion::find($promotionId);
+            if (!$promotion) {
+                return (new ServiceController())->apiResponse(404, [], 'Promotion non trouvée.');
+            }
+
+            $dateDebut = new DateTime($promotion->date_debut);
+            $dateFin = new DateTime($promotion->date_fin);
+            $dateToday = new DateTime();
+
+            if (($dateToday >= $dateDebut && $dateToday <= $dateFin)) {
+                return (new ServiceController())->apiResponse(404, [], 'La date actuelle n\'est pas dans la période de validité de la promotion.');
+            }
+
+            if ($promotion->is_encours) {
+                return (new ServiceController())->apiResponse(404, [], 'La promotion est déjà activée.');
+            }
+
+            $promotion->is_encours = true;
+            $promotion->save();
+
+            return (new ServiceController())->apiResponse(200, [], 'Promotion activée avec succès.');
+
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], 'Erreur serveur : ' . $e->getMessage());
+        }
+    }
 
 }

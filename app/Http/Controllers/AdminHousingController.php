@@ -273,6 +273,7 @@ public function showHousingDetailForValidationForadmin($id)
         'housingType'
     ])->find($id);
 
+    
     $equipments_nouveau_by_category = $listing->housingEquipments
     ->where('is_verified', 0)
     ->groupBy('category.name')
@@ -292,6 +293,9 @@ public function showHousingDetailForValidationForadmin($id)
         ];
     });
 
+    
+
+
     $equipments_defaut_by_category = $listing->housingEquipments
     ->where('is_verified', 1)
     ->groupBy('category.name')
@@ -310,6 +314,8 @@ public function showHousingDetailForValidationForadmin($id)
             })->toArray(),
         ];
     });
+
+    
     $hoteCharge_id = [];
     $travelerCharge_id = [];
     $totalHoteCharge = 0;
@@ -317,31 +323,35 @@ public function showHousingDetailForValidationForadmin($id)
 
     $housingCharges = Housing_charge::where('housing_id', $id)->get();
 
-    if ($housingCharges->isEmpty()) {
-        return response()->json(['message' => 'Aucune charge associée à ce logement'], 404);
-    }
-
-    foreach ($housingCharges as $housingCharge) {
-        $charge = Charge::find($housingCharge->charge_id);
-        $chargeData = [
-            'id_housing_charge' => $housingCharge->id,
-            'housing_id' => $housingCharge->housing_id,
-            'id_charge' => $charge->id,
-            'charge_name' => $charge->name,
-            'is_mycharge' => $housingCharge->is_mycharge,
-            'valeur_charge' => $housingCharge->valeur
-        ];
-
-        if ($housingCharge->is_mycharge) {
-            $hoteCharge_id[] = $chargeData;
-            $totalHoteCharge += $housingCharge->valeur;
-        } else {
-            $travelerCharge_id[] = $chargeData;
-            $totalTravelerCharge += $housingCharge->valeur;
+    
+    if (!$housingCharges->isEmpty()) {
+        foreach ($housingCharges as $housingCharge) {
+            $charge = Charge::find($housingCharge->charge_id);
+            $chargeData = [
+                'id_housing_charge' => $housingCharge->id,
+                'housing_id' => $housingCharge->housing_id,
+                'id_charge' => $charge->id,
+                'charge_name' => $charge->name,
+                'is_mycharge' => $housingCharge->is_mycharge,
+                'valeur_charge' => $housingCharge->valeur
+            ];
+    
+            if ($housingCharge->is_mycharge) {
+                $hoteCharge_id[] = $chargeData;
+                $totalHoteCharge += $housingCharge->valeur;
+            } else {
+                $travelerCharge_id[] = $chargeData;
+                $totalTravelerCharge += $housingCharge->valeur;
+            }
         }
     }
+    
+
+    
 
     $totalCharge = $totalHoteCharge + $totalTravelerCharge;
+
+//    return $listing;
 
     $data = [
         'id_housing' => $listing->id,
@@ -441,6 +451,7 @@ public function showHousingDetailForValidationForadmin($id)
             }),
         ],
 
+
         'reductions' => $listing->reductions,
 
         'promotions' => $listing->promotions,
@@ -494,6 +505,9 @@ public function showHousingDetailForValidationForadmin($id)
 
         ]
     ];
+
+    // return 1;
+
 
     return response()->json(['data' => $data]);
 }

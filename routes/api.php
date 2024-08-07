@@ -309,7 +309,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
    //Administration des permissions et role
 
-        Route::prefix('users')->group(function () {
+        Route::middleware(['auth:sanctum', '2fa'])->prefix('users')->group(function () {
             Route::middleware(['role_or_permission:superAdmin|Manageusers.assignPermsToRole'])->group(function () {
                 Route::post('/assignPermsToRole/{role}', [AuthController::class, 'assignPermsToRole'])->name('users.assignPermsToRole');
             });
@@ -396,6 +396,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
             Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
             Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
+            
+            Route::post('/switchToAnotherRole/{roleName}', [AuthController::class, 'switchToAnotherRole']);
         });
 
 
@@ -820,7 +822,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             //Gestion des logements (CRUD)
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.store']], function () {
                 Route::post('/store', [HousingController::class, 'addHousing'])->name('logement.store');
-                Route::post('/store_step_1', [AddHousingController::class, 'addHousing_step_1'])->name('logement.store_step_1');
+                Route::post('/store_step_1/{housingId}', [AddHousingController::class, 'addHousing_step_1'])->name('logement.store_step_1');
                 Route::post('/store_step_2/{housingId}', [AddHousingController::class, 'addHousing_step_2'])->name('logement.store_step_2');
                 Route::post('/store_step_3/{housingId}', [AddHousingZController::class, 'addHousing_step_3'])->name('logement.store_step_3');
                 Route::post('/store_step_4/{housingId}', [AddHousingController::class, 'addHousing_step_4'])->name('logement.store_step_4');
@@ -839,124 +841,124 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::post('/store_step_17/{housingId}', [AddHousingZController::class, 'addHousing_step_17'])->name('logement.store_step_17');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.storeInProgress']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.storeInProgress']], function () {
                 Route::post('/storeInProgress', [HousingController::class, 'addHousingInProgress'])->name('logement.storeInProgress');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.updateSensible']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateSensible']], function () {
                 Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing'])->name('logement.updateSensible');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.updateInsensible']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateInsensible']], function () {
                 Route::put('/update/insensible/{housingid}', [HousingController::class, 'updateInsensibleHousing'])->name('logement.updateInsensible');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.disable']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.disable']], function () {
                 Route::put('/{housingId}/hote/disable', [HousingController::class, 'disableHousing'])->name('logement.disable');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.enable']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.enable']], function () {
                 Route::put('/{housingId}/hote/enable', [HousingController::class, 'enableHousing'])->name('logement.enable');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.destroyHote']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.destroyHote']], function () {
                 Route::delete('/destroyHousingHote/{id}', [HousingController::class, 'destroyHousingHote'])->name('logement.destroyHote');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.getHousingForHote']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHote']], function () {
                 Route::get('/getHousingForHote', [HousingController::class, 'getHousingForHote'])->name('logement.getHousingForHote');
             });
 
             // Gestion des photos logement
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.updatePhoto']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updatePhoto']], function () {
                 Route::post('/updatephoto/{photo_id}', [PhotoController::class, 'updatePhotoHousing'])->name('logement.updatePhoto');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.setCoverPhoto']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.setCoverPhoto']], function () {
                 Route::post('/{housingId}/setcoverphoto/{photoId}', [PhotoController::class, 'setCoverPhoto'])->name('logement.setCoverPhoto');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deletePhoto']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deletePhoto']], function () {
                 Route::delete('/photo/{photoId}', [PhotoController::class, 'deletePhotoHousing'])->name('logement.deletePhoto');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addPhoto']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addPhoto']], function () {
                 Route::post('/add/file/{housingId}', [HousingController::class, 'addPhotoToHousing'])->name('logement.addPhoto');
             });
             // Gestion des équipements du logement
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.storeUnexistEquipment']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.storeUnexistEquipment']], function () {
                 Route::post('equipment/storeUnexist/{housingId}', [HousingEquipmentController::class, 'storeUnexist'])->name('logement.storeUnexistEquipment');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.equipementsHousing']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.equipementsHousing']], function () {
                 Route::get('/{housingId}/equipements', [HousingEquipmentController::class, 'equipementsHousing'])->name('logement.equipementsHousing');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deleteEquipement']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deleteEquipement']], function () {
                 Route::delete('/equipement', [HousingEquipmentController::class, 'DeleteEquipementHousing'])->name('logement.deleteEquipement');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addEquipment']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addEquipment']], function () {
                 Route::post('/equipment/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing'])->name('logement.addEquipment');
             });
             // Gestion des préférences du logement
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.housingPreference']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.housingPreference']], function () {
                 Route::get('/{housingPreferenceId}/preferences', [HousingPreferenceController::class, 'housingPreference'])->name('logement.housingPreference');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deletePreference']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deletePreference']], function () {
                 Route::delete('/preference', [HousingPreferenceController::class, 'deletePreferenceHousing'])->name('logement.deletePreference');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addPreference']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addPreference']], function () {
                 Route::post('/preference/addPreferenceToHousing', [HousingPreferenceController::class, 'addPreferenceToHousing'])->name('logement.addPreference');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.storeUnexistPreference']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.storeUnexistPreference']], function () {
             Route::post('/preference/storeUnexist/{housingId}', [HousingPreferenceController::class, 'storeUnexist'])->name('logement.storeUnexistPreference');
             });
 
             // Gestion des catégories pour un hôte qui ajoute déjà un logement
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deletePhotoCategory']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deletePhotoCategory']], function () {
             Route::delete('/category/photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory'])->name('logement.deletePhotoCategory');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addDefaultCategory']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addDefaultCategory']], function () {
             Route::post('/category/default/add', [HousingCategoryFileController::class, 'addHousingCategory'])->name('logement.addDefaultCategory');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addNewCategory']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addNewCategory']], function () {
             Route::post('/category/default/addNew', [HousingCategoryFileController::class, 'addHousingCategoryNew'])->name('logement.addNewCategory');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deleteCategory']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deleteCategory']], function () {
             Route::delete('/{housingId}/category/{categoryId}/delete', [HousingCategoryFileController::class, 'deleteHousingCategory'])->name('logement.deleteCategory');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addPhotoCategory']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addPhotoCategory']], function () {
             Route::post('/{housingId}/category/{categoryId}/photos/add', [HousingCategoryFileController::class, 'addPhotosCategoryToHousing'])->name('logement.addPhotoCategory');
             });
 
             // Gestion des charges
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.addCharge']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addCharge']], function () {
             Route::post('/charge/addChargeToHousing', [HousingChargeController::class, 'addChargeToHousing'])->name('logement.addCharge');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.listCharge']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.listCharge']], function () {
             Route::get('/charge/listelogementcharge/{housingId}', [HousingChargeController::class, 'listelogementcharge'])->name('logement.listCharge');
             });
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.deleteCharge']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deleteCharge']], function () {
             Route::delete('/charge', [HousingChargeController::class, 'DeleteChargeHousing'])->name('logement.deleteCharge');
             });
 
             // Liste des logements non remplis complètement par l'hôte
 
-            Route::group(['middleware' => ['role_or_permission:SuperAdmin|hote|Managelogement.HousingHoteInProgress']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.HousingHoteInProgress']], function () {
             Route::get('/liste/notFinished', [HousingController::class, 'HousingHoteInProgress'])->name('logement.HousingHoteInProgress');
             });
 
@@ -1334,6 +1336,9 @@ Route::prefix('portefeuille')->group(function () {
                    Route::delete('/delete/{id}', [PromotionController::class, 'DeletePromotion'])
                        ->name('promotion.delete')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.delete');
+                    Route::post('/active/{promotionId}/{housingId}', [PromotionController::class, 'activePromotion'])
+                       ->name('promotion.activePromotion')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.activePromotion');
                });
 
         Route::prefix('reduction')->group(function () {
@@ -1352,12 +1357,15 @@ Route::prefix('portefeuille')->group(function () {
                     Route::delete('/delete/{id}', [ReductionController::class, 'DeleteReduction'])
                         ->name('reduction.delete')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.delete');
-                        Route::delete('/active/{reductionId}/{housingId}', [ReductionController::class, 'activeReduction'])
+                        Route::post('/active/{reductionId}/{housingId}', [ReductionController::class, 'activeReduction'])
                         ->name('reduction.activeReduction')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.activeReduction');
-                        Route::delete('/desactive/{reductionId}/{housingId}', [ReductionController::class, 'desactiveReduction'])
+                        Route::post('/desactive/{reductionId}/{housingId}', [ReductionController::class, 'desactiveReduction'])
                         ->name('reduction.desactiveReduction')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.desactiveReduction');
+                        Route::post('/update/{reductionId}', [ReductionController::class, 'updateReduction'])
+                        ->name('reduction.updateReduction')
+                        ->middleware('role_or_permission:superAdmin|hote|Managereduction.updateReduction');
                 });
 
                 //Crud de type de demande

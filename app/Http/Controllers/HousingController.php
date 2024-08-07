@@ -1850,97 +1850,98 @@ public function updateInsensibleHousing(Request $request, $id)
 
 
 public function formatListingsData($listings)
-    {
-        return $listings->map(function ($listing) {
-            return [
-                'id_housing' => $listing->id,
-                'housing_type_id' => $listing->housing_type_id,
-                'housing_type_name' => $listing->housingType->name,
-                'property_type_id' => $listing->property_type_id,
-                'property_type_name' => $listing->propertyType->name,
-                'user_id' => $listing->user_id,
-                'name_housing' => $listing->name,
-                'description' => $listing->description,
-                'number_of_bed' => $listing->number_of_bed,
-                'number_of_traveller' => $listing->number_of_traveller,
-                'sit_geo_lat' => $listing->sit_geo_lat,
-                'sit_geo_lng' => $listing->sit_geo_lng,
-                'country' => $listing->country,
-                'address' => $listing->address,
-                'city' => $listing->city,
-                'department' => $listing->department,
-                'is_camera' => $listing->is_camera,
-                'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => $listing->is_animal_exist,
-                'interior_regulation' => $listing->interior_regulation,
-                'telephone' => $listing->telephone,
-                'code_pays' => $listing->code_pays,
-                'surface' => $listing->surface,
-                'price' => $listing->price,
-                'status' => $listing->status,
-                'arrived_independently' => $listing->arrived_independently,
-                'is_instant_reservation' => $listing->is_instant_reservation,
-                'minimum_duration' => $listing->minimum_duration,
-                'time_before_reservation' => $listing->time_before_reservation,
-                'cancelation_condition' => $listing->cancelation_condition,
-                'departure_instruction' => $listing->departure_instruction,
-                'is_accept_arm' => $listing->is_accept_arm,
-                'is_accept_noise' => $listing->is_accept_noise,
-                'is_accept_smoking' => $listing->is_accept_smoking,
-                'is_accept_chill' => $listing->is_accept_smoking,
-                'is_accept_alcool' => $listing->is_accept_alccol,
-                'is_deleted' => $listing->is_deleted,
-                'is_blocked' => $listing->is_blocked,
-                'is_accept_anulation'=> $listing->is_accept_anulation,
-                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
-                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
-                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
-                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
-                
-                'photos_logement' => $listing->photos->map(function ($photo) {
-                    if($photo->is_verified){
-                        return [
-                            'id_photo' => $photo->id,
-                            'path' => $photo->path,
-                            'extension' => $photo->extension,
-                            'is_couverture' => $photo->is_couverture,
-                        ];
-                    }
-                }),
-                'user' => [
-                    'id' => $listing->user->id,
-                    'lastname' => $listing->user->lastname,
-                    'firstname' => $listing->user->firstname,
-                    'telephone' => $listing->user->telephone,
-                    'code_pays' => $listing->user->code_pays,
-                    'email' => $listing->user->email,
-                    'country' => $listing->user->country,
-                    'file_profil' => $listing->user->file_profil,
-                    'city' => $listing->user->city,
-                    'address' => $listing->user->address,
-                    'sexe' => $listing->user->sexe,
-                    'postal_code' => $listing->user->postal_code,
-                    'is_admin' => $listing->user->is_admin,
-                    'is_traveller' => $listing->user->is_traveller,
-                    'is_hote' => $listing->user->is_hote,
-                ],
-                'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
+{
+    return $listings->map(function ($listing) {
+        return [
+            'id_housing' => $listing->id,
+            'housing_type_id' => $listing->housing_type_id ?? 'non renseigné',
+            'housing_type_name' => $listing->housingType->name ?? 'non renseigné',
+            'property_type_id' => $listing->property_type_id ?? 'non renseigné',
+            'property_type_name' => $listing->propertyType->name ?? 'non renseigné',
+            'user_id' => $listing->user_id ?? 'non renseigné',
+            'name_housing' => $listing->name ?? 'non renseigné',
+            'description' => $listing->description ?? 'non renseigné',
+            'number_of_bed' => $listing->number_of_bed ?? 'non renseigné',
+            'number_of_traveller' => $listing->number_of_traveller ?? 'non renseigné',
+            'sit_geo_lat' => $listing->sit_geo_lat ?? 'non renseigné',
+            'sit_geo_lng' => $listing->sit_geo_lng ?? 'non renseigné',
+            'country' => $listing->country ?? 'non renseigné',
+            'address' => $listing->address ?? 'non renseigné',
+            'city' => $listing->city ?? 'non renseigné',
+            'department' => $listing->department ?? 'non renseigné',
+            'is_camera' => $listing->is_camera ?? 'non renseigné',
+            'is_accepted_animal' => $listing->is_accepted_animal ?? 'non renseigné',
+            'is_animal_exist' => $listing->is_animal_exist ?? 'non renseigné',
+            'interior_regulation' => $listing->interior_regulation ?? 'non renseigné',
+            'telephone' => $listing->telephone ?? 'non renseigné',
+            'code_pays' => $listing->code_pays ?? 'non renseigné',
+            'surface' => $listing->surface ?? 'non renseigné',
+            'price' => $listing->price ?? 'non renseigné',
+            'status' => $listing->status ?? 'non renseigné',
+            'arrived_independently' => $listing->arrived_independently ?? 'non renseigné',
+            'is_instant_reservation' => $listing->is_instant_reservation ?? 'non renseigné',
+            'minimum_duration' => $listing->minimum_duration ?? 'non renseigné',
+            'time_before_reservation' => $listing->time_before_reservation ?? 'non renseigné',
+            'cancelation_condition' => $listing->cancelation_condition ?? 'non renseigné',
+            'departure_instruction' => $listing->departure_instruction ?? 'non renseigné',
+            'is_accept_arm' => $listing->is_accept_arm ?? 'non renseigné',
+            'is_accept_noise' => $listing->is_accept_noise ?? 'non renseigné',
+            'is_accept_smoking' => $listing->is_accept_smoking ?? 'non renseigné',
+            'is_accept_chill' => $listing->is_accept_chill ?? 'non renseigné',
+            'is_accept_alcool' => $listing->is_accept_alcool ?? 'non renseigné',
+            'is_deleted' => $listing->is_deleted ?? 'non renseigné',
+            'is_blocked' => $listing->is_blocked ?? 'non renseigné',
+            'is_accept_anulation' => $listing->is_accept_anulation ?? 'non renseigné',
+            'delai_partiel_remboursement' => $listing->delai_partiel_remboursement ?? 'non renseigné',
+            'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? 'non renseigné',
+            'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? 'non renseigné',
+            'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? 'non renseigné',
+            
+            'photos_logement' => $listing->photos->map(function ($photo) {
+                if ($photo->is_verified) {
                     return [
-                        'category_id' => $categoryFiles->first()->category_id,
-                        'category_name' => $categoryFiles->first()->category->name,
-                        'number' => $categoryFiles->first()->number,
-                        'photos_category' => $categoryFiles->map(function ($categoryFile) {
-                            return [
-                                'file_id' => $categoryFile->file->id,
-                                'path' => $categoryFile->file->path,
-                            ];
-                        }),
+                        'id_photo' => $photo->id,
+                        'path' => $photo->path ?? 'non renseigné',
+                        'extension' => $photo->extension ?? 'non renseigné',
+                        'is_couverture' => $photo->is_couverture ?? 'non renseigné',
                     ];
-                })->values(),
-                "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average']
-            ];
-        });
-    }
+                }
+            })->filter(), // Use filter to remove null values if any
+            'user' => [
+                'id' => $listing->user->id ?? 'non renseigné',
+                'lastname' => $listing->user->lastname ?? 'non renseigné',
+                'firstname' => $listing->user->firstname ?? 'non renseigné',
+                'telephone' => $listing->user->telephone ?? 'non renseigné',
+                'code_pays' => $listing->user->code_pays ?? 'non renseigné',
+                'email' => $listing->user->email ?? 'non renseigné',
+                'country' => $listing->user->country ?? 'non renseigné',
+                'file_profil' => $listing->user->file_profil ?? 'non renseigné',
+                'city' => $listing->user->city ?? 'non renseigné',
+                'address' => $listing->user->address ?? 'non renseigné',
+                'sexe' => $listing->user->sexe ?? 'non renseigné',
+                'postal_code' => $listing->user->postal_code ?? 'non renseigné',
+                'is_admin' => $listing->user->is_admin ?? 'non renseigné',
+                'is_traveller' => $listing->user->is_traveller ?? 'non renseigné',
+                'is_hote' => $listing->user->is_hote ?? 'non renseigné',
+            ],
+            'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
+                return [
+                    'category_id' => $categoryFiles->first()->category_id ?? 'non renseigné',
+                    'category_name' => $categoryFiles->first()->category->name ?? 'non renseigné',
+                    'number' => $categoryFiles->first()->number ?? 'non renseigné',
+                    'photos_category' => $categoryFiles->map(function ($categoryFile) {
+                        return [
+                            'file_id' => $categoryFile->file->id ?? 'non renseigné',
+                            'path' => $categoryFile->file->path ?? 'non renseigné',
+                        ];
+                    }),
+                ];
+            })->values(),
+            "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average'] ?? 'non renseigné'
+        ];
+    });
+}
+
 
     /**
  * @OA\Put(

@@ -122,7 +122,7 @@ class User extends Authenticatable
     }
     public function user_partenaire()
     {
-        return $this->hasOne(user_partnaire::class);
+        return $this->hasOne(user_partenaire::class);
     }
     public function verificationDocumentspartenaire()
     {
@@ -130,7 +130,7 @@ class User extends Authenticatable
     }
     public function Partenaire()
     {
-        return $this->belongsTo(user_partnaire::class, 'partenaire_id', 'id');
+        return $this->belongsTo(user_partenaire::class, 'partenaire_id', 'id');
     }
 
 }

@@ -292,7 +292,6 @@ class PromotionController extends Controller
    public function getHousingPromotions($housingId)
   {
     try {
-        $variable=$this->activatePromotionsForHousing($housingId);
         $housing = Housing::find($housingId);
         if (!$housing) {
             return response()->json(['error' => 'Logement non trouvé.'], Response::HTTP_NOT_FOUND);
@@ -421,38 +420,6 @@ public function DeletePromotion($id)
 }
 
 
-//Fonction pour déclencher l'activation d'une promotion dont la date debut est atteint
-public function activatePromotionsForHousing($housingId)
-{
-    $currentDate = Carbon::now(); // Date et heure actuelles
-
-    $promotions = Promotion::where('housing_id', $housingId)
-        ->where('is_encours', false)
-        ->where('is_deleted', false)
-        ->where('is_blocked', false)
-        ->get();
-
-    $activatedPromotions = [];
-
-    foreach ($promotions as $promotion) {
-        if ($promotion->date_debut <= $currentDate and $promotion->date_fin >= $currentDate) {
-            $promotion->is_encours = true;
-            $promotion->save();
-            $activatedPromotions[] = $promotion;
-        }
-    }
-
-    if (empty($activatedPromotions)) {
-        return response()->json([
-            'message' => 'Aucune promotion n\'a été activée pour ce logement.',
-        ], 404);
-    }
-
-    return response()->json([
-        'message' => 'Promotions activées avec succès.',
-        'activated_promotions' => $activatedPromotions,
-    ], 200);
-}
 
 
 /**

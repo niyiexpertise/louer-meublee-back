@@ -35,7 +35,9 @@ use App\Mail\NotificationEmailwithoutfile;
 use DateTime;
 use App\Mail\NotificationEmail;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\user_partenaire;
 
 class ReservationController extends Controller
 {
@@ -96,11 +98,11 @@ class ReservationController extends Controller
             $required_paid_value = $montant_total / 2;
             
             if ($valeur_paye < $required_paid_value) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant total"];
+                return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
             }
         } else {
             if ($valeur_paye < $montant_total) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant total"];
+                return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant à payé"];
             }
         }
         $existing_reservations = Reservation::where('housing_id', $housing_id)->get();
@@ -329,45 +331,47 @@ class ReservationController extends Controller
  * )
 */
 
-    public function storeReservationWithPayment(Request $request)
-    {
-        $validatedData = $request->validate([
-            'housing_id' => 'required',
-            'date_of_starting' => 'required|date',
-            'date_of_end' => 'required|date',
-            'number_of_adult' => 'required|integer',
-            'number_of_child' => 'required|integer',
-            'number_of_domestical_animal' => 'required|integer',
-            'number_of_baby' => 'required|integer',
-            'message_to_hote' => 'nullable|string',
-            'code_pays' => 'required|string',
-            'telephone_traveler' => 'required|integer',
-            'photo' => 'required|file|mimes:jpg,jpeg,png',
-            'heure_arrivee_max' => 'required|date_format:H:i',
-            'heure_arrivee_min' => 'required|date_format:H:i',
-            'is_tranche_paiement' => 'required',
-            'montant_total' => 'required|numeric',
-            'valeur_payee' => 'required|numeric',
-            'payment_method' => 'required|string',
-            'id_transaction' => 'required|string',
-            'statut_paiement' =>'required',
-            'photo' => 'file|mimes:jpg,jpeg,png|max:2048',
-            'valeur_reduction_hote' => 'nullable|numeric',
-            'valeur_reduction_hote' => 'nullable|numeric',
-            'valeur_promotion_hote' => 'nullable|numeric',
-            'valeur_reduction_code_promo' => 'nullable|numeric',
-            'valeur_reduction_staturp' => 'nullable|numeric',
-            'montant_charge' => 'nullable|numeric',
-            'montant_housing' => 'nullable|numeric',
-            'montant_a_paye' => 'nullable|numeric',
-        ]);
-        $user_id=Auth::id();
-    
-    $validation_result =$this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'],$validatedData['date_of_end'], $validatedData['number_of_domestical_animal'],$validatedData['valeur_payee'],$validatedData['montant_total'],$validatedData['id_transaction'],$validatedData['is_tranche_paiement'],$validatedData['payment_method']);
+public function storeReservationWithPayment(Request $request)
+{
+    $validatedData = $request->validate([
+        'housing_id' => 'required',
+        'date_of_starting' => 'required|date',
+        'date_of_end' => 'required|date',
+        'number_of_adult' => 'required|integer',
+        'number_of_child' => 'required|integer',
+        'number_of_domestical_animal' => 'required|integer',
+        'number_of_baby' => 'required|integer',
+        'message_to_hote' => 'nullable|string',
+        'code_pays' => 'required|string',
+        'telephone_traveler' => 'required|integer',
+        'photo' => 'required|file|mimes:jpg,jpeg,png|max:2048',
+        'heure_arrivee_max' => 'required|date_format:H:i',
+        'heure_arrivee_min' => 'required|date_format:H:i',
+        'is_tranche_paiement' => 'required',
+        'montant_total' => 'required|numeric',
+        'valeur_payee' => 'required|numeric',
+        'payment_method' => 'required|string',
+        'id_transaction' => 'required|string',
+        'statut_paiement' => 'required',
+        'valeur_reduction_hote' => 'nullable|numeric',
+        'valeur_promotion_hote' => 'nullable|numeric',
+        'valeur_reduction_code_promo' => 'nullable|numeric',
+        'valeur_reduction_staturp' => 'nullable|numeric',
+        'montant_charge' => 'nullable|numeric',
+        'montant_housing' => 'nullable|numeric',
+        'montant_a_paye' => 'nullable|numeric',
+    ]);
+
+    $user_id = Auth::id();
+    $validation_result = $this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'], $validatedData['date_of_end'], $validatedData['number_of_domestical_animal'], $validatedData['valeur_payee'], $validatedData['montant_a_paye'], $validatedData['id_transaction'], $validatedData['is_tranche_paiement'], $validatedData['payment_method']);
+
     if (!$validation_result['is_allowed']) {
         return response()->json(['message' => $validation_result['message']], 409);
-    }    
+    }
 
+    DB::beginTransaction();
+
+    try {
         $reservation = Reservation::create([
             'housing_id' => $validatedData['housing_id'],
             'date_of_reservation' => now(),
@@ -389,8 +393,8 @@ class ReservationController extends Controller
             'is_integration' => false,
             'is_rejected_traveler' => false,
             'is_rejected_hote' => false,
-            'user_id'=> $user_id,
-            'photo'=> 'defaut',
+            'user_id' => $user_id,
+            'photo' => 'defaut',
             'valeur_reduction_hote' => $validatedData['valeur_reduction_hote'] ?? 0,
             'valeur_promotion_hote' => $validatedData['valeur_promotion_hote'] ?? 0,
             'valeur_reduction_code_promo' => $validatedData['valeur_reduction_code_promo'] ?? 0,
@@ -399,17 +403,17 @@ class ReservationController extends Controller
             'montant_housing' => $validatedData['montant_housing'] ?? 0,
             'montant_a_paye' => $validatedData['montant_a_paye'] ?? 0,
         ]);
-    
+
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
             $photoPath = $photo->move(public_path('image/photo_reservation'), $photoName);
             $photoUrl = url('/image/photo_reservation/' . $photoName);
-    
+
             $reservation->photo = $photoUrl;
             $reservation->save();
         }
-    
+
         $paymentData = [
             'reservation_id' => $reservation->id,
             'amount' => $validatedData['valeur_payee'],
@@ -419,75 +423,80 @@ class ReservationController extends Controller
             'is_confirmed' => false,
             'is_canceled' => false,
         ];
-    
+
         if ($request->has('country')) {
             $paymentData['country'] = $request->input('country');
         }
-    
+
         $payment = Payement::create($paymentData);
+
         if ($validatedData['payment_method'] == "portfeuille") {
+            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+            $portefeuille->solde -= $validatedData['valeur_payee'];
 
-        $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-        $portefeuille->solde -= $validatedData['valeur_payee'];
-
-        $portefeuilleTransaction = new Portfeuille_transaction();
-        $portefeuilleTransaction->debit = true;
-        $portefeuilleTransaction->credit = false;
-        $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
-        $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
-        $portefeuilleTransaction->reservation_id = $reservation->id;
-        $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
-        $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
-        $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-        $portefeuilleTransaction->save();
-        $portefeuille->save();
+            $portefeuilleTransaction = new Portfeuille_transaction();
+            $portefeuilleTransaction->debit = true;
+            $portefeuilleTransaction->credit = false;
+            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
+            $portefeuilleTransaction->reservation_id = $reservation->id;
+            $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
+            $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
+            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+            $portefeuilleTransaction->save();
+            $portefeuille->save();
         }
 
-        $notificationName="Félicitation!Vous venez de faire une reservation.D'ici 24h,elle sera confirmée ou rejeté par l'hôte";
+        $notificationName = "Félicitation! Vous venez de faire une reservation. D'ici 24h, elle sera confirmée ou rejetée par l'hôte";
         $housing = Housing::where('id', $validatedData['housing_id'])
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->first();
-        $notification = new Notification([
-           'name' => $notificationName,
-           'user_id' => $user_id,
-          ]);
-          $notification->save();
+            ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+            ->where('is_updated', 0)
+            ->where('is_actif', 1)
+            ->where('is_destroy', 0)
+            ->first();
 
-          $mail_to_traveler = [
+        $notification = new Notification([
+            'name' => $notificationName,
+            'user_id' => $user_id,
+        ]);
+        $notification->save();
+
+        $mail_to_traveler = [
             'title' => 'Confirmation de Réservation',
             'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
-           ];
-        
+        ];
 
-          $notificationName = "Bonne nouvelle! Votre logement a été reservé par un utilisateur.Accéder à la section de reservation pour confirmer la reservation";
-             $notification = new Notification([
-           'name' => $notificationName,
-           'user_id' => $housing->user_id,
-             ]);
-          $notification->save();
+        $notificationName = "Bonne nouvelle! Votre logement a été reservé par un utilisateur. Accéder à la section de reservation pour confirmer la reservation";
+        $notification = new Notification([
+            'name' => $notificationName,
+            'user_id' => $housing->user_id,
+        ]);
+        $notification->save();
 
-          $mail_to_host = [
-        'title' => 'Nouvelle Réservation',
-        'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .
-        " Date de début : " . $reservation->date_of_starting . "\n" .
-        " Date de fin : " . $reservation->date_of_end . "\n" 
-             ];
-        
-        $promotion_statut=$this->checkAndUpdateIsEncours($validatedData['housing_id']);
+        $mail_to_host = [
+            'title' => 'Nouvelle Réservation',
+            'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .
+                " Date de début : " . $reservation->date_of_starting . "\n" .
+                " Date de fin : " . $reservation->date_of_end . "\n"
+        ];
+
 
         Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
         Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
+
+        DB::commit();
 
         return response()->json([
             'message' => 'Réservation et paiement créés avec succès',
             'reservation' => $reservation,
             'payment' => $payment,
         ], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => 'Une erreur s\'est produite'.$e->getMessage()], 500);
     }
+}
    
     
     /**
@@ -627,10 +636,10 @@ class ReservationController extends Controller
             $soldeRestant = Portfeuille_transaction::sum('montant_restant');
 
             $portfeuille =Portfeuille::where('user_id',$reservation->user_id)->first();
-            $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->montant_total]);
+            $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->valeur_payee]);
             $transaction = new portfeuille_transaction();
             $transaction->portfeuille_id = $portfeuille->id;
-            $transaction->amount = $reservation->montant_total;
+            $transaction->amount = $reservation->valeur_payee;
             $transaction->debit = 0;
             $transaction->credit =1;
             $transaction->reservation_id = $reservation->id;
@@ -640,7 +649,7 @@ class ReservationController extends Controller
             $transaction->valeur_commission = 0;
               $transaction->montant_commission = 0;
               $transaction->montant_restant = 0;
-              $transaction->solde_total = $soldeTotal  + $reservation->montant_total;
+              $transaction->solde_total = $soldeTotal  + $reservation->valeur_payee;
               $transaction->solde_commission = $soldeCommission  + 0;
               $transaction->solde_restant = $soldeRestant  + 0;
               $transaction->save();
@@ -781,7 +790,7 @@ class ReservationController extends Controller
         
         if ($reservation->is_rejected_hote) {
             return response()->json([
-                'message' => 'Vous ne pouvez pas confirmer une reservation déjà rejetée par l hote'
+                'message' => 'Vous ne pouvez pas annuler une reservation déjà rejetée par l hote'
             ]);
         }
 
@@ -1030,7 +1039,7 @@ class ReservationController extends Controller
             
             $mailhote = [
                 'title' => "Annulation d'un logement",
-                'body' => "La réservation d'un de vos biens a été annulée. Cependant, cette annulation n'entraîne aucun remboursement, donc votre portefeuille n'a pas été crédité. Solde actuel : $portefeuilleHote->solde FCFA."
+                'body' => "La réservation d'un de vos biens a été annulée. Solde actuel : $portefeuilleHote->solde FCFA."
             ];
             
 
@@ -1189,118 +1198,129 @@ class ReservationController extends Controller
  */
 public function confirmIntegration(Request $request)
 {
-    $reservation = Reservation::find($request->input('reservation_id'));
+    DB::beginTransaction();
 
-    if (!$reservation) {
-        return response()->json(['message' => 'Réservation non trouvée'], 404);
-    }
-    if (!$reservation->is_confirmed_hote) {
-        return response()->json(['message' => 'La réservation doit être confirmée par l\'hôte'], 400);
-    }
+    try {
+        $reservation = Reservation::find($request->input('reservation_id'));
 
-    if ($reservation->is_rejected_traveler || $reservation->is_rejected_hote) {
-        return response()->json(['message' => 'La réservation a été rejetée, Donc vous ne pouvez pas comnfirmer l\'intégration'], 400);
-    }
-    if ($reservation->montant_total > $reservation->valeur_payee) {
-        return response()->json(['message' => 'Veuillez solder la deuxième tranche avant de confirmer l\'intégration'], 400);
-    }
+        if (!$reservation) {
+            return response()->json(['message' => 'Réservation non trouvée'], 404);
+        }
+        if (!$reservation->is_confirmed_hote) {
+            return response()->json(['message' => 'La réservation doit être confirmée par l\'hôte'], 400);
+        }
 
-    if ($reservation->is_integration) {
-        return response()->json(['message' => 'L\'intégration a déjà été confirmée'], 400);
-    }
+        if ($reservation->is_rejected_traveler || $reservation->is_rejected_hote) {
+            return response()->json(['message' => 'La réservation a été rejetée, Donc vous ne pouvez pas comnfirmer l\'intégration'], 400);
+        }
+        if ($reservation->montant_a_paye > $reservation->valeur_payee) {
+            return response()->json(['message' => 'Veuillez solder la deuxième tranche avant de confirmer l\'intégration'], 400);
+        }
 
-    $housing = Housing::find($reservation->housing_id);
+        if ($reservation->is_integration) {
+            return response()->json(['message' => 'L\'intégration a déjà été confirmée'], 400);
+        }
 
-    if (!$housing) {
-        return response()->json(['message' => 'Logement non trouvé'], 404);
-    }
+        $housing = Housing::find($reservation->housing_id);
 
-    $owner = User::find($housing->user_id);
+        if (!$housing) {
+            return response()->json(['message' => 'Logement non trouvé'], 404);
+        }
 
-    if (!$owner) {
-        return response()->json(['message' => 'Propriétaire non trouvé'], 404);
-    }
+        $owner = User::find($housing->user_id);
 
-    $commission = Commission::where('user_id', $owner->id)->first();
+        if (!$owner) {
+            return response()->json(['message' => 'Propriétaire non trouvé'], 404);
+        }
 
-    if (!$commission) {
-        return response()->json(['message' => 'Commission non trouvée pour ce proprietaire'], 404);
-    }
+        $commission = Commission::where('user_id', $owner->id)->first();
 
-    $commission_percentage = $commission->valeur; 
-    $total_amount = $reservation->valeur_payee;
+        if (!$commission) {
+            return response()->json(['message' => 'Commission non trouvée pour ce proprietaire'], 404);
+        }
 
-    $commission_amount = $total_amount * ($commission_percentage / 100);
-    $remaining_amount = $total_amount - $commission_amount;
+        $commission_percentage = $commission->valeur; 
+        $total_amount = $reservation->valeur_payee;
 
-    $reservation->is_integration = true;
-    $reservation->save();
-    $previous_transactions = Portfeuille_transaction::all();
+        $commission_amount = $total_amount * ($commission_percentage / 100);
+        $remaining_amount = $total_amount - $commission_amount;
 
-    $solde_total = $previous_transactions->sum('amount');
-    $solde_commission = $previous_transactions->sum('montant_commission');
-    $solde_restant = $previous_transactions->sum('montant_restant');
+        $reservation->is_integration = true;
+        $reservation->save();
+        $previous_transactions = Portfeuille_transaction::all();
 
-    $new_solde_total = $solde_total + $total_amount;
-    $new_solde_commission = $solde_commission + $commission_amount;
-    $new_solde_restant = $solde_restant + $remaining_amount;
+        $solde_total = $previous_transactions->sum('amount');
+        $solde_commission = $previous_transactions->sum('montant_commission');
+        $solde_restant = $previous_transactions->sum('montant_restant');
 
-    $portefeuilleTransaction = new Portfeuille_transaction();
-    $portefeuilleTransaction->debit = false;
-    $portefeuilleTransaction->credit = true;
-    $portefeuilleTransaction->amount = $total_amount;
-    $portefeuilleTransaction->valeur_commission = $commission_percentage;
-    $portefeuilleTransaction->montant_commission =$commission_amount ;
-    $portefeuilleTransaction->montant_restant=$remaining_amount;
-    $portefeuilleTransaction->solde_total = $new_solde_total;
-    $portefeuilleTransaction->solde_commission = $new_solde_commission;
-    $portefeuilleTransaction->solde_restant = $new_solde_restant;
-    $portefeuilleTransaction->motif = "Virement sur le compte de l'hôte après confirmation de l'intégration ";
-    $portefeuilleTransaction->reservation_id = $reservation->id;
-    $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
-    $portefeuilleTransaction->id_transaction = "0";
-    $portefeuilleTransaction->payment_method = "portfeuille";
-    $portefeuilleTransaction->save();
+        $new_solde_total = $solde_total + $total_amount;
+        $new_solde_commission = $solde_commission + $commission_amount;
+        $new_solde_restant = $solde_restant + $remaining_amount;
 
-    $portefeuille = Portfeuille::where('user_id', $owner->id)->first();
+        $portefeuilleTransaction = new Portfeuille_transaction();
+        $portefeuilleTransaction->debit = false;
+        $portefeuilleTransaction->credit = true;
+        $portefeuilleTransaction->amount = $total_amount;
+        $portefeuilleTransaction->valeur_commission = $commission_percentage;
+        $portefeuilleTransaction->montant_commission = $commission_amount;
+        $portefeuilleTransaction->montant_restant = $remaining_amount;
+        $portefeuilleTransaction->solde_total = $new_solde_total;
+        $portefeuilleTransaction->solde_commission = $new_solde_commission;
+        $portefeuilleTransaction->solde_restant = $new_solde_restant;
+        $portefeuilleTransaction->motif = "Virement sur le compte de l'hôte après confirmation de l'intégration";
+        $portefeuilleTransaction->reservation_id = $reservation->id;
+        $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
+        $portefeuilleTransaction->id_transaction = "0";
+        $portefeuilleTransaction->payment_method = "portfeuille";
+        $portefeuilleTransaction->save();
 
-    if (!$portefeuille) {
-        return response()->json(['message' => 'Portefeuille du propriétaire non trouvé'], 404);
-    }
+        
+              
+        $portefeuille = Portfeuille::where('user_id', $owner->id)->first();
 
-    $portefeuille->solde += $remaining_amount;
-    $portefeuille->save();
+        if (!$portefeuille) {
+            return response()->json(['message' => 'Portefeuille du propriétaire non trouvé'], 404);
+        }
 
-    $notification = new Notification();
-    $notification->user_id = $reservation->housing->user_id;
-    $notification->name = " Un voyageur vient de confirmer lson intégration dans votre logement  intitulé {$reservation->housing->name}. Votre venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA ";
-    $notification->save();
+        $portefeuille->solde += $remaining_amount;
+        $portefeuille->save();
 
-    $mail = [
-        "title" => "Confirmation de  l'intégration d'un voyageur",
-        "body" => "Un voyageur vient de confirmer lson intégration dans votre logement  intitulé {$reservation->housing->name}. Votre venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA "
-    ];
-    
-  Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mail) );
-
-  $right = Right::where('name','admin')->first();
-  $adminUsers = User_right::where('right_id', $right->id)->get();
-    foreach ($adminUsers as $adminUser) {
         $notification = new Notification();
-        $notification->user_id = $adminUser->user_id;
-        $notification->name = "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmé son intégration à ce logement.Vous bénéficiez d'une commission de {$commission_amount}FCFA";
+        $notification->user_id = $reservation->housing->user_id;
+        $notification->name = "Un voyageur vient de confirmer l'intégration dans votre logement intitulé {$reservation->housing->name}. Vous venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA";
         $notification->save();
 
         $mail = [
-            "title" => "Confirmation de l'intégration d'un voyageur dans un logement",
-            "body" => "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmé son intégration à ce logement.Vous bénéficiez d'une commission de {$commission_amount}FCFA"
+            "title" => "Confirmation de l'intégration d'un voyageur",
+            "body" => "Un voyageur vient de confirmer l'intégration dans votre logement intitulé {$reservation->housing->name}. Vous venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA"
         ];
-        
-  Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
-    }
 
-    return response()->json(['message' => 'Intégration confirmée et montant crédité'], 200);
+        Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+        $right = Right::where('name', 'admin')->first();
+        $adminUsers = User_right::where('right_id', $right->id)->get();
+        foreach ($adminUsers as $adminUser) {
+            $notification = new Notification();
+            $notification->user_id = $adminUser->user_id;
+            $notification->name = "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmer son intégration à ce logement. Vous bénéficiez d'une commission de {$commission_amount} FCFA";
+            $notification->save();
+
+            $mail = [
+                "title" => "Confirmation de l'intégration d'un voyageur dans un logement",
+                "body" => "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmer son intégration à ce logement. Vous bénéficiez d'une commission de {$commission_amount} FCFA"
+            ];
+
+            Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail));
+        }
+
+        DB::commit();
+        return response()->json(['message' => 'Intégration confirmée et montant crédité'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 }
+
 
 // Mettre a jours le statut de la promotion en cours;voir si la date n'est pas dépassé ou bien le nombre de reservation n'est pas atteint
 public function checkAndUpdateIsEncours($housingId)

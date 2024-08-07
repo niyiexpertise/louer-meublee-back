@@ -31,6 +31,13 @@ class Reservation extends Model
         'is_rejected_traveler',
         'is_rejected_hote',
         'photo',
+          'valeur_reduction_hote',
+    'valeur_promotion_hote',
+    'valeur_reduction_code_promo',
+    'valeur_reduction_staturp',
+    'montant_charge',
+    'montant_housing',
+    'montant_a_paye',
     ];
     
     public function user()

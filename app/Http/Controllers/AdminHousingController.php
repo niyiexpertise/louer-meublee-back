@@ -64,7 +64,10 @@ class AdminHousingController extends Controller
     public function indexHousingForValidationForadmin()
     {
         $listings = Housing::where('status', 'Unverified')->where('is_finished', 1)->get();
-    
+
+        foreach ($listings as $listing){
+            (new PromotionController())->actionRepetitif($listing->id);
+        }
         $data = $listings->map(function ($listing) {
             return [
                 'id_housing' => $listing->id,
@@ -154,6 +157,9 @@ class AdminHousingController extends Controller
     public function indexHousingForUpdateForadmin()
     {
         $listings = Housing::where('is_updated', '1')->get();
+        foreach ($listings as $listing){
+            (new PromotionController())->actionRepetitif($listing->id);
+        }
     
         $data = $listings->map(function ($listing) {
             return [
@@ -274,7 +280,7 @@ public function showHousingDetailForValidationForadmin($id)
         'housingType'
     ])->find($id);
 
-    
+    (new PromotionController())->actionRepetitif($listing->id);
     $equipments_nouveau_by_category = $listing->housingEquipments
     ->where('is_verified', 0)
     ->groupBy('category.name')
@@ -563,10 +569,13 @@ public function showHousingDetailForValidationForadmin($id)
      try {
 
          $housing = Housing::find($id);
+
+         
  
          if (!$housing) {
              return response()->json(['message' => 'L\'ID du logement spécifié n\'existe pas'], 404);
          }
+         (new PromotionController())->actionRepetitif($housing->id);
  
          $housing->status = 'verified';
          $housing->save();
@@ -650,6 +659,7 @@ public function showHousingDetailForValidationForadmin($id)
          }
  
          foreach ($housingIds as $id) {
+            (new PromotionController())->actionRepetitif($id);
              $housing = Housing::findOrFail($id);
              $housing->status = 'verified';
              $housing->save();
@@ -698,7 +708,11 @@ public function showHousingDetailForValidationForadmin($id)
      ->where('is_blocked', 1)
      ->where('is_finished', 1)
      ->get();
- 
+
+     foreach ($listings as $listing){
+        (new PromotionController())->actionRepetitif($listing->id);
+    }
+
      $data = $listings->map(function ($listing) {
          return [
              'id_housing' => $listing->id,
@@ -794,6 +808,10 @@ public function showHousingDetailForValidationForadmin($id)
      ->where('is_blocked', 0)
      ->where('is_finished', 1)
      ->get();
+
+     foreach ($listings as $listing){
+        (new PromotionController())->actionRepetitif($listing->id);
+    }
  
      $data = $listings->map(function ($listing) {
          return [
@@ -1028,6 +1046,8 @@ public function UpdateOneHousing($id)
             return response()->json(['message' => 'L\'ID du logement spécifié n\'existe pas'], 404);
         }
 
+        (new PromotionController())->actionRepetitif($id);
+
         $housing->is_updated = 1;
         $housing->save();
 
@@ -1068,6 +1088,10 @@ public function ListeDesLogementsValideDisable()
     ->where('is_actif', 0)
     ->where('is_finished', 1)
     ->get();
+
+    foreach ($listings as $listing){
+        (new PromotionController())->actionRepetitif($listing->id);
+    }
 
     $data = $listings->map(function ($listing) {
         return [
@@ -1162,6 +1186,7 @@ public function ListeDesLogementsValideDisable()
                 $listings = Housing::where('is_destroy',true)->get();
                 $data = [];
                 foreach($listings as $listing){
+                    (new PromotionController())->actionRepetitif($listing->id);
                     $data[] = [
                         'id_housing' => $listing->id,
                         'housing_type_name' => $listing->housingType->name,

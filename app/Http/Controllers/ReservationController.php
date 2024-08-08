@@ -1230,7 +1230,7 @@ public function confirmIntegration(Request $request)
         return response()->json(['message' => 'Commission non trouvée pour ce proprietaire'], 404);
     }
 
-    $commission_percentage = $commission->valeur; 
+    $commission_percentage = $commission->valeur;
     $total_amount = $reservation->valeur_payee;
 
     $commission_amount = $total_amount * ($commission_percentage / 100);

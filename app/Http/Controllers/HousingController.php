@@ -1697,6 +1697,8 @@ public function getListingsByNightPriceMin($price)
      if (!$housing) {
          return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
      }
+
+     (new PromotionController())->actionRepetitif($id);
  
      $validatedData = $request->validate([
          'interior_regulation' => 'required',
@@ -1710,7 +1712,6 @@ public function getListingsByNightPriceMin($price)
      ]);
  
      $housing->update($validatedData);
- 
      $housing->is_updated = true;
      $housing->save();
  
@@ -1827,6 +1828,8 @@ public function updateInsensibleHousing(Request $request, $id)
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+    (new PromotionController())->actionRepetitif($id);
+
     $validatedData = $request->validate([
         'name' => 'required|string',
         'description' => 'required|string',
@@ -1852,6 +1855,10 @@ public function updateInsensibleHousing(Request $request, $id)
 
 public function formatListingsData($listings)
     {
+
+        foreach ($listings as $listing){
+            (new PromotionController())->actionRepetitif($listing->id);
+        }
         return $listings->map(function ($listing) {
             return [
                 'id_housing' => $listing->id,
@@ -1872,7 +1879,8 @@ public function formatListingsData($listings)
                 'department' => $listing->department,
                 'is_camera' => $listing->is_camera,
                 'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => $listing->is_animal_exist,
+                'is_animal_exist' => 
+                +$listing->is_animal_exist,
                 'interior_regulation' => $listing->interior_regulation,
                 'telephone' => $listing->telephone,
                 'code_pays' => $listing->code_pays,

@@ -268,8 +268,7 @@ class RetraitController extends Controller
                 ];
                 
                  Mail::to($retrait->user->email)->send(new NotificationEmailwithoutfile($mail));
-                
-                
+
 
             return response()->json([
                 'message' => 'Retraits successfully validated',

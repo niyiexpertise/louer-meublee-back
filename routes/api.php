@@ -396,7 +396,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
             Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
             Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
-            
+
             Route::post('/switchToAnotherRole/{roleName}', [AuthController::class, 'switchToAnotherRole']);
         });
 
@@ -1143,15 +1143,15 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.getReservationsCountByYearAndMonth')
             ->middleware('role_or_permission:superAdmin|Managereservation.getReservationsCountByYearAndMonth');
 
-        Route::get('/getAllReservationCanceledByTravelerForAdmin', [ReservationController::class, 'getAllReservationCanceledByTravelerForAdmin'])
+        Route::get('/getAllReservationCanceledByTravelerForAdmin', [AdminReservationController::class, 'getAllReservationCanceledByTravelerForAdmin'])
             ->name('reservation.getAllReservationCanceledByTravelerForAdmin')
             ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationCanceledByTravelerForAdmin');
 
-        Route::get('/getAllReservationRejectedForAdmin', [ReservationController::class, 'getAllReservationRejectedForAdmin'])
+        Route::get('/getAllReservationRejectedForAdmin', [AdminReservationController::class, 'getAllReservationRejectedForAdmin'])
             ->name('reservation.getAllReservationRejectedForAdmin')
             ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationRejectedForAdmin');
 
-        Route::get('/getAllReservationConfirmedForAdmin', [ReservationController::class, 'getAllReservationConfirmedForAdmin'])
+        Route::get('/getAllReservationConfirmedForAdmin', [AdminReservationController::class, 'getAllReservationConfirmedForAdmin'])
             ->name('reservation.getAllReservationConfirmedForAdmin')
             ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationConfirmedForAdmin');
 });
@@ -1165,9 +1165,11 @@ Route::prefix('portefeuille')->group(function () {
     Route::get('/user/transaction', [PortfeuilleTransactionController::class, 'getPortfeuilleDetails'])
         ->name('portefeuille.user.transaction');
 
+
+
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
-        ->middleware('superAdmin|Manageportefeuille.transaction.all');
+        ->middleware('superAdmin');
 });
 
         //Crud de methode de paiement
@@ -1398,7 +1400,14 @@ Route::prefix('portefeuille')->group(function () {
                Route::get('/users', [DashboardPartenaireController::class, 'getUsersForPartenaire'])
                    ->name('partenaire.getUsersForPartenaire')
                    ->middleware('role_or_permission:superAdmin|partenaire|Managepartenaire.getUsersForPartenaire');
-           });
+
+                Route::get('users/transaction', [DashboardPartenaireController::class, 'getPartnerPortfeuilleDetails'])
+                ->name('portefeuille.user.transactionpartenaire');
+                
+                Route::get('users/reservation', [DashboardPartenaireController::class, 'getReservationsWithPromoCode'])
+                ->name('portefeuille.user.reservationpartenaire');
+
+      });
 
 
 

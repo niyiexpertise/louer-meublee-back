@@ -1206,13 +1206,15 @@ public function confirmIntegration(Request $request)
         if (!$reservation) {
             return response()->json(['message' => 'Réservation non trouvée'], 404);
         }
+
         if (!$reservation->is_confirmed_hote) {
             return response()->json(['message' => 'La réservation doit être confirmée par l\'hôte'], 400);
         }
 
         if ($reservation->is_rejected_traveler || $reservation->is_rejected_hote) {
-            return response()->json(['message' => 'La réservation a été rejetée, Donc vous ne pouvez pas comnfirmer l\'intégration'], 400);
+            return response()->json(['message' => 'La réservation a été rejetée, Donc vous ne pouvez pas confirmer l\'intégration'], 400);
         }
+
         if ($reservation->montant_a_paye > $reservation->valeur_payee) {
             return response()->json(['message' => 'Veuillez solder la deuxième tranche avant de confirmer l\'intégration'], 400);
         }
@@ -1236,10 +1238,10 @@ public function confirmIntegration(Request $request)
         $commission = Commission::where('user_id', $owner->id)->first();
 
         if (!$commission) {
-            return response()->json(['message' => 'Commission non trouvée pour ce proprietaire'], 404);
+            return response()->json(['message' => 'Commission non trouvée pour ce propriétaire'], 404);
         }
 
-        $commission_percentage = $commission->valeur; 
+        $commission_percentage = $commission->valeur;
         $total_amount = $reservation->valeur_payee;
 
         $commission_amount = $total_amount * ($commission_percentage / 100);
@@ -1247,11 +1249,12 @@ public function confirmIntegration(Request $request)
 
         $reservation->is_integration = true;
         $reservation->save();
-        $previous_transactions = Portfeuille_transaction::all();
 
+        $previous_transactions = Portfeuille_transaction::all();
         $solde_total = $previous_transactions->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
         $solde_restant = $previous_transactions->sum('montant_restant');
+        $solde_commission_partenaire = $previous_transactions->sum('solde_commission_partenaire');
 
         $new_solde_total = $solde_total + $total_amount;
         $new_solde_commission = $solde_commission + $commission_amount;
@@ -1272,10 +1275,14 @@ public function confirmIntegration(Request $request)
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";
         $portefeuilleTransaction->payment_method = "portfeuille";
+        $portefeuilleTransaction->partenaire_id = 0; // Initial
+        $portefeuilleTransaction->valeur_commission_partenaire = 0; // Initial
+        $portefeuilleTransaction->montant_commission_partenaire = 0; // Initial
+        $portefeuilleTransaction->solde_commission_partenaire = $solde_commission_partenaire;
         $portefeuilleTransaction->save();
 
-        
-              
+        $this->handlePartnerLogic($portefeuilleTransaction->id);
+
         $portefeuille = Portfeuille::where('user_id', $owner->id)->first();
 
         if (!$portefeuille) {
@@ -1299,6 +1306,7 @@ public function confirmIntegration(Request $request)
 
         $right = Right::where('name', 'admin')->first();
         $adminUsers = User_right::where('right_id', $right->id)->get();
+
         foreach ($adminUsers as $adminUser) {
             $notification = new Notification();
             $notification->user_id = $adminUser->user_id;
@@ -1314,12 +1322,14 @@ public function confirmIntegration(Request $request)
         }
 
         DB::commit();
-        return response()->json(['message' => 'Intégration confirmée et montant crédité'], 200);
+
+        return response()->json(['message' => 'Intégration confirmée avec succès'], 200);
     } catch (\Exception $e) {
         DB::rollBack();
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json(['message' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
     }
 }
+
 
 
 // Mettre a jours le statut de la promotion en cours;voir si la date n'est pas dépassé ou bien le nombre de reservation n'est pas atteint
@@ -1365,4 +1375,68 @@ public function checkAndUpdateIsEncours($housingId)
     }
 }
 
+
+public function handlePartnerLogic($transactionId)
+{
+    $transaction = Portfeuille_transaction::find($transactionId);
+    
+    if (!$transaction) {
+        return response()->json(['message' => 'Transaction non trouvée'], 404);
+    }
+
+    $reservation = Reservation::find($transaction->reservation_id);
+
+    if (!$reservation) {
+        return response()->json(['message' => 'Réservation non trouvée'], 404);
+    }
+
+    if ($reservation->valeur_reduction_code_promo != 0) {
+        $email_partenaire = $reservation->user->Partenaire->user->email;
+        $user_id_partenaire = $reservation->user->Partenaire->user->id;
+        $commission_partenaire = $reservation->user->Partenaire->commission;
+        $partenaire_id = $reservation->user->Partenaire->id;
+
+        $commission_amount = $transaction->montant_commission;
+        $montant_commission_partenaire = $commission_amount * ($commission_partenaire / 100);
+
+        // Mettre à jour la commission totale et le solde de la commission dans la transaction
+        $transaction->montant_commission_partenaire = $montant_commission_partenaire;
+        $transaction->solde_commission_partenaire += $montant_commission_partenaire;
+
+        // Calculer les nouvelles valeurs de la commission et mettre à jour le portefeuille du partenaire
+        $portefeuille_partenaire = Portfeuille::where('user_id', $user_id_partenaire)->first();
+
+        if (!$portefeuille_partenaire) {
+            return response()->json(['message' => 'Portefeuille du partenaire non trouvé'], 404);
+        }
+
+        // Calculer les nouvelles valeurs pour le portefeuille du partenaire
+        $portefeuille_partenaire->solde += $montant_commission_partenaire;
+        $portefeuille_partenaire->save();
+        
+        $notification = new Notification();
+        $notification->user_id = $user_id_partenaire;
+        $notification->name = "Vous venez de recevoir un dépôt de {$montant_commission_partenaire} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille_partenaire->solde} FCFA";
+        $notification->save();
+
+        $mail = [
+            "title" => "Virement de votre part suite à la confirmation de l'intégration d'un voyageur",
+            "body" => "Vous venez de recevoir un dépôt de {$montant_commission_partenaire} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille_partenaire->solde} FCFA"
+        ];
+        Mail::to($email_partenaire)->send(new NotificationEmailwithoutfile($mail));
+
+        // Mettre à jour les anciennes commissions
+        $ancien_solde_commission = Portfeuille_transaction::where('partenaire_id', $partenaire_id)
+            ->sum('montant_commission_partenaire');
+        $ancien_commission_totale = Portfeuille_transaction::where('partenaire_id', $partenaire_id)
+            ->sum('montant_commission');
+
+        $transaction->montant_commission = $ancien_commission_totale - $montant_commission_partenaire;
+        $transaction->solde_commission = $ancien_solde_commission - $montant_commission_partenaire;
+
+        $transaction->save();
+    }
+
+    $transaction->save();
+}
 }

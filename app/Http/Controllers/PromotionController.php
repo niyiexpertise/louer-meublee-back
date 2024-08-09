@@ -292,7 +292,6 @@ class PromotionController extends Controller
    public function getHousingPromotions($housingId)
   {
     try {
-        $variable=$this->activatePromotionsForHousing($housingId);
         $housing = Housing::find($housingId);
         if (!$housing) {
             return response()->json(['error' => 'Logement non trouvé.'], Response::HTTP_NOT_FOUND);

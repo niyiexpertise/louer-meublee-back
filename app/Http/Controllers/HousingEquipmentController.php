@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\Housing_equipment;
 use Illuminate\Http\Request;
 use App\Models\Housing;
@@ -264,30 +265,23 @@ public function DeleteEquipementHousing(Request $request)
                     $housingEquipment->is_verified = false;
                     $housingEquipment->save();
                     $userId = Auth::id();
-                    $notification = new Notification([
-                        'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
-                        'user_id' => $userId,
-                       ]);
-                    $notification->save();
+                   
                     $mailhote = [
                         "title" => "Notification ajout d'un équipement à un logement",
                         "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
                      ];
-                    Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+                    dispatch( new SendRegistrationEmail(Auth::user()->emaill, $mailhote['body'], $mailhote['title'], 2));
                 
                      $right = Right::where('name','admin')->first();
                      $adminUsers = User_right::where('right_id', $right->id)->get();
                      foreach ($adminUsers as $adminUser) {
-                     $notification = new Notification();
-                     $notification->user_id = $adminUser->user_id;
-                     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
-                     $notification->save();
-                
                      $mail = [
                         'title' => "Notification sur l'ajout d'un nouveau équipement",
                         'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
                     ];
-                     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+                     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
                        }
 
                     return response()->json([
@@ -380,30 +374,24 @@ public function DeleteEquipementHousing(Request $request)
                 }
         
                 $userId = Auth::id();
-                    $notification = new Notification([
-                        'name' => "L'enregistrement de ce nouvel  équipement a été pris en compte. l'administrateur validera dans moin de 48h",
-                        'user_id' => $userId,
-                       ]);
-                    $notification->save();
+                    
                     $mailhote = [
                         "title" => "Notification ajout d'un équipement à un logement",
                         "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
                      ];
-                    Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+                    dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
                 
                      $right = Right::where('name','admin')->first();
                      $adminUsers = User_right::where('right_id', $right->id)->get();
                      foreach ($adminUsers as $adminUser) {
-                     $notification = new Notification();
-                     $notification->user_id = $adminUser->user_id;
-                     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
-                     $notification->save();
+                    
                 
                      $mail = [
                         'title' => "Notification sur l'ajout d'un nouveau équipement",
                         'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
                     ];
-                     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+                     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
                        }
         
                 return response()->json([
@@ -553,18 +541,12 @@ public function makeVerifiedHousingEquipment(string $id)
         }
         Housing_equipment::whereId($id)->update(['is_verified' => true]);
 
-           $notification = new Notification([
-               'name' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
-               'user_id' =>$housingEquipment->housing->user_id ,
-              ]);
-              $notification->save();
               $mail = [
                 'title' => "Notification sur la validation du nouveau équipement ajouté au logement",
                 'body' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
             ];
             
-            Mail::to($housingEquipment->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
-              
+            dispatch( new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
 
         return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
     } catch(Exception $e) {
@@ -779,7 +761,7 @@ public function getUnexistEquipmentInvalidForHousing()
                     'housing_name' => $housingEquipment->housing->name,
                     'housing_description' => $housingEquipment->housing->description,
                     'is_verified' => $housingEquipment->is_verified,
-                    'user_detail' =>$housing->user,
+                    'user_detail' =>$housingEquipment->housing->user,
                     'category_id' => $category->id,
                     'category_name' =>$category->name, 
                 ];

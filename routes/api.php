@@ -54,6 +54,7 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\DashBoardTravelerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +69,7 @@ use App\Http\Controllers\AddHousingZController;
 
 Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::get('/user', [LoginController::class, 'checkAuth']);
+    Route::get('/returnAuthCommission', [LoginController::class, 'returnAuthCommission']);
     Route::post('/users/logout', [LogoutController::class, 'logout']);
 
 });
@@ -1436,7 +1438,7 @@ Route::get('/preference/index', [PreferenceController::class, 'index']);
 Route::get('/language/index', [LanguageController::class, 'index']);
 
 Route::prefix('logement')->group(function () {
-   Route::post('/index/ListeDesLogementsAcceuil', [HousingController::class, 'ListeDesLogementsAcceuil']);
+   Route::post('/index/ListeDesLogementsAcceuil/{userId}', [HousingController::class, 'ListeDesLogementsAcceuil']);
    Route::get('/index/ListeDesPhotosLogementAcceuil/{id}', [HousingController::class, 'ListeDesPhotosLogementAcceuil']);
    Route::post('/ShowDetailLogementAcceuil', [HousingController::class, 'ShowDetailLogementAcceuil']);
    Route::get('/filterby/typehousing/{id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByTypehousing']);
@@ -1483,6 +1485,37 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
 
 });
+
+    Route::middleware(['auth:sanctum', '2fa'])->group(function () {
+        Route::prefix('reservation')->group(function () {
+            Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
+            ->name('reservation.getReservationsForTraveler')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');
+
+            Route::get('getRejectedReservationsByTraveler', [DashBoardTravelerController::class, 'getRejectedReservationsByTraveler'])
+            ->name('reservation.getRejectedReservationsByTraveler')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getRejectedReservationsByTraveler');
+
+            Route::get('getConfirmedReservations', [DashBoardTravelerController::class, 'getConfirmedReservations'])
+            ->name('reservation.getConfirmedReservations')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getConfirmedReservations');
+
+            Route::get('getRejectedReservationsByHost', [DashBoardTravelerController::class, 'getRejectedReservationsByHost'])
+            ->name('reservation.getRejectedReservationsByHost')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getRejectedReservationsByHost');
+
+            Route::get('getUnpaidReservations', [DashBoardTravelerController::class, 'getUnpaidReservations'])
+            ->name('reservation.getUnpaidReservations')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getUnpaidReservations');
+
+            Route::get('getPendingConfirmations', [DashBoardTravelerController::class, 'getPendingConfirmations'])
+            ->name('reservation.getPendingConfirmations')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getPendingConfirmations');
+
+
+        });
+    });
+
 
 
 Route::middleware(['auth:sanctum', '2fa'])->group(function () {

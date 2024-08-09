@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\Housing_category_file;
 use App\Models\Housing;
 use App\Models\housing_preference;
@@ -176,30 +177,25 @@ class HousingCategoryFileController extends Controller
          $housingCategoryFile->save();
      }
      $userId = Auth::id();
-    $notification = new Notification([
-        'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
-        'user_id' => $userId,
-       ]);
-       $notification->save();
+
     $mailhote = [
         "title" => "Notification ajout d'une pièce à un logement",
         "body" => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h."
      ];
-    Mail::to($existingEntry->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+    dispatch( new SendRegistrationEmail(User::whereId($userId)->first()->email, $mailhote['body'], $mailhote['title'], 2));
 
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
-     $notification = new Notification();
-     $notification->user_id = $adminUser->user_id;
-     $notification->name = "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider.";
-     $notification->save();
+  
 
      $mail = [
          "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
          "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
      ];
-     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+     dispatch( new SendRegistrationEmail($adminUser->user->email, $mailhote['body'], $mailhote['title'], 2));
        }
      return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
  }
@@ -294,16 +290,12 @@ class HousingCategoryFileController extends Controller
         $housingCategoryFile->save();
     }
     $userId = Auth::id();
-    $notification = new Notification([
-        'name' => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h",
-        'user_id' => $userId,
-       ]);
-    $notification->save();
        $mailhote = [
         "title" => "Notification ajout d'une pièce à un logement",
         "body" => "Votre ajout de la pièce a été pris en compte. l'administrateur validera dans moin de 48h."
      ];
-    Mail::to(User::where('id',$userId)->first()->email)->send(new NotificationEmailwithoutfile($mailhote) );
+
+    dispatch( new SendRegistrationEmail($request->email, $mailhote['body'], $mailhote['title'], 2));
 
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
@@ -317,7 +309,9 @@ class HousingCategoryFileController extends Controller
          "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
          "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
      ];
-     Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+   
+
+     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
        }
 
     return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
@@ -465,7 +459,8 @@ public function validateDefaultCategoryHousing($housing_id, $category_id)
         'title' => "Validation de  la catégorie ajoutée au logement",
         'body' => "L'ajout de cette catégorie : " . $category->name . " a été validé par l'administrateur.",
     ];
-    Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+    dispatch( new SendRegistrationEmail($housingCategoryFiles->first()->housing->user->email, $mail['body'], $mail['title'], 2));
 
     return response()->json(['message' => 'Catégories validées avec succès'], 200);
 }
@@ -608,16 +603,12 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
     }
     $category->update(['is_verified' => true]);
 
-    $notification = new Notification([
-        'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
-        'user_id' => $user_id,
-    ]);
-    $notification->save();
     $mail = [
         'title' => "Validation de  la catégorie ajoutée au logement",
         'body' => "L'ajout de cette catégorie : " . $category->name . " a été validé par l'administrateur.",
     ];
-    Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+    dispatch( new SendRegistrationEmail($housingCategoryFiles->first()->housing->user->email, $mail['body'], $mail['title'], 2));
 
 
     return response()->json(['message' => 'Catégories validées avec succès'], 200);
@@ -711,7 +702,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
             ],
         ], 200);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
@@ -797,7 +788,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 
         return response()->json(['message' => 'Catégorie et fichiers associés supprimés avec succès.'], 200);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
@@ -905,32 +896,26 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
          $savedFiles[] = $photoModel;
      }
      $userId = Auth::id();
-     $notification = new Notification([
-        'name' => "Votre ajout de la photo a été prise en compte. l'administrateur validera dans moin de 48h",
-        'user_id' => $userId,
-       ]);
-    $notification->save();
+
      $mailhote = [
         'title' => "Notification d'ajout de photo à une pièce",
         'body' => "Votre ajout de la photo a été prise en compte. l'administrateur validera dans moin de 48h.",
     ];
-     Mail::to( $housingCategoryFile->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote));
+
+     dispatch( new SendRegistrationEmail($housingCategoryFile->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
 
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
-     $notification = new Notification();
-     $notification->user_id = $adminUser->user_id;
-     $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour une categorie d'un logement.";
-     $notification->save();
+
 
      $mail = [
          "title" => "Ajout d'une/de nouvelle(s) photo(s) à une catégorie d'un logement",
          "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour une categorie d'un logement."
      ];
-    
-         Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
-       }
+
+     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
+           }
  
      return response()->json([
             'message' => 'Photos ajoutées avec succès',
@@ -1041,22 +1026,19 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             }
             $housingCategoryFile->is_verified = true;
             $housingCategoryFile->save();
-            $notification = new Notification([
-                'name' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur",
-                'user_id' => $user_id,
-            ]);
-            $notification->save();
+  
             $mail = [
                 'title' => "Validation de  la photo ajoutée à la catégorie de votre logement",
                 'body' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur.",
             ];
-            Mail::to($housingCategoryFiles->first()->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+            dispatch( new SendRegistrationEmail($housingCategoryFile->first()->housing->user->email, $mail['body'], $mail['title'], 2));
 
             return response()->json([
                 'message' => 'Statut de vérification mis à jour avec succès',
                 'is_verified' => $housingCategoryFile->is_verified,
             ], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Une erreur s\'est produite',
             ], 500);

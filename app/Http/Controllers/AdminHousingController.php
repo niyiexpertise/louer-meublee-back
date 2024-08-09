@@ -28,6 +28,7 @@ use App\Models\Note;
 use App\Models\Reservation;
 use App\Models\Review_reservation;
 use App\Http\Controllers\HousingController;
+use App\Jobs\SendRegistrationEmail;
 use Exception;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -581,17 +582,13 @@ public function showHousingDetailForValidationForadmin($id)
          $housing->save();
  
          $notificationName = "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme.";
-         $notification = new Notification([
-             'name' => $notificationName,
-             'user_id' => $housing->user_id,
-         ]);
-         $notification->save();
+        
          $mail = [
             'title' => "Confirmation d'ajout d'un logement",
             'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
            ];
-        
-         Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+           dispatch( new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
  
          return response()->json(['message' => 'Statut du logement mis à jour avec succès'], 200);
      } catch (\Exception $e) {
@@ -675,7 +672,8 @@ public function showHousingDetailForValidationForadmin($id)
                 'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
                ];
             
-             Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+            dispatch( new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
+
          }
  
          return response()->json(['message' => 'Statut des logements mis à jour avec succès'], 200);

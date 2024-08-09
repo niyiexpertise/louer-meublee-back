@@ -888,7 +888,7 @@ class AddHousingController extends Controller
                 'photos.*' => 'file'
             ]);
 
-            $extensions = ['jpg','jpeg','png','gif','mp4','mov','avi','mkv'];
+            $extensions = ['jpg','jpeg','png','gif','webp','bmp','svg','tiff','mp4','mov','avi','mkv','mpeg','webm'];
 
            
 

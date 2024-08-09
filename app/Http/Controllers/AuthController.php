@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\Response;
@@ -415,17 +416,13 @@ public function RevokePermsToRole(Request $request, $r){
                     $permission_name .= " " . $pr['name'] . ",";
                 }
                 $message_notification ="Vous avez maintenant le rôle de ". $role->name .".";
-                $notification = new Notification([
-                 'name' => $message_notification,
-                 'user_id' =>$id,
-                     ]);
-                    $notification->save();
+               
                     $mail = [
                         'title' => "Attribution du role de ".$role->name,
                         'body' => $message_notification 
                     ];
                     try {
-                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
                        
                     }
@@ -561,17 +558,14 @@ public function RevokePermsToRole(Request $request, $r){
                     $user->assignRole($roles);
                 }
                 $message_notification ="Vous n'avez plus maintenant le rôle de  ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
-                $notification = new Notification([
-                 'name' => $message_notification,
-                 'user_id' =>$id,
-                     ]);
-                    $notification->save();
+                
                     $mail = [
                         'title' => "Retrait du role de ".$role->name,
                         'body' => $message_notification 
                     ];
                     try {
-                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+                        
                     } catch (\Exception $e) {
                        
                     }
@@ -714,17 +708,13 @@ public function RevokePermsToRole(Request $request, $r){
 
             $uniquePermissions = array_unique($permissions);
             $message_notification= "Vous avez maintenant les permissions suivantes: ". $permission_name . ".";
-                $notification = new Notification([
-                 'name' => $message_notification,
-                 'user_id' =>$id,
-                     ]);
-                    $notification->save();
                     $mail = [
                         'title' => "Notification sur les nouvelle permissions attribuées",
                         'body' => $message_notification 
                     ];
                     try {
-                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+
+                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
                        
                     }
@@ -867,17 +857,14 @@ public function RevokePermsToRole(Request $request, $r){
 
             $uniquePermissions = array_unique($permissions);
             $message_notification= "Vous n'avez plus les permissions suivantes: ". $permission_name . ".Elles vous ont été retiré par l'admin.";
-                $notification = new Notification([
-                 'name' => $message_notification,
-                 'user_id' =>$id,
-                     ]);
-                    $notification->save();
                     $mail = [
                         'title' => "Notification sur le retrait des permissions ",
                         'body' => $message_notification 
                     ];
                     try {
-                        Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail));
+    
+
+                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
                        
                     }

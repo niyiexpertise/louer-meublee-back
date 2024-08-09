@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException ;
 use Illuminate\Validation\Rule;
 /**
  * @OA\Info(
- *      title="Api de location des meubles",
+ *      title="Api Louer Meublée",
  *      version="1.0.0",
  *      description="il s'agit de la documentation complète de chaque methode,route,etc",
  *      @OA\Contact(

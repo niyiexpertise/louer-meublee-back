@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Housing;
 use App\Models\HousingType;
@@ -339,169 +341,9 @@ public function addHousing_step_7(Request $request, $housingId){
     }
 }
 
-/**
- * @OA\Post(
- *     path="/api/logement/store_step_8/{housingId}",
- *     summary="Ajouter des équipements et des catégories à un logement",
- *     tags={"Ajout de logement"},
- *     @OA\Parameter(
- *         name="housingId",
- *         in="path",
- *         required=true,
- *         description="ID du logement",
- *         @OA\Schema(
- *             type="integer"
- *         )
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 type="object",
- *                 required={
- *                     "equipment_housing",
- *                     "category_equipment_housing",
- *                     "category_id",
- *                     "number_category"
- *                 },
- *                 @OA\Property(
- *                     property="equipment_housing",
- *                     description="Liste des ID d'équipements existants pour le logement",
- *                     type="array",
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="category_equipment_housing",
- *                     description="Liste des ID de catégories associées aux équipements",
- *                     type="array",
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="category_id",
- *                     description="Liste des ID de catégories existantes pour le logement",
- *                     type="array",
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="number_category",
- *                     description="Liste des nombres associés à chaque catégorie",
- *                     type="array",
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="new_categories",
- *                     description="Liste des nouvelles catégories à ajouter",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="string")
- *                 ),
- *                 @OA\Property(
- *                     property="new_categories_numbers",
- *                     description="Liste des nombres associés aux nouvelles catégories",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="new_equipment",
- *                     description="Liste des nouveaux équipements à ajouter",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="string")
- *                 ),
- *                 @OA\Property(
- *                     property="new_equipment_category",
- *                     description="Liste des catégories associées aux nouveaux équipements",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="integer")
- *                 ),
- *                 @OA\Property(
- *                     property="photo_categories{id}",
- *                     description="Photos des catégories existantes, où {id} est remplacé par l'ID de la catégorie",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="string", format="binary")
- *                 ),
- *                 @OA\Property(
- *                     property="new_category_photos_{name}",
- *                     description="Photos des nouvelles catégories, où {name} est remplacé par le nom de la nouvelle catégorie",
- *                     type="array",
- *                     nullable=true,
- *                     @OA\Items(type="string", format="binary")
- *                 )
- *             ),
- *             example={
- *                 "equipment_housing": {1, 2, 3},
- *                 "category_equipment_housing": {10, 20, 30},
- *                 "category_id": {100, 200},
- *                 "number_category": {2, 3},
- *                 "new_categories": {"Salle de jeux", "Bureau"},
- *                 "new_categories_numbers": {1, 1},
- *                 "new_equipment": {"Projecteur", "Scanner"},
- *                 "new_equipment_category": {100, 200},
- *                 "photo_categories100": {"cat100_photo1.jpg", "cat100_photo2.jpg"},
- *                 "new_category_photos_Salle_de_jeux": {"salle_photo1.jpg", "salle_photo2.jpg"}
- *             }
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Étape 8 terminée avec succès",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="housing_id",
- *                 description="ID du logement",
- *                 type="integer"
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Données invalides ou logement non trouvé",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 description="Message d'erreur",
- *                 type="string"
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=505,
- *         description="Erreur de validation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 description="Message d'erreur",
- *                 type="string"
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Erreur serveur",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 description="Message d'erreur",
- *                 type="string"
- *             )
- *         )
- *     ),
- *     security={
- *         {"bearerAuth": {}}
- *     }
- * )
- */
 
 
- public function  addHousing_step_8(Request $request,$housingId){
+ public function  addHousing_step_8_old(Request $request,$housingId){
         try {
             $housing = Housing::whereId($housingId)->first();
 
@@ -1588,18 +1430,20 @@ public function addHousing_step_16(Request $request, $housingId) {
          $userId = auth()->user()->id;
          $notificationName = "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur.";
 
-         $notification = new Notification([
-             'name' => $notificationName,
-             'user_id' => $userId,
-         ]);
-         $notification->save();
+        //  $notification = new Notification([
+        //      'name' => $notificationName,
+        //      'user_id' => $userId,
+        //  ]);
+        //  $notification->save();
 
          $mail = [
              'title' => "Ajout d'un logement",
              'body' => "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur."
          ];
 
-         Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail));
+
+         dispatch( new SendRegistrationEmail(Auth::user()->email, $mail['body'], $mail['title'], 2));
+
 
          $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
@@ -1612,17 +1456,13 @@ public function addHousing_step_16(Request $request, $housingId) {
          })->get();
 
          foreach ($adminUsers as $adminUser) {
-             $notification = new Notification();
-             $notification->user_id = $adminUser->id;
-             $notification->name = "Un nouveau logement vient d'être ajouté sur le site par un hôte.";
-             $notification->save();
 
              $mail = [
                  'title' => "Notification d'ajout d'un logement",
                  'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
              ];
 
-             Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
+            dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
          }
 
          return (new ServiceController())->apiResponse(200, ["housing_id" => $housing->id], 'Étape 17 terminée avec succès');
@@ -1650,6 +1490,405 @@ public function addHousing_step_16(Request $request, $housingId) {
 
         return null;
     }
+
+   /**
+ * @OA\Post(
+ *     path="/api/logement/store_step_8/{housingId}",
+ *     summary="Add or update housing step 8",
+ *   security={
+ *         {"bearerAuth": {}}
+ *     },
+ *     description="Add or update housing information for step 8 including categories and pieces.",
+ *     operationId="addHousingStep8",
+ *     tags={"Ajout de logement"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="ID of the housing to update",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="categories",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(
+ *                             property="id",
+ *                             type="integer"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="name",
+ *                             type="string"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="equipments",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="object",
+ *                                 @OA\Property(
+ *                                     property="equipments->equipmentsId",
+ *                                     type="array",
+ *                                     @OA\Items(type="integer")
+ *                                 ),
+ *                                 @OA\Property(
+ *                                     property="equipments->newEquipementName",
+ *                                     type="string"
+ *                                 )
+ *                             )
+ *                         ),
+ *                         @OA\Property(
+ *                             property="photos",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="string",
+ *                                 format="binary"
+ *                             )
+ *                         )
+ *                     )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="pieces",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(
+ *                             property="id",
+ *                             type="integer"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="name",
+ *                             type="string"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="nomnbre",
+ *                             type="integer",
+ *                             description="Number of pieces or quantity (use `quantity` if applicable)"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="quantity",
+ *                             type="integer",
+ *                             description="Number of pieces or quantity (use `nomnbre` if applicable)"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="photos",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="string",
+ *                                 format="binary"
+ *                             )
+ *                         )
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Step 8 completed successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="housing_id",
+ *                 type="integer"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Resource not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="error",
+ *                 type="string"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="error",
+ *                 type="string"
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function addHousing_step_8(Request $request, $housingId){
+    try {
+        $housing = Housing::whereId($housingId)->first();
+        if (!$housing) {
+            return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+        }
+        
+        $errorcheckOwner = $this->checkOwner($housingId);
+        if ($errorcheckOwner) {
+            return $errorcheckOwner;
+        }
+        $validationResponse = $this->validateStepOrder(8, $housingId);
+        if ($validationResponse) {
+            return $validationResponse;
+        }
+        
+        $this->deleteHousingData($housingId);
+
+        // Validation des catégories
+        foreach ($request->categories as $categorie) {
+            // $categorie = json_decode($categorieA, true);
+
+            if (!Category::find($categorie['id'])) {
+                return (new ServiceController())->apiResponse(404, [], 'Pièce non trouvée');
+            }
+
+            if (!isset($categorie['nombre']) || !$categorie['nombre']) {
+                return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " non renseigné");
+            }
+
+            if (!is_int($categorie['nombre'])) {
+                return (new ServiceController())->apiResponse(404, [], "Le nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " doit être un entier");
+            }
+
+            // return  count($categorie['equipments'][0]['equipmentsId']);
+
+            if (!$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
+                return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît pour la pièce ".Category::find($categorie['id'])->name);
+            }
+
+            $items = $categorie['equipments'][0]['equipmentsId'];
+            $uniqueItems = array_unique($items);
+
+            if (count($uniqueItems) < count($items)) {
+                return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id.");
+            }
+
+            foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                if (!is_int($equipmentId)) {
+                    return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
+                }
+
+                $equipment = Equipment::find($equipmentId);
+                if (!$equipment) {
+                    return (new ServiceController())->apiResponse(404, [], 'Équipement non trouvé pour le logement '.Category::find($categorie['id'])->name);
+                }
+
+                $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
+                    ->where('category_id', $categorie['id'])->exists();
+
+                if (!$EquipmentCategorieExists) {
+                    return (new ServiceController())->apiResponse(404, [], "Revoyez les id de catégorie et équipement que vous renvoyez. L'équipement ".Equipment::find($equipmentId)->name ." n'est pas associé à la pièce " . Category::find($categorie['id'])->name);
+                }
+            }
+
+            if (isset($categorie['equipments'][0]['newEquipementName']) && count($categorie['equipments'][0]['newEquipementName']) > 0) {
+                $items = $categorie['equipments'][0]['newEquipementName'];
+                $uniqueItems = array_unique($items);
+
+                if (count($uniqueItems) < count($items)) {
+                    return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux nouveaux équipements avec le même nom à la pièce ". Category::find($categorie['id'])->name);
+                }
+
+                foreach ($categorie['equipments'][0]['newEquipementName'] as $equipmentName) {
+                    $EquipmentExists = Equipment::whereName($equipmentName)->exists();
+                    if ($EquipmentExists) {
+                        return (new ServiceController())->apiResponse(404, [], "Un autre équipement ayant le même nom existe déjà dans la base de données ou a été exclu. $equipmentName existe déjà comme nom d'équipement");
+                    }
+                }
+            }
+
+            if (!isset($categorie['photos']) || count($categorie['photos']) == 0) {
+                return (new ServiceController())->apiResponse(404, [], "Veuillez ajouter des photos à la pièce " . Category::whereId($categorie['id'])->first()->name);
+            }
+        }
+
+        // Validation des pièces
+        if ($request->has('pieces')) {
+
+            $nouvellePieces = $request->pieces;
+
+            $names = [];
+            foreach ($nouvellePieces as $piece) {
+                // return $piece;
+                // $piece = json_decode($piece, true);
+
+                $name = $piece['name'];
+                if (in_array($name, $names)) {
+                    return (new ServiceController())->apiResponse(404, [], "Le nom de la pièce $name est dupliqué.");
+                } else {
+                    $names[] = $name;
+                }
+            }
+
+            foreach ($nouvellePieces as $piece) {
+                // $piece = json_decode($piece, true);
+
+                if (Category::whereName($piece['name'])->exists()) {
+                    return (new ServiceController())->apiResponse(404, [], "Une autre catégorie ayant le même nom existe déjà dans la base de données ou a été exclue. " . $piece['name'] . " existe déjà comme nom de pièce");
+                }
+
+                if (!isset($piece['nombre']) || !$piece['nombre']) {
+                    return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . $piece['name'] . " non renseigné");
+                }
+
+                if (!is_int($piece['nombre'])) {
+                    return (new ServiceController())->apiResponse(404, [], "Le nombre de  pièce " . $piece['name'] . " doit être un entier");
+                }
+
+                if (!isset($piece['equipments'][0]['equipmentsId']) || count($piece['equipments'][0]['equipmentsId']) == 0) {
+                    return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît à la pièce ". $piece['name'] );
+                }
+
+                $items = $piece['equipments'][0]['equipmentsId'];
+                $uniqueItems = array_unique($items);
+
+                if (count($uniqueItems) < count($items)) {
+                    return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id à la pièce ".$piece['name'] );
+                }
+
+                foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+                    if (!is_int($equipmentId)) {
+                        return (new ServiceController())->apiResponse(404, [], "Les ids équipements de la pièce ".$piece['name']." doivent être des entiers");
+                    }
+
+                    $equipment = Equipment::find($equipmentId);
+                    if (!$equipment) {
+                        return (new ServiceController())->apiResponse(404, [], ' Un équipement non trouvé pour la pièce '. $piece['name']);
+                    }
+                }
+
+                if (!isset($piece['photos']) || count($piece['photos']) == 0) {
+                    return (new ServiceController())->apiResponse(404, [], "Veuillez ajouter des photos à la pièce " . $piece['name']);
+                }
+            }
+        }
+
+        // Mise à jour des éléments pour une catégorie existante
+        foreach ($request->categories as $categorie) {
+            // $categorie = json_decode($categorieA, true);
+            $categorieModel = Category::find($categorie['id']);
+
+            // Mise à jour pour les équipements existants
+            foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                $equipment = Equipment::find($equipmentId);
+                if ($equipment) {
+                    $housingEquipment = new Housing_equipment();
+                    $housingEquipment->equipment_id = $equipmentId;
+                    $housingEquipment->category_id = $categorie['id'];
+                    $housingEquipment->housing_id = $housing->id;
+                    $housingEquipment->is_verified = true;
+                    $housingEquipment->save();
+                }
+            }
+
+            // Mise à jour pour les équipements inexistants
+            foreach ($categorie['equipments'][0]['newEquipementName'] as $newEquipment) {
+                $equipment = Equipment::whereName($newEquipment)->first();
+                if (!$equipment) {
+                    $equipment = new Equipment();
+                    $equipment->name = $newEquipment;
+                    $equipment->is_verified = false;
+                    $equipment->save();
+                }
+                $equipmentCategory = new Equipment_category();
+                $equipmentCategory->equipment_id = $equipment->id;
+                $equipmentCategory->category_id = $categorie['id'];
+                $equipmentCategory->save();
+
+                $housingEquipment = new Housing_equipment();
+                $housingEquipment->equipment_id = $equipment->id;
+                $housingEquipment->category_id = $categorie['id'];
+                $housingEquipment->housing_id = $housing->id;
+                $housingEquipment->is_verified = false;
+                $housingEquipment->save();
+            }
+
+            // Enregistrement des photos
+            foreach ($categorie['photos'] as $fileId) {
+                $photoModel = new File();
+                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
+                $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+                $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
+                $photoModel->path = $photoUrl;
+                $photoModel->save();
+
+                $housingCategoryFile = new Housing_category_file();
+                $housingCategoryFile->housing_id = $housing->id;
+                $housingCategoryFile->category_id = $categorie['id'];
+                $housingCategoryFile->file_id = $photoModel->id;
+                $housingCategoryFile->number = count($categorie['photos']);
+                $housingCategoryFile->is_verified = true;
+                $housingCategoryFile->save();
+            }
+        }
+
+        // Mise à jour des éléments pour une catégorie inexistante
+        foreach ($request->pieces as $piece) {
+            // $piece = json_decode($pieceA, true);
+            $existCategorie = Category::whereName($piece['name'])->first();
+
+            if (!$existCategorie) {
+                $newcategory = new Category();
+                $newcategory->name = $piece['name'];
+                $newcategory->is_verified = false;
+                $newcategory->save();
+            } else {
+                $newcategory = $existCategorie;
+            }
+
+            // Mise à jour pour les équipements existants
+            foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+                $equipment = Equipment::find($equipmentId);
+                if ($equipment) {
+                    $housingEquipment = new Housing_equipment();
+                    $housingEquipment->equipment_id = $equipmentId;
+                    $housingEquipment->category_id = $newcategory->id;
+                    $housingEquipment->housing_id = $housing->id;
+                    $housingEquipment->is_verified = true;
+                    $housingEquipment->save();
+                }
+            }
+
+            // Enregistrement des photos
+            foreach ($piece['photos'] as $fileId) {
+                $photoModel = new File();
+                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+                $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+                $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
+                $photoModel->path = $photoUrl;
+                $photoModel->save();
+
+                $housingCategoryFile = new Housing_category_file();
+                $housingCategoryFile->housing_id = $housing->id;
+                $housingCategoryFile->category_id = $newcategory->id;
+                $housingCategoryFile->file_id = $photoModel->id;
+                $housingCategoryFile->number = count($piece['photos']);
+                $housingCategoryFile->is_verified = true;
+                $housingCategoryFile->save();
+            }
+        }
+
+        $housing->step = 8;
+        $housing->save();
+
+        $data = ["housing_id" => $housing->id];
+
+        return (new ServiceController())->apiResponse(200, $data, 'Étape 8 terminée avec succès');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+
 }
 
 

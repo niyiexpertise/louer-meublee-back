@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\Category;
 use App\Models\Equipment;
 use App\Models\Notification;
@@ -785,18 +786,13 @@ class EquipementController extends Controller
         
         if ($housingEquipment) {
             $housingEquipment->update(['is_verified' => true]);
-            
-            $notification = new Notification([
-                'name' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
-                'user_id' => $housingEquipment->housing->user_id,
-            ]);
-            $notification->save();
 
             $mail = [
                 'title' => "Validation du nouvel équipement ajouté au logement",
                 'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
             ];
-            Mail::to($housingEquipment->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+
+            dispatch( new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
         }
 
         return response()->json(['data' => 'Équipement vérifié avec succès.'], 200);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\verification_document_partenaire;
 use App\Models\verification_statut_partenaire;
 use App\Models\User;
@@ -448,10 +449,6 @@ public function validateDocuments(Request $request)
         $role = Role::where('name','partenaire')->first();
         $grant = new AuthController();
         $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
-        $notification = new Notification();
-        $notification->user_id = $user_id;
-        $notification->name = "Votre demande d'être partenaire a été validée avec succès.";
-        $notification->save();
         $commission=new user_partenaire();
         $commission->user_id=$user->id;
         $commission->commission=5;
@@ -463,7 +460,8 @@ public function validateDocuments(Request $request)
             'title' => 'Demande d\'être partenaire',
             'body' => "Votre demande d'être partenaire a été validée avec succès."
         ];
-         Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
@@ -554,11 +552,6 @@ public function validateDocument(Request $request)
             $grant = new AuthController();
             $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
             
-            $notification = new Notification();
-            $notification->user_id = $user_id;
-            $notification->name = "Votre demande d'être partenaire a été validée avec succès.";
-            $notification->save();
-            
             $commission=new user_partenaire();
                 $commission->user_id=$user->id;
                 $commission->commission=5;
@@ -571,8 +564,8 @@ public function validateDocument(Request $request)
                 'title' => 'Demande d\'être hôte',
                 'body' => "Votre demande d'être partenaire a été validée avec succès."
             ];
-             Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
             
+             dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Models\Charge;
@@ -36,10 +37,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use Illuminate\Support\Facades\DB;
 class InscriptionController extends Controller
 {
    /**
- * @OA\Post(
+ * @OA\Get(
  *     path="/api/users/register",
  *     tags={"Inscription"},
  *     summary="Enregistrer un nouvel utilisateur",
@@ -92,146 +94,136 @@ class InscriptionController extends Controller
 
 
  public function register(Request $request)
- {
-     
-     
-     $validator = Validator::make($request->all(), [
-         'nom' => 'required|string',
-         'prenom' => 'required|string',
-         'password' => [
-             'required',
-             'string',
-             'min:8',
-             'confirmed',
-             'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
-         ],
-         'code_pays' => 'required|string',
-         'telephone' => 'required|numeric|unique:users',
-         'email' => 'required|email|unique:users',
-         'pays' => 'required|string',
-         'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-         'ville' => 'required|string',
-         'addresse' => 'required|string',
-         'sexe' => 'required|string',
-         'password_confirmation' => 'required|string',
-         'code_promo' => 'nullable|string',
-         
-     ]);
+{
+    $validator = Validator::make($request->all(), [
+        'nom' => 'required|string',
+        'prenom' => 'required|string',
+        'password' => [
+            'required',
+            'string',
+            'min:8',
+            'confirmed',
+            'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
+        ],
+        'code_pays' => 'required|string',
+        'telephone' => 'required|numeric|unique:users',
+        'email' => 'required|email|unique:users',
+        'pays' => 'required|string',
+        'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'ville' => 'required|string',
+        'addresse' => 'required|string',
+        'sexe' => 'required|string',
+        'password_confirmation' => 'required|string',
+        'code_promo' => 'nullable|string',
+    ]);
 
-     if ($validator->fails()) {
-        // return response()->json(['message' => 'User registered successfully'], 201);
-         return response()->json(['error' => $validator->errors()], 200);
-     }
+    if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 200);
+    }
 
-     $identity_profil_url ='';
-     
-     if ($request->hasFile('identity_profil')) {
-     $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
-     $identity_profil_path = $request->file('identity_profil')->move(public_path('image/photo_profil'), $identity_profil_name);
-     $base_url = url('/');
-     $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
-     }
+    $identity_profil_url = '';
 
-     $testEmail = new TestController();
+    if ($request->hasFile('identity_profil')) {
+        $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
+        $identity_profil_path = $request->file('identity_profil')->move(public_path('image/photo_profil'), $identity_profil_name);
+        $base_url = url('/');
+        $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
+    }
 
-     $test = $testEmail->verifyEmail($request->email);
+    $testEmail = new TestController();
+    $test = $testEmail->verifyEmail($request->email);
 
-     if($test == 'undeliverable'){
+    if ($test == 'undeliverable') {
         return response()->json([
             'error' => "Nous vous prions de saisir une adresse mail fonctionnelle",
         ], 200);
-     }
-     
-     $user = new User();
-     $user->lastname = strtoupper($request->nom);
-     $user->firstname = $request->prenom;
-     $user->password = bcrypt($request->password);
-     $user->telephone = $request->telephone;
-     $user->code_pays = $request->code_pays;
-     $user->email = $request->email;
-     $user->country = $request->pays;
-     $user->city = $request->ville;
-     $user->address = $request->addresse;
-     $user->sexe = $request->sexe;
-     $user->postal_code = $request->postal_code;
-     $user->file_profil = $identity_profil_url;
-     
-     if ($request->has('code_promo') and !empty($request->code_promo)) {
-        $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->first();
-        if (!$user_partenaire) {
-            return response()->json([
-                'error' => "Le code promo que vous avez entré n'existe pas.",
-            ], 200);
-        }else{
-            $user->partenaire_id=$user_partenaire->id;
-           
-        }
-     }
-     $user->save();
-     $right = Right::where('name','traveler')->first();
-     $user->assignRole('traveler');
-     $user_right = new User_right();
-     $user_right->user_id = $user->id;
-     $user_right->right_id = $right->id;
-     $user_right->save();
-
-    /* $userLanguages =$request->language_id;
-     if (!empty($request->language_id)) {
-        foreach ($userLanguages as $language_id) {
-            $userLanguage = new User_language([
-               'user_id' => $user->id,
-               'language_id' => $language_id,
-                 ]);
-   
-           $userLanguage->save();
-               }
-    } */
-
-     $created_at = $user->created_at;
-     $date_creation = Carbon::parse($created_at)->isoFormat('D MMMM YYYY [à] HH[h]mm');
-     $message_notification = "Compte créé avec succès le " . $date_creation;
-
-        $notification = new Notification([
-         'name' => $message_notification,
-         'user_id' =>$user->id,
-         
-     ]);
-     $notification->save();
-     $mail = [
-        'title' => 'Inscription',
-        'body' => "Compte créé avec succès le ". $date_creation
-     ];
-    try {
-        Mail::to($request->email)->send(new NotificationEmailwithoutfile($mail));
-     if ($request->has('code_promo')) {
-        $user_partenaire =user_partenaire::where('code_promo',$request->code_promo)->get();
-        $mailpartenaire = [
-            'title' => 'Inscription via votre code promo',
-            'body' => "Compte créé avec succès le ". $date_creation."via votre code promo"
-         ];
-         $message_notification = "Compte créé avec succès le ". $date_creation."via votre code promo";
-
-        $notification = new Notification([
-         'name' => $message_notification,
-         'user_id' =>$user_partenaire->user_id,
-          ]);
-        $notification->save();
-         
-         Mail::to($user_partenaire->user->email)->send(new NotificationEmailwithoutfile($mailpartenaire));
-     }
-    } catch (\Exception $e) {
-       
     }
-    
 
-     $portfeuille= new Portfeuille([
-         'solde' =>0,
-         'user_id' =>$user->id,
-         
-     ]);
-     $portfeuille->save();
+    DB::beginTransaction();
 
-     return response()->json(['message' => 'User registered successfully','users'=>$user], 201);
- }
+    try {
+        $user = new User();
+        $user->lastname = strtoupper($request->nom);
+        $user->firstname = $request->prenom;
+        $user->password = bcrypt($request->password);
+        $user->telephone = $request->telephone;
+        $user->code_pays = $request->code_pays;
+        $user->email = $request->email;
+        $user->country = $request->pays;
+        $user->city = $request->ville;
+        $user->address = $request->addresse;
+        $user->sexe = $request->sexe;
+        $user->postal_code = $request->postal_code;
+        $user->file_profil = $identity_profil_url;
+
+        if ($request->has('code_promo') and !empty($request->code_promo)) {
+            $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();
+            if (!$user_partenaire) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => "Le code promo que vous avez entré n'existe pas.",
+                ], 200);
+            } else {
+                $user->partenaire_id = $user_partenaire->id;
+            }
+        }
+
+        $user->save();
+        $right = Right::where('name', 'traveler')->first();
+        $user->assignRole('traveler');
+        $user_right = new User_right();
+        $user_right->user_id = $user->id;
+        $user_right->right_id = $right->id;
+        $user_right->save();
+
+        $created_at = $user->created_at;
+        $date_creation = Carbon::parse($created_at)->isoFormat('D MMMM YYYY [à] HH[h]mm');
+        $message_notification = "Compte créé avec succès le " . $date_creation;
+
+        $portfeuille = new Portfeuille([
+            'solde' => 0,
+            'user_id' => $user->id,
+        ]);
+        $portfeuille->save();
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+
+    $mail = [
+        'title' => 'Inscription',
+        'body' => "Compte créé avec succès le " . $date_creation,
+    ];
+
+    try {
+
+        $user = User::whereEmail($request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'error' => "Utilisateur non trouvé.",
+            ], 404);
+        }
+
+        dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+
+        if ($request->has('code_promo')) {
+            $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();
+            $mailpartenaire = [
+                'title' => 'Inscription via votre code promo',
+                'body' => "Compte créé avec succès le " . $date_creation . " via votre code promo .",
+            ];
+
+            dispatch( new SendRegistrationEmail($user_partenaire->user->email, $mailpartenaire['body'], $mailpartenaire['title'], 2));
+        }
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+
+    return response()->json(['message' => 'User registered successfully', 'users' => $user], 201);
+}
+
 
 }

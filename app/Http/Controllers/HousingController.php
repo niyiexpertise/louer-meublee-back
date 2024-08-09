@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Support\Facades\App;
 use Illuminate\Http\Request;
 use App\Models\Charge;
@@ -31,6 +33,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Favoris;
 use App\Models\UserVisiteHousing;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
@@ -801,8 +804,15 @@ public function ListeDesPhotosLogementAcceuil($id)
 
  /**
  * @OA\Post(
- *   path="/api/logement/index/ListeDesLogementsAcceuil",
+ *   path="/api/logement/index/ListeDesLogementsAcceuil/{userId}",
  *   tags={"Housing"},
+ *  @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the user connected",
+     *         @OA\Schema(type="integer")
+     *     ),
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
  *    @OA\RequestBody(
@@ -895,7 +905,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function ListeDesLogementsAcceuil(Request $request)
+ public function ListeDesLogementsAcceuil(Request $request,$userId)
     {
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
@@ -905,7 +915,36 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->get();
-        $data = $this->formatListingsData($listings);
+
+
+        $data = $this->formatListingsData($listings,$userId);
+               
+        $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
+        if ($request->has('user_id') ) {
+            $user_id= $request->input('user_id');
+            $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
+                }else{
+                    $insertvisite=$controllervisitesite->recordSiteVisit();
+                }
+       
+
+             return response()->json(['data' => $data], 200);
+    }
+
+
+    public function ListeDesLogementsAcceuilAuth(Request $request)
+    {
+        $listings = Housing::where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->get();
+
+        $userId = $request->query('userId');
+        $data = $this->formatListingsData($listings,$userId);
                
         $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
         if ($request->has('user_id') ) {
@@ -1720,18 +1759,14 @@ public function getListingsByNightPriceMin($price)
      $adminUsers = User::where('is_admin', 1)->get();
  
      foreach ($adminUsers as $adminUser) {
-         $notification = new Notification([
-             'name' => $notificationText,
-             'user_id' => $adminUser->id,
-         ]);
-         $notification->save();
- 
+
          $mail = [
              'title' => 'Mise à jour de logement',
              'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
          ];
 
-         Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
+
+         dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
      }
  
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
@@ -1853,103 +1888,112 @@ public function updateInsensibleHousing(Request $request, $id)
 
 
 
-public function formatListingsData($listings)
-    {
-
-        foreach ($listings as $listing){
-            (new PromotionController())->actionRepetitif($listing->id);
-        }
-        return $listings->map(function ($listing) {
-            return [
-                'id_housing' => $listing->id,
-                'housing_type_id' => $listing->housing_type_id,
-                'housing_type_name' => $listing->housingType->name,
-                'property_type_id' => $listing->property_type_id,
-                'property_type_name' => $listing->propertyType->name,
-                'user_id' => $listing->user_id,
-                'name_housing' => $listing->name,
-                'description' => $listing->description,
-                'number_of_bed' => $listing->number_of_bed,
-                'number_of_traveller' => $listing->number_of_traveller,
-                'sit_geo_lat' => $listing->sit_geo_lat,
-                'sit_geo_lng' => $listing->sit_geo_lng,
-                'country' => $listing->country,
-                'address' => $listing->address,
-                'city' => $listing->city,
-                'department' => $listing->department,
-                'is_camera' => $listing->is_camera,
-                'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => 
-                +$listing->is_animal_exist,
-                'interior_regulation' => $listing->interior_regulation,
-                'telephone' => $listing->telephone,
-                'code_pays' => $listing->code_pays,
-                'surface' => $listing->surface,
-                'price' => $listing->price,
-                'status' => $listing->status,
-                'arrived_independently' => $listing->arrived_independently,
-                'is_instant_reservation' => $listing->is_instant_reservation,
-                'minimum_duration' => $listing->minimum_duration,
-                'time_before_reservation' => $listing->time_before_reservation,
-                'cancelation_condition' => $listing->cancelation_condition,
-                'departure_instruction' => $listing->departure_instruction,
-                'is_accept_arm' => $listing->is_accept_arm,
-                'is_accept_noise' => $listing->is_accept_noise,
-                'is_accept_smoking' => $listing->is_accept_smoking,
-                'is_accept_chill' => $listing->is_accept_smoking,
-                'is_accept_alcool' => $listing->is_accept_alccol,
-                'is_deleted' => $listing->is_deleted,
-                'is_blocked' => $listing->is_blocked,
-                'is_accept_anulation'=> $listing->is_accept_anulation,
-                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
-                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
-                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
-                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
-                
-                'photos_logement' => $listing->photos->map(function ($photo) {
-                    if($photo->is_verified){
-                        return [
-                            'id_photo' => $photo->id,
-                            'path' => $photo->path,
-                            'extension' => $photo->extension,
-                            'is_couverture' => $photo->is_couverture,
-                        ];
-                    }
-                }),
-                'user' => [
-                    'id' => $listing->user->id,
-                    'lastname' => $listing->user->lastname,
-                    'firstname' => $listing->user->firstname,
-                    'telephone' => $listing->user->telephone,
-                    'code_pays' => $listing->user->code_pays,
-                    'email' => $listing->user->email,
-                    'country' => $listing->user->country,
-                    'file_profil' => $listing->user->file_profil,
-                    'city' => $listing->user->city,
-                    'address' => $listing->user->address,
-                    'sexe' => $listing->user->sexe,
-                    'postal_code' => $listing->user->postal_code,
-                    'is_admin' => $listing->user->is_admin,
-                    'is_traveller' => $listing->user->is_traveller,
-                    'is_hote' => $listing->user->is_hote,
-                ],
-                'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
-                    return [
-                        'category_id' => $categoryFiles->first()->category_id,
-                        'category_name' => $categoryFiles->first()->category->name,
-                        'number' => $categoryFiles->first()->number,
-                        'photos_category' => $categoryFiles->map(function ($categoryFile) {
-                            return [
-                                'file_id' => $categoryFile->file->id,
-                                'path' => $categoryFile->file->path,
-                            ];
-                        }),
-                    ];
-                })->values(),
-                "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average']
-            ];
-        });
+public function formatListingsData($listings,$userId=0)
+{
+    foreach ($listings as $listing){
+        (new PromotionController())->actionRepetitif($listing->id);
     }
+
+    
+
+    // return Auth::guard('sanctum')->user();
+
+    return $listings->map(function ($listing) use ($userId) {
+        return [
+            'id_housing' => $listing->id,
+            'housing_type_id' => $listing->housing_type_id ?? 'non renseigné',
+            'housing_type_name' => $listing->housingType->name ?? 'non renseigné',
+            'property_type_id' => $listing->property_type_id ?? 'non renseigné',
+            'property_type_name' => $listing->propertyType->name ?? 'non renseigné',
+            'user_id' => $listing->user_id ?? 'non renseigné',
+            'name_housing' => $listing->name ?? 'non renseigné',
+            'description' => $listing->description ?? 'non renseigné',
+            'number_of_bed' => $listing->number_of_bed ?? 'non renseigné',
+            'number_of_traveller' => $listing->number_of_traveller ?? 'non renseigné',
+            'sit_geo_lat' => $listing->sit_geo_lat ?? 'non renseigné',
+            'sit_geo_lng' => $listing->sit_geo_lng ?? 'non renseigné',
+            'country' => $listing->country ?? 'non renseigné',
+            'address' => $listing->address ?? 'non renseigné',
+            'city' => $listing->city ?? 'non renseigné',
+            'department' => $listing->department ?? 'non renseigné',
+            'is_camera' => $listing->is_camera ?? 'non renseigné',
+            'is_accepted_animal' => $listing->is_accepted_animal ?? 'non renseigné',
+            'is_animal_exist' => $listing->is_animal_exist ?? 'non renseigné',
+            'interior_regulation' => $listing->interior_regulation ?? 'non renseigné',
+            'telephone' => $listing->telephone ?? 'non renseigné',
+            'code_pays' => $listing->code_pays ?? 'non renseigné',
+            'surface' => $listing->surface ?? 'non renseigné',
+            'price' => $listing->price ?? 'non renseigné',
+            'status' => $listing->status ?? 'non renseigné',
+            'arrived_independently' => $listing->arrived_independently ?? 'non renseigné',
+            'is_instant_reservation' => $listing->is_instant_reservation ?? 'non renseigné',
+            'minimum_duration' => $listing->minimum_duration ?? 'non renseigné',
+            'time_before_reservation' => $listing->time_before_reservation ?? 'non renseigné',
+            'cancelation_condition' => $listing->cancelation_condition ?? 'non renseigné',
+            'departure_instruction' => $listing->departure_instruction ?? 'non renseigné',
+            'is_accept_arm' => $listing->is_accept_arm ?? 'non renseigné',
+            'is_accept_noise' => $listing->is_accept_noise ?? 'non renseigné',
+            'is_accept_smoking' => $listing->is_accept_smoking ?? 'non renseigné',
+            'is_accept_chill' => $listing->is_accept_chill ?? 'non renseigné',
+            'is_accept_alcool' => $listing->is_accept_alcool ?? 'non renseigné',
+            'is_deleted' => $listing->is_deleted ?? 'non renseigné',
+            'is_blocked' => $listing->is_blocked ?? 'non renseigné',
+            'is_accept_anulation' => $listing->is_accept_anulation ?? 'non renseigné',
+            'delai_partiel_remboursement' => $listing->delai_partiel_remboursement ?? 'non renseigné',
+            'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? 'non renseigné',
+            'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? 'non renseigné',
+            'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? 'non renseigné',
+            'photos_logement' => $listing->photos->map(function ($photo) {
+                if ($photo->is_verified) {
+                    return [
+                        'id_photo' => $photo->id,
+                        'path' => $photo->path ?? 'non renseigné',
+                        'extension' => $photo->extension ?? 'non renseigné',
+                        'is_couverture' => $photo->is_couverture ?? 'non renseigné',
+                    ];
+                }
+            })->filter(), // Use filter to remove null values if any
+            'user' => [
+                'id' => $listing->user->id ?? 'non renseigné',
+                'lastname' => $listing->user->lastname ?? 'non renseigné',
+                'firstname' => $listing->user->firstname ?? 'non renseigné',
+                'telephone' => $listing->user->telephone ?? 'non renseigné',
+                'code_pays' => $listing->user->code_pays ?? 'non renseigné',
+                'email' => $listing->user->email ?? 'non renseigné',
+                'country' => $listing->user->country ?? 'non renseigné',
+                'file_profil' => $listing->user->file_profil ?? 'non renseigné',
+                'city' => $listing->user->city ?? 'non renseigné',
+                'address' => $listing->user->address ?? 'non renseigné',
+                'sexe' => $listing->user->sexe ?? 'non renseigné',
+                'postal_code' => $listing->user->postal_code ?? 'non renseigné',
+                'is_admin' => $listing->user->is_admin ?? 'non renseigné',
+                'is_traveller' => $listing->user->is_traveller ?? 'non renseigné',
+                'is_hote' => $listing->user->is_hote ?? 'non renseigné',
+            ],
+            'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
+                return [
+                    'category_id' => $categoryFiles->first()->category_id ?? 'non renseigné',
+                    'category_name' => $categoryFiles->first()->category->name ?? 'non renseigné',
+                    'number' => $categoryFiles->first()->number ?? 'non renseigné',
+                    'photos_category' => $categoryFiles->map(function ($categoryFile) {
+                        return [
+                            'file_id' => $categoryFile->file->id ?? 'non renseigné',
+                            'path' => $categoryFile->file->path ?? 'non renseigné',
+                        ];
+                    }),
+                ];
+            })->values(),
+            "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average'] ?? 'non renseigné',
+           'is_favorite' => $userId != 0 ? DB::table('favoris')->where('user_id', $userId)->where('housing_id', $listing->id)->exists() : false
+
+
+        ];
+    });
+}
+
+
+
+
 
     /**
  * @OA\Put(
@@ -2401,17 +2445,12 @@ public function enableHousing($housingId)
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
-     $notification = new Notification();
-     $notification->user_id = $adminUser->user_id;
-     $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}.";
-     $notification->save();
-
           $mail = [
          "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
         "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
      ];
     
-         Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+         dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
        }
              return response()->json(['data' => 'Photos de logement ajouté avec succès'], 200);
 
@@ -2641,6 +2680,7 @@ public function validatePhoto(Request $request, $photoId)
  */
 public function getAvailableHousingsBetweenDates(Request $request)
 {
+
     $startDateParam = $request->query('start_date');
     $endDateParam = $request->query('end_date');
 
@@ -2659,11 +2699,12 @@ public function getAvailableHousingsBetweenDates(Request $request)
         ], 200);
     }
 
+
     if ($startDate > $endDate) {
         return response()->json([
             'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
         ], 200);
-    }
+    }   
 
     if ($startDate < Carbon::now()->startOfDay()) {
         return response()->json([

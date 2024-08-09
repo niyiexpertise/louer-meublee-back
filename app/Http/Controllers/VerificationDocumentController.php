@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\verification_document;
 use App\Models\verification_statut;
 use App\Models\User;
@@ -294,6 +295,8 @@ public function index()
 
                  try {
                      Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths));
+
+                     dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
                  } catch (\Exception $e) {
                      // Gérer l'erreur de l'envoi de l'email
                  }
@@ -472,7 +475,9 @@ public function validateDocuments(Request $request)
             'title' => 'Demande d\'être hôte',
             'body' => "Votre demande d'être hôte a été validée avec succès."
         ];
-         Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
+
+
+         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 1));
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
@@ -563,11 +568,6 @@ public function validateDocument(Request $request)
             $grant = new AuthController();
             $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
 
-            $notification = new Notification();
-            $notification->user_id = $user_id;
-            $notification->name = "Votre demande d'être hôte a été validée avec succès.";
-            $notification->save();
-
             $commission=new Commission();
             $commission->user_id=$user->id;
             $commission->valeur=5;
@@ -577,8 +577,7 @@ public function validateDocument(Request $request)
                 'title' => 'Demande d\'être hôte',
                 'body' => "Votre demande d'être hôte a été validée avec succès."
             ];
-             Mail::to($user->email)->send(new NotificationEmailwithoutfile($mail) );
-
+             dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
         }
 

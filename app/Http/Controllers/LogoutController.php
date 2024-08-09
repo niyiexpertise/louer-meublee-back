@@ -63,6 +63,11 @@ public function logout(Request $request) {
     try {
         
         if (Auth::check()) {
+
+        $user = User::whereId(Auth::user()->id)->first()
+        ;
+        $user->is_double_authentification = 0;
+        $user->save();
             
             $accessToken = $request->bearerToken();
 
@@ -96,7 +101,7 @@ public function logout(Request $request) {
                 'message' => 'User not authenticated'
             ], 200);
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json([
             'status' => false,
             'message' => $e->getMessage()

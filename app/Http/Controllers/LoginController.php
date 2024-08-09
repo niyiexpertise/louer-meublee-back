@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Models\Charge;
@@ -130,6 +131,8 @@ public function login(Request $request){
                 // Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
 
                 try {
+                    $user->is_double_authentification = 0;
+                    $user->save();
                     Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
                 } catch (\Exception $e) {
 
@@ -295,13 +298,27 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         // $code = User::where('code', $verification)->first();
-        $code =User::whereId(Auth::user()->id)->whereCode($verification)->first();
-        if ($code == null) {
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Check failed',
-            ]);
+       
+
+        if(!(User::whereId(Auth::user()->id)->first())){
+            return (new ServiceController())->apiResponse(404,[], 'Utilisateur non trouvé');
         }
+
+        if(User::whereId(Auth::user()->id)->first()->code !=$verification ){
+            return [User::whereId(Auth::user()->id)->first()->code,$verification]; 
+            return (new ServiceController())->apiResponse(404,[], "Ce code n'appartient pas à l'utilisateur connecté");
+        }
+
+        $code = User::where([
+            ['id', Auth::user()->id],
+            ['code', $verification]
+        ])->first();
+
+
+    //     if(!$code)
+    //   {
+    //         return (new ServiceController())->apiResponse(404,[], 'Utilisateur ayant ce code non trouvé');
+    //     }
         $code->code=0;  
         $code->is_double_authentification = true;
         $code->save();
@@ -456,7 +473,8 @@ public function password_recovery_start_step(Request $request){
             ];
 
 
-            Mail::to($request->email)->send(new NotificationEmail($mail) );
+
+            dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
 
             return response()->json([
                 'status_code' => 200,
@@ -552,5 +570,16 @@ public function password_recovery_end_step(Request $request){
             return response()->json($e->getMessage());
             }
 }
+
+    public function returnAuthCommission(){
+        $user = Auth::user();
+        if(!$user){
+            return (new ServiceController())->apiResponse(403, [], "UNAUTHENTIFICATED");
+        }
+
+        $commission = $user->commission->valeur ?? "null";
+
+        return $commission;
+    }
 
 }

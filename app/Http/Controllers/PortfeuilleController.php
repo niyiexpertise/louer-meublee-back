@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\Portfeuille;
 use Illuminate\Http\Request;
 use App\Models\Charge;
@@ -142,18 +143,15 @@ class PortfeuilleController extends Controller
         $portefeuilleTransaction->save();
 
 
-        $notification = new Notification([
-            'name' => "Votre portefeuille a été crédité de {$amount} FCFA Nouveau solde : {$portefeuille->solde} FCFA",
-            'user_id' => $userId,
-        ]);
-        $notification->save();
+
 
         $mail = [
             "title" => "Confirmation de dépôt sur votre portefeuille",
             "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
         ];
 
-  Mail::to(User::find($userId)->email)->send(new NotificationEmailwithoutfile($mail) );
+
+  dispatch( new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
     
         return response()->json([
             'message' => 'Le portefeuille a été crédité avec succès.',

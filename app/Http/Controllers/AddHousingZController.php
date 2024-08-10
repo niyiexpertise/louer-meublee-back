@@ -1180,6 +1180,7 @@ public function addHousing_step_16(Request $request, $housingId) {
             'reduction_value_night_number' => 'required|array',
         ]);
 
+
         $message = [];
         if ($validator->fails()) {
             $message[] = $validator->errors();
@@ -1200,17 +1201,17 @@ public function addHousing_step_16(Request $request, $housingId) {
         }
 
         // Validation des nombres de nuits
-        foreach ($nightNumbers as $nightNumber) {
-            if (!is_int($nightNumber) || $nightNumber <= 0) {
-                return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
-            }
-        }
+        // foreach ($nightNumbers as $nightNumber) {
+        //     if (!is_int($nightNumber) || $nightNumber <= 0) {
+        //         return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
+        //     }
+        // }
 
-        foreach ($values as $value) {
-            if (!is_numeric($value) || $value <= 0) {
-                return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nulle.');
-            }
-        }
+        // foreach ($values as $value) {
+        //     if (!is_numeric($value) || $value <= 0) {
+        //         return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nulle.');
+        //     }
+        // }
 
 
 
@@ -1484,9 +1485,9 @@ public function addHousing_step_16(Request $request, $housingId) {
         }
 
 
-        if ($housing->step < $currentStep - 1) {
-            return (new ServiceController())->apiResponse(404, [], 'Vous devez compléter l\'étape ' . ($currentStep - 1) . ' avant de passer à l\'étape ' . $currentStep . '.');
-        }
+        // if ($housing->step < $currentStep - 1) {
+        //     return (new ServiceController())->apiResponse(404, [], 'Vous devez compléter l\'étape ' . ($currentStep - 1) . ' avant de passer à l\'étape ' . $currentStep . '.');
+        // }
 
         return null;
     }

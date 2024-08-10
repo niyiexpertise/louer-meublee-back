@@ -80,7 +80,6 @@ class ReservationController extends Controller
 
         }
         if ($payementmethode == "portfeuille") {
-           
 
             $user_id = Auth::id();
             $portefeuille = Portfeuille::where('user_id', $user_id)->first();

@@ -5556,6 +5556,172 @@
                 ]
             }
         },
+        "/api/reservation/soldeReservation": {
+            "post": {
+                "tags": [
+                    "Dashboard traveler"
+                ],
+                "summary": "Effectuer le paiement d'une réservation",
+                "operationId": "6436f8a8a49d18a61fd6b70debface44",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reservation_id",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "reservation_id": {
+                                        "description": "ID de la réservation",
+                                        "type": "integer",
+                                        "example": 123
+                                    },
+                                    "payment_method": {
+                                        "description": "Méthode de paiement",
+                                        "type": "string",
+                                        "example": "portfeuille"
+                                    },
+                                    "id_transaction": {
+                                        "description": "ID de la transaction (facultatif)",
+                                        "type": "string",
+                                        "example": "txn_abc123"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement (facultatif)",
+                                        "type": "string",
+                                        "example": "completed"
+                                    },
+                                    "valeur_payee": {
+                                        "description": "Valeur payée (facultatif, uniquement pour 'portfeuille')",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement effectué avec succès"
+                                        },
+                                        "reservation": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 123
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 456
+                                                },
+                                                "montant_total": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "valeur_payee": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "montant_a_payer": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous ne pouvez pas terminer le paiement d'une réservation qui ne peut être payé par tranche"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès interdit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'êtes pas autorisé à effectuer ce paiement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation non trouvée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur s'est produite : message de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/partenaire/users": {
             "get": {
                 "tags": [
@@ -8218,20 +8384,20 @@
                 }
             }
         },
-        "/api/logement/index/ListeDesLogementsAcceuil/{userId}": {
+        "/api/logement/index/ListeDesLogementsAcceuil": {
             "post": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements pour l'accueil et pour l'admin en même temps.",
                 "description": "Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
-                "operationId": "ca411854cf5e86a5b61398d3d74f9830",
+                "operationId": "a3b238531dbd2117bd75fe12636926da",
                 "parameters": [
                     {
-                        "name": "userId",
-                        "in": "path",
+                        "name": "id",
+                        "in": "query",
                         "description": "ID of the user connected",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "integer"
                         }

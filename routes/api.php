@@ -1438,7 +1438,7 @@ Route::get('/preference/index', [PreferenceController::class, 'index']);
 Route::get('/language/index', [LanguageController::class, 'index']);
 
 Route::prefix('logement')->group(function () {
-   Route::post('/index/ListeDesLogementsAcceuil/{userId}', [HousingController::class, 'ListeDesLogementsAcceuil']);
+   Route::post('/index/ListeDesLogementsAcceuil', [HousingController::class, 'ListeDesLogementsAcceuil']);
    Route::get('/index/ListeDesPhotosLogementAcceuil/{id}', [HousingController::class, 'ListeDesPhotosLogementAcceuil']);
    Route::post('/ShowDetailLogementAcceuil', [HousingController::class, 'ShowDetailLogementAcceuil']);
    Route::get('/filterby/typehousing/{id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByTypehousing']);
@@ -1511,6 +1511,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::get('getPendingConfirmations', [DashBoardTravelerController::class, 'getPendingConfirmations'])
             ->name('reservation.getPendingConfirmations')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getPendingConfirmations');
+
+            Route::post('soldeReservation', [DashBoardTravelerController::class, 'soldeReservation'])
+            ->name('reservation.soldeReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.soldeReservation');
 
 
         });

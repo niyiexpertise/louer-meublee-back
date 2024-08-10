@@ -804,12 +804,12 @@ public function ListeDesPhotosLogementAcceuil($id)
 
  /**
  * @OA\Post(
- *   path="/api/logement/index/ListeDesLogementsAcceuil/{userId}",
+ *   path="/api/logement/index/ListeDesLogementsAcceuil",
  *   tags={"Housing"},
  *  @OA\Parameter(
-     *         name="userId",
-     *         in="path",
-     *         required=true,
+     *         name="id",
+     *         in="query",
+     *         required=false,
      *         description="ID of the user connected",
      *         @OA\Schema(type="integer")
      *     ),
@@ -905,7 +905,7 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function ListeDesLogementsAcceuil(Request $request,$userId)
+ public function ListeDesLogementsAcceuil(Request $request)
     {
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
@@ -915,6 +915,15 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->get();
+
+        $userId = intval($request->query('id'));
+
+        if($request->query('id')){
+            if($userId<=0){
+                return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
+            }
+        }
+
 
 
         $data = $this->formatListingsData($listings,$userId);
@@ -1896,7 +1905,7 @@ public function formatListingsData($listings,$userId=0)
 
     
 
-    // return Auth::guard('sanctum')->user();
+    // return DB::table('favoris')->where('user_id', 9)->where('housing_id', 2)->exists() ;
 
     return $listings->map(function ($listing) use ($userId) {
         return [

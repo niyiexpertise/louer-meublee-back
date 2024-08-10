@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Payement;
+use App\Models\Portfeuille;
+use App\Models\Portfeuille_transaction;
 use App\Models\Reservation;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashBoardTravelerController extends Controller
 {
@@ -207,9 +211,12 @@ class DashBoardTravelerController extends Controller
             try {
                 $userId = Auth::id();
 
+                
                 $data["data"] = Reservation::where('user_id', $userId)
-                                ->whereColumn('valeur_payee', '<', 'montant_total')
-                                ->get();
+                ->where('is_tranche_paiement', true)
+                ->whereColumn('valeur_payee', '<', 'montant_a_paye')
+                ->get();
+
                 $data["nombre"] = count($data["data"]) ;
 
                 return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations non entièrement payées.');
@@ -257,5 +264,233 @@ class DashBoardTravelerController extends Controller
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
         }
+
+
+      /**
+ * @OA\Post(
+ *     path="/api/reservation/soldeReservation",
+ *     summary="Effectuer le paiement d'une réservation",
+ *     tags={"Dashboard traveler"},
+ *  security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 required={"reservation_id", "payment_method"},
+ *                 @OA\Property(
+ *                     property="reservation_id",
+ *                     description="ID de la réservation",
+ *                     type="integer",
+ *                     example=123
+ *                 ),
+ *                 @OA\Property(
+ *                     property="payment_method",
+ *                     description="Méthode de paiement",
+ *                     type="string",
+ *                     example="portfeuille"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="id_transaction",
+ *                     description="ID de la transaction (facultatif)",
+ *                     type="string",
+ *                     example="txn_abc123"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="statut_paiement",
+ *                     description="Statut du paiement (facultatif)",
+ *                     type="string",
+ *                     example="completed"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="valeur_payee",
+ *                     description="Valeur payée (facultatif, uniquement pour 'portfeuille')",
+ *                     type="number",
+ *                     format="float",
+ *                     example=50.00
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Paiement effectué avec succès",
+ * 
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Paiement effectué avec succès"
+ *             ),
+ *             @OA\Property(
+ *                 property="reservation",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="id",
+ *                     type="integer",
+ *                     example=123
+ *                 ),
+ *                 @OA\Property(
+ *                     property="user_id",
+ *                     type="integer",
+ *                     example=456
+ *                 ),
+ *                 @OA\Property(
+ *                     property="montant_total",
+ *                     type="number",
+ *                     format="float",
+ *                     example=100.00
+ *                 ),
+ *                 @OA\Property(
+ *                     property="valeur_payee",
+ *                     type="number",
+ *                     format="float",
+ *                     example=50.00
+ *                 ),
+ *             ),
+ *             @OA\Property(
+ *                 property="montant_a_payer",
+ *                 type="number",
+ *                 format="float",
+ *                 example=50.00
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Requête invalide",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Vous ne pouvez pas terminer le paiement d'une réservation qui ne peut être payé par tranche"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès interdit",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Vous n'êtes pas autorisé à effectuer ce paiement"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation non trouvée",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Réservation non trouvée"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="error",
+ *                 type="string",
+ *                 example="Une erreur s'est produite : message de l'erreur"
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
+
+
+
+        public function soldeReservation(Request $request)
+        {
+            $validatedData = $request->validate([
+                'reservation_id' => 'required|exists:reservations,id',
+                'payment_method' => 'required|string',
+                'id_transaction' => 'nullable|string',
+                'statut_paiement' => 'boolean',
+                'valeur_payee' =>'required'
+            ]);
+
+            $user_id = Auth::id();
+            $reservation = Reservation::find($validatedData['reservation_id']);
+
+            if (!$reservation) {
+                return response()->json(['message' => 'Réservation non trouvée'], 404);
+            }
+
+            if ($reservation->user_id != $user_id) {
+                return response()->json(['message' => 'Vous n\'êtes pas autorisé à effectuer ce paiement'], 403);
+            }
+
+            if (!$reservation->is_tranche_paiement) {
+                return response()->json(['message' => "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche "], 400);
+            }
+
+            if($request->valeur_payee < ($reservation->montant_total / 2)){
+                return response()->json(['message' => "Le montant à payer est ".$reservation->montant_total / 2], 400);
+            }
+
+            $required_paid_value = $reservation->montant_total / 2;
+
+
+            DB::beginTransaction();
+
+            try {
+                $reservation->valeur_payee += $required_paid_value;
+                $reservation->save();
+
+                $paymentData = [
+                    'reservation_id' => $reservation->id,
+                    'amount' => $required_paid_value,
+                    'payment_method' => $validatedData['payment_method'],
+                    'id_transaction' => $validatedData['id_transaction'],
+                    'statut' => $validatedData['statut_paiement'],
+                    'is_confirmed' => true,
+                    'is_canceled' => false,
+                ];
+
+                Payement::create($paymentData);
+
+                if ($validatedData['payment_method'] == "portfeuille") {
+                    $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+                    $portefeuille->solde -= $validatedData['valeur_payee'];
+
+                    $portefeuilleTransaction = new Portfeuille_transaction();
+                    $portefeuilleTransaction->debit = true;
+                    $portefeuilleTransaction->credit = false;
+                    $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+                    $portefeuilleTransaction->motif = "Solder une réservation avec portefeuille";
+                    $portefeuilleTransaction->reservation_id = $reservation->id;
+                    $portefeuilleTransaction->payment_method = $validatedData['payment_method']??null;
+                    $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
+                    $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+                    $portefeuilleTransaction->save();
+                    $portefeuille->save();
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Paiement effectué avec succès',
+                    'reservation' => $reservation,
+                    'montant_a_payer' => $required_paid_value
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);
+            }
+        }
+
 
 }

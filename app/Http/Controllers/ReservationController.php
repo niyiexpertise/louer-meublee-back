@@ -50,11 +50,11 @@ class ReservationController extends Controller
             ->where('is_actif', 1)
             ->where('is_destroy', 0)
             ->first();
-    
+
         if (!$housing) {
             return ['is_allowed' => false, 'message' => 'Logement non trouvé ou a été supprimé ou désactivé par l\'hôte'];
         }
-    
+
         if (!$housing->is_accepted_animal && $number_of_domestical_animal > 0) {
             return ['is_allowed' => false, 'message' => 'Le logement n\'accepte pas les animaux domestiques'];
         }
@@ -63,14 +63,14 @@ class ReservationController extends Controller
         if ($new_start >= $new_end) {
             return ['is_allowed' => false, 'message' => 'La date de fin doit être postérieure à la date de début'];
         }
-    
-    
+
+
         $stay_duration = $new_end->diffInDays($new_start);
-    
+
         if ($stay_duration < $housing->minimum_duration) {
             return ['is_allowed' => false, 'message' => "La durée minimale de séjour est de {$housing->minimum_duration} jours"];
         }
-    
+
         if ($valeur_paye > $montant_total) {
 
             return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
@@ -80,7 +80,7 @@ class ReservationController extends Controller
 
         }
         if ($payementmethode == "portfeuille") {
-           
+
 
             $user_id = Auth::id();
             $portefeuille = Portfeuille::where('user_id', $user_id)->first();
@@ -88,15 +88,15 @@ class ReservationController extends Controller
             if (!$portefeuille) {
                 return ['is_allowed' => false, 'message' => 'Portefeuille introuvable'];
             }
-    
+
             if ($portefeuille->solde < $valeur_paye) {
                 return ['is_allowed' => false, 'message' => 'Solde insuffisant dans le portefeuille pour pouvoir réserver'];
             }
         }
-        
+
         if ($is_tranche_paiement == 1) {
             $required_paid_value = $montant_total / 2;
-            
+
             if ($valeur_paye < $required_paid_value) {
                 return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
             }
@@ -106,12 +106,12 @@ class ReservationController extends Controller
             }
         }
         $existing_reservations = Reservation::where('housing_id', $housing_id)->get();
-    
+
         foreach ($existing_reservations as $reservation) {
             $time_before_reservation = $housing->time_before_reservation;
-    
+
             $existing_end = Carbon::parse($reservation->date_of_end);
-    
+
             $minimum_start_date = $existing_end->copy()->addDays($time_before_reservation);
             $existing_start = Carbon::parse($reservation->date_of_starting);
             if ($new_start <= $existing_end && $new_end >= $existing_start) {
@@ -119,14 +119,14 @@ class ReservationController extends Controller
             }
             if ($new_start < $minimum_start_date && $new_end >= $minimum_start_date) {
                 return ['is_allowed' => false, 'message' => 'La nouvelle réservation commence trop tôt par rapport au délai requis'];
-            }    
-            
-            
+            }
+
+
         }
-    
+
         return ['is_allowed' => true, 'message' => 'Réservation autorisée'];
     }
-    
+
 /**
  * @OA\Post(
  *     path="/api/reservation/store",
@@ -303,7 +303,7 @@ class ReservationController extends Controller
  *                     example=1,
  *                     description="montant_a_paye"
  *                 ),
- * 
+ *
  *             )
  *         )
  *     ),
@@ -497,8 +497,8 @@ public function storeReservationWithPayment(Request $request)
         return response()->json(['error' => 'Une erreur s\'est produite'.$e->getMessage()], 500);
     }
 }
-   
-    
+
+
     /**
      * @OA\Put(
      *     path="/api/reservation/hote_confirm_reservation/{idReservation}",
@@ -645,7 +645,7 @@ public function storeReservationWithPayment(Request $request)
             $transaction->reservation_id = $reservation->id;
             $transaction->payment_method = "portfeuille";
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
-        
+
             $transaction->valeur_commission = 0;
               $transaction->montant_commission = 0;
               $transaction->montant_restant = 0;
@@ -677,7 +677,7 @@ public function storeReservationWithPayment(Request $request)
                 "title" => "Rejet d'une réservation",
                 "body" => " Une reservation vient d\être annulé  par l hote pour le motif suivant << $request->motif_rejet_hote >>  et le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}.il a pour identifiant "
             ];
-            
+
       Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
           }
           return response()->json([
@@ -702,7 +702,7 @@ public function storeReservationWithPayment(Request $request)
         $notification->user_id = $reservation->user_id;
         $notification->name = $mailtraveler['body'];
         $notification->save();
-        
+
        Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mailtraveler) );
 
         $portefeuilleHote = Portfeuille::find($reservation->housing->user->portfeuille->id);
@@ -710,7 +710,7 @@ public function storeReservationWithPayment(Request $request)
         $notification->user_id = $reservation->housing->user_id;
         $notification->name = $mailhote['body'];
         $notification->save();
-        
+
       Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote) );
 
       $right = Right::where('name','admin')->first();
@@ -725,7 +725,7 @@ public function storeReservationWithPayment(Request $request)
                 "title" => "Annulation d'une réservation par un voyageur",
                 "body" => "Une réservation vient d'être annulée par un client avec l'identifiant {$reservation->user->id}. Le motif de l'annulation est le suivant : « $request->motif_rejet_traveler ». Le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}, avec l'identifiant {$reservation->housing->user->id}. Vous recevez une commission de {$montant_commission} FCFA sur cette opération"
             ];
-            
+
       Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
         }
      }
@@ -762,7 +762,7 @@ public function storeReservationWithPayment(Request $request)
      * )
      */
 
-    
+
 
      public function traveler_reject_reservation($idReservation, Request $request){
         try{
@@ -787,7 +787,7 @@ public function storeReservationWithPayment(Request $request)
                 'message' => 'Vous ne pouvez pas annuler une réservation qui n est pas confirmer par l hote'
             ]);
         }
-        
+
         if ($reservation->is_rejected_hote) {
             return response()->json([
                 'message' => 'Vous ne pouvez pas annuler une reservation déjà rejetée par l hote'
@@ -817,17 +817,17 @@ public function storeReservationWithPayment(Request $request)
         $currentDate =  DateTime::createFromFormat('Y-m-d', date('Y-m-d'));
 
         $diff = $dateIntegration->diff($currentDate);
-        $totalDays = $diff->days; 
+        $totalDays = $diff->days;
         if ($diff->h > 0) {
-            $totalDays += ($diff->h / 24); 
+            $totalDays += ($diff->h / 24);
         }
 
         if ($diff->i > 0) {
-            $totalDays += ($diff->i / (24 * 60)); 
+            $totalDays += ($diff->i / (24 * 60));
         }
 
-        $diffEnHeure = $totalDays * 24; 
-             
+        $diffEnHeure = $totalDays * 24;
+
         $dateIntegration = DateTime::createFromFormat('Y-m-d', $reservation->date_of_starting);
 
         $dateIntegration->modify('-' . $diff->days . ' days');
@@ -890,17 +890,19 @@ public function storeReservationWithPayment(Request $request)
               $transaction->solde_commission = $soldeCommission  + $montant_commission;
               $transaction->solde_restant = $soldeRestant + $montantHote;
               $transaction->save();
+              $this->handlePartnerLogic($transaction->id);
+
 
               $mailtraveler = [
                 'title' => 'Confirmation d\'annulation',
                 'body' => "Votre annulation a été prise en compte. Vous bénéficiez d'un remboursement intégral et votre portefeuille a été crédité de $montantClient FCFA. Solde actuel : $portefeuilleClient->solde FCFA."
                ];
-            
+
                $mailhote = [
                 'title' => "Annulation d'un logement",
                 'body' => "La réservation d'un de vos biens a été annulée. L'annulation a entraîné un remboursement intégral, et votre portefeuille a été crédité de {$montantHote} FCFA. Solde actuel : $portefeuilleHote->solde FCFA."
                ];
-            
+
               $this->notifyAnnulation($request, $reservation->id,$mailtraveler,$mailhote,$montant_commission);
 
               return response()->json([
@@ -912,7 +914,7 @@ public function storeReservationWithPayment(Request $request)
                 'montantHote' => $montantHote,
                 'fraisLouerMeublee' =>$montant_commission,
                 'montant retourné au client' => $montantClient,
-              
+
             ]);
 
         }else if( $diffEnHeure >= $reservation->housing->delai_partiel_remboursement ){
@@ -924,7 +926,7 @@ public function storeReservationWithPayment(Request $request)
            $montantClient =  ($reservation->valeur_payee * $reservation->housing->valeur_partiel_remboursement)/100;
            $montantWithoutClient = $reservation->valeur_payee - $montantClient;
            $montant_commission = ($montantWithoutClient * $reservation->housing->user->commission->valeur)/100;
-           $montantHote = $montantWithoutClient - $montant_commission;         
+           $montantHote = $montantWithoutClient - $montant_commission;
 
            $portefeuilleClient = Portfeuille::find($reservation->user->portfeuille->id);
            $client_solde = $montantClient+$portefeuilleClient->solde;
@@ -965,11 +967,14 @@ public function storeReservationWithPayment(Request $request)
            $transaction->solde_commission = $soldeCommission + $montant_commission;
            $transaction->solde_restant = $soldeRestant + $montantHote;
            $transaction->save();
+           $this->handlePartnerLogic($transaction->id);
+
+           
            $mailtraveler = [
             'title' => 'Confirmation d\'annulation',
             'body' => "Votre annulation a été prise en compte. Vous bénéficiez d'un remboursement partiel et votre portefeuille a été crédité de $montantClient FCFA. Solde actuel : $portefeuilleClient->solde FCFA."
            ];
-        
+
             $mailhote = [
             'title' => "Annulation d'un logement",
             'body' => "La réservation d'un de vos biens a été annulée. L'annulation a entraîné un remboursement partiel, et votre portefeuille a été crédité de {$montantHote} FCFA. Solde actuel : $portefeuilleHote->solde FCFA."
@@ -986,7 +991,7 @@ public function storeReservationWithPayment(Request $request)
             'montantHote' => $montantHote,
             'fraisLouerMeublee' =>$montant_commission,
             'montant retourné au client' => $montantClient,
-         
+
         ]);
          }else{
 
@@ -1032,19 +1037,21 @@ public function storeReservationWithPayment(Request $request)
             $transaction->solde_commission = $soldeCommission  + $montant_commission;
             $transaction->solde_restant = $soldeRestant + $montantHote;
             $transaction->save();
+            $this->handlePartnerLogic($transaction->id);
+
             $mailtraveler = [
                 'title' => 'Confirmation d\'annulation',
                 'body' => "Votre annulation a été prise en compte. Cependant, il n'y a pas de remboursement, donc votre portefeuille n'a pas été crédité. Solde actuel : $portefeuilleClient->solde FCFA."
             ];
-            
+
             $mailhote = [
                 'title' => "Annulation d'un logement",
                 'body' => "La réservation d'un de vos biens a été annulée. Solde actuel : $portefeuilleHote->solde FCFA."
             ];
-            
+
 
           $this->notifyAnnulation($request, $reservation->id,$mailtraveler,$mailhote,$montant_commission);
-            
+
 
           return response()->json([
             'message' => 'Reservation canceled successfully',
@@ -1054,10 +1061,10 @@ public function storeReservationWithPayment(Request $request)
             'montantHote' => $montantHote,
             'fraisLouerMeublee' =>$montant_commission,
             'montant retourné au client' => $montantClient,
-         
+
         ]);
          }
-     
+
   } catch(Exception $e) {
               return response()->json([
                   'error' => 'An error occurred',
@@ -1096,11 +1103,11 @@ public function storeReservationWithPayment(Request $request)
                 'message' =>'housing not found'
             ]);
         }
-    
+
         $reservations = Reservation::where('housing_id', $housingId)->get();
-    
+
         $reservationCount = $reservations->count();
-    
+
         return response()->json( [
             'housing' => $housing,
             'reservations' => $reservations,
@@ -1108,8 +1115,8 @@ public function storeReservationWithPayment(Request $request)
         ]);
     }
 
-     
-     
+
+
                                   /**
           * @OA\Get(
           *     path="/api/reservation/showDetailOfReservationForHote/{idReservation}",
@@ -1137,13 +1144,13 @@ public function storeReservationWithPayment(Request $request)
                  'message' => 'Reservation not found'
              ], 404);
          }
-     
+
          if (!(Auth::user()->id == $reservation->housing->user_id)) {
              return response()->json([
                  'message' => 'Vous ne pouvez pas consulter les détails d une réservation qui ne vous concerne pas'
              ], 403);
          }
-     
+
          return response()->json([
              'data' =>[
                  'detail de la reservation' => $reservation->toArray(),
@@ -1220,7 +1227,7 @@ public function confirmIntegration(Request $request)
         }
 
         if ($reservation->is_integration) {
-            return response()->json(['message' => 'L\'intégration a déjà été confirmée'], 400);
+            return response()->json(['message' => 'L\'intégration a déjà été confirmée auparavant.'], 400);
         }
 
         $housing = Housing::find($reservation->housing_id);
@@ -1254,12 +1261,11 @@ public function confirmIntegration(Request $request)
         $solde_total = $previous_transactions->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
         $solde_restant = $previous_transactions->sum('montant_restant');
-        $solde_commission_partenaire = $previous_transactions->sum('solde_commission_partenaire');
+        $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
 
         $new_solde_total = $solde_total + $total_amount;
         $new_solde_commission = $solde_commission + $commission_amount;
         $new_solde_restant = $solde_restant + $remaining_amount;
-
         $portefeuilleTransaction = new Portfeuille_transaction();
         $portefeuilleTransaction->debit = false;
         $portefeuilleTransaction->credit = true;
@@ -1275,10 +1281,8 @@ public function confirmIntegration(Request $request)
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";
         $portefeuilleTransaction->payment_method = "portfeuille";
-        $portefeuilleTransaction->partenaire_id = 0; // Initial
-        $portefeuilleTransaction->valeur_commission_partenaire = 0; // Initial
-        $portefeuilleTransaction->montant_commission_partenaire = 0; // Initial
-        $portefeuilleTransaction->solde_commission_partenaire = $solde_commission_partenaire;
+       
+        
         $portefeuilleTransaction->save();
 
         $this->handlePartnerLogic($portefeuilleTransaction->id);
@@ -1301,7 +1305,8 @@ public function confirmIntegration(Request $request)
             "title" => "Confirmation de l'intégration d'un voyageur",
             "body" => "Un voyageur vient de confirmer l'intégration dans votre logement intitulé {$reservation->housing->name}. Vous venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA"
         ];
-
+              
+        DB::commit();
         Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
 
         $right = Right::where('name', 'admin')->first();
@@ -1321,7 +1326,7 @@ public function confirmIntegration(Request $request)
             Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail));
         }
 
-        DB::commit();
+        
 
         return response()->json(['message' => 'Intégration confirmée avec succès'], 200);
     } catch (\Exception $e) {
@@ -1351,7 +1356,7 @@ public function checkAndUpdateIsEncours($housingId)
                                         ->where('date_of_reservation', '>=', $promotion->date_debut)
                                         ->where('date_of_reservation', '<=', $promotion->date_fin)
                                         ->count();
-              
+
         // Condition 1: Nombre de réservations atteint ou dépassé
         if ($totalReservations >= $promotion->number_of_reservation) {
 
@@ -1367,7 +1372,7 @@ public function checkAndUpdateIsEncours($housingId)
             $promotion->save();
             return response()->json(['message' => 'Promotion terminée car la date de fin est passée.'], 200);
         }
-     
+
         return response()->json(['message' => 'La promotion est encore en cours.'], 200);
 
     } catch (Exception $e) {
@@ -1379,7 +1384,7 @@ public function checkAndUpdateIsEncours($housingId)
 public function handlePartnerLogic($transactionId)
 {
     $transaction = Portfeuille_transaction::find($transactionId);
-    
+
     if (!$transaction) {
         return response()->json(['message' => 'Transaction non trouvée'], 404);
     }
@@ -1398,12 +1403,15 @@ public function handlePartnerLogic($transactionId)
 
         $commission_amount = $transaction->montant_commission;
         $montant_commission_partenaire = $commission_amount * ($commission_partenaire / 100);
-
+        $montant_commission_admin=$commission_amount-$montant_commission_partenaire;
+        $valeur_commission_admin=$transaction->valeur_commission-$commission_partenaire;     
         // Mettre à jour la commission totale et le solde de la commission dans la transaction
         $transaction->montant_commission_partenaire = $montant_commission_partenaire;
         $transaction->solde_commission_partenaire += $montant_commission_partenaire;
+        $transaction->valeur_commission_partenaire=$commission_partenaire;  
+        $transaction->partenaire_id=$partenaire_id;
 
-        // Calculer les nouvelles valeurs de la commission et mettre à jour le portefeuille du partenaire
+        // mettre à jour le portefeuille du partenaire
         $portefeuille_partenaire = Portfeuille::where('user_id', $user_id_partenaire)->first();
 
         if (!$portefeuille_partenaire) {
@@ -1413,7 +1421,13 @@ public function handlePartnerLogic($transactionId)
         // Calculer les nouvelles valeurs pour le portefeuille du partenaire
         $portefeuille_partenaire->solde += $montant_commission_partenaire;
         $portefeuille_partenaire->save();
-        
+
+        //Remplissage de la part de l'admin
+        $ancien_solde_commission_admin = Portfeuille_transaction::all()->sum('montant_commission_admin');
+        $transaction->montant_commission_admin=$montant_commission_admin;
+        $transaction->new_solde_admin=$ancien_solde_commission_admin+$montant_commission_admin;
+        $transaction->valeur_commission_admin=100-$commission_partenaire;
+        $transaction->save();
         $notification = new Notification();
         $notification->user_id = $user_id_partenaire;
         $notification->name = "Vous venez de recevoir un dépôt de {$montant_commission_partenaire} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille_partenaire->solde} FCFA";
@@ -1425,18 +1439,19 @@ public function handlePartnerLogic($transactionId)
         ];
         Mail::to($email_partenaire)->send(new NotificationEmailwithoutfile($mail));
 
-        // Mettre à jour les anciennes commissions
-        $ancien_solde_commission = Portfeuille_transaction::where('partenaire_id', $partenaire_id)
-            ->sum('montant_commission_partenaire');
-        $ancien_commission_totale = Portfeuille_transaction::where('partenaire_id', $partenaire_id)
-            ->sum('montant_commission');
 
-        $transaction->montant_commission = $ancien_commission_totale - $montant_commission_partenaire;
-        $transaction->solde_commission = $ancien_solde_commission - $montant_commission_partenaire;
+       
+    }else{
+        $ancien_solde_commission_admin = Portfeuille_transaction::all()->sum('montant_commission_admin');
+        $ancien_solde_commission_partenaire = Portfeuille_transaction::all()->sum('montant_commission_partenaire');
 
-        $transaction->save();
+        $transaction->montant_commission_admin= $transaction->montant_commission;
+        $transaction->new_solde_admin=$ancien_solde_commission_admin+$transaction->montant_commission;
+        $transaction->valeur_commission_admin=100;
+        $transaction->solde_commission_partenaire=$ancien_solde_commission_partenaire;
+
+         $transaction->save();
     }
 
-    $transaction->save();
 }
 }

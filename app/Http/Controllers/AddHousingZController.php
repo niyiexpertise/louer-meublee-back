@@ -1213,14 +1213,26 @@ public function addHousing_step_16(Request $request, $housingId) {
         //     }
         // }
 
+        foreach ($nightNumbers as $index => $nightNumber) {
+            if( intval($nightNumber) <= 0){
+                        return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
+                    }
+        }
+
+        foreach ($values as $value) {
+            if (floatval($value) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nulle.');
+            }
+        }
+
 
 
         $reductionsDeleted = Reduction::where('housing_id', $housingId)->delete();
 
         foreach ($nightNumbers as $index => $nightNumber) {
             $reduction = new Reduction();
-            $reduction->night_number = $nightNumber;
-            $reduction->value = $values[$index];
+            $reduction->night_number = intval($nightNumber);
+            $reduction->value = floatval($values[$index]);
             $reduction->housing_id = $housing->id;
             $reduction->is_encours = true;
             $reduction->save();
@@ -1360,6 +1372,7 @@ public function addHousing_step_16(Request $request, $housingId) {
         }
 
 
+
          // Initialiser les messages d'erreur
          $messages = [];
 
@@ -1369,7 +1382,7 @@ public function addHousing_step_16(Request $request, $housingId) {
 
          // Si un champ est présent, tous les autres doivent l'être aussi
          if (!empty($promotionProvided) && count($promotionProvided) !== count($promotionFields)) {
-             return (new ServiceController())->apiResponse(400, [], 'Tous les champs de promotion doivent être présents ou absents.');
+             return (new ServiceController())->apiResponse(400, ["err"=>$request], 'Tous les champs de promotion doivent être présents ou absents.');
          }
 
          // Valider les champs de promotion s'ils sont présents
@@ -1380,19 +1393,19 @@ public function addHousing_step_16(Request $request, $housingId) {
              $promotionValue = $request->input('promotion_value');
 
              if (!strtotime($promotionDateDebut)) {
-                 return (new ServiceController())->apiResponse(404, [], 'La date de début de la promotion doit être une date valide.');
+                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de début de la promotion doit être une date valide.');
              }
              if (!strtotime($promotionDateFin)) {
-                 return (new ServiceController())->apiResponse(404, [], 'La date de fin de la promotion doit être une date valide.');
+                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de fin de la promotion doit être une date valide.');
              }
              if (strtotime($promotionDateFin) < strtotime($promotionDateDebut)) {
-                 return (new ServiceController())->apiResponse(404, [], 'La date de fin de la promotion doit être après ou égale à la date de début.');
+                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de fin de la promotion doit être après ou égale à la date de début.');
              }
-             if (!is_int($promotionNumberOfReservation) || $promotionNumberOfReservation <= 0) {
-                 return (new ServiceController())->apiResponse(404, [], 'Le nombre de réservations doit être un entier supérieur à zéro.');
+             if (intval($promotionNumberOfReservation)<= 0) {
+                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'Le nombre de réservations doit être un entier supérieur à zéro.');
              }
-             if (!is_numeric($promotionValue) || $promotionValue <= 0) {
-                 return (new ServiceController())->apiResponse(404, [], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
+             if (floatval($promotionValue) <= 0) {
+                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
              }
 
              $dateToday = new DateTime();
@@ -1412,8 +1425,8 @@ public function addHousing_step_16(Request $request, $housingId) {
              $promotion = new Promotion();
              $promotion->date_debut = $promotionDateDebut;
              $promotion->date_fin = $promotionDateFin;
-             $promotion->number_of_reservation = $promotionNumberOfReservation;
-             $promotion->value = $promotionValue;
+             $promotion->number_of_reservation = intval($promotionNumberOfReservation);
+             $promotion->value = floatval($promotionValue);
              $promotion->housing_id = $housing->id;
              $promotion->is_encours = $isEncours;
              $promotion->save();

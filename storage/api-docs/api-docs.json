@@ -5592,12 +5592,6 @@
                                         "description": "Statut du paiement (facultatif)",
                                         "type": "string",
                                         "example": "completed"
-                                    },
-                                    "valeur_payee": {
-                                        "description": "Valeur payée (facultatif, uniquement pour 'portfeuille')",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 50
                                     }
                                 },
                                 "type": "object"
@@ -5625,16 +5619,6 @@
                                                 "user_id": {
                                                     "type": "integer",
                                                     "example": 456
-                                                },
-                                                "montant_total": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 100
-                                                },
-                                                "valeur_payee": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50
                                                 }
                                             },
                                             "type": "object"

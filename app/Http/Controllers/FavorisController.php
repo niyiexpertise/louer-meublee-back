@@ -205,6 +205,11 @@ public function removeFromFavorites($housingId)
              ->with(['housing', 'housing.photos','housing.user'])
              ->get()
              ->pluck('housing');
+
+             foreach($favorite_listings as $favorite){
+                $favorite->is_favorite = true;
+                $favorite->housing_note = (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($favorite->id)->original['data']['overall_average'] ?? 'non renseigné';
+             }
  
          return response()->json(['data' => $favorite_listings], 200);
      } catch (\Exception $e) {

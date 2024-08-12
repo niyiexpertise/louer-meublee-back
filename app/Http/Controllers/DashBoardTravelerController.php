@@ -303,13 +303,7 @@ class DashBoardTravelerController extends Controller
  *                     type="string",
  *                     example="completed"
  *                 ),
- *                 @OA\Property(
- *                     property="valeur_payee",
- *                     description="Valeur payée (facultatif, uniquement pour 'portfeuille')",
- *                     type="number",
- *                     format="float",
- *                     example=50.00
- *                 )
+ *                
  *             )
  *         )
  *     ),
@@ -336,18 +330,6 @@ class DashBoardTravelerController extends Controller
  *                     property="user_id",
  *                     type="integer",
  *                     example=456
- *                 ),
- *                 @OA\Property(
- *                     property="montant_total",
- *                     type="number",
- *                     format="float",
- *                     example=100.00
- *                 ),
- *                 @OA\Property(
- *                     property="valeur_payee",
- *                     type="number",
- *                     format="float",
- *                     example=50.00
  *                 ),
  *             ),
  *             @OA\Property(
@@ -483,6 +465,8 @@ class DashBoardTravelerController extends Controller
                     
                     $portefeuilleTransaction->save();
                     $portefeuille->save();
+                    $portefeuilleTransaction->save();
+                    (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
                 }
 
                 if ($validatedData['payment_method'] == "espece" ) {
@@ -502,6 +486,7 @@ class DashBoardTravelerController extends Controller
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
                    
                     $portefeuilleTransaction->save();
+                    (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
                 }
 
                 DB::commit();

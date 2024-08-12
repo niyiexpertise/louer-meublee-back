@@ -94,7 +94,7 @@ class FavorisController extends Controller
             $favorite->save();
     
             return response()->json(['message' => 'Le logement a été ajouté aux favoris avec succès.'], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['message' => 'Une erreur s\'est produite lors de l\'ajout aux favoris.'], 500);
         }
     }
@@ -158,7 +158,7 @@ public function removeFromFavorites($housingId)
         } else {
             return response()->json(['message' => 'Le logement n\'est pas dans la liste des favoris de cet utilisateur.'], 404);
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['message' => 'Une erreur s\'est produite lors de la suppression du logement des favoris.'], 500);
     }
 }
@@ -202,12 +202,12 @@ public function removeFromFavorites($housingId)
              ->whereHas('housing', function ($query) {
                  $query->where('is_blocked', false)->where('is_deleted', false);
              })
-             ->with(['housing', 'housing.photos'])
+             ->with(['housing', 'housing.photos','housing.user'])
              ->get()
              ->pluck('housing');
  
          return response()->json(['data' => $favorite_listings], 200);
-     } catch (Exception $e) {
+     } catch (\Exception $e) {
          return response()->json(['message' => 'Une erreur s\'est produite lors de la récupération des favoris.'], 500);
      }
  }

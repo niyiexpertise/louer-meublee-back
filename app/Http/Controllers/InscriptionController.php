@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\DB;
 class InscriptionController extends Controller
 {
    /**
- * @OA\Get(
+ * @OA\Post(
  *     path="/api/users/register",
  *     tags={"Inscription"},
  *     summary="Enregistrer un nouvel utilisateur",

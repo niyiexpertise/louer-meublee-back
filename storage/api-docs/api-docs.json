@@ -11702,13 +11702,13 @@
             }
         },
         "/api/users/register": {
-            "get": {
+            "post": {
                 "tags": [
                     "Inscription"
                 ],
                 "summary": "Enregistrer un nouvel utilisateur",
                 "description": "Enregistre un nouvel utilisateur avec les informations fournies",
-                "operationId": "14c09b32a6bda0c9d14ea1cb63e4a8fb",
+                "operationId": "d62a46aefee7c5921c98e5ddb6164436",
                 "requestBody": {
                     "required": true,
                     "content": {

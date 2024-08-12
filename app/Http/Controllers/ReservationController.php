@@ -451,7 +451,7 @@ public function storeReservationWithPayment(Request $request)
             
             $portefeuilleTransaction->save();
             $portefeuille->save();
-            
+
             $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
 
         }
@@ -658,6 +658,8 @@ public function storeReservationWithPayment(Request $request)
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
 
              $transaction->save();
+             $this->initialisePortefeuilleTransaction($transaction->id);
+
           }
           $notification = new Notification();
           $notification->user_id = $reservation->user_id;
@@ -870,10 +872,10 @@ public function storeReservationWithPayment(Request $request)
               $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
               $transaction->valeur_commission = 0;
               $transaction->montant_commission = 0;
-              $transaction->montant_restant = 0;
+              $transaction->montant_restant = $montantClient;
               $transaction->solde_total = $soldeTotal  + $montantClient;
               $transaction->solde_commission = $soldeCommission  + 0;
-              $transaction->solde_restant = $soldeRestant  + 0;
+              $transaction->solde_restant = $soldeRestant  + $montantClient;
               $transaction->save();
 
               $soldeTotal =  $soldeTotal  + $montantClient;
@@ -946,10 +948,10 @@ public function storeReservationWithPayment(Request $request)
            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
            $transaction->valeur_commission = 0;
            $transaction->montant_commission = 0;
-           $transaction->montant_restant = 0;
+           $transaction->montant_restant = $montantClient;
            $transaction->solde_total = $soldeTotal  + $montantClient;
            $transaction->solde_commission = $soldeCommission  + 0;
-           $transaction->solde_restant = $soldeRestant + 0;
+           $transaction->solde_restant = $soldeRestant + $montantClient;
            $transaction->save();
 
            $soldeTotal =  $soldeTotal  + $montantClient;
@@ -1020,7 +1022,7 @@ public function storeReservationWithPayment(Request $request)
             $transaction->montant_restant = 0;
             $transaction->solde_total = $soldeTotal  + $montantClient;
             $transaction->solde_commission = $soldeCommission  + 0;
-            $transaction->solde_restant = $soldeRestant + 0;
+            $transaction->solde_restant = $soldeRestant + $montantClient;
             $transaction->save();
 
             $soldeTotal =  $soldeTotal  + $montantClient;
@@ -1492,6 +1494,5 @@ public function handlePartnerLogic($transactionId)
         // Sauvegarder les modifications
         $transaction->save();
 
-        return response()->json(['message' => 'Transaction mise à jour avec succès.'], 200);
     }
 }

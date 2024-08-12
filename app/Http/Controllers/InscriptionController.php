@@ -38,8 +38,10 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\DB;
+
 class InscriptionController extends Controller
 {
+
    /**
  * @OA\Post(
  *     path="/api/users/register",
@@ -207,9 +209,11 @@ class InscriptionController extends Controller
             ], 404);
         }
 
-        dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+        for ($i = 0; $i < 20; $i++) {
+            dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+        }
 
-        if ($request->has('code_promo')) {
+        if ($request->has('code_promo') and !empty( $request->code_promo)) {
             $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();
             $mailpartenaire = [
                 'title' => 'Inscription via votre code promo',
@@ -218,6 +222,10 @@ class InscriptionController extends Controller
 
             dispatch( new SendRegistrationEmail($user_partenaire->user->email, $mailpartenaire['body'], $mailpartenaire['title'], 2));
         }
+
+
+
+
     } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }

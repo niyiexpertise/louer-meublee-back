@@ -15,7 +15,10 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-      $schedule->job(new ActivatePromotions())->everyMinute();    }
+      //$schedule->job(new ActivatePromotions())->everyMinute();
+      $schedule->command('queue:work --queue=default')->everyMinute();
+
+    }
 
     /**
      * Register the commands for the application.

@@ -5779,6 +5779,271 @@
                 ]
             }
         },
+        "/api/partenaire/users/transaction": {
+            "get": {
+                "tags": [
+                    "Dashboard partenaire"
+                ],
+                "summary": "Obtenir les détails des transactions du portefeuille pour un partenaire connecté",
+                "description": "Retourne le solde du portefeuille  et la liste des transactions de partenariat associées pour le partenaire connecté.",
+                "operationId": "5e97a56a12e7af61b0ec3538f3223dde",
+                "responses": {
+                    "200": {
+                        "description": "Détails des transactions du partenaire récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "solde_portefeuille": {
+                                            "description": "Solde actuel du portefeuille de l'utilisateur",
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 1500
+                                        },
+                                        "transactions": {
+                                            "description": "Liste des transactions associées au portefeuille du partenaire",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID de la transaction",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "debit": {
+                                                        "description": "Indique si la transaction est un débit",
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "credit": {
+                                                        "description": "Indique si la transaction est un crédit",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "amount": {
+                                                        "description": "Montant de la transaction",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 100
+                                                    },
+                                                    "valeur_commission_partenaire": {
+                                                        "description": "Valeur de la commission pour le partenaire",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5
+                                                    },
+                                                    "montant_commission_partenaire": {
+                                                        "description": "Montant de la commission pour le partenaire",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5
+                                                    },
+                                                    "solde_commission_partenaire": {
+                                                        "description": "Solde de la commission pour le partenaire",
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 10
+                                                    },
+                                                    "motif": {
+                                                        "description": "Motif de la transaction",
+                                                        "type": "string",
+                                                        "example": "Virement sur le compte du partenaire"
+                                                    },
+                                                    "reservation_id": {
+                                                        "description": "ID de la réservation associée",
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "payment_method": {
+                                                        "description": "Méthode de paiement utilisée",
+                                                        "type": "string",
+                                                        "example": "portfeuille"
+                                                    },
+                                                    "portfeuille_id": {
+                                                        "description": "ID du portefeuille",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "id_transaction": {
+                                                        "description": "ID de la transaction",
+                                                        "type": "string",
+                                                        "example": "0"
+                                                    },
+                                                    "created_at": {
+                                                        "description": "Date de création de la transaction",
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-08T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "description": "Date de dernière mise à jour de la transaction",
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-08T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partenaire non trouvé pour cet utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string",
+                                            "example": "Partenaire non trouvé pour cet utilisateur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Message d'erreur interne",
+                                            "type": "string",
+                                            "example": "Une erreur est survenue."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/partenaire/users/reservation": {
+            "get": {
+                "tags": [
+                    "Dashboard partenaire"
+                ],
+                "summary": "Liste des réservations effectuées avec le code promo d'un partenaire connecté",
+                "operationId": "439f2dfc2d14f4c5e08f257c3cfcccab",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "reservations": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "reservation_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "date_of_reservation": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_of_starting": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "date_of_end": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "number_of_adult": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number_of_child": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number_of_domestical_animal": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number_of_baby": {
+                                                        "type": "integer"
+                                                    },
+                                                    "telephone_traveler": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_confirmed_hote": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_rejected_traveler": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_rejected_hote": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "is_vire": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "valeur_commission_partenaire": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "nullable": true
+                                                    },
+                                                    "montant_commission_partenaire": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "nullable": true
+                                                    },
+                                                    "lastname_traveler": {
+                                                        "type": "string"
+                                                    },
+                                                    "firstname_traveler": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Partenaire non trouvé ou aucune réservation avec code promo"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/document/index": {
             "get": {
                 "tags": [

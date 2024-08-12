@@ -114,7 +114,7 @@ class UserController extends Controller
     ])
     ->where('is_deleted', false)
     ->get();
-     
+
     $formattedUsers = [];
     foreach ($users as $user) {
         $formattedUser = [
@@ -139,8 +139,8 @@ class UserController extends Controller
             'solde_portfeuille' => $user->portfeuille->solde,
             'user_role' => User::find($user->id)->getRoleNames(),
             'user_language' => [],
-            'user_preference' => [], 
-            
+            'user_preference' => [],
+
         ];
 
         foreach ($user->user_language as $userLanguage) {
@@ -225,7 +225,7 @@ class UserController extends Controller
  *         response=200,
  *         description="Liste des avis de l'utilisateur connecté",
  *         @OA\JsonContent(
- *            
+ *
  *         )
  *     ),
  *     @OA\Response(
@@ -332,9 +332,9 @@ public function userLanguages()
      if (!$userId) {
          return response()->json(['error' => 'Unauthenticated'], 401);
      }
- 
+
      $user = User::find($userId);
- 
+
      if (!$user) {
          return response()->json(['error' => 'User not found'], 404);
      }
@@ -342,12 +342,12 @@ public function userLanguages()
      $validator = Validator::make($request->all(), [
          'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
      ]);
- 
+
      if ($validator->fails()) {
          return response()->json(['error' => $validator->errors()], 400);
      }
      $oldProfilePhotoUrl = $user->file_profil;
-    
+
      if ($oldProfilePhotoUrl) {
          $parsedUrl = parse_url($oldProfilePhotoUrl);
          $oldProfilePhotoPath = public_path($parsedUrl['path']);
@@ -361,10 +361,10 @@ public function userLanguages()
      $base_url = url('/');
      $user->file_profil = $base_url .'/image/photo_profil/' . $profilePhotoName;
      $user->save();
- 
+
      return response()->json(['message' => 'Profile photo updated successfully', 'user' => $user], 200);
  }
- 
+
 
          /**
  * @OA\Put(
@@ -398,7 +398,7 @@ public function userLanguages()
  *     )
  * )
  */
-    
+
  public function block(string $id)
  {
     try{
@@ -481,8 +481,8 @@ public function unblock($id)
  *         response=200,
  *         description="List of users from the specified country",
  *         @OA\JsonContent(
- *             
- *             
+ *
+ *
  *         )
  *     )
  * )
@@ -500,7 +500,7 @@ public function unblock($id)
      if ($users->isEmpty()) {
          return response()->json(['error' => 'Aucun utilisateur trouvé pour le pays spécifié.'], 404);
      }
- 
+
      $formattedUsers = [];
      foreach ($users as $user) {
          $formattedUser = [
@@ -527,7 +527,7 @@ public function unblock($id)
              'solde_portfeuille' => $user->portfeuille->solde,
              'user_role' => User::find($user->id)->getRoleNames(),
              'user_language' => [],
-             'user_preference' => [], 
+             'user_preference' => [],
          ];
          foreach ($user->user_language as $userLanguage) {
              $formattedUserLanguage = [
@@ -537,7 +537,7 @@ public function unblock($id)
              ];
              $formattedUser['user_language'][] = $formattedUserLanguage;
          }
- 
+
          foreach ($user->user_preference as $userPreference) {
              $formattedUserPreference = [
                  'preference_id' => $userPreference->preference_id,
@@ -546,13 +546,13 @@ public function unblock($id)
              ];
              $formattedUser['user_preference'][] = $formattedUserPreference;
          }
- 
+
          $formattedUsers[] = $formattedUser;
      }
- 
+
      return response()->json(['users' => $formattedUsers], 200);
  }
- 
+
  /**
      * @OA\Put(
      *     path="/api/users/update_password",
@@ -632,7 +632,7 @@ public function updatePassword(Request $request)
  *         response=200,
  *         description="Liste des utilisateurs avec le rôle 'traveler'",
  *         @OA\JsonContent(
- *            
+ *
  *         )
  *     ),
  *     @OA\Response(
@@ -759,7 +759,7 @@ public function updateUser(Request $request)
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 400);
     }
-    
+
     $user = User::find($userId);
     if (!$user) {
         return response()->json(['error' => 'Utilisateur non trouvé'], 404);
@@ -793,7 +793,7 @@ public function updateUser(Request $request)
  *         response=200,
  *         description="Liste des utilisateurs ayant le rôle 'hote'",
  *         @OA\JsonContent(
- *            
+ *
  *         )
  *     ),
  *     @OA\Response(
@@ -815,7 +815,7 @@ public function getUsersWithRoleHost()
         $query->where('right_id', $hostRole->id);
     })
     ->where('is_deleted', 0)
-    ->with(['user_language.language', 'user_preference.preference']) 
+    ->with(['user_language.language', 'user_preference.preference'])
     ->with('portfeuille')
     ->leftJoin('commissions', 'users.id', '=', 'commissions.user_id')
     ->select('users.*', 'commissions.valeur as commission_value')
@@ -878,7 +878,7 @@ public function getUsersWithRoleHost()
  *         response=200,
  *         description="Liste des utilisateurs ayant le rôle 'admin'",
  *         @OA\JsonContent(
- *            
+ *
  *         )
  *     ),
  *     @OA\Response(
@@ -900,8 +900,8 @@ public function getUsersWithRoleAdmin()
         $query->where('right_id', $adminRole->id);
     })
     ->where('is_deleted', 0)
-    ->with(['user_language.language', 'user_preference.preference'])  
-    ->with('portfeuille')  
+    ->with(['user_language.language', 'user_preference.preference'])
+    ->with('portfeuille')
     ->get();
 
     if ($usersWithRole->isEmpty()) {
@@ -1065,9 +1065,7 @@ public function getUserDetails($userId) {
     $total_reservations = Reservation::where('user_id', $userId)->count();
 
     $portefeuille = Portfeuille::where('user_id', $userId)->first();
-    $solde = $portefeuille ? $portefeuille->solde : 0;
-
-    $total_transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)->count();
+    $solde = $portefeuille ? $portefeuille->solde : 0;    $total_transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)->count();
 
     $user_details = [
         'user_info' => [
@@ -1129,7 +1127,7 @@ public function getUserDetails($userId) {
             $userId = $user->id;
 
             $reservationCount = Reservation::where('user_id', $userId)->where('valeur_reduction_code_promo', 0)->count();
-            
+
             $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
             $codePromoDetails = $userPartenaire ? [
                 'id'=> $userPartenaire->id,

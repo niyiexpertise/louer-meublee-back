@@ -468,25 +468,19 @@ class DashBoardTravelerController extends Controller
                         return response()->json(['message' => "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement"], 400);
                     }
                     $portefeuille->solde -= $required_paid_value;
-                    $soldeTotal = Portfeuille_transaction::sum('amount');
-                    $soldeCommission = Portfeuille_transaction::sum('montant_commission');
-                    $soldeRestant = Portfeuille_transaction::sum('montant_restant');
+                    
 
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->debit = true;
                     $portefeuilleTransaction->credit = false;
                     $portefeuilleTransaction->amount = $required_paid_value;
                     $portefeuilleTransaction->motif = "Finalisation de paiement";
-                    $portefeuilleTransaction->valeur_commission = 0;
-                    $portefeuilleTransaction->montant_commission = 0;
-                    $portefeuilleTransaction->montant_restant = 0;
+                    
                     $portefeuilleTransaction->reservation_id = $reservation->id;
                     $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
                     $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-                    $portefeuilleTransaction->solde_total = $soldeTotal  + $required_paid_value;
-                    $portefeuilleTransaction->solde_commission = $soldeCommission;
-                    $portefeuilleTransaction->solde_restant = $soldeRestant;
+                    
                     $portefeuilleTransaction->save();
                     $portefeuille->save();
                 }
@@ -494,25 +488,19 @@ class DashBoardTravelerController extends Controller
                 if ($validatedData['payment_method'] == "espece" ) {
 
                     $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
-                    $soldeTotal = Portfeuille_transaction::sum('amount');
-                    $soldeCommission = Portfeuille_transaction::sum('montant_commission');
-                    $soldeRestant = Portfeuille_transaction::sum('montant_restant');
+                    
 
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->debit = true;
                     $portefeuilleTransaction->credit = false;
                     $portefeuilleTransaction->amount = $required_paid_value;
                     $portefeuilleTransaction->motif = "Finalisation de paiement";
-                    $portefeuilleTransaction->valeur_commission = 0;
-                    $portefeuilleTransaction->montant_commission = 0;
-                    $portefeuilleTransaction->montant_restant = 0;
+                    
                     $portefeuilleTransaction->reservation_id = $reservation->id;
                     $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
                     $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-                    $portefeuilleTransaction->solde_total = $soldeTotal  + $required_paid_value;
-                    $portefeuilleTransaction->solde_commission = $soldeCommission;
-                    $portefeuilleTransaction->solde_restant = $soldeRestant;
+                   
                     $portefeuilleTransaction->save();
                 }
 

@@ -547,5 +547,21 @@ public function getReservationsCountByYearAndMonth()
     ], 200);
 }
 
+public function getUsersGroupedByCountry()
+    {
+        $usersGroupedByCountry = User::select('country_id', DB::raw('COUNT(*) as number_of_users'))
+            ->groupBy('country_id')
+            ->with('country')
+            ->get()
+            ->map(function ($userGroup) {
+                return [
+                    'country_name' => $userGroup->country->name,
+                    'number_of_users' => $userGroup->number_of_users,
+                ];
+            });
+
+        return response()->json($usersGroupedByCountry);
+    }
+
 
 }

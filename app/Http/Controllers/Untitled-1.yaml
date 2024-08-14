@@ -41,3 +41,17 @@
     }
   
 }
+
+
+ public function uploadFiles(Request $request, $randomString,$location){
+        foreach($request->file('files') as $photo){
+            $errorUploadFiles = $this->validateFile($photo);
+            $this->storeFile($photo, $randomString, $location);
+
+            if($errorUploadFiles){
+                return $errorUploadFiles;
+            }
+
+            // return 1;
+        }
+    }

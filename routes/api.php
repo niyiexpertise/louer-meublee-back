@@ -54,6 +54,7 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 
 /*
@@ -524,6 +525,16 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [ReviewController::class, 'destroy'])->name('review.destroy');
         });
+    });
+
+    // Gestion des chats
+    Route::prefix('chats')->group(function () {
+        Route::post('/createMessage/{recipientId}/{content}', [ChatController::class, 'createMessage']);
+        Route::get('/getChatsByModelType/{modelType}', [ChatController::class, 'getChatsByModelType']);
+        Route::get('/getChatsByModelTypeAndId/{modelType}/{modelId}', [ChatController::class, 'getChatsByModelTypeAndId']);
+        Route::post('/markMessageAsRead/{messageId}', [ChatController::class, 'markMessageAsRead']);
+        Route::post('/markMessageAsUnRead/{messageId}', [ChatController::class, 'markMessageAsUnRead']);
+        Route::get('/getMessagesByChatId/{chatId}', [ChatController::class, 'getMessagesByChatId']);
     });
 
 

@@ -38,6 +38,8 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\user_partenaire;
+use App\Jobs\SendRegistrationEmail;
+
 
 class ReservationController extends Controller
 {
@@ -446,8 +448,12 @@ public function storeReservationWithPayment(Request $request)
             $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
             $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
             $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+            
             $portefeuilleTransaction->save();
             $portefeuille->save();
+
+            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+
         }
 
         $notificationName = "Félicitation! Vous venez de faire une reservation. D'ici 24h, elle sera confirmée ou rejetée par l'hôte";
@@ -484,9 +490,11 @@ public function storeReservationWithPayment(Request $request)
                 " Date de fin : " . $reservation->date_of_end . "\n"
         ];
 
+        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
+        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
 
-        Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
-        Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
+        // Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
+        //Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
 
         DB::commit();
 
@@ -649,13 +657,9 @@ public function storeReservationWithPayment(Request $request)
             $transaction->payment_method = "portfeuille";
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
 
-            $transaction->valeur_commission = 0;
-              $transaction->montant_commission = 0;
-              $transaction->montant_restant = 0;
-              $transaction->solde_total = $soldeTotal  + $reservation->valeur_payee;
-              $transaction->solde_commission = $soldeCommission  + 0;
-              $transaction->solde_restant = $soldeRestant  + 0;
-              $transaction->save();
+             $transaction->save();
+             $this->initialisePortefeuilleTransaction($transaction->id);
+
           }
           $notification = new Notification();
           $notification->user_id = $reservation->user_id;
@@ -868,10 +872,10 @@ public function storeReservationWithPayment(Request $request)
               $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
               $transaction->valeur_commission = 0;
               $transaction->montant_commission = 0;
-              $transaction->montant_restant = 0;
+              $transaction->montant_restant = $montantClient;
               $transaction->solde_total = $soldeTotal  + $montantClient;
               $transaction->solde_commission = $soldeCommission  + 0;
-              $transaction->solde_restant = $soldeRestant  + 0;
+              $transaction->solde_restant = $soldeRestant  + $montantClient;
               $transaction->save();
 
               $soldeTotal =  $soldeTotal  + $montantClient;
@@ -944,10 +948,10 @@ public function storeReservationWithPayment(Request $request)
            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
            $transaction->valeur_commission = 0;
            $transaction->montant_commission = 0;
-           $transaction->montant_restant = 0;
+           $transaction->montant_restant = $montantClient;
            $transaction->solde_total = $soldeTotal  + $montantClient;
            $transaction->solde_commission = $soldeCommission  + 0;
-           $transaction->solde_restant = $soldeRestant + 0;
+           $transaction->solde_restant = $soldeRestant + $montantClient;
            $transaction->save();
 
            $soldeTotal =  $soldeTotal  + $montantClient;
@@ -972,7 +976,7 @@ public function storeReservationWithPayment(Request $request)
            $transaction->save();
            $this->handlePartnerLogic($transaction->id);
 
-           
+
            $mailtraveler = [
             'title' => 'Confirmation d\'annulation',
             'body' => "Votre annulation a été prise en compte. Vous bénéficiez d'un remboursement partiel et votre portefeuille a été crédité de $montantClient FCFA. Solde actuel : $portefeuilleClient->solde FCFA."
@@ -1018,7 +1022,7 @@ public function storeReservationWithPayment(Request $request)
             $transaction->montant_restant = 0;
             $transaction->solde_total = $soldeTotal  + $montantClient;
             $transaction->solde_commission = $soldeCommission  + 0;
-            $transaction->solde_restant = $soldeRestant + 0;
+            $transaction->solde_restant = $soldeRestant + $montantClient;
             $transaction->save();
 
             $soldeTotal =  $soldeTotal  + $montantClient;
@@ -1284,8 +1288,8 @@ public function confirmIntegration(Request $request)
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";
         $portefeuilleTransaction->payment_method = "portfeuille";
-       
-        
+
+
         $portefeuilleTransaction->save();
 
         $this->handlePartnerLogic($portefeuilleTransaction->id);
@@ -1308,7 +1312,7 @@ public function confirmIntegration(Request $request)
             "title" => "Confirmation de l'intégration d'un voyageur",
             "body" => "Un voyageur vient de confirmer l'intégration dans votre logement intitulé {$reservation->housing->name}. Vous venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA"
         ];
-              
+
         DB::commit();
         Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
 
@@ -1329,7 +1333,7 @@ public function confirmIntegration(Request $request)
             Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail));
         }
 
-        
+
 
         return response()->json(['message' => 'Intégration confirmée avec succès'], 200);
     } catch (\Exception $e) {
@@ -1407,11 +1411,11 @@ public function handlePartnerLogic($transactionId)
         $commission_amount = $transaction->montant_commission;
         $montant_commission_partenaire = $commission_amount * ($commission_partenaire / 100);
         $montant_commission_admin=$commission_amount-$montant_commission_partenaire;
-        $valeur_commission_admin=$transaction->valeur_commission-$commission_partenaire;     
+        $valeur_commission_admin=$transaction->valeur_commission-$commission_partenaire;
         // Mettre à jour la commission totale et le solde de la commission dans la transaction
         $transaction->montant_commission_partenaire = $montant_commission_partenaire;
         $transaction->solde_commission_partenaire += $montant_commission_partenaire;
-        $transaction->valeur_commission_partenaire=$commission_partenaire;  
+        $transaction->valeur_commission_partenaire=$commission_partenaire;
         $transaction->partenaire_id=$partenaire_id;
 
         // mettre à jour le portefeuille du partenaire
@@ -1443,7 +1447,7 @@ public function handlePartnerLogic($transactionId)
         Mail::to($email_partenaire)->send(new NotificationEmailwithoutfile($mail));
 
 
-       
+
     }else{
         $ancien_solde_commission_admin = Portfeuille_transaction::all()->sum('montant_commission_admin');
         $ancien_solde_commission_partenaire = Portfeuille_transaction::all()->sum('montant_commission_partenaire');
@@ -1457,4 +1461,38 @@ public function handlePartnerLogic($transactionId)
     }
 
 }
+
+    public function initialisePortefeuilleTransaction($id)
+    {
+        $transaction = Portfeuille_transaction::find($id);
+
+        if (!$transaction) {
+            return response()->json(['error' => 'Transaction non trouvée.'], 404);
+        }
+
+        // Calculer les totaux nécessaires
+        $solde_commission = Portfeuille_transaction::sum('montant_commission');
+        $solde_total = Portfeuille_transaction::sum('amount');
+        $solde_commission_partenaire = Portfeuille_transaction::sum('montant_commission_partenaire');
+        $solde_restant = Portfeuille_transaction::sum('montant_restant');
+        $solde_commission_admin = Portfeuille_transaction::sum('montant_commission_admin');
+
+        // Mettre à jour les colonnes spécifiques
+        $transaction->valeur_commission = 0;
+        $transaction->montant_commission = 0;
+        $transaction->montant_restant = $transaction->amount;
+        $transaction->valeur_commission_partenaire = 0;
+        $transaction->montant_commission_partenaire = 0;
+        $transaction->valeur_commission_admin = 0;
+        $transaction->montant_commission_admin = 0;
+        $transaction->new_solde_admin = $solde_commission_admin;
+        $transaction->solde_total = $solde_total;
+        $transaction->solde_restant = $solde_restant + $transaction->amount;
+        $transaction->solde_commission = $solde_commission;
+        $transaction->solde_commission_partenaire = $solde_commission_partenaire;
+
+        // Sauvegarder les modifications
+        $transaction->save();
+
+    }
 }

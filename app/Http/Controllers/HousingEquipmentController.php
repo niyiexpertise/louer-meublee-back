@@ -271,7 +271,7 @@ public function DeleteEquipementHousing(Request $request)
                         "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
                      ];
 
-                    dispatch( new SendRegistrationEmail(Auth::user()->emaill, $mailhote['body'], $mailhote['title'], 2));
+                    dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
                 
                      $right = Right::where('name','admin')->first();
                      $adminUsers = User_right::where('right_id', $right->id)->get();

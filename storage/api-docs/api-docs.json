@@ -14397,7 +14397,7 @@
         "/api/portefeuille/transaction/all": {
             "get": {
                 "tags": [
-                    "Portefeuille"
+                    "Transaction"
                 ],
                 "summary": "Voir toutes les transactions éffectué sur le site (Admin)",
                 "operationId": "a834e8ec09f88df3112d746515bc3b37",

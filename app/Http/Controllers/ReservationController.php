@@ -41,6 +41,8 @@ use App\Models\user_partenaire;
 use App\Jobs\SendRegistrationEmail;
 
 
+
+
 class ReservationController extends Controller
 {
 
@@ -372,8 +374,10 @@ public function storeReservationWithPayment(Request $request)
         $message[] = $validatedData->errors();
         return (new ServiceController())->apiResponse(505,[],$message);
     }   
-
+    
     $user_id = Auth::id();
+    $validatedData = $validatedData->validated(); 
+
     $validation_result = $this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'], $validatedData['date_of_end'], $validatedData['number_of_domestical_animal'], $validatedData['valeur_payee'], $validatedData['montant_a_paye'], $validatedData['id_transaction'], $validatedData['is_tranche_paiement'], $validatedData['payment_method']);
 
     if (!$validation_result['is_allowed']) {
@@ -637,7 +641,7 @@ public function storeReservationWithPayment(Request $request)
             $transaction->reservation_id = $reservation->id;
             $transaction->payment_method = "portfeuille";
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
-             $transaction->save();
+            $transaction->save();
              $this->initialisePortefeuilleTransaction($transaction->id);
 
           }
@@ -821,7 +825,7 @@ public function storeReservationWithPayment(Request $request)
           ]);
 
 
-            $soldeTotal = Portfeuille_transaction::sum('amount');
+            $soldeTotal = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
             $soldeCommission = Portfeuille_transaction::sum('montant_commission');
             $soldeRestant = Portfeuille_transaction::sum('montant_restant');
 
@@ -911,6 +915,8 @@ public function storeReservationWithPayment(Request $request)
            $transaction->solde_commission = $soldeCommission  + 0;
            $transaction->solde_restant = $soldeRestant + $montantClient;
            $transaction->save();
+           $this->initialisePortefeuilleTransaction($transaction->id);
+
 
            $soldeTotal =  $soldeTotal  + $montantClient;
 
@@ -978,7 +984,7 @@ public function storeReservationWithPayment(Request $request)
             $transaction->credit =1;
             $transaction->reservation_id = $reservation->id;
             $transaction->payment_method = "portfeuille";
-            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
+            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client(Le client ne reçoit rien)";
             $transaction->valeur_commission = $reservation->housing->user->commission->valeur;
             $transaction->montant_commission = $montant_commission;
             $transaction->montant_restant = $montantHote;
@@ -1007,7 +1013,6 @@ public function storeReservationWithPayment(Request $request)
             $data = [
                 'durée en jours' => $totalDays,
                 'durée  en heure' =>$diffEnHeure,
-                'delai d annulation pour ne pas obtenir un  remboursement intégral  ' => $delai,
                 'montant' => $reservation->valeur_payee,
                 'montantHote' => $montantHote,
                 'fraisLouerMeublee' =>$montant_commission,
@@ -1212,7 +1217,7 @@ public function confirmIntegration(Request $request)
         $reservation->save();
 
         $previous_transactions = Portfeuille_transaction::all();
-        $solde_total = $previous_transactions->sum('amount');
+        $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
         $solde_restant = $previous_transactions->sum('montant_restant');
         $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
@@ -1357,14 +1362,14 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
         $user_id_partenaire = $reservation->user->Partenaire->user->id;
         $commission_partenaire = $reservation->user->Partenaire->commission;
         $partenaire_id = $reservation->user->Partenaire->id;
+        $ancien_solde_commission_partenaire = Portfeuille_transaction::all()->sum('montant_commission_partenaire');
 
         $commission_amount = $transaction->montant_commission;
         $montant_commission_partenaire = $commission_amount * ($commission_partenaire / 100);
         $montant_commission_admin=$commission_amount-$montant_commission_partenaire;
-        $valeur_commission_admin=$transaction->valeur_commission-$commission_partenaire;
         // Mettre à jour la commission totale et le solde de la commission dans la transaction
         $transaction->montant_commission_partenaire = $montant_commission_partenaire;
-        $transaction->solde_commission_partenaire += $montant_commission_partenaire;
+        $transaction->solde_commission_partenaire= $ancien_solde_commission_partenaire+$montant_commission_partenaire;
         $transaction->valeur_commission_partenaire=$commission_partenaire;
         $transaction->partenaire_id=$partenaire_id;
 
@@ -1433,7 +1438,7 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
 
         // Calculer les totaux nécessaires
         $solde_commission = Portfeuille_transaction::sum('montant_commission');
-        $solde_total = Portfeuille_transaction::sum('amount');
+        $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
         $solde_commission_partenaire = Portfeuille_transaction::sum('montant_commission_partenaire');
         $solde_restant = Portfeuille_transaction::sum('montant_restant');
         $solde_commission_admin = Portfeuille_transaction::sum('montant_commission_admin');

@@ -106,9 +106,9 @@ class PortfeuilleTransactionController extends Controller
      $portefeuille = Portfeuille::where('user_id', $user->id)->first();
 
      if (!$portefeuille) {
-         return response()->json([
-             'message' => 'Portefeuille non trouvé pour cet utilisateur.'
-         ], 404);
+
+         return (new ServiceController())->apiResponse(404, [], 'Portefeuille non trouvé pour cet utilisateur.');
+
      }
 
      $transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)
@@ -135,17 +135,18 @@ class PortfeuilleTransactionController extends Controller
          ]);
      });
 
-     return response()->json([
-         'solde_portefeuille' => $portefeuille->solde,
-         'transactions' => $filtered_transactions,
-     ], 200);
+     $data =[
+        'solde_portefeuille' => $portefeuille->solde,
+        'transactions' => $filtered_transactions,
+    ];
+          return (new ServiceController())->apiResponse(200, $data, "Detail de portefeuille de l'utilisateur recupéré avec succès .");
  }
 
   /**
    * @OA\Get(
    *     path="/api/portefeuille/transaction/all",
    *     summary="Voir toutes les transactions éffectué sur le site (Admin)",
-   *     tags={"Portefeuille"},
+   *     tags={"Transaction"},
    * security={{"bearerAuth": {}}},
    *     @OA\Response(
    *         response=200,
@@ -157,13 +158,14 @@ class PortfeuilleTransactionController extends Controller
     public function getAllTransactions()
 {
 
-    $transactions = Portfeuille_transaction::orderBy('created_at', 'desc')->get();
+    $transactions = Portfeuille_transaction::orderBy('id', 'desc')->get();
 
     if ($transactions->isEmpty()) {
-        return response()->json([
-            'message' => 'Aucune transaction trouvée sur le site.'
-        ], 404);
+
+        return (new ServiceController())->apiResponse(404, [], 'Aucune transaction trouvée sur le site.');
+
     }
+
 
     $data = [];
     foreach ($transactions as $transaction) {
@@ -173,10 +175,8 @@ class PortfeuilleTransactionController extends Controller
             'transaction' => $transaction,
         ];
     }
+    return (new ServiceController())->apiResponse(200, $data, "Detail de portefeuille de l'utilisateur recupéré avec succès .");
 
-    return response()->json([
-        'data' => $data,
-    ], 200);
 }
 
 

@@ -1172,6 +1172,10 @@ Route::prefix('portefeuille')->group(function () {
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
         ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.all');
+        
+    Route::post('/transaction/update', [PortfeuilleTransactionController::class, 'updateTransaction'])
+         ->name('portefeuille.transaction.update')
+        ->middleware('role_or_permission:superAdmin');
 });
 
         //Crud de methode de paiement

@@ -38,7 +38,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/housing_with_many_reservation",
      *     summary="Top 10 des logements avec le plus grand nombre de reservation",
      * description="Top 10 des logements avec le plus grand nombre de reservation",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -67,7 +67,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/country_with_many_reservation",
      *     summary="Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
      * description="Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -121,7 +121,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/getReservationsCountByYear",
      *     summary="Evolution du Nombre total de réservation au fil des années",
      * description="Evolution du Nombre total de réservation au fil des années",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -283,7 +283,7 @@ function showDetailOfReservationForAdmin($idReservation){
      *     path="/api/reservation/topTravelersWithMostReservations",
      *     summary="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
      * description="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -425,7 +425,7 @@ public function getAllReservationCanceledByTravelerForAdmin(){
  *     path="/api/reservation/getReservationsCountByYearAndMonth",
  *     summary="Obtenir le nombre de réservations par année et par mois",
  *     description="Récupère le nombre de réservations par année et par mois. Fournit le total annuel et le détail mensuel pour chaque année.",
- *     tags={"Reservation"},
+ *     tags={"Administration"},
  *  security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,

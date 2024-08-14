@@ -469,7 +469,7 @@ class DashBoardTravelerController extends Controller
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
                 }
 
-                if ($validatedData['payment_method'] == "espece" ) {
+                else {
 
                     $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
                     

@@ -16,8 +16,24 @@ class Portfeuille_transaction extends Model
         'debit',
         'credit',
         'motif',
-        'id_transaction'
+        'id_transaction',
+        'valeur_commission',
+        'montant_commission',
+        'montant_restant',
+        'solde_total',
+        'solde_commission',
+        'solde_restant',
+        'valeur_commission_partenaire',
+        'montant_commission_partenaire',
+        'solde_commission_partenaire',
+        'partenaire_id',
+        'valeur_commission_admin',
+        'montant_commission_admin',
+        'new_solde_admin',
+        'created_at',
+        'updated_at'
     ];
+    
 
     public function portfeuille()
     {

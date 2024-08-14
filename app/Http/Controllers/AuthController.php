@@ -1410,7 +1410,7 @@ public function RevokePermsToRole(Request $request, $r){
 /**
  * @OA\Get(
  *     path="/api/users/usersCountByRole",
- *     tags={"ManageAccess"},
+ *     tags={"Administration"},
 * security={{"bearerAuth": {}}},
  *     summary="Recupère chaque role avec le nombre d'utilisateur associé",
  *     @OA\Response(

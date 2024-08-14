@@ -1243,7 +1243,7 @@ public function ListeDesLogementsValideDisable()
      *     path="/api/logement/country_with_many_housing",
      *     summary="Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
      * description="Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
-     *     tags={"Housing"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -1269,7 +1269,7 @@ public function ListeDesLogementsValideDisable()
      *     path="/api/logement/hote_with_many_housing",
      *     summary="Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
      * description="Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
-     *     tags={"Housing"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -1296,7 +1296,7 @@ public function ListeDesLogementsValideDisable()
      *     path="/api/logement/getTop10HousingByAverageNotes",
      *     summary="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
      * description="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
-     *     tags={"Housing"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,

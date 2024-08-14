@@ -2505,7 +2505,7 @@
         "/api/logement/country_with_many_housing": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Administration"
                 ],
                 "summary": "Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
                 "description": "Top 10 des pays avec le plus grand nombre de logement sur la plateforme",
@@ -2525,7 +2525,7 @@
         "/api/logement/hote_with_many_housing": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Administration"
                 ],
                 "summary": "Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
                 "description": "Top 10 des utilisateurs(hotes) avec le plus grand nombre de logement",
@@ -2545,7 +2545,7 @@
         "/api/logement/getTop10HousingByAverageNotes": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Administration"
                 ],
                 "summary": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
                 "description": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
@@ -2593,7 +2593,7 @@
         "/api/reservation/housing_with_many_reservation": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Administration"
                 ],
                 "summary": "Top 10 des logements avec le plus grand nombre de reservation",
                 "description": "Top 10 des logements avec le plus grand nombre de reservation",
@@ -2613,7 +2613,7 @@
         "/api/reservation/country_with_many_reservation": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Administration"
                 ],
                 "summary": "Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
                 "description": "Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
@@ -2653,7 +2653,7 @@
         "/api/reservation/getReservationsCountByYear": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Administration"
                 ],
                 "summary": "Evolution du Nombre total de réservation au fil des années",
                 "description": "Evolution du Nombre total de réservation au fil des années",
@@ -2755,7 +2755,7 @@
         "/api/reservation/topTravelersWithMostReservations": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Administration"
                 ],
                 "summary": "Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
                 "description": "Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
@@ -2835,7 +2835,7 @@
         "/api/reservation/getReservationsCountByYearAndMonth": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Administration"
                 ],
                 "summary": "Obtenir le nombre de réservations par année et par mois",
                 "description": "Récupère le nombre de réservations par année et par mois. Fournit le total annuel et le détail mensuel pour chaque année.",
@@ -3925,7 +3925,7 @@
         "/api/users/usersCountByRole": {
             "get": {
                 "tags": [
-                    "ManageAccess"
+                    "Administration"
                 ],
                 "summary": "Recupère chaque role avec le nombre d'utilisateur associé",
                 "operationId": "2ae3e9c55df8a3fee9575ca17b7ea243",

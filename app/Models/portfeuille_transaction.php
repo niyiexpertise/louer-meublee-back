@@ -35,6 +35,8 @@ class Portfeuille_transaction extends Model
     ];
     
 
+    
+
     public function portfeuille()
     {
         return $this->belongsTo(Portfeuille::class);

@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Auth;
 
 class FavorisController extends Controller
 {
-    
+
     public function index()
     {
         //
@@ -78,24 +78,36 @@ class FavorisController extends Controller
 
     public function addToFavorites(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             'housing_id' => 'required|exists:housings,id',
+
         ]);
-    
+
+        $message = [];
+
+        if ($validator->fails()) {
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
+        }
+
         try {
             $user = auth()->user();
-    
+
+
             if ($user->favorites()->where('housing_id', $request->housing_id)->exists()) {
-                return response()->json(['message' => 'Le logement est déjà en favori.'], 400);
+                return (new ServiceController())->apiResponse(404, [], 'Le logement est déjà en favori.');
+
             }
             $favorite = new Favoris();
             $favorite->user_id = $user->id;
             $favorite->housing_id = $request->housing_id;
             $favorite->save();
-    
-            return response()->json(['message' => 'Le logement a été ajouté aux favoris avec succès.'], 200);
+
+            return (new ServiceController())->apiResponse(200,[], 'Le logement a été ajouté aux favoris avec succès.');
+
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Une erreur s\'est produite lors de l\'ajout aux favoris.'], 500);
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
     }
  /**
@@ -154,12 +166,14 @@ public function removeFromFavorites($housingId)
         $favorite = $user->favorites()->where('housing_id', $housingId)->first();
         if ($favorite) {
             $favorite->delete();
-            return response()->json(['message' => 'Le logement a été retiré des favoris avec succès.'], 200);
+            return (new ServiceController())->apiResponse(200,[], 'Le logement a été retiré des favoris avec succès.');
+
         } else {
-            return response()->json(['message' => 'Le logement n\'est pas dans la liste des favoris de cet utilisateur.'], 404);
+            return (new ServiceController())->apiResponse(404, [], 'Le logement n\'est pas dans la liste des favoris de cet utilisateur.');
+
         }
     } catch (\Exception $e) {
-        return response()->json(['message' => 'Une erreur s\'est produite lors de la suppression du logement des favoris.'], 500);
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
     }
 }
 
@@ -210,10 +224,15 @@ public function removeFromFavorites($housingId)
                 $favorite->is_favorite = true;
                 $favorite->housing_note = (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($favorite->id)->original['data']['overall_average'] ?? 'non renseigné';
              }
- 
-         return response()->json(['data' => $favorite_listings], 200);
+             $data = [
+                'favoris_housing' => $favorite_listings,
+
+                    ];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Liste des logements ajoutés aux favoris recupérée avec succès  ');
+
      } catch (\Exception $e) {
-         return response()->json(['message' => 'Une erreur s\'est produite lors de la récupération des favoris.'], 500);
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
      }
  }
 

@@ -1,0 +1,43 @@
+
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Salon",
+      "equipments": [
+        {
+          "equipmentsId": [1,2,5,3,4],
+          "newEquipementName": "lolo"
+        },
+       
+      ]
+      "photos": [File,Fille,File]
+    },
+    {
+      "id": 2,
+      "name": "Chambre",
+     "equipments": [
+        {
+          "equipmentsId": [1,2,5,3,4],
+          "newEquipementName": "table"
+        },
+       
+      ]
+      "photos": [File,Fille,File]
+    }
+  ],
+  "pieces": 
+    {
+      "id": 1,
+      "name": "Living Room",
+      "nomnbre": 2
+      "photos": [File,Fille,File]
+    },
+    {
+      "id": 2,
+      "name": "Bedroom",
+      "quantity": 1
+      "photos": [File,Fille,File]
+    }
+  
+}

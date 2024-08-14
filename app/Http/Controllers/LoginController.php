@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Models\Charge;
@@ -130,6 +131,8 @@ public function login(Request $request){
                 // Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
 
                 try {
+                    $user->is_double_authentification = 0;
+                    $user->save();
                     Mail::to($request->email)->send(new ConfirmationLoginEmail($mail) );
                 } catch (\Exception $e) {
 
@@ -152,7 +155,7 @@ public function login(Request $request){
           return response()->json(['error' => 'Adresse email invalide.'], 200);
       }
 
-     } catch(Exception $e) {
+     } catch(\Exception $e) {
       return response()->json($e->getMessage());
       }
 }
@@ -201,7 +204,7 @@ public function checkAuth(Request $request){
             'user_roles'=>$rightsDetails
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json($e->getMessage());
     }
 }
@@ -210,6 +213,7 @@ public function checkAuth(Request $request){
  * @OA\Post(
  *     path="/api/users/verification_code",
  *     tags={"Authentication"},
+ *     security={{"bearerAuth": {}}},
  *     summary="Vérification du code de vérification",
  *     description="Vérifie le code de vérification envoyé par l'utilisateur.",
  *     requestBody={
@@ -293,14 +297,30 @@ public function verification_code(Request $request)
 {
     try {
         $verification = $request->code;
-        $code = User::where('code', $verification)->first();
-        if ($code == null) {
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Check failed',
-            ]);
+        // $code = User::where('code', $verification)->first();
+       
+
+        if(!(User::whereId(Auth::user()->id)->first())){
+            return (new ServiceController())->apiResponse(404,[], 'Utilisateur non trouvé');
         }
+
+        if(User::whereId(Auth::user()->id)->first()->code !=$verification ){
+            return [User::whereId(Auth::user()->id)->first()->code,$verification]; 
+            return (new ServiceController())->apiResponse(404,[], "Ce code n'appartient pas à l'utilisateur connecté");
+        }
+
+        $code = User::where([
+            ['id', Auth::user()->id],
+            ['code', $verification]
+        ])->first();
+
+
+    //     if(!$code)
+    //   {
+    //         return (new ServiceController())->apiResponse(404,[], 'Utilisateur ayant ce code non trouvé');
+    //     }
         $code->code=0;  
+        $code->is_double_authentification = true;
         $code->save();
         if ($code !== null) {
             return response()->json([
@@ -314,7 +334,7 @@ public function verification_code(Request $request)
             'message' => 'Check failed',
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json([
             'status_code' => 500,
             'message' => $e->getMessage(),
@@ -388,7 +408,7 @@ public function new_code($id) {
             'message' => 'This id does not exist'
         ]);
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         return response()->json(['message' => 'Internal Server Error'], 500);
     }
 }
@@ -453,7 +473,8 @@ public function password_recovery_start_step(Request $request){
             ];
 
 
-            Mail::to($request->email)->send(new NotificationEmail($mail) );
+
+            dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
 
             return response()->json([
                 'status_code' => 200,
@@ -466,7 +487,7 @@ public function password_recovery_start_step(Request $request){
              ]);
         }
 
-    } catch(Exception $e) {
+    } catch(\Exception $e) {
         return response()->json($e->getMessage());
     }
 }
@@ -545,9 +566,20 @@ public function password_recovery_end_step(Request $request){
                 ]);
         }
 
-          } catch(Exception $e) {
+          } catch(\Exception $e) {
             return response()->json($e->getMessage());
             }
 }
+
+    public function returnAuthCommission(){
+        $user = Auth::user();
+        if(!$user){
+            return (new ServiceController())->apiResponse(403, [], "UNAUTHENTIFICATED");
+        }
+
+        $commission = $user->commission->valeur ?? "null";
+
+        return $commission;
+    }
 
 }

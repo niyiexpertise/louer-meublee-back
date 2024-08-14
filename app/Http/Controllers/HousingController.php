@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Support\Facades\App;
 use Illuminate\Http\Request;
 use App\Models\Charge;
@@ -31,6 +33,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Favoris;
 use App\Models\UserVisiteHousing;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
@@ -196,7 +199,7 @@ class HousingController extends Controller
                         }
                 
                                      }   else{
-                                                    return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
+                                        return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
                                             } 
                    } else{
                         return response()->json(['message' => 'Renseigner les catégories des équipements s il vous plaît).'], 200);
@@ -341,7 +344,7 @@ class HousingController extends Controller
                                 'message' => "Aucune photo trouvée pour la catégorie $categoryId."
                             ], 200);
                         }
-                        // dd(count($request->file($photoCategoryKey)));
+                        // return(($request->file("photo_categories1")));
                         if(count($request->file($photoCategoryKey)) == 0){
                                     return response()->json([
                                         'message' => " Il doit y avoir au moins une photo pour la catégorie "
@@ -803,6 +806,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  * @OA\Post(
  *   path="/api/logement/index/ListeDesLogementsAcceuil",
  *   tags={"Housing"},
+ *  @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         required=false,
+     *         description="ID of the user connected",
+     *         @OA\Schema(type="integer")
+     *     ),
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
  *    @OA\RequestBody(
@@ -905,7 +915,45 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->get();
-        $data = $this->formatListingsData($listings);
+
+        $userId = intval($request->query('id'));
+
+        if($request->query('id')){
+            if($userId<=0){
+                return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
+            }
+        }
+
+
+
+        $data = $this->formatListingsData($listings,$userId);
+               
+        $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
+        if ($request->has('user_id') ) {
+            $user_id= $request->input('user_id');
+            $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
+                }else{
+                    $insertvisite=$controllervisitesite->recordSiteVisit();
+                }
+       
+
+             return response()->json(['data' => $data], 200);
+    }
+
+
+    public function ListeDesLogementsAcceuilAuth(Request $request)
+    {
+        $listings = Housing::where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->get();
+
+        $userId = $request->query('userId');
+        $data = $this->formatListingsData($listings,$userId);
                
         $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
         if ($request->has('user_id') ) {
@@ -963,15 +1011,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  public function ShowDetailLogementAcceuil(Request $request)
  {
 
-      
+     
        $id= $request->input('housing_id');
-    //    dd($id);
        $user_id= $request->input('user_id');
           $housing = Housing::where('id', $id)->get();
           
         if($housing->isEmpty()) {
             return response()->json(['message' => " L\'ID du logement spécifié n\'existe pas"], 404);
         }
+        (new PromotionController())->actionRepetitif($id);
 
      $listing = Housing::with([
          'photos',
@@ -1697,6 +1745,8 @@ public function getListingsByNightPriceMin($price)
      if (!$housing) {
          return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
      }
+
+     (new PromotionController())->actionRepetitif($id);
  
      $validatedData = $request->validate([
          'interior_regulation' => 'required',
@@ -1710,7 +1760,6 @@ public function getListingsByNightPriceMin($price)
      ]);
  
      $housing->update($validatedData);
- 
      $housing->is_updated = true;
      $housing->save();
  
@@ -1719,18 +1768,14 @@ public function getListingsByNightPriceMin($price)
      $adminUsers = User::where('is_admin', 1)->get();
  
      foreach ($adminUsers as $adminUser) {
-         $notification = new Notification([
-             'name' => $notificationText,
-             'user_id' => $adminUser->id,
-         ]);
-         $notification->save();
- 
+
          $mail = [
              'title' => 'Mise à jour de logement',
              'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
          ];
 
-         Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
+
+         dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
      }
  
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
@@ -1827,6 +1872,8 @@ public function updateInsensibleHousing(Request $request, $id)
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+    (new PromotionController())->actionRepetitif($id);
+
     $validatedData = $request->validate([
         'name' => 'required|string',
         'description' => 'required|string',
@@ -1850,98 +1897,112 @@ public function updateInsensibleHousing(Request $request, $id)
 
 
 
-public function formatListingsData($listings)
-    {
-        return $listings->map(function ($listing) {
-            return [
-                'id_housing' => $listing->id,
-                'housing_type_id' => $listing->housing_type_id,
-                'housing_type_name' => $listing->housingType->name,
-                'property_type_id' => $listing->property_type_id,
-                'property_type_name' => $listing->propertyType->name,
-                'user_id' => $listing->user_id,
-                'name_housing' => $listing->name,
-                'description' => $listing->description,
-                'number_of_bed' => $listing->number_of_bed,
-                'number_of_traveller' => $listing->number_of_traveller,
-                'sit_geo_lat' => $listing->sit_geo_lat,
-                'sit_geo_lng' => $listing->sit_geo_lng,
-                'country' => $listing->country,
-                'address' => $listing->address,
-                'city' => $listing->city,
-                'department' => $listing->department,
-                'is_camera' => $listing->is_camera,
-                'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => $listing->is_animal_exist,
-                'interior_regulation' => $listing->interior_regulation,
-                'telephone' => $listing->telephone,
-                'code_pays' => $listing->code_pays,
-                'surface' => $listing->surface,
-                'price' => $listing->price,
-                'status' => $listing->status,
-                'arrived_independently' => $listing->arrived_independently,
-                'is_instant_reservation' => $listing->is_instant_reservation,
-                'minimum_duration' => $listing->minimum_duration,
-                'time_before_reservation' => $listing->time_before_reservation,
-                'cancelation_condition' => $listing->cancelation_condition,
-                'departure_instruction' => $listing->departure_instruction,
-                'is_accept_arm' => $listing->is_accept_arm,
-                'is_accept_noise' => $listing->is_accept_noise,
-                'is_accept_smoking' => $listing->is_accept_smoking,
-                'is_accept_chill' => $listing->is_accept_smoking,
-                'is_accept_alcool' => $listing->is_accept_alccol,
-                'is_deleted' => $listing->is_deleted,
-                'is_blocked' => $listing->is_blocked,
-                'is_accept_anulation'=> $listing->is_accept_anulation,
-                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
-                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
-                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
-                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
-                
-                'photos_logement' => $listing->photos->map(function ($photo) {
-                    if($photo->is_verified){
-                        return [
-                            'id_photo' => $photo->id,
-                            'path' => $photo->path,
-                            'extension' => $photo->extension,
-                            'is_couverture' => $photo->is_couverture,
-                        ];
-                    }
-                }),
-                'user' => [
-                    'id' => $listing->user->id,
-                    'lastname' => $listing->user->lastname,
-                    'firstname' => $listing->user->firstname,
-                    'telephone' => $listing->user->telephone,
-                    'code_pays' => $listing->user->code_pays,
-                    'email' => $listing->user->email,
-                    'country' => $listing->user->country,
-                    'file_profil' => $listing->user->file_profil,
-                    'city' => $listing->user->city,
-                    'address' => $listing->user->address,
-                    'sexe' => $listing->user->sexe,
-                    'postal_code' => $listing->user->postal_code,
-                    'is_admin' => $listing->user->is_admin,
-                    'is_traveller' => $listing->user->is_traveller,
-                    'is_hote' => $listing->user->is_hote,
-                ],
-                'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
-                    return [
-                        'category_id' => $categoryFiles->first()->category_id,
-                        'category_name' => $categoryFiles->first()->category->name,
-                        'number' => $categoryFiles->first()->number,
-                        'photos_category' => $categoryFiles->map(function ($categoryFile) {
-                            return [
-                                'file_id' => $categoryFile->file->id,
-                                'path' => $categoryFile->file->path,
-                            ];
-                        }),
-                    ];
-                })->values(),
-                
-            ];
-        });
+public function formatListingsData($listings,$userId=0)
+{
+    foreach ($listings as $listing){
+        (new PromotionController())->actionRepetitif($listing->id);
     }
+
+    
+
+    // return DB::table('favoris')->where('user_id', 9)->where('housing_id', 2)->exists() ;
+
+    return $listings->map(function ($listing) use ($userId) {
+        return [
+            'id_housing' => $listing->id,
+            'housing_type_id' => $listing->housing_type_id ?? 'non renseigné',
+            'housing_type_name' => $listing->housingType->name ?? 'non renseigné',
+            'property_type_id' => $listing->property_type_id ?? 'non renseigné',
+            'property_type_name' => $listing->propertyType->name ?? 'non renseigné',
+            'user_id' => $listing->user_id ?? 'non renseigné',
+            'name_housing' => $listing->name ?? 'non renseigné',
+            'description' => $listing->description ?? 'non renseigné',
+            'number_of_bed' => $listing->number_of_bed ?? 'non renseigné',
+            'number_of_traveller' => $listing->number_of_traveller ?? 'non renseigné',
+            'sit_geo_lat' => $listing->sit_geo_lat ?? 'non renseigné',
+            'sit_geo_lng' => $listing->sit_geo_lng ?? 'non renseigné',
+            'country' => $listing->country ?? 'non renseigné',
+            'address' => $listing->address ?? 'non renseigné',
+            'city' => $listing->city ?? 'non renseigné',
+            'department' => $listing->department ?? 'non renseigné',
+            'is_camera' => $listing->is_camera ?? 'non renseigné',
+            'is_accepted_animal' => $listing->is_accepted_animal ?? 'non renseigné',
+            'is_animal_exist' => $listing->is_animal_exist ?? 'non renseigné',
+            'interior_regulation' => $listing->interior_regulation ?? 'non renseigné',
+            'telephone' => $listing->telephone ?? 'non renseigné',
+            'code_pays' => $listing->code_pays ?? 'non renseigné',
+            'surface' => $listing->surface ?? 'non renseigné',
+            'price' => $listing->price ?? 'non renseigné',
+            'status' => $listing->status ?? 'non renseigné',
+            'arrived_independently' => $listing->arrived_independently ?? 'non renseigné',
+            'is_instant_reservation' => $listing->is_instant_reservation ?? 'non renseigné',
+            'minimum_duration' => $listing->minimum_duration ?? 'non renseigné',
+            'time_before_reservation' => $listing->time_before_reservation ?? 'non renseigné',
+            'cancelation_condition' => $listing->cancelation_condition ?? 'non renseigné',
+            'departure_instruction' => $listing->departure_instruction ?? 'non renseigné',
+            'is_accept_arm' => $listing->is_accept_arm ?? 'non renseigné',
+            'is_accept_noise' => $listing->is_accept_noise ?? 'non renseigné',
+            'is_accept_smoking' => $listing->is_accept_smoking ?? 'non renseigné',
+            'is_accept_chill' => $listing->is_accept_chill ?? 'non renseigné',
+            'is_accept_alcool' => $listing->is_accept_alcool ?? 'non renseigné',
+            'is_deleted' => $listing->is_deleted ?? 'non renseigné',
+            'is_blocked' => $listing->is_blocked ?? 'non renseigné',
+            'is_accept_anulation' => $listing->is_accept_anulation ?? 'non renseigné',
+            'delai_partiel_remboursement' => $listing->delai_partiel_remboursement ?? 'non renseigné',
+            'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? 'non renseigné',
+            'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? 'non renseigné',
+            'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? 'non renseigné',
+            'photos_logement' => $listing->photos->map(function ($photo) {
+                if ($photo->is_verified) {
+                    return [
+                        'id_photo' => $photo->id,
+                        'path' => $photo->path ?? 'non renseigné',
+                        'extension' => $photo->extension ?? 'non renseigné',
+                        'is_couverture' => $photo->is_couverture ?? 'non renseigné',
+                    ];
+                }
+            })->filter(), // Use filter to remove null values if any
+            'user' => [
+                'id' => $listing->user->id ?? 'non renseigné',
+                'lastname' => $listing->user->lastname ?? 'non renseigné',
+                'firstname' => $listing->user->firstname ?? 'non renseigné',
+                'telephone' => $listing->user->telephone ?? 'non renseigné',
+                'code_pays' => $listing->user->code_pays ?? 'non renseigné',
+                'email' => $listing->user->email ?? 'non renseigné',
+                'country' => $listing->user->country ?? 'non renseigné',
+                'file_profil' => $listing->user->file_profil ?? 'non renseigné',
+                'city' => $listing->user->city ?? 'non renseigné',
+                'address' => $listing->user->address ?? 'non renseigné',
+                'sexe' => $listing->user->sexe ?? 'non renseigné',
+                'postal_code' => $listing->user->postal_code ?? 'non renseigné',
+                'is_admin' => $listing->user->is_admin ?? 'non renseigné',
+                'is_traveller' => $listing->user->is_traveller ?? 'non renseigné',
+                'is_hote' => $listing->user->is_hote ?? 'non renseigné',
+            ],
+            'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
+                return [
+                    'category_id' => $categoryFiles->first()->category_id ?? 'non renseigné',
+                    'category_name' => $categoryFiles->first()->category->name ?? 'non renseigné',
+                    'number' => $categoryFiles->first()->number ?? 'non renseigné',
+                    'photos_category' => $categoryFiles->map(function ($categoryFile) {
+                        return [
+                            'file_id' => $categoryFile->file->id ?? 'non renseigné',
+                            'path' => $categoryFile->file->path ?? 'non renseigné',
+                        ];
+                    }),
+                ];
+            })->values(),
+            "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average'] ?? 'non renseigné',
+           'is_favorite' => $userId != 0 ? DB::table('favoris')->where('user_id', $userId)->where('housing_id', $listing->id)->exists() : false
+
+
+        ];
+    });
+}
+
+
+
+
 
     /**
  * @OA\Put(
@@ -2393,17 +2454,12 @@ public function enableHousing($housingId)
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
-     $notification = new Notification();
-     $notification->user_id = $adminUser->user_id;
-     $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}.";
-     $notification->save();
-
           $mail = [
          "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
         "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
      ];
     
-         Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+         dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
        }
              return response()->json(['data' => 'Photos de logement ajouté avec succès'], 200);
 
@@ -2439,15 +2495,12 @@ public function getCurrentPromotion($housingId)
 
 public function getCurrentReductions($housingId)
 {
-    $currentDate = Carbon::now();
 
-    $ongoingReductions = Reduction::where('housing_id', $housingId)
-        ->where('is_encours', true)
+    $ongoingReductions = reduction::where('housing_id', $housingId)
+        ->where('is_encours', 1)
         ->where('is_deleted', false)
         ->where('is_blocked', false)
-        ->where('date_debut', '<=', $currentDate)
-        ->where('date_fin', '>=', $currentDate)
-        ->get(); 
+        ->get();
 
     return response()->json([
         'data' => $ongoingReductions,
@@ -2636,6 +2689,7 @@ public function validatePhoto(Request $request, $photoId)
  */
 public function getAvailableHousingsBetweenDates(Request $request)
 {
+
     $startDateParam = $request->query('start_date');
     $endDateParam = $request->query('end_date');
 
@@ -2654,11 +2708,12 @@ public function getAvailableHousingsBetweenDates(Request $request)
         ], 200);
     }
 
+
     if ($startDate > $endDate) {
         return response()->json([
             'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
         ], 200);
-    }
+    }   
 
     if ($startDate < Carbon::now()->startOfDay()) {
         return response()->json([
@@ -2715,608 +2770,7 @@ public function getOrDefault($input, $default = 'XX') {
 
 
 
-public function addHousingInProgress(Request $request)
- {
-    if($request->has('housing_id')){
-        $housingId = $request->housing_id;
-        $exist = Housing::where('id',$housingId)->first();
-        $housing = Housing::where('id', $housingId )->get();
-          
-        if($housing->isEmpty()) {
-            return response()->json(['message' => " L\'ID du logement(housing_id) spécifié n\'existe pas"], 404);
-        }
-        $exist->delete();
-    }
 
-     $validator = Validator::make($request->all(), [
-
-        'housing_id' =>'nullable',
-        'housing_type_id' => 'required|integer|exists:housing_types,id',
-        'property_type_id' => 'required|integer|exists:property_types,id',
-        'name' => 'string|max:255|unique:housings',
-        'description' => 'string',
-        'number_of_bed' => 'integer|min:1',
-        'number_of_traveller' => 'integer|min:1',
-        'sit_geo_lat' => 'numeric',
-        'sit_geo_lng' => 'numeric',
-        'country' => 'string',
-        'address' => 'string',
-        'city' => 'string',
-        'department' => 'string',
-        'is_camera' => 'boolean',
-        'is_accepted_animal' => 'boolean',
-        'is_animal_exist' => 'boolean',
-        'interior_regulation' => 'string',
-        'telephone' => 'string|max:20',
-        'code_pays' => 'string|max:5',
-        'arrived_independently' => 'string',
-        'is_instant_reservation' => 'boolean',
-        'minimum_duration' => 'integer|min:1',
-        'time_before_reservation' => 'integer|min:0',
-        'cancelation_condition' => 'string',
-        'departure_instruction' => 'string',
-        'surface' => 'numeric|min:1',
-        'price' => 'numeric|min:1',
-        'is_accept_arm' => 'boolean',
-        'is_accept_smoking' => 'boolean',
-        'is_accept_chill' => 'boolean',
-        'is_accept_noise' => 'boolean',
-        'is_accept_alccol' => 'boolean',
-        'is_accept_anulation' => 'boolean',
-        'profile_photo_id' => 'nullable|integer',
-        'photos' => 'nullable|array',
-        'photos.*' => 'file|image|max:2048',
-        'preferences' => 'nullable|array',
-        'preferences.*' => 'integer',
-        'Hotecharges' => 'nullable|array',
-        'Hotecharges.*' => 'integer',
-        'Travelercharges' => 'nullable|array',
-        'Travelercharges.*' => 'integer',
-        'Travelerchargesvalue' => 'nullable|array',
-        'Travelerchargesvalue.*' => 'numeric|min:0',
-        'reduction_night_number' => 'nullable|array',
-        'reduction_date_debut' => 'nullable|array',
-        'reduction_date_fin' => 'nullable|array',
-        'reduction_value_night_number' => 'nullable|array',
-        'promotion_date_debut' => 'nullable|date',
-        'promotion_date_fin' => 'nullable|date',
-        'promotion_number_of_reservation' => 'nullable|integer|min:1',
-        'promotion_value' => 'nullable|numeric|min:0',
-        'equipment_housing' => 'nullable|array',
-        'equipment_housing.*' => 'integer',
-        'category_equipment_housing' => 'nullable|array',
-        'category_equipment_housing.*' => 'integer',
-        'category_id' => 'nullable|array',
-        'category_id.*' => 'integer',
-        'number_category' => 'nullable|array',
-        'photo_categories.*' => 'nullable|file|image|max:2048',
-        'new_equipment' => 'nullable|array',
-        'new_equipment.*' => 'string',
-        'new_equipment_category' => 'nullable|array',
-        'new_equipment_category.*' => 'integer',
-         'new_categories' => 'nullable|array',
-            'new_categories_numbers' => 'nullable|array',
-      'new_category_photos_.*' => 'nullable|array',
-        'new_category_photos_.*.*' => 'file|image|max:2048',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['message' => 'Les données fournies ne sont pas valides.', 'errors' => $validator->errors()], 200);
-    }
-
-    //debut validation hote charge
-
-    if ($request->has('Hotecharges')) {
-               
-        if($request->has('Hotechargesvalue')){
-                   if (count($request->input('Hotecharges')) == count($request->input('Hotechargesvalue')) ) {
-                    foreach ($request->Hotecharges as $HotechargesId) {
-                        $HotechargesExists = Charge::where('id', $HotechargesId)->exists();
-            
-                        if (!$HotechargesExists) {
-                            return response()->json(['message' => 'Revoyez les id de charges que vous renvoyez;précisement la variable HoteCharge.'], 200);
-                            } 
-                     
-                    }
-            
-                                 }   else{
-                                                return response()->json(['message' => 'Le nombre de valeurs de charges Hote ne correspond pas au nombre de charges.'], 200);
-                                        } 
-               } else{
-                    return response()->json(['message' => 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).'], 200);
-                 }
-       
-       }   
-       //endvalidation
-       //debut validation traveler charge    
-
-       if ($request->has('Travelercharges')) {
-               
-        if($request->has('Travelerchargesvalue')){
-                   if (count($request->input('Travelercharges')) == count($request->input('Travelerchargesvalue')) ) {
-                    foreach ($request->Travelercharges as $TravelerchargesId) {
-                        $TravelerchargesExists = Charge::where('id', $TravelerchargesId)->exists();
-            
-                        if (!$TravelerchargesExists) {
-                            return response()->json(['message' => 'Revoyez les id de charges que vous renvoyez;précisement la variable TravelerCharge.'], 200);
-                            } 
-                     
-                    }
-            
-                                 }   else{
-                                                return response()->json(['message' => 'Le nombre de valeurs de charges Traveler ne correspond pas au nombre de charges.'], 200);
-                                        } 
-               } else{
-                    return response()->json(['message' => 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).'], 200);
-                 }
-       
-       }  
-        //endvalidation
-        //validation equipment_housing
-
-        // if ($request->has('category_equipment_housing') && $request->has('equipment_housing') && count($request->input('category_equipment_housing')) !== count($request->input('equipment_housing'))) {
-        //     return response()->json(['message' => 'La taille de la variable <<category_equipment_housing>> doit être égale à la taille de <<equipment_housing>>'], 200);
-        // }
-
-        if ($request->has('equipment_housing')) {
-               
-            if($request->has('category_equipment_housing')){
-                       if (count($request->input('equipment_housing')) == count($request->input('category_equipment_housing')) ) {
-                        foreach ($request->equipment_housing as $index=> $equipmentId) {
-                            $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
-                                        ->where('category_id', $request->input('category_equipment_housing')[$index])
-                                            ->exists();
-                
-                            if (!$EquipmentCategorieExists) {
-                                return response()->json(['message' => "Revoyez les id de catégorie et équipement que vous renvoyez.L equipement $equipmentId n est pas associé à la catégorie ".$request->category_equipment_housing[$index]], 200);
-                                } 
-                         
-                        }
-                
-                                     }   else{
-                                                    return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
-                                            } 
-                   } else{
-                        return response()->json(['message' => 'Renseigner les catégories des équipements s il vous plaît).'], 200);
-                     }
-           
-           }  
-        //endvalidation
-         
-
-   
-
-   
-    //validation new equipment
-    // if ($request->has('new_equipment') && $request->has('new_equipment_category') && count($request->input('new_equipment')) !== count($request->input('new_equipment_category'))) {
-    //     return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 200);
-    // }
-
-    if ($request->has('new_equipment')) {
-               
-        if($request->has('new_equipment_category')){
-                   if (count($request->input('new_equipment')) == count($request->input('new_equipment_category')) ) {
-                    foreach ($request->new_equipment as $index=> $equipmentId) {
-                        $CategorieExists = Category::where('id', $request->input('new_equipment_category')[$index])
-                                        ->exists();
-            
-                        if (!$CategorieExists) {
-                            return response()->json(['message' => "Revoyez les id de catégorie que vous renvoyez.La catégorie". $request->new_equipment_category[$index]." n existe pas"], 200);
-                            } 
-                            $equipments = Equipment::where('is_deleted',false)->where('is_blocked',false)->get();
-                            foreach($equipments as $e){
-                                if($equipmentId == $e->name){
-                                    return response()->json(['message' => "Un autre equipement ayant le même nom existe déjà dans la base de donnée"], 200);
-                            
-                                }
-                            }
-                     
-                    }
-            
-                                 }   else{
-                                                return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 200);
-                                        } 
-               } else{
-                    return response()->json(['message' => 'Renseigner les catégories des nouveaux équipements s il vous plaît).'], 200);
-                 }
-       
-       }  
-
-    //endvalidation
-    //validation reduction
-    // if ($request->has('reduction_night_number') && (count($request->input('reduction_night_number')) !== count($request->input('reduction_date_debut')) ||
-    //     count($request->input('reduction_date_debut')) !== count($request->input('reduction_date_fin')) ||
-    //     count($request->input('reduction_date_fin')) !== count($request->input('reduction_value_night_number')))) {
-    //     return response()->json(['message' => 'Les données de réduction sont incohérentes.'], 200);
-    // }
-
-    if ($request->has('reduction_night_number')) {
-               
-        if($request->has('reduction_value_night_number') && $request->has('reduction_date_debut') && $request->has('reduction_date_fin')){
-                   if (count($request->input('reduction_night_number')) == count($request->input('reduction_value_night_number'))) {
-    
-            
-                                 }   else{
-                                 return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_value_night_number>>'], 200);
-                        } 
-                        if (count($request->input('reduction_night_number')) == count($request->input('reduction_date_debut'))) {
-    
-            
-                        }   else{
-                        return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_date_debut>>'], 200);
-               } 
-               if (count($request->input('reduction_night_number')) == count($request->input('reduction_date_fin'))) {
-    
-            
-               }   else{
-               return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_date_fin>>'], 200);
-      } 
-               } else{
-                    return response()->json(['message' => 'Renseigner les valeurs ou les dates début ou les dates de fin de la réduction s il vous plaît).'], 200);
-                 }
-       
-       }  
-   
-    //endvalidation
-
-    //validation promotion
-
-    
-    if ($request->has('promotion_number_of_reservation')) {
-               
-        if($request->has('promotion_value')){
-             
-               } else{
-                    return response()->json(['message' => 'Renseigner la valeur de la promotion.'], 200);
-        }
-
-        if($request->has('promotion_date_fin')){
-             
-        } else{
-                            return response()->json(['message' => 'Renseigner la date de fin de la promotion.'], 200);
-                }
-
-           if($request->has('promotion_date_debut')){
-                            
-           } else{
-         return response()->json(['message' => 'Renseigner la date de fin de la promotion.'], 200);
-           }
-       
-       }  
-
-        //endpromotion
-          //validation categorie
-
-        //   if ($request->has('category_id') && $request->has('number_category') && count($request->input('category_id')) !== count(($request->input('number_category'))) ) {
-        //     return response()->json([
-        //         'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "number_category".'
-        //     ], 200);
-        if ($request->has('category_id')) {
-               
-            if($request->has('number_category')){
-                       if (count($request->input('category_id')) == count($request->input('number_category'))) {
-        
-                
-                                     }   else{
-                                     return response()->json(['message' => 'La taille de la variable <<category_id>> doit être égale à la taille de <<number_category>>'], 200);
-                            } 
-                            foreach($request->input('category_id') as $categoryId){
-                                $existCategorie = Category::whereId($categoryId)->first();
-                                if(!$existCategorie){
-                                    return response()->json(['message' => "La categorie ayant pour id $categoryId n'existe pas"], 200);
-                                }
-
-                            }
-                          
-                   } else{
-                        return response()->json(['message' => 'Renseigner les valeurs de number_category.'], 200);
-                     }
-
-                     foreach ($request->input('category_id') as $index => $categoryId) {
-                        $photoCategoryKey = 'photo_categories' . $categoryId;
-                        if (!$request->hasFile($photoCategoryKey)) {
-                            return response()->json([
-                                'message' => "Aucune photo trouvée pour la catégorie $categoryId."
-                            ], 200);
-                        }
-                        // dd(count($request->file($photoCategoryKey)));
-                        if(count($request->file($photoCategoryKey)) == 0){
-                                    return response()->json([
-                                        'message' => " Il doit y avoir au moins une photo pour la catégorie "
-                                    ], 200);
-                        }
-                      }
-           
-           }   
-
-  
-    //endvalidation
-    //validation new category
-    if ($request->has('new_categories') && $request->has('new_categories_numbers') && count($request->input('new_categories')) !== count(($request->input('new_categories_numbers'))) ) {
-        return response()->json([
-            'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "new_categories_numbers".'
-        ], 200);
-    }
-
-    if ($request->has('new_categories')) {
-               
-        if($request->has('new_categories_numbers')){
-                   if (count($request->input('new_categories')) == count($request->input('new_categories_numbers'))) {
-    
-            
-                                 }   else{
-                                 return response()->json(['message' => 'La taille de la variable <<new_categories>> doit être égale à la taille de <<new_categories_numbers>>'], 200);
-                        } 
-                        foreach($request->input('new_categories') as $categoryName){
-                            $category = Category::where('is_deleted',false)->where('is_blocked',false)->get();
-                            foreach($category as $e){
-                                if($categoryName == $e->name){
-                                    return response()->json(['message' => "Une autre catégorie ayant le même nom existe déjà dans la base de donnée"], 200);
-                            
-                                }
-
-                        }}
-                      
-               } else{
-                    return response()->json(['message' => 'Renseigner les valeurs de new_categories_numbers.'], 200);
-                 }
-       
-        
-       
-       
-        foreach ($request->input('new_categories') as $index => $new_categoriesName) {
-            $photoCategoryKey = 'new_category_photos_' . $new_categoriesName;
-            if (!$request->hasFile($photoCategoryKey)) {
-                return response()->json([
-                    'message' => "Aucune photo trouvée pour la catégorie $new_categoriesName."
-                ], 200);
-            }
-            if(count($request->file($photoCategoryKey)) == 0){
-                return response()->json([
-                    'message' => " Il doit y avoir au moins une photo pour la catégorie "
-                ], 200);
-    }
-          }
-    }
-
-    //endvalidation
-
-    
-     $userId = Auth::id();
-
-        $housing = new Housing();
-       // Fonction utilitaire pour retourner une valeur ou un défaut si vide
-
-
-// Application de la fonction pour assigner les valeurs
-$housing->user_id = $userId;
-$housing->housing_type_id = $this->getOrDefault($request->input('housing_type_id'));
-$housing->property_type_id = $this->getOrDefault($request->input('property_type_id'));
-$housing->name = $this->getOrDefault($request->input('name'));
-$housing->description = $this->getOrDefault($request->input('description'));
-$housing->number_of_bed = $this->getOrDefault($request->input('number_of_bed'),00);
-$housing->number_of_traveller = $this->getOrDefault($request->input('number_of_traveller'),00);
-$housing->sit_geo_lat = $this->getOrDefault($request->input('sit_geo_lat'),00.00);
-$housing->sit_geo_lng = $this->getOrDefault($request->input('sit_geo_lng'),00.00);
-$housing->country = $this->getOrDefault($request->input('country'));
-$housing->address = $this->getOrDefault($request->input('address'));
-$housing->city = $this->getOrDefault($request->input('city'));
-$housing->department = $this->getOrDefault($request->input('department'));
-$housing->is_camera = $this->getOrDefault($request->input('is_camera'), false); // Pour les booléens
-$housing->is_accepted_animal = $this->getOrDefault($request->input('is_accepted_animal'), false);
-$housing->is_animal_exist = $this->getOrDefault($request->input('is_animal_exist'), false);
-$housing->interior_regulation = $this->getOrDefault($request->input('interior_regulation'));
-$housing->telephone = $this->getOrDefault($request->input('telephone'));
-$housing->code_pays = $this->getOrDefault($request->input('code_pays'));
-$housing->status = "Unverified";
-$housing->arrived_independently = $this->getOrDefault($request->input('arrived_independently'));
-$housing->is_instant_reservation = $this->getOrDefault($request->input('is_instant_reservation'), false);
-$housing->minimum_duration = $this->getOrDefault($request->input('minimum_duration'),00);
-$housing->time_before_reservation = $this->getOrDefault($request->input('time_before_reservation'),00);
-$housing->departure_instruction = $this->getOrDefault($request->input('departure_instruction'));
-$housing->surface = $this->getOrDefault($request->input('surface'),00.00);
-$housing->price = $this->getOrDefault($request->input('price'),00.00);
-$housing->is_updated = 0;
-$housing->is_actif = 1;
-$housing->is_destroy = 0;
-$housing->is_accept_arm = $this->getOrDefault($request->input('is_accept_arm'), false);
-$housing->is_accept_smoking = $this->getOrDefault($request->input('is_accept_smoking'), false);
-$housing->is_accept_chill = $this->getOrDefault($request->input('is_accept_chill'), false);
-$housing->is_accept_noise = $this->getOrDefault($request->input('is_accept_noise'), false);
-$housing->is_accept_alccol = $this->getOrDefault($request->input('is_accept_alccol'), false);
-$housing->is_accept_anulation = $this->getOrDefault($request->input('is_accept_anulation'), true);
-
-     $housing->is_finished=0;
-     if ( $request->input('is_accept_anulation')) {
-        $housing->delai_partiel_remboursement = $this->getOrDefault($request->input('delai_partiel_remboursement'), 00);
-        $housing->delai_integral_remboursement = $this->getOrDefault($request->input('delai_integral_remboursement'), 00);
-        $housing->valeur_integral_remboursement = $this->getOrDefault($request->input('valeur_integral_remboursement'), 00);
-        $housing->valeur_partiel_remboursement = $this->getOrDefault($request->input('valeur_partiel_remboursement'), 00);
-    }   
-     $housing->save();
- 
-     if ($request->hasFile('photos')) {
-         foreach ($request->file('photos') as $index => $photo) {
-             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-             $photoUrl = url('/image/photo_logement/' . $photoName);
-             $type = $photo->getClientOriginalExtension();
-             $photoModel = new photo();
-             $photoModel->path = $photoUrl;
-             $photoModel->extension = $type;
-             if ($index == $request->input('profile_photo_id')) {
-                 $photoModel->is_couverture = true;
-             }
-             $photoModel->housing_id = $housing->id;;
-             $photoModel->save();
-         }
-     }
-     if ($request->has('preferences')) {
-        foreach ($request->input('preferences') as $preference) {
-            $housingPreference = new housing_preference();
-            $housingPreference->housing_id = $housing->id;
-            $housingPreference->preference_id = $preference;
-            $housingPreference->is_verified = true;
-            $housingPreference->save();
-     }
-    }
-     if ($request->has('Hotecharges')) {
-        foreach ($request->input('Hotecharges') as $index => $charge) {
-            $housingCharge = new Housing_charge();
-            $housingCharge->housing_id = $housing->id;
-            $housingCharge->charge_id = $charge;
-            $housingCharge->is_mycharge= true;
-            $housingCharge->valeur=$request->input('Hotechargesvalue')[$index];
-            $housingCharge->save();
-        }
-     }
-     if ($request->has('Travelercharges')) {
-        foreach ($request->input('Travelercharges') as $index => $charge) {
-            $housingCharge = new Housing_charge();
-            $housingCharge->housing_id = $housing->id;
-            $housingCharge->charge_id = $charge;
-            $housingCharge->is_mycharge= false;
-            $housingCharge->valeur=$request->input('Travelerchargesvalue')[$index];
-            $housingCharge->save();
-        }
-     }
-     if ($request->has('reduction_night_number')) {
-        foreach ($request->input('reduction_night_number') as $index => $nightNumber) {
-            $reduction = new reduction();
-            $reduction->night_number = $nightNumber;
-            $reduction->date_debut =$request->input('reduction_date_debut')[$index];
-            $reduction->date_fin = $request->input('reduction_date_fin')[$index];
-            $reduction->value = $request->input('reduction_value_night_number')[$index];
-            $reduction->housing_id = $housing->id;
-            $reduction->is_encours = false;
-        $reduction->save();
-        }
-    }    
-    if ($request->has('promotion_number_of_reservation')) {
-        $promotion = new promotion();
-        $promotion->date_debut =$request->input('promotion_date_debut');
-        $promotion->date_fin = $request->input('promotion_date_fin');
-        $promotion->number_of_reservation = $request->input('promotion_number_of_reservation');
-        $promotion->value = $request->input('promotion_value');
-        $promotion->housing_id = $housing->id;
-        $promotion->is_encours = false;
-        $promotion->save();
-    }
-
-    if ($request->has('equipment_housing')) {
-        foreach ($request->equipment_housing as $index => $equipmentId ) {
-            $equipment = Equipment::find($equipmentId);   
-            if ($equipment) {
-                $housingEquipment = new Housing_equipment();
-                $housingEquipment->equipment_id = $equipmentId;
-                $housingEquipment->category_id =  $request->input('category_equipment_housing')[$index];
-                $housingEquipment->housing_id = $housing->id;
-                $housingEquipment->is_verified = true;
-                $housingEquipment->save();
-            } else {
-               
-            }
-        }
-    }
-
-    if ($request->has('new_equipment') && $request->has('new_equipment_category')) {
-        $newEquipments = $request->input('new_equipment');
-        $newEquipmentCategories = $request->input('new_equipment_category');
-
-        foreach ($newEquipments as $index => $newEquipment) {
-            $equipment = new Equipment();
-            $equipment->name = $newEquipment;
-            $equipment->is_verified=false;
-            $equipment->save();
-
-
-            $equipmentCategory = new Equipment_category();
-            $equipmentCategory->equipment_id = $equipment->id;
-            $equipmentCategory->category_id = $newEquipmentCategories[$index];
-            $equipmentCategory->save();
-
-            $housingEquipment = new Housing_equipment();
-            $housingEquipment->equipment_id = $equipment->id;
-            $housingEquipment->category_id =$newEquipmentCategories[$index];
-            $housingEquipment->housing_id = $housing->id;
-            $housingEquipment->is_verified = false;
-            $housingEquipment->save();
-        }
-    }
-    if ($request->has('category_id')) {
-    foreach ($request->input('category_id') as $index => $categoryId) {
-        $housingCategoryId = $housing->id;
-        $photoCategoryKey = 'photo_categories' . $categoryId;
-        $photoFiles = $request->file($photoCategoryKey);
-        foreach ($photoFiles as $fileId) {
-            $photoModel = new File();
-            $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
-            $photoUrl = url('/image/photo_category/' . $photoName);
-        
-            $photoModel->path = $photoUrl;
-            $photoModel->save();
-            $housingCategoryFile = new Housing_category_file();
-            $housingCategoryFile->housing_id = $housingCategoryId;
-            $housingCategoryFile->category_id = $categoryId;
-            $housingCategoryFile->file_id = $photoModel->id;
-            $housingCategoryFile->number = $request->input('number_category')[$index];
-            $housingCategoryFile->is_verified = true;
-            $housingCategoryFile->save();
-        }
-      }
-    }
-    if($request->has('new_categories')&& $request->has('new_categories_numbers')) {
-    $newCategories = $request->input('new_categories') ?? [];
-    $newCategoriesNumbers = $request->input('new_categories_numbers') ?? [];
-
-    foreach ($newCategories as $index => $newCategory) {
-        $categoryName = $newCategory;
-        $categoryNumber = $newCategoriesNumbers[$index];
-        $photoCategoryKey = 'new_category_photos_' . $categoryName;
-        $categoryPhotos = $request->file($photoCategoryKey) ?? [];
-        $category = new Category();
-        $category->name = $categoryName;
-        $category->is_verified = false;
-        $category->save();
-
-        foreach ($categoryPhotos as $photoFile) {
-            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
-            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
-            $photoUrl = url('/image/photo_category/' . $photoName);
-
-            $photo = new File();
-            $photo->path = $photoUrl;
-            $photo->save();
-
-            $housingCategoryFile = new Housing_category_file();
-            $housingCategoryFile->housing_id = $housing->id;
-            $housingCategoryFile->category_id = $category->id;
-            $housingCategoryFile->file_id = $photo->id;
-            $housingCategoryFile->number = $categoryNumber;
-            $housingCategoryFile->is_verified = false;
-            $housingCategoryFile->save();
-        }
-      }
-    }
-    
-     $notificationName="Félicitation!Vous venez de commencer l'ajout de votre logement, vous pouvez vous connectez à tout moment pour continuer.";
-
-     $notification = new Notification([
-        'name' => $notificationName,
-        'user_id' => $userId,
-       ]);
-       $mail = [
-        'title' => "Ajout d'un logement",
-        'body' => "Félicitation!Vous venez de commencer l'ajout de votre logement, vous pouvez vous connectez à tout moment pour continuer."
-       ];
-
-       Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail));
-    
-       
-     return response()->json(['message' => 'Logement ajoute avec succes'], 201);
- 
-}
 
     /**
  * @OA\Get(

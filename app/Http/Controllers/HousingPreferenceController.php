@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use Illuminate\Http\Request;
 use App\Models\Housing;
 use App\Models\housing_preference;
@@ -236,34 +237,26 @@ public function storeUnexist(Request $request,$housingId)
             $housingPreference->is_verified= false;
             $housingPreference->save();
             $userId = Auth::id();
-            $notification = new Notification([
-                'name' => "Votre ajout de la préférence a été pris en compte. l'administrateur validera dans moin de 48h",
-                'user_id' => $userId,
-            ]);
-            $notification->save();
             $mailhote = [
                 'title' => "Notification d'une nouvelle préférence'",
                 'body' => "Votre ajout de la préférence a été pris en compte. l'administrateur validera dans moin de 48h",
             ];
-            Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote));
+
+            dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
 
             $right = Right::where('name','admin')->first();
             $adminUsers = User_right::where('right_id', $right->id)->get();
             foreach ($adminUsers as $adminUser) {
-            $notification = new Notification();
-            $notification->user_id = $adminUser->user_id;
-            $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) préférence(s) à son logement.";
-            $notification->save();
 
             $mail = [
                 "title" => "Ajout d'une/de nouvelle(s) préférence(s) à un logement",
                 "body" => "Un hote vient d'ajouter une/de nouvelle(s) préférence(s) à son logement."
             ];
             
-                Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+                dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
             }
             return response()->json(['data' => 'Type de preference créé avec succès.', 'preference' => $preference], 201);
-    } catch(Exception $e) {    
+    } catch(\Exception $e) {    
         return response()->json($e->getMessage());
     }
 
@@ -403,38 +396,32 @@ public function ListHousingPreferenceInvalid($housingId) {
             }
 
             $userId = Auth::id();
-            $notification = new Notification([
-                'name' => "Votre ajout de la préférence a été pris en compte. l'administrateur validera dans moin de 48h",
-                'user_id' => $userId,
-            ]);
-            $notification->save();
+           
             $mailhote = [
                 'title' => "Notification d'une nouvelle préférence'",
                 'body' => "Votre ajout de la préférence a été pris en compte. l'administrateur validera dans moin de 48h",
             ];
-            Mail::to(Auth::user()->email)->send(new NotificationEmailwithoutfile($mailhote));
+
+            dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
 
             $right = Right::where('name','admin')->first();
             $adminUsers = User_right::where('right_id', $right->id)->get();
             foreach ($adminUsers as $adminUser) {
-            $notification = new Notification();
-            $notification->user_id = $adminUser->user_id;
-            $notification->name = "Un hote vient d'ajouter une/de nouvelle(s) préférence(s) à son logement.";
-            $notification->save();
+           
 
             $mail = [
                 "title" => "Ajout d'une/de nouvelle(s) préférence(s) à un logement",
                 "body" => "Un hote vient d'ajouter une/de nouvelle(s) préférence(s) à son logement."
             ];
-            
-                Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
+        
+                dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
             }
             
             return response()->json([
                 "message" =>  empty($m) ? '  error' : $m,
                 'error' => empty($e) ? ' no error' : $e
             ],200);
-    } catch(Exception $e) {    
+    } catch(\Exception $e) {    
         return response()->json($e->getMessage(),);
     }
 }
@@ -492,18 +479,17 @@ try{
         return response()->json(['data' => 'association preference logement déjà vérifié.'], 200);
     }
     housing_preference::whereId($housingPreferenceId)->update(['is_verified' => true]);
-    $notification = new Notification([
-        'name' => "L'ajout de cette préférence : ".Preference::find($housingPreference->preference_id)->name." a été validé par l'administrateur",
-        'user_id' =>$housingPreference->housing->user_id ,
-       ]);
-    $notification->save();
+   
     $mailhote = [
         'title' => "Notification de validation d'une nouvelle préférence'",
         'body' => "L'ajout de cette préférence : ".Preference::find($housingPreference->preference_id)->name." a été validé par l'administrateur",
     ];
-    Mail::to($housingPreference->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote));
+   
+
+    dispatch( new SendRegistrationEmail($housingPreference->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
+    
     return response()->json(['data' => 'association preference logement vérifié avec succès.'], 200);
-} catch(Exception $e) {    
+} catch(\Exception $e) {    
     return response()->json($e->getMessage(), 500);
 }
 

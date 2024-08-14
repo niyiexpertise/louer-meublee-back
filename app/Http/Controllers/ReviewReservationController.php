@@ -65,13 +65,21 @@ class ReviewReservationController extends Controller
  {
 
      $validatedData = $request->validate([
-         'reservation_id' => 'required|exists:reservations,id',
+         'reservation_id' => 'required',
          'criteria_notes' => 'required|array',
          'criteria_notes.*.criteria_id' => 'required|exists:criterias,id',
          'criteria_notes.*.note' => 'required|numeric|min:0|max:10',
          'general_comment' => 'nullable|string',
      ]);
      $userId = Auth::id();
+     $reservation = Reservation::find($request->reservation_id);
+     if(!$reservation){
+        return (new ServiceController())->apiResponse(404,[], 'Reservation non trouvé');
+     }
+
+     if($userId != $reservation->user_id){
+        return (new ServiceController())->apiResponse(404,[], 'Vous ne pouvez pas donner votre avis ou une note sur une réservation qui ne vous appartient pas');
+     }
  
      $criteriaIds = [];
      $duplicateCriteriaIds = [];

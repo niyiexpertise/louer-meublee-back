@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Models\Housing;
 use App\Models\Preference;
 use App\Models\Notification;
@@ -33,6 +34,30 @@ class PreferenceController extends Controller
      * )
      */
     public function VerifiednotBlocknotDelete()
+    {
+        try{
+                $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
+                return response()->json(['data' => $preferences], 200);
+    
+        } catch(Exception $e) {
+              return response()->json(['error' => $e->getMessage()], 500);
+        }
+   
+    }
+
+          /**
+     * @OA\Get(
+     *     path="/api/preference/index",
+     *     summary="Get all preferences (verified, not blocked, not deleted)",
+     *     tags={"Preference"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of preferences"
+     *     )
+     * )
+     */
+    public function index()
     {
         try{
                 $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
@@ -585,20 +610,13 @@ class PreferenceController extends Controller
         if ($housingPreference) {
             $housingPreference->update(['is_verified' => true]);
 
-            // Créer une notification
-            $notification = new Notification([
-                'name' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
-                'user_id' => $housingPreference->housing->user_id,
-            ]);
-            $notification->save();
-
             // Envoyer un e-mail de notification
             $mail = [
                 'title' => "Validation de la nouvelle préférence ajoutée au logement",
                 'body' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
             ];
 
-            Mail::to($housingPreference->housing->user->email)->send(new NotificationEmailwithoutfile($mail));
+            dispatch( new SendRegistrationEmail($housingPreference->housing->user->email, $mail['body'], $mail['title'], 2));
         }
 
         return response()->json(['data' => 'Préférence vérifiée avec succès.'], 200);

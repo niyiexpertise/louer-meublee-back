@@ -27,7 +27,7 @@ use App\Models\Housing_charge;
 use App\Models\Reservation;
 use App\Models\Payement;
 use Carbon\Carbon;
-
+use App\Models\user_partenaire;
 class PortfeuilleTransactionController extends Controller
 {
     /**
@@ -102,19 +102,19 @@ class PortfeuilleTransactionController extends Controller
  public function getPortfeuilleDetails(Request $request)
  {
      $user = $request->user();
- 
+
      $portefeuille = Portfeuille::where('user_id', $user->id)->first();
- 
+
      if (!$portefeuille) {
          return response()->json([
              'message' => 'Portefeuille non trouvé pour cet utilisateur.'
          ], 404);
      }
- 
+
      $transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)
          ->orderBy('created_at', 'desc')
          ->get();
- 
+
      // Filtrer les champs indésirables des transactions
      $filtered_transactions = $transactions->map(function($transaction) {
          return $transaction->only([
@@ -134,13 +134,13 @@ class PortfeuilleTransactionController extends Controller
              'updated_at',
          ]);
      });
- 
+
      return response()->json([
          'solde_portefeuille' => $portefeuille->solde,
          'transactions' => $filtered_transactions,
      ], 200);
  }
- 
+
   /**
    * @OA\Get(
    *     path="/api/portefeuille/transaction/all",
@@ -150,7 +150,7 @@ class PortfeuilleTransactionController extends Controller
    *     @OA\Response(
    *         response=200,
    *         description="Liste de toutes les transactions éffectuées sur le site"
-   * 
+   *
    *     )
    * )
    */
@@ -179,5 +179,9 @@ class PortfeuilleTransactionController extends Controller
     ], 200);
 }
 
-    
+
+
+
+
+
 }

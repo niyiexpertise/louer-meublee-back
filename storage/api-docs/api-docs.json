@@ -2906,6 +2906,216 @@
                 ]
             }
         },
+        "/api/stat/getUsersGroupedByCountry": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Groupe les utilisateurs par pays",
+                "description": "Cette fonction retourne une liste des utilisateurs groupés par pays",
+                "operationId": "ec4c8a48eda5997333b8fa04dfbcee11",
+                "responses": {
+                    "200": {
+                        "description": "Une liste des utilisateurs groupés par pays",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "country_name": {
+                                                "description": "Le nom du pays",
+                                                "type": "string"
+                                            },
+                                            "number_of_users": {
+                                                "description": "Le nombre d'utilisateurs dans le pays",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stat/getHousingGroupedByCountry": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Groupe les logements par pays",
+                "description": "Cette fonction retourne une liste des logements groupés par pays",
+                "operationId": "38080715dad83bdf767bfc7b65865f71",
+                "responses": {
+                    "200": {
+                        "description": "Une liste des logements groupés par pays",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "country_name": {
+                                                "description": "Le nom du pays",
+                                                "type": "string"
+                                            },
+                                            "number_of_housing": {
+                                                "description": "Le nombre de logements dans le pays",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stat/getReservationGroupedByCountry": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Groupe les réservations par pays",
+                "description": "Cette fonction retourne une liste des réservations groupées par pays",
+                "operationId": "7c9459a64b7f281caec5ce4c87a59d9b",
+                "responses": {
+                    "200": {
+                        "description": "Une liste des réservations groupées par pays",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "country_name": {
+                                                "description": "Le nom du pays",
+                                                "type": "string"
+                                            },
+                                            "number_of_reservations": {
+                                                "description": "Le nombre de réservations dans le pays",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stat/getNumberOfReservationGroupedByTraveler": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Groupe les réservations par pays",
+                "description": "Cette fonction retourne une liste des réservations groupées par pays",
+                "operationId": "7d06744fc7d91dd2c96d92c6469f89b9",
+                "responses": {
+                    "200": {
+                        "description": "Une liste des réservations groupées par pays",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "country_name": {
+                                                "description": "Le nom du pays",
+                                                "type": "string"
+                                            },
+                                            "number_of_reservations": {
+                                                "description": "Le nombre de réservations dans le pays",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stat/getNumberOfReservationGroupedByHousing": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Groupe les réservations par logement",
+                "description": "Cette fonction retourne une liste des réservations groupées par logement",
+                "operationId": "21a352da9c53b22e4c2e1cc1e99ef207",
+                "responses": {
+                    "200": {
+                        "description": "Une liste des réservations groupées par logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "user": {
+                                                "description": "Le logement",
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "L'ID du logement",
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "description": "Le nom du logement",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "number_of_reservation": {
+                                                "description": "Le nombre de réservations dans le logement",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/assignPermsToRole/{role}": {
             "post": {
                 "tags": [

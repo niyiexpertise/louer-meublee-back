@@ -9511,6 +9511,16 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "requestBody": {
@@ -9862,6 +9872,16 @@
                 "operationId": "listingsFilteredByHousingType",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nom du pays",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
                         "name": "housingTypeId",
                         "in": "path",
                         "description": "ID du type de logement",
@@ -9897,6 +9917,16 @@
                 "operationId": "listingsFilteredByPropertyType",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "PropertyTypeId",
                         "in": "path",
                         "description": "ID du type de propriété",
@@ -9928,9 +9958,19 @@
                     "Housing"
                 ],
                 "summary": "Liste des logements filtrée par Pays",
-                "description": "Récupère la liste des logements filtrée par le paysspécifié.",
+                "description": "Récupère la liste des logements filtrée par le pays spécifié.",
                 "operationId": "579567a28bc3f4fe3efae14e21edfb56",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "country",
                         "in": "path",
@@ -9967,6 +10007,16 @@
                 "operationId": "2fd925a4f8e746457b691e3a4fbcb686",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "preference_id",
                         "in": "path",
                         "description": "Id du preference",
@@ -10002,6 +10052,16 @@
                 "operationId": "f668f23118bdd9677d89077e3a482231",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "city",
                         "in": "path",
                         "description": "Nom de la ville",
@@ -10027,15 +10087,25 @@
                 }
             }
         },
-        "/api/logement/filterby/departement/{departement}": {
+        "/api/logement/filterby/department/{departement}": {
             "get": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements filtrée par departement",
                 "description": "Récupère la liste des logements filtrée par departement spécifié.",
-                "operationId": "30b5f67f65e20095eaac05ee38aadc2b",
+                "operationId": "9c60c003503c8b0ba1486c6498496070",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "departement",
                         "in": "path",
@@ -10072,6 +10142,16 @@
                 "operationId": "b0f705915753ba229938a707728688e9",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "nbtraveler",
                         "in": "path",
                         "description": "Nombre de voyageur",
@@ -10106,6 +10186,16 @@
                 "description": "Récupère la liste des logements filtrée par un prix de nuit inférieur au montant spécifié.",
                 "operationId": "c6874caca3903c645fa5b08386ef8a96",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "price",
                         "in": "path",
@@ -10142,6 +10232,16 @@
                 "operationId": "0994d0b295cc90be26ba94c62df003ea",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "price",
                         "in": "path",
                         "description": "Prix de nuit minimum",
@@ -10176,6 +10276,16 @@
                 "description": "Récupère la liste des logements pour un User donné.",
                 "operationId": "64be7cf1593a8edebb8d86386524ef7f",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "UserID",
                         "in": "path",
@@ -14618,6 +14728,220 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/notifications/notifyUserHaveRoles/{mode}": {
+            "post": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Notify users with specified roles.",
+                "operationId": "6ed486d9afb234760af4b07b320cbebf",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "path",
+                        "description": "Mode de transmission(avec email et mail ou l'un des deux)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "roleIds",
+                                    "object",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "roleIds": {
+                                        "description": "Array of role IDs",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "object": {
+                                        "description": "Object of the notification",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "Content of the notification",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marked as unread successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Role not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Role not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/notifyUsers/{mode}": {
+            "post": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Notify users",
+                "description": "Send a notification to multiple users",
+                "operationId": "cc326ab50884fe65d388b09a0d3ad202",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "path",
+                        "description": "Mode de transmission(avec email et mail ou l'un des deux)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "userIds",
+                                    "object",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "userIds": {
+                                        "description": "List of user IDs to notify",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "object": {
+                                        "description": "Notification object",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "Notification content",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marqué comme lu avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/paiement/reservation/user": {

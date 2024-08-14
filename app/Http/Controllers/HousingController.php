@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+
 class HousingController extends Controller
 {
 
@@ -364,11 +367,10 @@ class HousingController extends Controller
     }
 
     if ($request->has('new_categories')) {
-               
+
         if($request->has('new_categories_numbers')){
                    if (count($request->input('new_categories')) == count($request->input('new_categories_numbers'))) {
-    
-            
+
                                  }   else{
                                  return response()->json(['message' => 'La taille de la variable <<new_categories>> doit être égale à la taille de <<new_categories_numbers>>'], 200);
                         } 
@@ -813,6 +815,13 @@ public function ListeDesPhotosLogementAcceuil($id)
      *         description="ID of the user connected",
      *         @OA\Schema(type="integer")
      *     ),
+     *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false ,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="integer", example=1)
+ *   ),
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
  *    @OA\RequestBody(
@@ -905,16 +914,24 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function ListeDesLogementsAcceuil(Request $request)
+
+public function ListeDesLogementsAcceuil(Request $request)
     {
-        $listings = Housing::where('status', 'verified')
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+    $page = intval($request->query('page', 1)); 
+    $perPage = 15;
+
+    $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
         $userId = intval($request->query('id'));
 
@@ -937,8 +954,8 @@ public function ListeDesPhotosLogementAcceuil($id)
                 }
        
 
-             return response()->json(['data' => $data], 200);
-    }
+             return response()->json(['data' => $data],200);
+            }
 
 
     public function ListeDesLogementsAcceuilAuth(Request $request)
@@ -951,6 +968,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->get();
+
+      
 
         $userId = $request->query('userId');
         $data = $this->formatListingsData($listings,$userId);
@@ -1222,6 +1241,16 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de logement",
  *     description="Récupère la liste des logements filtrée par le type de logement spécifié.",
  *     operationId="listingsFilteredByHousingType",
+ *    @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Nom du pays",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
  *     @OA\Parameter(
  *         name="housingTypeId",
  *         in="path",
@@ -1245,8 +1274,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function  ListeDesLogementsAcceuilFilterByTypehousing($id)
+ public function  ListeDesLogementsAcceuilFilterByTypehousing(Request $request ,$id)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1255,7 +1291,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
     
         $data = $this->formatListingsData($listings);
 
@@ -1269,6 +1305,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de proprieté",
  *     description="Récupère la liste des logements filtrée par le type de propriété spécifié.",
  *     operationId="listingsFilteredByPropertyType",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="PropertyTypeId",
  *         in="path",
@@ -1291,8 +1334,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsAcceuilFilterByTypeproperty($id)
+    public function  ListeDesLogementsAcceuilFilterByTypeproperty(Request $request, $id)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1301,7 +1350,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
                 ->where('property_type_id', $id)
-        ->get();
+                ->paginate($perPage, ['*'], 'page', $page);
 
         $data = $this->formatListingsData($listings);
 
@@ -1314,7 +1363,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     path="/api/logement/filterby/country/{country}",
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par Pays",
- *     description="Récupère la liste des logements filtrée par le paysspécifié.",
+ *     description="Récupère la liste des logements filtrée par le pays spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="country",
  *         in="path",
@@ -1337,8 +1393,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsFilterByCountry($country)
+    public function  ListeDesLogementsFilterByCountry(Request $request,$country)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1347,10 +1410,11 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('country', $country)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
     
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
+
       }
 
 /**
@@ -1359,6 +1423,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par preference",
  *     description="Récupère la liste des logements filtrée par le id preference spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="preference_id",
  *         in="path",
@@ -1381,8 +1452,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
+public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$preferenceId)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1)); 
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1393,7 +1470,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->whereHas('housing_preference', function ($query) use ($preferenceId) {
             $query->where('preference_id', $preferenceId);
         })
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
     
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
@@ -1404,6 +1481,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par ville",
  *     description="Récupère la liste des logements filtrée par villespécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="city",
  *         in="path",
@@ -1426,8 +1510,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByCity($city)
+ public function  ListeDesLogementsFilterByCity(Request $request, $city)
     {
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1436,7 +1525,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('city', $city)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
     
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
@@ -1444,10 +1533,17 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
 
 /**
  * @OA\Get(
- *     path="/api/logement/filterby/departement/{departement}",
+ *     path="/api/logement/filterby/department/{departement}",
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par departement",
  *     description="Récupère la liste des logements filtrée par departement spécifié.",
+ *    @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="departement",
  *         in="path",
@@ -1470,8 +1566,15 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByDepartement($department)
+ public function  ListeDesLogementsFilterByDepartement(Request $request,$department)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1480,7 +1583,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('department', $department)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
  }
@@ -1490,6 +1593,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par nbtraveler",
  *     description="Récupère la liste des logements filtrée par nbtraveler spécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="nbtraveler",
  *         in="path",
@@ -1512,8 +1622,14 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsAcceuilFilterNbtravaller($nbtravaler)
+ public function  ListeDesLogementsAcceuilFilterNbtravaller(Request $request, $nbtravaler)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1522,7 +1638,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('number_of_traveller', $nbtravaler)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
     
         $data = $this->formatListingsData($listings);
 
@@ -1535,6 +1651,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit(Maximum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit inférieur au montant spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -1557,8 +1680,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
-public function getListingsByNightPriceMax($price)
+public function getListingsByNightPriceMax(Request $request, $price)
 {
+    if(!$request->page){
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+    $page = intval($request->query('page', 1)); 
+    $perPage = 15;
     $listings = Housing::where('price', '<=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1567,7 +1695,7 @@ public function getListingsByNightPriceMax($price)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-    ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
     $data = $this->formatListingsData($listings);
 
@@ -1580,6 +1708,13 @@ public function getListingsByNightPriceMax($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit (Minimum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit supérieur au montant spécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -1602,8 +1737,15 @@ public function getListingsByNightPriceMax($price)
  *     )
  * )
  */
-public function getListingsByNightPriceMin($price)
+public function getListingsByNightPriceMin(Request $request,$price)
 {
+
+    if(!$request->page){
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = 15;
     $listings = Housing::where('price', '>=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1612,7 +1754,7 @@ public function getListingsByNightPriceMin($price)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-    ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
     $data = $this->formatListingsData($listings);
 
@@ -1625,6 +1767,13 @@ public function getListingsByNightPriceMin($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par user",
  *     description="Récupère la liste des logements pour un User donné.",
+ * @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="UserID",
  *         in="path",
@@ -1647,8 +1796,14 @@ public function getListingsByNightPriceMin($price)
  *     )
  * )
  */
- public function ListeDesLogementsFilterByHote($userId)
+ public function ListeDesLogementsFilterByHote(Request $request, $userId)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1657,7 +1812,7 @@ public function getListingsByNightPriceMin($price)
         ->where('is_destroy', 0)
         ->where('user_id', $userId)
         ->where('is_finished', 1)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
  }
@@ -2798,6 +2953,17 @@ public function HousingHoteInProgress(){
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
 }
+
+
+    public function paginateH($items, $perPage = 15, $page = null){
+        $baseUrl = url('/');
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $total = count($items);
+        $currentpage = $page;
+        $offset = ($currentpage * $perPage) - $perPage;
+        $itemstoshow = array_slice($items, $offset, $perPage);
+        return new LengthAwarePaginator($itemstoshow,$total,$perPage,$page,['path' => "{$baseUrl}/api/logement/index/ListeDesLogementsAcceuil?id" ]);
+    }
 
 
 

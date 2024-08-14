@@ -186,7 +186,7 @@ class ChatController extends Controller
      *     path="/api/chats/markMessageAsRead/{messageId}",
      *     summary="Marque un message comme lu",
      *     tags={"Chats"},
-     *  security={{"bearerAuth": {}}}, 
+     *  security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="messageId",
      *         in="path",

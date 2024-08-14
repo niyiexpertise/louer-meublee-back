@@ -827,6 +827,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
        Route::post('/store', [NotificationController::class, 'store']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
+       Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
+       Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
        });
     });
     //Gestion des logements en favoris (ici il suffit d'etre connecté)

@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class Portfeuille_transaction extends Model
+class Portfeuille_transaction extends Model implements Auditable
 {
     use HasFactory;
+    use AuditableTrait;
     protected $fillable = [
         'portfeuille_id', 
         'amount',    

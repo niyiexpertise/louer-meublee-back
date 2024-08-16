@@ -2799,4 +2799,6 @@ public function HousingHoteInProgress(){
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
 }
 
+
+
 }

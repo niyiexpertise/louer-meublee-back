@@ -134,13 +134,11 @@ class PortfeuilleController extends Controller
         $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
         $portefeuilleTransaction->id_transaction = $request->input('transaction_id'); 
         $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
-        $portefeuilleTransaction->valeur_commission = 0;
-        $portefeuilleTransaction->montant_commission = 0;
-        $portefeuilleTransaction->montant_restant = 0;
+        
         $portefeuilleTransaction->solde_total = $soldeTotal  + $amount;
-        $portefeuilleTransaction->solde_commission = $soldeCommission  + 0;
-        $portefeuilleTransaction->solde_restant = $soldeRestant  + 0;
+        
         $portefeuilleTransaction->save();
+            (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
 
 
 
@@ -151,7 +149,7 @@ class PortfeuilleController extends Controller
         ];
 
 
-  dispatch( new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
+      dispatch( new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
     
         return response()->json([
             'message' => 'Le portefeuille a été crédité avec succès.',

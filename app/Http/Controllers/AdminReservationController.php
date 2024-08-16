@@ -38,7 +38,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/housing_with_many_reservation",
      *     summary="Top 10 des logements avec le plus grand nombre de reservation",
      * description="Top 10 des logements avec le plus grand nombre de reservation",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -67,7 +67,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/country_with_many_reservation",
      *     summary="Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
      * description="Top 10 des pays avec le plus grand nombre de réservation sur la plateforme",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -121,7 +121,7 @@ class AdminReservationController extends Controller
      *     path="/api/reservation/getReservationsCountByYear",
      *     summary="Evolution du Nombre total de réservation au fil des années",
      * description="Evolution du Nombre total de réservation au fil des années",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -283,7 +283,7 @@ function showDetailOfReservationForAdmin($idReservation){
      *     path="/api/reservation/topTravelersWithMostReservations",
      *     summary="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
      * description="Top 10 des utilisateurs(voyageurs) avec le plus grand nombre de réservations",
-     *     tags={"Reservation"},
+     *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -425,7 +425,7 @@ public function getAllReservationCanceledByTravelerForAdmin(){
  *     path="/api/reservation/getReservationsCountByYearAndMonth",
  *     summary="Obtenir le nombre de réservations par année et par mois",
  *     description="Récupère le nombre de réservations par année et par mois. Fournit le total annuel et le détail mensuel pour chaque année.",
- *     tags={"Reservation"},
+ *     tags={"Administration"},
  *  security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
@@ -547,20 +547,257 @@ public function getReservationsCountByYearAndMonth()
     ], 200);
 }
 
+/**
+ * @OA\Get(
+ *     path="/api/stat/getUsersGroupedByCountry",
+ *     tags={"Administration"},
+ *  security={{"bearerAuth": {}}},
+ *     summary="Groupe les utilisateurs par pays",
+ *     description="Cette fonction retourne une liste des utilisateurs groupés par pays",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Une liste des utilisateurs groupés par pays",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="country_name",
+ *                     type="string",
+ *                     description="Le nom du pays"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_users",
+ *                     type="integer",
+ *                     description="Le nombre d'utilisateurs dans le pays"
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
 public function getUsersGroupedByCountry()
     {
-        $usersGroupedByCountry = User::select('country_id', DB::raw('COUNT(*) as number_of_users'))
-            ->groupBy('country_id')
-            ->with('country')
+        $usersGroupedByCountry = User::select('country', DB::raw('COUNT(*) as number_of_users'))
+            ->groupBy('country')
             ->get()
             ->map(function ($userGroup) {
                 return [
-                    'country_name' => $userGroup->country->name,
+                    'country_name' => $userGroup->country,
                     'number_of_users' => $userGroup->number_of_users,
                 ];
             });
 
-        return response()->json($usersGroupedByCountry);
+            return (new ServiceController())->apiResponse(200, [$usersGroupedByCountry], 'Groupe les utilisateurs par pays');
+
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/stat/getHousingGroupedByCountry",
+     *     tags={"Administration"},
+     *     security={{"bearerAuth": {}}},
+     *     summary="Groupe les logements par pays",
+     *     description="Cette fonction retourne une liste des logements groupés par pays",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Une liste des logements groupés par pays",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="country_name",
+     *                     type="string",
+     *                     description="Le nom du pays"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="number_of_housing",
+     *                     type="integer",
+     *                     description="Le nombre de logements dans le pays"
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getHousingGroupedByCountry()
+    {
+        $housingsGroupedByCountry = Housing::select('country', DB::raw('COUNT(*) as number_of_housings'))
+            ->where('is_updated',0)
+            ->where('is_deleted',0)
+            ->where('is_actif',1)
+            ->where('is_destroy',0)
+            ->where('is_finished',1)
+            ->groupBy('country')
+            ->get()
+            ->map(function ($userGroup) {
+                return [
+                    'country_name' => $userGroup->country,
+                    'number_of_housing' => $userGroup->number_of_housings,
+                ];
+            });
+
+            return (new ServiceController())->apiResponse(200, [$housingsGroupedByCountry], 'Groupe les logements par pays');
+
+    }
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/stat/getReservationGroupedByCountry",
+ *     tags={"Administration"},
+ *     security={{"bearerAuth": {}}},
+ *     summary="Groupe les réservations par pays",
+ *     description="Cette fonction retourne une liste des réservations groupées par pays",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Une liste des réservations groupées par pays",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="country_name",
+ *                     type="string",
+ *                     description="Le nom du pays"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="number_of_reservations",
+ *                     type="integer",
+ *                     description="Le nombre de réservations dans le pays"
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+    public function getReservationGroupedByCountry()
+    {
+        $reservationsGroupedByCountry = Reservation::join('housings', 'reservations.housing_id', '=', 'housings.id')
+        ->select('housings.country', DB::raw('COUNT(*) as number_of_reservations'))
+        ->where('reservations.is_blocked', 0)
+        ->where('reservations.is_deleted', 0)
+        ->groupBy('housings.country')
+        ->get()
+        ->map(function ($item) {
+            return [
+                'country_name' => $item->country,
+                'number_of_housing' => $item->number_of_reservations,
+            ];
+        });
+
+
+            return (new ServiceController())->apiResponse(200, $reservationsGroupedByCountry, 'Groupe les réservations par pays');
+
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/stat/getNumberOfReservationGroupedByTraveler",
+     *     tags={"Administration"},
+     *     security={{"bearerAuth": {}}},
+     *     summary="Groupe les réservations par pays",
+     *     description="Cette fonction retourne une liste des réservations groupées par pays",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Une liste des réservations groupées par pays",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="country_name",
+     *                     type="string",
+     *                     description="Le nom du pays"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="number_of_reservations",
+     *                     type="integer",
+     *                     description="Le nombre de réservations dans le pays"
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getNumberOfReservationGroupedByTraveler()
+    {
+        $reservationsGroupedByTraveler = Reservation::select('user_id', DB::raw('COUNT(*) as number_of_reservations'))
+        ->where('is_blocked', 0)
+        ->where('is_deleted', 0)
+            ->groupBy('user_id')
+            ->get()
+            ->map(function ($userGroup) {
+                return [
+                    'user' => User::find($userGroup->user_id),
+                    'number_of_reservation' => $userGroup->number_of_reservations,
+                ];
+            });
+
+            return (new ServiceController())->apiResponse(200, [$reservationsGroupedByTraveler], 'Groupe les réservations par voyageur');
+
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/stat/getNumberOfReservationGroupedByHousing",
+     *     tags={"Administration"},
+     *     security={{"bearerAuth": {}}},
+     *     summary="Groupe les réservations par logement",
+     *     description="Cette fonction retourne une liste des réservations groupées par logement",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Une liste des réservations groupées par logement",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     description="Le logement",
+     *                     @OA\Property(
+     *                         property="id",
+     *                         type="integer",
+     *                         description="L'ID du logement"
+     *                     ),
+     *                     @OA\Property(
+     *                         property="name",
+     *                         type="string",
+     *                         description="Le nom du logement"
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="number_of_reservation",
+     *                     type="integer",
+     *                     description="Le nombre de réservations dans le logement"
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getNumberOfReservationGroupedByHousing()
+    {
+        $reservationsGroupedByHousing = Reservation::select('housing_id', DB::raw('COUNT(*) as number_of_housings'))
+        ->where('is_blocked', 0)
+        ->where('is_deleted', 0)
+        ->groupBy('housing_id')
+        ->get()
+        ->map(function ($userGroup) {
+                return [
+                    'user' => Housing::find($userGroup->housing_id),
+                    'number_of_reservation' => $userGroup->number_of_housings,
+                ];
+            });
+
+            return (new ServiceController())->apiResponse(200, [$reservationsGroupedByHousing], 'Groupe les réservations par logement');
+
     }
 
 

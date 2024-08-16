@@ -537,6 +537,15 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::get('/getMessagesByChatId/{chatId}', [ChatController::class, 'getMessagesByChatId']);
     });
 
+    //Gestion de quelques stats
+    Route::prefix('stat')->group(function () {
+        Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
+        Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
+        Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);
+        Route::get('/getNumberOfReservationGroupedByTraveler', [AdminReservationController::class, 'getNumberOfReservationGroupedByTraveler']);
+        Route::get('/getNumberOfReservationGroupedByHousing', [AdminReservationController::class, 'getNumberOfReservationGroupedByHousing']);
+    });
+
 
     //Gestion des langues sous formes de CRUD.
     Route::prefix('language')->group(function () {

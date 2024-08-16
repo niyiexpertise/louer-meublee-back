@@ -243,14 +243,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     //Gestion des équipements.
     Route::prefix('equipment')->name('equipment.')->group(function () {
-        Route::middleware(['role_or_permission:admin|superAdmin|ManageEquipment.indexAdmin'])->group(function () {
-            Route::get('/indexAdmin', [EquipementController::class, 'indexAdmin'])->name('indexAdmin');
-        });
-
-        Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.indexBlock'])->group(function () {
-            Route::get('/indexBlock', [EquipementController::class, 'indexBlock'])->name('indexBlock');
-        });
-
+        
         Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.VerifiedBlocknotDelete'])->group(function () {
             Route::get('/VerifiedBlocknotDelete', [EquipementController::class, 'VerifiedBlocknotDelete'])->name('VerifiedBlocknotDelete');
         });
@@ -502,7 +495,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     });
 
     //Gestion de quelques stats
-    Route::prefix('stat')->group(function () {
+    Route::prefix('stat')->group(['middleware' => ['role:superAdmin|admin']])->group(function () {
         Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
         Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
         Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);

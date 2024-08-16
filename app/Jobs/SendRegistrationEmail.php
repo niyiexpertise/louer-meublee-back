@@ -45,6 +45,5 @@ class SendRegistrationEmail implements ShouldQueue
         } catch (\Exception $e) {
             throw $e;
         }
-        
     }
 }

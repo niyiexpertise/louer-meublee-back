@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\NotificationWithFile;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\verification_document;
 use App\Models\verification_statut;
@@ -294,9 +295,10 @@ public function index()
                  ];
 
                  try {
-                     Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths));
+                    //  Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths));
 
-                     dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+                     dispatch(new NotificationWithFile($adminUser->email, $mail['body'], $mail['title'],$filePaths));
+
                  } catch (\Exception $e) {
                      // Gérer l'erreur de l'envoi de l'email
                  }

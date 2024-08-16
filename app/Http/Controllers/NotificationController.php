@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\User_right;
 use Exception;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
@@ -147,7 +148,7 @@ class NotificationController extends Controller
     public function getUserNotifications()
     {
         //$userID = auth()->user()->id;
-        $userId = 11;
+        $userId = Auth::user()->id;
         $notification = Notification::where('user_id', $userId)->get();
         if (!$notification ) {
             return response()->json(['error' => 'Notification non trouvée non trouvé'], 404);

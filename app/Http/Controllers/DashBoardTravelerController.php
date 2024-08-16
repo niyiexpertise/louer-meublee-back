@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Housing;
 use App\Models\Payement;
 use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
@@ -503,7 +504,84 @@ class DashBoardTravelerController extends Controller
             }
         }
 
+        /**
+ * @OA\Get(
+ *     path="/api/reservation/showDetailReservation/{reservationId}",
+ *  security={{"bearerAuth": {}}},
+ *     summary="Afficher les détails d'une réservation",
+ *     description="Récupère les détails d'une réservation spécifique par ID. Seul le propriétaire de la réservation peut accéder à ces détails.",
+ *     operationId="showDetailReservation",
+ *     tags={"Dashboard traveler"},
+ *     @OA\Parameter(
+ *         name="reservationId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la réservation",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Détails de la réservation récupérés avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="detail de la reservation",
+ *                 description="Les détails de la réservation",
+ *                 type="string", example="[]"
+ *                
+ *             ),
+ *             @OA\Property(
+ *                 property="voyageur",
+ *                 description="Les détails du voyageur",
+ *                 type="string", example="[]"
+ *                
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation non trouvée ou l'utilisateur n'est pas autorisé à accéder à cette réservation",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
+ *             )
+ *         )
+ *     ),
+ *     @OA\SecurityScheme(
+ *         securityScheme="BearerToken",
+ *         type="http",
+ *         scheme="bearer",
+ *         bearerFormat="JWT"
+ *     )
+ * )
+ */
+    public function showDetailReservation($reservationId){
+        $reservation = Reservation::find($reservationId);
+         if(!$reservation){
+             return (new ServiceController())->apiResponse(404,[], "Reservation non trouvée. ");
+
+         }
+
+         if (!(Auth::user()->id == $reservation->user_id)) {
+              return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas consulter les détails d' une réservation qui ne vous concerne pas. ");
+         }
+
+         $data = [
+            'detail de la reservation' => $reservation->toArray(),
+            'propriétaire' => [
+                'id' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->id,
+                'nom' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->lastname,
+                'prenom' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->firstname,
+            ]
+         ];
         
+
+       return (new ServiceController())->apiResponse(200,$data, 'Detail de reservation recupéré avec succès');
+    }
 
 
 }

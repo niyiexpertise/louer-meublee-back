@@ -385,6 +385,11 @@ public function RevokePermsToRole(Request $request, $r){
                         'message' => 'role not found',
                     ]);
                 }
+
+                if($role->name == "superAdmin"){
+                    return (new ServiceController())->apiResponse(404, [], "Repentez vous.");
+                }
+
                 if (!$right) {
                     return response()->json([
                         'message' => 'role not found',
@@ -1124,31 +1129,33 @@ public function RevokePermsToRole(Request $request, $r){
 
         //liste des utilisateurs et leur rôlespublic function usersRoles()
         public function usersRoles()
-
 {
     try {
         // Récupérer tous les utilisateurs avec leurs rôles
         $userRights = User_right::with('user', 'right')->get();
-
+        
         // Créer un tableau associatif pour stocker les rôles de chaque utilisateur
         $data = [];
-
+        
         foreach ($userRights as $userRight) {
             $userId = $userRight->user_id;
             $roleName = $userRight->right->name;
-
+            
             // Vérifier si l'utilisateur existe déjà dans le tableau
             if (!isset($data[$userId])) {
-                // Si l'utilisateur n'existe pas, le créer avec ses informations de base
+                
                 $data[$userId] = [
                     'user_id' => $userId,
-                    'user_info' => $userRight->user,
-                    'roles' => []
+                    'user_info' => $userRight->user->toArray(), // Convertir l'utilisateur en tableau
+                    
                 ];
             }
 
-            // Ajouter le rôle à l'utilisateur
-            $data[$userId]['roles'][] = $roleName;
+            // Ajouter le rôle à l'utilisateur dans la clé 'roles' de 'user_info'
+            if (!isset($data[$userId]['user_info']['roles'])) {
+                $data[$userId]['user_info']['roles'] = [];
+            }
+            $data[$userId]['user_info']['roles'][] = $roleName;
         }
 
         // Convertir le tableau associatif en un tableau numérique
@@ -1260,153 +1267,7 @@ public function RevokePermsToRole(Request $request, $r){
            }
        }
 
-       /**
-       * @OA\Post(
-       *     path="/api/users/switchToHote",
-       *     summary="Passer au role hote",
-       *     tags={"ManageAccess"},
-       * security={{"bearerAuth": {}}},
-       *     @OA\Response(
-       *         response=200,
-       *         description="move to hote"
-       * 
-       *     )
-       * )
-       */
-
-        //aller au role hote
-       public function switchToHote(){
-            try{
-             $id = auth()->id();
-                
-                
-                $role =  User::find($id)->getRoleNames();
-                if (count($role) == 0) {
-                    return (new ServiceController())->apiResponse(200,[], "Vous n'avez aucun rôle");
-                }
-                $role_actif = $role[0];
-                // dd($role_actif);
-                $r = Right::where('name','hote')->first();
-            $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
-            // dd($exist);
-                    if(!$exist){
-                        return response()->json([
-                            "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
-                        ]);
-                    }
-                $user = User::find($id)->removeRole($role_actif);
-                $user = User::find($id)->assignRole("hote");
-                return response()->json([
-                    'message' => 'role retire avec success',
-                    'data' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => User::find($id)->getRoleNames()
-                    ]
-                ]);
-            }catch (Exception $e){
-                  return response()->json(['error' => $e->getMessage()], 500);
-            }
-       }
-
-
-
-       /**
-       * @OA\Post(
-       *     path="/api/users/switchToAdmin",
-       *     summary="Passer au role admin",
-       *     tags={"ManageAccess"},
-       * security={{"bearerAuth": {}}},
-       *     @OA\Response(
-       *         response=200,
-       *         description="move to admin"
-       * 
-       *     )
-       * )
-       */
-       //aller au role admin
-       public function switchToAdmin(){
-        try{
-         $id = auth()->id();
-            
-            
-            $role =  User::find($id)->getRoleNames();
-            $role_actif = $role[0];
-            // dd($role_actif);
-            $r = Right::where('name','admin')->first();
-            $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
-            // dd($exist);
-                    if(!$exist){
-                        return response()->json([
-                            "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
-                        ]);
-                    }
-            $user = User::find($id)->removeRole($role_actif);
-            $user = User::find($id)->assignRole("admin");
-            return response()->json([
-                'message' => 'role retire avec success',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => User::find($id)->getRoleNames()
-                ]
-            ]);
-        }catch (Exception $e){
-              return response()->json(['error' => $e->getMessage()], 500);
-        }
-   }
-
-              /**
-       * @OA\Post(
-       *     path="/api/users/switchToTraveler",
-       *     summary="Passer au role voyageur",
-       *     tags={"ManageAccess"},
-       * security={{"bearerAuth": {}}},
-       *     @OA\Response(
-       *         response=200,
-       *         description="move to traveler"
-       * 
-       *     )
-       * )
-       */
-
-               //aller au role voyageur
-               public function switchToTraveler(){
-                try{
-                    $id = auth()->id();
-                    // $id = 4;
-                    
-                    $role =  User::find($id)->getRoleNames();
-                    $role_actif = $role[0];
-                    // return response()->json($role_actif);
-                    
-                    $r = Right::where('name','traveler')->first();
-                    $exist = User_right::where('user_id',$id)->where('right_id',$r->id)->exists();
-                    // dd($exist);
-                            if(!$exist){
-                                return response()->json([
-                                    "message " => "Vous n'avez pas le rôle auquel vous voulez switcher!"
-                                ]);
-                            }
-                    $user = User::find($id)->removeRole($role_actif);
-                    $user = User::find($id)->assignRole("traveler");
-                    return response()->json([
-                        'message' => 'role retire avec success',
-                        'data' => [
-                            'id' => $user->id,
-                            'name' => $user->name,
-                            'email' => $user->email,
-                            'role' => User::find($id)->getRoleNames()
-                        ]
-                    ]);
-                }catch (Exception $e){
-                      return response()->json(['error' => $e->getMessage()], 500);
-                }
-           }
-
-
+       
 /**
  * @OA\Get(
  *     path="/api/users/usersCountByRole",

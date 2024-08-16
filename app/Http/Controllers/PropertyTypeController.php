@@ -26,9 +26,6 @@ class PropertyTypeController extends Controller
      *     )
      * )
      */
-
-
-
     public function index()
     {
         try{

@@ -6,6 +6,7 @@ use App\Jobs\SendRegistrationEmail;
 use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Housing;
+use App\Models\Reservation;
 use App\Models\Right;
 use App\Models\User;
 use App\Models\User_right;
@@ -69,6 +70,17 @@ class ChatController extends Controller
      {
          try {
              $userId = auth()->id();
+
+             $models = (new AuditController)->getAllModels();
+             $modelMappings = [];
+            foreach ($models as $model) {
+                $modelName = class_basename($model);
+                $modelMappings[$modelName] = "App\Models\\$model";
+            }
+
+            if (!in_array($modelType, $models)) {
+                return (new ServiceController())->apiResponse(404, [], "Le modèle $modelType spécifié n'existe pas.");
+            }
   
              $chats = Chat::where('model_type_concerned', $modelType)
                           ->where(function($query) use ($userId) {
@@ -147,17 +159,28 @@ class ChatController extends Controller
      public function getChatsByModelTypeAndId($modelType, $modelId)
      {
          try {
-             $userId = auth()->id();
 
-            $modelMappings = [
-                'Housing' => 'App\Models\Housing',
-                'Reservation' => 'App\Models\Reservation',
-            ];
+             $userId = auth()->id();
+             $models = (new AuditController)->getAllModels();
+             $modelMappings = [];
+            foreach ($models as $model) {
+                $modelName = class_basename($model);
+                $modelMappings[$modelName] = "App\Models\\$model";
+            }
+
+            if (!in_array($modelType, $models)) {
+                return (new ServiceController())->apiResponse(404, [], "Le modèle $modelType spécifié n'existe pas.");
+            }
+
+            // $modelMappings = [
+            //     'Housing' => 'App\Models\Housing',
+            //     'Reservation' => 'App\Models\Reservation',
+            // ];
 
             if ($modelType && isset($modelMappings[$modelType]) && $modelType!= "Support Information") {
                 $modelClass = $modelMappings[$modelType];
                 if (!(new $modelClass())::find($modelId)) {
-                    return (new ServiceController())->apiResponse(404, [], "$modelType non trouvé");
+                    return (new ServiceController())->apiResponse(404, [], "$modelType non trouvé pour l'id $modelId");
                 }
             }
 
@@ -475,21 +498,35 @@ class ChatController extends Controller
                 return (new ServiceController())->apiResponse(505, [],$sensitiferrors);
             }
 
-            $modelMappings = [
-                'Housing' => 'App\Models\Housing',
-                'Reservation' => 'App\Models\Reservation',
-            ];
+            // $modelMappings = [
+            //     'Housing' => 'App\Models\Housing',
+            //     'Reservation' => 'App\Models\Reservation',
+            // ];
 
             if (!User::find($recipientId) && $ModelType!= "Support Information") {
                 return (new ServiceController())->apiResponse(404, [], "Receveur non trouvé, vérifié l'id du receveur que vous envoyé");
 
             }
 
-            if ($ModelType && isset($modelMappings[$ModelType]) && $ModelType!= "Support Information") {
+            if ($ModelType && $ModelType!= "Support Information") {
+
+                $models = (new AuditController)->getAllModels();
+                if (!in_array( $request->query('ModelType'), $models)) {
+                    return (new ServiceController())->apiResponse(404, [], "Le modèle  {$request->query('ModelType')} spécifié n'existe pas.");
+                }
+
+                $modelMappings = [];
+                foreach ($models as $model) {
+                    $modelName = class_basename($model);
+                    $modelMappings[$modelName] = "App\Models\\$model";
+                }
+   
                 $modelClass = $modelMappings[$ModelType];
                 if (!(new $modelClass())::find($ModelId)) {
-                    return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé");
+                    return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé pour l'id $ModelId");
                 }
+            }else{
+                return (new ServiceController())->apiResponse(404, [], "Model comportant le nom $ModelType non trouvé");
             }
 
             if ($chatId) {
@@ -836,6 +873,10 @@ class ChatController extends Controller
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }
+
+
+    
+
 
 
 }

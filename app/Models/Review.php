@@ -14,7 +14,17 @@ class Review extends Model implements Auditable
 
     protected $fillable = [
       'content',
+      'is_deleted',
+      'user_id'
   ];
+
+  protected  static  $auditInclude = [
+    'content',
+      'is_deleted',
+      'user_id'
+];
+
+  
     public function user()
     {
       return $this->belongsTo(User::class);

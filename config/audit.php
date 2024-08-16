@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Database\Eloquent\Model;
+
 return [
 
     'enabled' => env('AUDITING_ENABLED', true),
@@ -30,7 +32,7 @@ return [
             'web',
             'api'
         ],
-        'resolver'     => OwenIt\Auditing\Resolvers\UserResolver::class
+        'resolver'     => App\Resolvers\CustomUserResolver::class,
     ],
 
     /*
@@ -61,7 +63,7 @@ return [
         'updated',
         'deleted',
         'restored',
-        'index',
+        'update'=>'update',
     ],
 
     /*

@@ -309,7 +309,7 @@ class CriteriaController extends Controller
         if (!$criteria) {
             return response()->json(['error' => 'Critère non trouvé.'], 404);
         }
-        $nbexist=Note::where('critere_id', $id)->count(); 
+        $nbexist=Note::where('criteria_id', $id)->count(); 
     
         if ($nbexist > 0) {
             return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);

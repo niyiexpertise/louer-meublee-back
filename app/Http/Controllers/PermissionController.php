@@ -17,7 +17,7 @@ class PermissionController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="List of permissions"
-     * 
+     *
      *     )
      * )
      */

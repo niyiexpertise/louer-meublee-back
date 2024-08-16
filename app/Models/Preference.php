@@ -8,7 +8,12 @@ use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
 class Preference extends Model implements Auditable
-{   protected $fillable = ['name'];
+{   protected $fillable = ['name','icone','is_verified','is_deleted'];
+
+  protected $auditEvents = [
+    'updated',
+    'update',
+];
   
     use HasFactory;
     use AuditableTrait;

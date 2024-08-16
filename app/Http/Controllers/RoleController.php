@@ -28,14 +28,18 @@ class RoleController extends Controller
     {
         try{
             $roles = Role::all();
+            $data = [];
+            foreach( $roles as $role){
+                if(!($role->name == "superAdmin")){
+                    $data[]=$role;
+                }
+            }
             return response()->json([
-                'roles' => $roles
+                'roles' => $data
             ],200);
         }catch (Exception $e){
               return response()->json(['error' => $e->getMessage()], 500);
         }
-        
-
     }
 
     /**

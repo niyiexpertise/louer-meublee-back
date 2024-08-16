@@ -385,6 +385,11 @@ public function RevokePermsToRole(Request $request, $r){
                         'message' => 'role not found',
                     ]);
                 }
+
+                if($role->name == "superAdmin"){
+                    return (new ServiceController())->apiResponse(404, [], "Repentez vous.");
+                }
+
                 if (!$right) {
                     return response()->json([
                         'message' => 'role not found',
@@ -1124,31 +1129,33 @@ public function RevokePermsToRole(Request $request, $r){
 
         //liste des utilisateurs et leur rôlespublic function usersRoles()
         public function usersRoles()
-
 {
     try {
         // Récupérer tous les utilisateurs avec leurs rôles
         $userRights = User_right::with('user', 'right')->get();
-
+        
         // Créer un tableau associatif pour stocker les rôles de chaque utilisateur
         $data = [];
-
+        
         foreach ($userRights as $userRight) {
             $userId = $userRight->user_id;
             $roleName = $userRight->right->name;
-
+            
             // Vérifier si l'utilisateur existe déjà dans le tableau
             if (!isset($data[$userId])) {
-                // Si l'utilisateur n'existe pas, le créer avec ses informations de base
+                
                 $data[$userId] = [
                     'user_id' => $userId,
-                    'user_info' => $userRight->user,
-                    'roles' => []
+                    'user_info' => $userRight->user->toArray(), // Convertir l'utilisateur en tableau
+                    
                 ];
             }
 
-            // Ajouter le rôle à l'utilisateur
-            $data[$userId]['roles'][] = $roleName;
+            // Ajouter le rôle à l'utilisateur dans la clé 'roles' de 'user_info'
+            if (!isset($data[$userId]['user_info']['roles'])) {
+                $data[$userId]['user_info']['roles'] = [];
+            }
+            $data[$userId]['user_info']['roles'][] = $roleName;
         }
 
         // Convertir le tableau associatif en un tableau numérique

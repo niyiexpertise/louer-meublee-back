@@ -3116,6 +3116,234 @@
                 ]
             }
         },
+        "/api/audit/getAudits": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère tous les audits",
+                "description": "Récupère l'ensemble des enregistrements de la table `audits`.",
+                "operationId": "getAudits",
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/audit/getAuditsByModelType/{modelType}": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère les audits par type de modèle",
+                "description": "Récupère les enregistrements de la table `audits` en fonction du `auditable_type`.",
+                "operationId": "getAuditsByModelType",
+                "parameters": [
+                    {
+                        "name": "modelType",
+                        "in": "path",
+                        "description": "Type de modèle (par exemple : 'App\\\\Models\\\\Review')",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "user_type": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "user_id": {
+                                                "type": "integer",
+                                                "nullable": true
+                                            },
+                                            "event": {
+                                                "type": "string"
+                                            },
+                                            "auditable_type": {
+                                                "type": "string"
+                                            },
+                                            "auditable_id": {
+                                                "type": "integer"
+                                            },
+                                            "old_values": {
+                                                "type": "string"
+                                            },
+                                            "new_values": {
+                                                "type": "string"
+                                            },
+                                            "url": {
+                                                "type": "string"
+                                            },
+                                            "ip_address": {
+                                                "type": "string"
+                                            },
+                                            "user_agent": {
+                                                "type": "string"
+                                            },
+                                            "tags": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/audit/getAuditsByModelTypeAndId/{modelType}/{modelId}": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère les audits par type de modèle et ID",
+                "description": "Récupère les enregistrements de la table `audits` en fonction du `auditable_type` et de l'`auditable_id`.",
+                "operationId": "getAuditsByModelTypeAndId",
+                "parameters": [
+                    {
+                        "name": "modelType",
+                        "in": "path",
+                        "description": "Type de modèle (par exemple : 'App\\\\Models\\\\Review')",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "modelId",
+                        "in": "path",
+                        "description": "ID du modèle",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "user_type": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "user_id": {
+                                                "type": "integer",
+                                                "nullable": true
+                                            },
+                                            "event": {
+                                                "type": "string"
+                                            },
+                                            "auditable_type": {
+                                                "type": "string"
+                                            },
+                                            "auditable_id": {
+                                                "type": "integer"
+                                            },
+                                            "old_values": {
+                                                "type": "string"
+                                            },
+                                            "new_values": {
+                                                "type": "string"
+                                            },
+                                            "url": {
+                                                "type": "string"
+                                            },
+                                            "ip_address": {
+                                                "type": "string"
+                                            },
+                                            "user_agent": {
+                                                "type": "string"
+                                            },
+                                            "tags": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/assignPermsToRole/{role}": {
             "post": {
                 "tags": [
@@ -6552,6 +6780,72 @@
                                         "error": {
                                             "type": "string",
                                             "example": "Une erreur s'est produite : message de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/showDetailReservation/{reservationId}": {
+            "get": {
+                "tags": [
+                    "Dashboard traveler"
+                ],
+                "summary": "Afficher les détails d'une réservation",
+                "description": "Récupère les détails d'une réservation spécifique par ID. Seul le propriétaire de la réservation peut accéder à ces détails.",
+                "operationId": "showDetailReservation",
+                "parameters": [
+                    {
+                        "name": "reservationId",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la réservation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "detail de la reservation": {
+                                            "description": "Les détails de la réservation",
+                                            "type": "string",
+                                            "example": "[]"
+                                        },
+                                        "voyageur": {
+                                            "description": "Les détails du voyageur",
+                                            "type": "string",
+                                            "example": "[]"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée ou l'utilisateur n'est pas autorisé à accéder à cette réservation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
                                         }
                                     },
                                     "type": "object"

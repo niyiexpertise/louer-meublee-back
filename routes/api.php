@@ -56,6 +56,7 @@ use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
+use App\Http\Controllers\AuditController;
 
 /*
 |--------------------------------------------------------------------------
@@ -814,6 +815,15 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     });
 
+    //Gestion des audits
+    Route::group(['middleware' => ['role:superAdmin|admin']], function () {
+        Route::prefix('audit')->group(function () {
+         Route::get('/getAudits', [AuditController::class, 'getAudits']);
+         Route::get('/getAuditsByModelType/{modelType}', [AuditController::class, 'getAuditsByModelType']);
+         Route::get('/getAuditsByModelTypeAndId/{modelType}/{modelId}', [AuditController::class, 'getAuditsByModelTypeAndId']);
+         });
+      });
+
 
    // Gestion des Notifications (Pas besoin de permission ,ni de role,il suffit d'etre connecté)
      Route::prefix('notifications')->group(function () {
@@ -1519,6 +1529,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::prefix('reservation')->group(function () {
+            Route::get('showDetailReservation/{reservationId}', [DashBoardTravelerController::class, 'showDetailReservation'])
+            ->name('reservation.showDetailReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.showDetailReservation');
+
             Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
             ->name('reservation.getReservationsForTraveler')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');

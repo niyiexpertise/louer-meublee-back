@@ -1131,23 +1131,28 @@ public function RevokePermsToRole(Request $request, $r){
         public function usersRoles()
 {
     try {
-        // Récupérer tous les utilisateurs avec leurs rôles
-        $userRights = User_right::with('user', 'right')->get();
+        // Récupérer tous les utilisateurs avec leurs rôles, en filtrant les utilisateurs non supprimés (is_deleted = false)
+        $userRights = User_right::with(['user' => function ($query) {
+            $query->where('is_deleted', false);
+        }, 'right'])->get();
         
         // Créer un tableau associatif pour stocker les rôles de chaque utilisateur
         $data = [];
         
         foreach ($userRights as $userRight) {
+            // Assurez-vous que l'utilisateur n'est pas null
+            if (!$userRight->user) {
+                continue;
+            }
+
             $userId = $userRight->user_id;
             $roleName = $userRight->right->name;
-            
+
             // Vérifier si l'utilisateur existe déjà dans le tableau
             if (!isset($data[$userId])) {
-                
                 $data[$userId] = [
                     'user_id' => $userId,
                     'user_info' => $userRight->user->toArray(), // Convertir l'utilisateur en tableau
-                    
                 ];
             }
 

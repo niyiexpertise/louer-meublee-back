@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Http\Controllers\NotificationController;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,6 +34,6 @@ class NotificationWithFile implements ShouldQueue
      */
     public function handle(): void
     {
-        //
+        (new NotificationController())->storeAndSendFileEmail($this->email,$this->name,$this->object,$this->attachedFiles);
     }
 }

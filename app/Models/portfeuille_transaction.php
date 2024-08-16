@@ -34,12 +34,17 @@ class Portfeuille_transaction extends Model implements Auditable
         'montant_commission_admin',
         'new_solde_admin',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'solde_credit',
+        'solde_debit',
     ];
     
-
-    
-
+    protected $hidden = [
+        'solde_restant',
+        'montant_restant',
+        'solde_credit',
+        'solde_debit',
+    ];
     public function portfeuille()
     {
         return $this->belongsTo(Portfeuille::class);

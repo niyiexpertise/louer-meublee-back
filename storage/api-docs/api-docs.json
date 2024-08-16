@@ -4303,63 +4303,6 @@
                 ]
             }
         },
-        "/api/users/switchToHote": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role hote",
-                "operationId": "aedf1d55a26b5c612c813bb49f15a059",
-                "responses": {
-                    "200": {
-                        "description": "move to hote"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/switchToAdmin": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role admin",
-                "operationId": "ec66b9280a4e344d87c2cbdc24aa0e42",
-                "responses": {
-                    "200": {
-                        "description": "move to admin"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/switchToTraveler": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role voyageur",
-                "operationId": "0bf453f6289ad809f9cb3d5d8af08159",
-                "responses": {
-                    "200": {
-                        "description": "move to traveler"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/users/usersCountByRole": {
             "get": {
                 "tags": [
@@ -15876,13 +15819,192 @@
         "/api/portefeuille/transaction/all": {
             "get": {
                 "tags": [
-                    "Portefeuille"
+                    "Transaction"
                 ],
                 "summary": "Voir toutes les transactions éffectué sur le site (Admin)",
                 "operationId": "a834e8ec09f88df3112d746515bc3b37",
                 "responses": {
                     "200": {
                         "description": "Liste de toutes les transactions éffectuées sur le site"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/transaction/update": {
+            "post": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Mettre à jour une transaction",
+                "description": "Met à jour les commissions ou autres champs d'une transaction, puis met à jour les soldes correspondants et enregistre les modifications dans l'historique.",
+                "operationId": "updateTransaction",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "ID de la transaction",
+                                        "type": "integer"
+                                    },
+                                    "valeur_commission": {
+                                        "description": "Nouvelle valeur de commission",
+                                        "type": "number"
+                                    },
+                                    "valeur_commission_partenaire": {
+                                        "description": "Nouvelle valeur de commission pour le partenaire",
+                                        "type": "number"
+                                    },
+                                    "valeur_commission_admin": {
+                                        "description": "Nouvelle valeur de commission pour l'admin",
+                                        "type": "number"
+                                    },
+                                    "motif": {
+                                        "description": "Motif de la modification",
+                                        "type": "string",
+                                        "example": "Correction de la commission partenaire"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Données de requête non valides"
+                    },
+                    "404": {
+                        "description": "Transaction non trouvée"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/transaction/{id}/history": {
+            "get": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Récupère l'historique des modifications d'une transaction",
+                "description": "Retourne l'historique des modifications pour une transaction spécifique en fonction de son ID.",
+                "operationId": "1d2de0c090836c76cefbb49d71a11ce3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la transaction dont l'historique doit être récupéré",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique des modifications de la transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "transaction_id": {
+                                                "type": "integer",
+                                                "example": 81
+                                            },
+                                            "field_modified": {
+                                                "type": "string",
+                                                "example": "valeur_commission"
+                                            },
+                                            "old_value": {
+                                                "type": "string",
+                                                "example": "10"
+                                            },
+                                            "new_value": {
+                                                "type": "string",
+                                                "example": "15"
+                                            },
+                                            "modified_by": {
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "modified_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-08-15T12:34:56Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Transaction not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur est survenue lors de la récupération de l'historique."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

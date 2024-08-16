@@ -495,7 +495,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     });
 
     //Gestion de quelques stats
-    Route::prefix('stat')->group(['middleware' => ['role:superAdmin|admin']])->group(function () {
+    Route::prefix('stat')->middleware(['role:superAdmin|admin'])->group(function () {
         Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
         Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
         Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);

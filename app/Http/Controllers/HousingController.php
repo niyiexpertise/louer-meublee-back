@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+
 class HousingController extends Controller
 {
 
@@ -50,7 +53,7 @@ class HousingController extends Controller
         $housingId = $request->housing_id;
         $exist = Housing::where('id',$housingId)->first();
         $housing = Housing::where('id', $housingId )->get();
-          
+
         if($housing->isEmpty()) {
             return response()->json(['message' => " L\'ID du logement(housing_id) spécifié n\'existe pas"], 404);
         }
@@ -128,7 +131,7 @@ class HousingController extends Controller
         'new_category_photos_.*.*' => 'file|image|max:2048',
     ]);
 
-    
+
 
 
     if ($validator->fails()) {
@@ -136,46 +139,46 @@ class HousingController extends Controller
     }
 
     if ($request->has('Hotecharges')) {
-               
+
         if($request->has('Hotechargesvalue')){
-                  
+
                     foreach ($request->Hotecharges as $HotechargesId) {
                         $HotechargesExists = Charge::where('id', $HotechargesId)->exists();
-            
+
                         if (!$HotechargesExists) {
                             return response()->json(['message' => 'Revoyez les id de charges que vous renvoyez;précisement la variable HoteCharge.'], 200);
-                            } 
-                     
+                            }
+
                     }
-            
+
                } else{
                     return response()->json(['message' => 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).'], 200);
                  }
-       
-       }   
-       //debut validation traveler charge    
+
+       }
+       //debut validation traveler charge
 
        if ($request->has('Travelercharges')) {
-               
+
         if($request->has('Travelerchargesvalue')){
                    if (count($request->input('Travelercharges')) == count($request->input('Travelerchargesvalue')) ) {
                     foreach ($request->Travelercharges as $TravelerchargesId) {
                         $TravelerchargesExists = Charge::where('id', $TravelerchargesId)->exists();
-            
+
                         if (!$TravelerchargesExists) {
                             return response()->json(['message' => 'Revoyez les id de charges que vous renvoyez;précisement la variable TravelerCharge.'], 200);
-                            } 
-                     
+                            }
+
                     }
-            
+
                                  }   else{
                                                 return response()->json(['message' => 'Le nombre de valeurs de charges Traveler ne correspond pas au nombre de charges.'], 200);
-                                        } 
+                                        }
                } else{
                     return response()->json(['message' => 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).'], 200);
                  }
-       
-       }  
+
+       }
         //endvalidation
         //validation equipment_housing
 
@@ -184,68 +187,68 @@ class HousingController extends Controller
         // }
 
         if ($request->has('equipment_housing')) {
-               
+
             if($request->has('category_equipment_housing')){
                        if (count($request->input('equipment_housing')) == count($request->input('category_equipment_housing')) ) {
                         foreach ($request->equipment_housing as $index=> $equipmentId) {
                             $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
                                         ->where('category_id', $request->input('category_equipment_housing')[$index])
                                             ->exists();
-                
+
                             if (!$EquipmentCategorieExists) {
                                 return response()->json(['message' => "Revoyez les id de catégorie et équipement que vous renvoyez.L equipement $equipmentId n est pas associé à la catégorie ".$request->category_equipment_housing[$index]], 200);
-                                } 
-                         
+                                }
+
                         }
-                
+
                                      }   else{
                                         return response()->json(['message' => 'Le nombre de valeurs de équipements  ne correspond pas au nombre de catégorie.'], 200);
-                                            } 
+                                            }
                    } else{
                         return response()->json(['message' => 'Renseigner les catégories des équipements s il vous plaît).'], 200);
                      }
-           
-           }  
+
+           }
         //endvalidation
-         
 
-   
 
-   
+
+
+
     //validation new equipment
     // if ($request->has('new_equipment') && $request->has('new_equipment_category') && count($request->input('new_equipment')) !== count($request->input('new_equipment_category'))) {
     //     return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 200);
     // }
 
     if ($request->has('new_equipment')) {
-               
+
         if($request->has('new_equipment_category')){
                    if (count($request->input('new_equipment')) == count($request->input('new_equipment_category')) ) {
                     foreach ($request->new_equipment as $index=> $equipmentId) {
                         $CategorieExists = Category::where('id', $request->input('new_equipment_category')[$index])
                                         ->exists();
-            
+
                         if (!$CategorieExists) {
                             return response()->json(['message' => "Revoyez les id de catégorie que vous renvoyez.La catégorie". $request->new_equipment_category[$index]." n existe pas"], 200);
-                            } 
+                            }
                             $equipments = Equipment::where('is_deleted',false)->where('is_blocked',false)->get();
                             foreach($equipments as $e){
                                 if($equipmentId == $e->name){
                                     return response()->json(['message' => "Un autre equipement ayant le même nom existe déjà dans la base de donnée"], 200);
-                            
+
                                 }
                             }
-                     
+
                     }
-            
+
                                  }   else{
                                                 return response()->json(['message' => 'La taille de la variable <<new_equipment>> doit être égale à la taille de <<new_equipment_category>>'], 200);
-                                        } 
+                                        }
                } else{
                     return response()->json(['message' => 'Renseigner les catégories des nouveaux équipements s il vous plaît).'], 200);
                  }
-       
-       }  
+
+       }
 
     //endvalidation
     //validation reduction
@@ -256,58 +259,58 @@ class HousingController extends Controller
     // }
 
     if ($request->has('reduction_night_number')) {
-               
+
         if($request->has('reduction_value_night_number') && $request->has('reduction_date_debut') && $request->has('reduction_date_fin')){
                    if (count($request->input('reduction_night_number')) == count($request->input('reduction_value_night_number'))) {
-    
-            
+
+
                                  }   else{
                                  return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_value_night_number>>'], 200);
-                        } 
+                        }
                         if (count($request->input('reduction_night_number')) == count($request->input('reduction_date_debut'))) {
-    
-            
+
+
                         }   else{
                         return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_date_debut>>'], 200);
-               } 
+               }
                if (count($request->input('reduction_night_number')) == count($request->input('reduction_date_fin'))) {
-    
-            
+
+
                }   else{
                return response()->json(['message' => 'La taille de la variable <<reduction_night_number>> doit être égale à la taille de <<reduction_date_fin>>'], 200);
-      } 
+      }
                } else{
                     return response()->json(['message' => 'Renseigner les valeurs ou les dates début ou les dates de fin de la réduction s il vous plaît).'], 200);
                  }
-       
-       }  
-   
+
+       }
+
     //endvalidation
 
     //validation promotion
 
-    
+
     if ($request->has('promotion_number_of_reservation')) {
-               
+
         if($request->has('promotion_value')){
-             
+
                } else{
                     return response()->json(['message' => 'Renseigner la valeur de la promotion.'], 200);
         }
 
         if($request->has('promotion_date_fin')){
-             
+
         } else{
                             return response()->json(['message' => 'Renseigner la date de fin de la promotion.'], 200);
                 }
 
            if($request->has('promotion_date_debut')){
-                            
+
            } else{
          return response()->json(['message' => 'Renseigner la date de fin de la promotion.'], 200);
            }
-       
-       }  
+
+       }
 
         //endpromotion
           //validation categorie
@@ -317,14 +320,14 @@ class HousingController extends Controller
         //         'message' => 'Le nombre de catégories ne correspond pas au nombre d\'entrées du tableau "number_category".'
         //     ], 200);
         if ($request->has('category_id')) {
-               
+
             if($request->has('number_category')){
                        if (count($request->input('category_id')) == count($request->input('number_category'))) {
-        
-                
+
+
                                      }   else{
                                      return response()->json(['message' => 'La taille de la variable <<category_id>> doit être égale à la taille de <<number_category>>'], 200);
-                            } 
+                            }
                             foreach($request->input('category_id') as $categoryId){
                                 $existCategorie = Category::whereId($categoryId)->first();
                                 if(!$existCategorie){
@@ -332,7 +335,7 @@ class HousingController extends Controller
                                 }
 
                             }
-                          
+
                    } else{
                         return response()->json(['message' => 'Renseigner les valeurs de number_category.'], 200);
                      }
@@ -351,10 +354,10 @@ class HousingController extends Controller
                                     ], 200);
                         }
                       }
-           
-           }   
 
-  
+           }
+
+
     //endvalidation
     //validation new category
     if ($request->has('new_categories') && $request->has('new_categories_numbers') && count($request->input('new_categories')) !== count(($request->input('new_categories_numbers'))) ) {
@@ -364,31 +367,30 @@ class HousingController extends Controller
     }
 
     if ($request->has('new_categories')) {
-               
+
         if($request->has('new_categories_numbers')){
                    if (count($request->input('new_categories')) == count($request->input('new_categories_numbers'))) {
-    
-            
+
                                  }   else{
                                  return response()->json(['message' => 'La taille de la variable <<new_categories>> doit être égale à la taille de <<new_categories_numbers>>'], 200);
-                        } 
+                        }
                         foreach($request->input('new_categories') as $categoryName){
                             $category = Category::where('is_deleted',false)->where('is_blocked',false)->get();
                             foreach($category as $e){
                                 if($categoryName == $e->name){
                                     return response()->json(['message' => "Une autre catégorie ayant le même nom existe déjà dans la base de donnée"], 200);
-                            
+
                                 }
 
                         }}
-                      
+
                } else{
                     return response()->json(['message' => 'Renseigner les valeurs de new_categories_numbers.'], 200);
                  }
-       
-        
-       
-       
+
+
+
+
         foreach ($request->input('new_categories') as $index => $new_categoriesName) {
             $photoCategoryKey = 'new_category_photos_' . $new_categoriesName;
             if (!$request->hasFile($photoCategoryKey)) {
@@ -405,9 +407,9 @@ class HousingController extends Controller
     }
 
     //endvalidation
-    
 
-     
+
+
      $housing = new Housing();
      $housing->housing_type_id = $request->input('housing_type_id');
      $housing->property_type_id = $request->input('property_type_id');
@@ -452,9 +454,9 @@ class HousingController extends Controller
         $housing->delai_integral_remboursement = $request->input('delai_integral_remboursement');
         $housing->valeur_integral_remboursement = $request->input('valeur_integral_remboursement');
         $housing->valeur_partiel_remboursement = $request->input('valeur_partiel_remboursement');
-    }    
+    }
      $housing->save();
- 
+
      if ($request->hasFile('photos')) {
          foreach ($request->file('photos') as $index => $photo) {
              $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
@@ -513,7 +515,7 @@ class HousingController extends Controller
             $reduction->is_encours = false;
         $reduction->save();
         }
-    }    
+    }
     if ($request->has('promotion_number_of_reservation')) {
         $promotion = new promotion();
         $promotion->date_debut =$request->input('promotion_date_debut');
@@ -527,7 +529,7 @@ class HousingController extends Controller
 
     if ($request->has('equipment_housing')) {
         foreach ($request->equipment_housing as $index => $equipmentId ) {
-            $equipment = Equipment::find($equipmentId);   
+            $equipment = Equipment::find($equipmentId);
             if ($equipment) {
                 $housingEquipment = new Housing_equipment();
                 $housingEquipment->equipment_id = $equipmentId;
@@ -536,7 +538,7 @@ class HousingController extends Controller
                 $housingEquipment->is_verified = true;
                 $housingEquipment->save();
             } else {
-               
+
             }
         }
     }
@@ -623,7 +625,7 @@ class HousingController extends Controller
         }
       }
     }
-    
+
      $notificationName="Félicitation!Vous venez d'ajouter un nouveau logement sur la plateforme.Le logement ne sera visible sur le site qu'après validation de l'administrateur";
 
      $notification = new Notification([
@@ -641,7 +643,7 @@ class HousingController extends Controller
              if (!$adminRole) {
                  return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
              }
-    
+
      $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
         $query->where('right_id', $adminRole->id);
     })
@@ -658,12 +660,12 @@ class HousingController extends Controller
             'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
            ];
 
-           Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail)); 
+           Mail::to($adminUser->email)->send(new NotificationEmailwithoutfile($mail));
 
-       } 
-       
+       }
+
      return response()->json(['message' => 'Logement ajoute avec succes'], 201);
- 
+
 }
 
 
@@ -735,7 +737,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         foreach ($listing->photos as $photo) {
              if($photo->is_verified){
 
-                $photo_id = uniqid(); 
+                $photo_id = uniqid();
                 $photo_info = [
                     'photo_unique_id' => $photo_id,
                     'id_photo' => $photo->id,
@@ -744,9 +746,9 @@ public function ListeDesPhotosLogementAcceuil($id)
                     'is_couverture' => $photo->is_couverture,
                 ];
                 $photo_logement[] = $photo_info;
-                   $photo_general[] = $photo_info; 
+                   $photo_general[] = $photo_info;
              }
-          
+
         }
     }
 
@@ -755,15 +757,15 @@ public function ListeDesPhotosLogementAcceuil($id)
 
     if ($listing->housingCategoryFiles->isNotEmpty()) {
         $unverifiedCategoryFiles = $listing->housingCategoryFiles->filter(function ($file) {
-            return $file->is_verified == 1; 
+            return $file->is_verified == 1;
         });
-    
-        $groupedCategoryFiles = $unverifiedCategoryFiles->groupBy('category.name'); 
-    
-        $photo_general = []; 
+
+        $groupedCategoryFiles = $unverifiedCategoryFiles->groupBy('category.name');
+
+        $photo_general = [];
         foreach ($groupedCategoryFiles as $categoryName => $categoryFiles) {
-            $category_photos = []; 
-    
+            $category_photos = [];
+
             foreach ($categoryFiles as $categoryFile) {
                 if (isset($categoryFile->file)) {
                     $photo_id = uniqid();
@@ -772,12 +774,12 @@ public function ListeDesPhotosLogementAcceuil($id)
                         'file_id' => $categoryFile->file->id,
                         'path' => url($categoryFile->file->path),
                     ];
-    
-                    $category_photos[] = $photo_info; 
+
+                    $category_photos[] = $photo_info;
                     $photo_general[] = $photo_info;
                 }
             }
-    
+
             if ($categoryFiles->isNotEmpty()) {
                 $firstCategoryFile = $categoryFiles->first();
 
@@ -786,17 +788,17 @@ public function ListeDesPhotosLogementAcceuil($id)
                     'category_name' => $firstCategoryFile->category->name,
                         'category_icone' => $firstCategoryFile->category->icone,
                            'number' => $firstCategoryFile->number,
-                    'photos_category' => $category_photos, 
+                    'photos_category' => $category_photos,
                 ];
             }
         }
     }
-    
+
     $data = [
         'id_housing' => $listing->id,
-        'photos_logement' => $photo_logement, 
+        'photos_logement' => $photo_logement,
         'categories' => $categories,
-        'photo_general' => $photo_general, 
+        'photo_general' => $photo_general,
     ];
 
     return response()->json(['data' => $data], 200);
@@ -813,6 +815,13 @@ public function ListeDesPhotosLogementAcceuil($id)
      *         description="ID of the user connected",
      *         @OA\Schema(type="integer")
      *     ),
+     *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false ,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="integer", example=1)
+ *   ),
  *   summary="Liste des logements pour l'accueil et pour l'admin en même temps.",
  *   description="Récupère la liste des logements disponibles et vérifiés pour l'accueil.c'est cette route qui vous envoit les logements à afficher sur le site ",
  *    @OA\RequestBody(
@@ -905,16 +914,24 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function ListeDesLogementsAcceuil(Request $request)
+
+public function ListeDesLogementsAcceuil(Request $request)
     {
-        $listings = Housing::where('status', 'verified')
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+    $page = intval($request->query('page', 1));
+    $perPage = 15;
+
+    $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
         $userId = intval($request->query('id'));
 
@@ -927,7 +944,7 @@ public function ListeDesPhotosLogementAcceuil($id)
 
 
         $data = $this->formatListingsData($listings,$userId);
-               
+
         $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
         if ($request->has('user_id') ) {
             $user_id= $request->input('user_id');
@@ -935,37 +952,13 @@ public function ListeDesPhotosLogementAcceuil($id)
                 }else{
                     $insertvisite=$controllervisitesite->recordSiteVisit();
                 }
-       
-
-             return response()->json(['data' => $data], 200);
-    }
 
 
-    public function ListeDesLogementsAcceuilAuth(Request $request)
-    {
-        $listings = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->get();
+             return response()->json(['data' => $data],200);
+            }
 
-        $userId = $request->query('userId');
-        $data = $this->formatListingsData($listings,$userId);
-               
-        $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
-        if ($request->has('user_id') ) {
-            $user_id= $request->input('user_id');
-            $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
-                }else{
-                    $insertvisite=$controllervisitesite->recordSiteVisit();
-                }
-       
 
-             return response()->json(['data' => $data], 200);
-    }
+   
 
 /**
  * @OA\Post(
@@ -1011,11 +1004,11 @@ public function ListeDesPhotosLogementAcceuil($id)
  public function ShowDetailLogementAcceuil(Request $request)
  {
 
-     
+
        $id= $request->input('housing_id');
        $user_id= $request->input('user_id');
           $housing = Housing::where('id', $id)->get();
-          
+
         if($housing->isEmpty()) {
             return response()->json(['message' => " L\'ID du logement spécifié n\'existe pas"], 404);
         }
@@ -1056,7 +1049,7 @@ public function ListeDesPhotosLogementAcceuil($id)
     //  if ($housingCharges->isEmpty()) {
     //      return response()->json(['message' => 'Aucune charge associé à ce logement'], 404);
     //  }
-     
+
      foreach ($housingCharges as $housingCharge) {
          $charge = Charge::find($housingCharge->charge_id);
          if ($housingCharge->is_mycharge == true) {
@@ -1065,7 +1058,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'housing_id' => $housingCharge->housing_id,
                  'id_charge' => $charge->id,
                  'charge_name' => $charge->name,
-                 'charge_icone' => $charge->icone,  
+                 'charge_icone' => $charge->icone,
                  'is_mycharge' => $housingCharge->is_mycharge,
                     'valeur_charge' => $housingCharge->valeur
              ];
@@ -1089,7 +1082,7 @@ public function ListeDesPhotosLogementAcceuil($id)
      $controllervitehousing = App::make('App\Http\Controllers\UserVisiteHousingController');
      $checkAuth=App::make('App\Http\Controllers\LoginController');
 
-     
+
 
      $note_commentaire= $controllerreviewreservation->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($id);
       $insertvisite=$controllervitehousing->recordHousingVisit($id,$user_id);
@@ -1141,7 +1134,7 @@ public function ListeDesPhotosLogementAcceuil($id)
          'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
          'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
          'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
- 
+
          'photos_logement' => $listing->photos->map(function ($photo) {
             if($photo->is_verified){
                 return [
@@ -1151,7 +1144,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                     'is_couverture' => $photo->is_couverture,
                 ];
             }
-             
+
          }),
          'user' => [
              'id' => $listing->user->id,
@@ -1170,7 +1163,7 @@ public function ListeDesPhotosLogementAcceuil($id)
              'is_traveller' => $listing->user->is_traveller,
              'is_hote' => $listing->user->is_hote,
          ],
- 
+
          'housing_preference' => $listing->housing_preference->filter(function ($preference) {
             return $preference->is_verified;
             })->map(function ($housingpreference) {
@@ -1181,11 +1174,11 @@ public function ListeDesPhotosLogementAcceuil($id)
                  'icone' => $housingpreference->preference->icone,
             ];
           }),
- 
+
          'reductions' =>$reduction->original['data'],
- 
+
          'promotions' => $promotion->original['data'],
- 
+
          'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
             return [
                 'category_id' => $categoryFiles->first()->category_id,
@@ -1200,8 +1193,8 @@ public function ListeDesPhotosLogementAcceuil($id)
                 }),
             ];
         })->values(),
- 
-        'equipments_by_category' => $equipments_by_category, 
+
+        'equipments_by_category' => $equipments_by_category,
         'charges' => [
             'charge_hote' => $hoteCharge_id,
             'charge_traveler' => $travelerCharge_id
@@ -1209,9 +1202,9 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         'User_statistique' => $userStatistique->original,
         'note_commentaire'=> $note_commentaire->original['data']
-        
+
      ];
- 
+
      return response()->json(['data' => $data]);
  }
 
@@ -1222,6 +1215,16 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de logement",
  *     description="Récupère la liste des logements filtrée par le type de logement spécifié.",
  *     operationId="listingsFilteredByHousingType",
+ *    @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Nom du pays",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
  *     @OA\Parameter(
  *         name="housingTypeId",
  *         in="path",
@@ -1245,8 +1248,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function  ListeDesLogementsAcceuilFilterByTypehousing($id)
+ public function  ListeDesLogementsAcceuilFilterByTypehousing(Request $request ,$id)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1255,8 +1265,8 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-        ->get();
-    
+        ->paginate($perPage, ['*'], 'page', $page);
+
         $data = $this->formatListingsData($listings);
 
         return response()->json(['data' => $data],200);
@@ -1269,6 +1279,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     summary="Liste des logements filtrée par type de proprieté",
  *     description="Récupère la liste des logements filtrée par le type de propriété spécifié.",
  *     operationId="listingsFilteredByPropertyType",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="PropertyTypeId",
  *         in="path",
@@ -1291,8 +1308,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsAcceuilFilterByTypeproperty($id)
+    public function  ListeDesLogementsAcceuilFilterByTypeproperty(Request $request, $id)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1301,20 +1324,27 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
                 ->where('property_type_id', $id)
-        ->get();
+                ->paginate($perPage, ['*'], 'page', $page);
 
         $data = $this->formatListingsData($listings);
 
         return response()->json(['data' => $data],200);
     }
 
- 
+
  /**
  * @OA\Get(
  *     path="/api/logement/filterby/country/{country}",
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par Pays",
- *     description="Récupère la liste des logements filtrée par le paysspécifié.",
+ *     description="Récupère la liste des logements filtrée par le pays spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="country",
  *         in="path",
@@ -1337,8 +1367,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsFilterByCountry($country)
+    public function  ListeDesLogementsFilterByCountry(Request $request,$country)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1347,10 +1384,11 @@ public function ListeDesPhotosLogementAcceuil($id)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('country', $country)
-        ->get();
-    
+        ->paginate($perPage, ['*'], 'page', $page);
+
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
+
       }
 
 /**
@@ -1359,6 +1397,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par preference",
  *     description="Récupère la liste des logements filtrée par le id preference spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="preference_id",
  *         in="path",
@@ -1381,8 +1426,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
+public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$preferenceId)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1393,8 +1444,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->whereHas('housing_preference', function ($query) use ($preferenceId) {
             $query->where('preference_id', $preferenceId);
         })
-        ->get();
-    
+        ->paginate($perPage, ['*'], 'page', $page);
+
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
     }
@@ -1404,6 +1455,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par ville",
  *     description="Récupère la liste des logements filtrée par villespécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="city",
  *         in="path",
@@ -1426,8 +1484,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByCity($city)
+ public function  ListeDesLogementsFilterByCity(Request $request, $city)
     {
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1436,18 +1499,25 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('city', $city)
-        ->get();
-    
+        ->paginate($perPage, ['*'], 'page', $page);
+
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
  }
 
 /**
  * @OA\Get(
- *     path="/api/logement/filterby/departement/{departement}",
+ *     path="/api/logement/filterby/department/{departement}",
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par departement",
  *     description="Récupère la liste des logements filtrée par departement spécifié.",
+ *    @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="departement",
  *         in="path",
@@ -1470,8 +1540,15 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByDepartement($department)
+ public function  ListeDesLogementsFilterByDepartement(Request $request,$department)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1480,7 +1557,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('department', $department)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
  }
@@ -1490,6 +1567,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par nbtraveler",
  *     description="Récupère la liste des logements filtrée par nbtraveler spécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="nbtraveler",
  *         in="path",
@@ -1512,8 +1596,14 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
- public function  ListeDesLogementsAcceuilFilterNbtravaller($nbtravaler)
+ public function  ListeDesLogementsAcceuilFilterNbtravaller(Request $request, $nbtravaler)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1522,8 +1612,8 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
         ->where('number_of_traveller', $nbtravaler)
-        ->get();
-    
+        ->paginate($perPage, ['*'], 'page', $page);
+
         $data = $this->formatListingsData($listings);
 
         return response()->json(['data' => $data],200);
@@ -1535,6 +1625,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit(Maximum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit inférieur au montant spécifié.",
+ *   @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -1557,8 +1654,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference($preferenceId)
  *     )
  * )
  */
-public function getListingsByNightPriceMax($price)
+public function getListingsByNightPriceMax(Request $request, $price)
 {
+    if(!$request->page){
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+    $page = intval($request->query('page', 1));
+    $perPage = 15;
     $listings = Housing::where('price', '<=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1567,7 +1669,7 @@ public function getListingsByNightPriceMax($price)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-    ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
     $data = $this->formatListingsData($listings);
 
@@ -1580,6 +1682,13 @@ public function getListingsByNightPriceMax($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par prix de nuit (Minimum)",
  *     description="Récupère la liste des logements filtrée par un prix de nuit supérieur au montant spécifié.",
+ *  @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="price",
  *         in="path",
@@ -1602,8 +1711,15 @@ public function getListingsByNightPriceMax($price)
  *     )
  * )
  */
-public function getListingsByNightPriceMin($price)
+public function getListingsByNightPriceMin(Request $request,$price)
 {
+
+    if(!$request->page){
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = 15;
     $listings = Housing::where('price', '>=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1612,7 +1728,7 @@ public function getListingsByNightPriceMin($price)
     ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-    ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
     $data = $this->formatListingsData($listings);
 
@@ -1625,6 +1741,13 @@ public function getListingsByNightPriceMin($price)
  *     tags={"Housing"},
  *     summary="Liste des logements filtrée par user",
  *     description="Récupère la liste des logements pour un User donné.",
+ * @OA\Parameter(
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="Le numéro de la page pour la pagination",
+ *     @OA\Schema(type="string", example=1)
+ *   ),
  *     @OA\Parameter(
  *         name="UserID",
  *         in="path",
@@ -1647,8 +1770,14 @@ public function getListingsByNightPriceMin($price)
  *     )
  * )
  */
- public function ListeDesLogementsFilterByHote($userId)
+ public function ListeDesLogementsFilterByHote(Request $request, $userId)
     {
+
+        if(!$request->page){
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+        $page = intval($request->query('page', 1));
+        $perPage = 15;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1657,11 +1786,11 @@ public function getListingsByNightPriceMin($price)
         ->where('is_destroy', 0)
         ->where('user_id', $userId)
         ->where('is_finished', 1)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
  }
- 
+
 /**
  * @OA\Put(
  *     path="/api/logement/update/sensible/{id}",
@@ -1741,13 +1870,13 @@ public function getListingsByNightPriceMin($price)
  {
      $userId = Auth::id();
      $housing = Housing::find($id);
- 
+
      if (!$housing) {
          return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
      }
 
      (new PromotionController())->actionRepetitif($id);
- 
+
      $validatedData = $request->validate([
          'interior_regulation' => 'required',
          'telephone' => 'required',
@@ -1758,15 +1887,15 @@ public function getListingsByNightPriceMin($price)
          'surface' => 'required',
          'price' => 'required',
      ]);
- 
+
      $housing->update($validatedData);
      $housing->is_updated = true;
      $housing->save();
- 
+
      $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
- 
+
      $adminUsers = User::where('is_admin', 1)->get();
- 
+
      foreach ($adminUsers as $adminUser) {
 
          $mail = [
@@ -1777,10 +1906,10 @@ public function getListingsByNightPriceMin($price)
 
          dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
      }
- 
+
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
  }
- 
+
 
 
 /**
@@ -1903,7 +2032,7 @@ public function formatListingsData($listings,$userId=0)
         (new PromotionController())->actionRepetitif($listing->id);
     }
 
-    
+
 
     // return DB::table('favoris')->where('user_id', 9)->where('housing_id', 2)->exists() ;
 
@@ -2047,30 +2176,30 @@ public function formatListingsData($listings,$userId=0)
     public function disableHousing($housingId)
     {
         $housing = Housing::find($housingId);
-    
+
         if (!$housing) {
             return response()->json(['error' => 'Logement non trouvé'], 404);
         }
-    
+
         if ($housing->is_disponible != 1) {
             return response()->json(['error' => 'Le logement est en cours de réservation et ne peut pas être désactivé'], 200);
         }
         if ($housing->is_active == 0) {
             return response()->json(['error' => 'Le logement était déjà desactivé'], 200);
         }
-    
+
         $user = auth()->user();
-    
+
         if ($housing->user_id != $user->id) {
             return response()->json(['error' => 'Seul le propriétaire du logement peut le désactiver'], 403);
         }
-    
+
         $housing->is_actif = 0;
         $housing->save();
-    
+
         return response()->json(['message' => 'Le logement a été désactivé avec succès'], 200);
     }
- 
+
     /**
  * @OA\Put(
  *      path="/api/logement/{housingId}/hote/enable",
@@ -2173,10 +2302,10 @@ public function enableHousing($housingId)
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
-    
-      
-    
+
+
+
+
        /**
          * @OA\Get(
          *     path="/api/logement/getHousingForHote",
@@ -2192,8 +2321,8 @@ public function enableHousing($housingId)
          * )
          */
     public function getHousingForHote(){
-       
-    
+
+
         try{
             $housings = Housing::where('is_destroy',0)
             ->where('is_deleted',0)
@@ -2239,23 +2368,23 @@ public function enableHousing($housingId)
  */
     public function getHousingStatisticAcceuil($housingId) {
         $housing = Housing::with('user')->find($housingId);
-    
+
         if (!$housing) {
             return response()->json([
                 'message' => 'Logement non trouvé'
             ], 404);
         }
-    
+
         $owner = $housing->user;
 
         $totalHousingPublished = Housing::where('user_id', $owner->id)->count();
-    
+
         $totalCommentsForHousing = Review_reservation::whereIn('reservation_id', function($query) use ($housingId) {
             $query->select('id')
                   ->from('reservations')
                   ->where('housing_id', $housingId);
         })->count();
-    
+
         $allNotesForOwner = Housing::with('reservation.notes')
             ->where('user_id', $owner->id)
             ->get()
@@ -2264,17 +2393,17 @@ public function enableHousing($housingId)
                     return $reservation->notes->pluck('note');
                 });
             });
-    
+
         $globalAverageForOwner = $allNotesForOwner->isEmpty() ? 0 : $allNotesForOwner->avg();
-    
+
         return response()->json([
             'total_housing_published' => $totalHousingPublished,
             'total_avis_for_housing' => $totalCommentsForHousing,
             'global_average_for_user' => $globalAverageForOwner,
             'user' => $housing->user
         ]);
-    }   
-    
+    }
+
     /**
  * @OA\Get(
  *     path="/api/logement/available_at_date",
@@ -2324,7 +2453,7 @@ public function enableHousing($housingId)
  public function getAvailableHousingsAtDate(Request $request) {
 
     $date = $request->query('date');
-    
+
     if (empty($date)) {
         return response()->json([
             'message' => 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.'
@@ -2458,7 +2587,7 @@ public function enableHousing($housingId)
          "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
         "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
      ];
-    
+
          dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
        }
              return response()->json(['data' => 'Photos de logement ajouté avec succès'], 200);
@@ -2466,7 +2595,7 @@ public function enableHousing($housingId)
    } catch (Exception $e) {
      return response()->json(['error' => $e->getMessage()], 500);
    }
-}  
+}
 
 
 // Fonction retournant la promotion en cours d'un logement donné à un instant t;
@@ -2627,11 +2756,11 @@ public function validatePhoto(Request $request, $photoId)
     } catch (ModelNotFoundException $e) {
         return response()->json([
             'message' => 'Photo non trouvée avec cet ID.',
-        ], 404); 
+        ], 404);
     } catch (Exception $e) {
         return response()->json([
             'message' => 'Une erreur s\'est produite lors de la validation de la photo.',
-        ], 500); 
+        ], 500);
     }
 }
 
@@ -2713,7 +2842,7 @@ public function getAvailableHousingsBetweenDates(Request $request)
         return response()->json([
             'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
         ], 200);
-    }   
+    }
 
     if ($startDate < Carbon::now()->startOfDay()) {
         return response()->json([
@@ -2740,7 +2869,7 @@ public function getAvailableHousingsBetweenDates(Request $request)
             $reservationEnd = Carbon::parse($reservation->date_of_end);
 
             $timeBeforeReservation = $housing->time_before_reservation ?? 0;
-            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);           
+            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
             if (($startDate <= $reservationEnd && $endDate >= $reservationStart) ||
                 ($endDate >= $reservationEnd && $startDate <= $minimumStartDate)) {
                 $isAvailable = false;
@@ -2798,6 +2927,17 @@ public function HousingHoteInProgress(){
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
 }
+
+
+    public function paginateH($items, $perPage = 15, $page = null){
+        $baseUrl = url('/');
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $total = count($items);
+        $currentpage = $page;
+        $offset = ($currentpage * $perPage) - $perPage;
+        $itemstoshow = array_slice($items, $offset, $perPage);
+        return new LengthAwarePaginator($itemstoshow,$total,$perPage,$page,['path' => "{$baseUrl}/api/logement/index/ListeDesLogementsAcceuil?id" ]);
+    }
 
 
 

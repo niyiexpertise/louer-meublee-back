@@ -54,6 +54,7 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 
 /*
@@ -526,6 +527,25 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
     });
 
+    // Gestion des chats
+    Route::prefix('chats')->group(function () {
+        Route::post('/createMessage/{recipientId}/{content}', [ChatController::class, 'createMessage']);
+        Route::get('/getChatsByModelType/{modelType}', [ChatController::class, 'getChatsByModelType']);
+        Route::get('/getChatsByModelTypeAndId/{modelType}/{modelId}', [ChatController::class, 'getChatsByModelTypeAndId']);
+        Route::post('/markMessageAsRead/{messageId}', [ChatController::class, 'markMessageAsRead']);
+        Route::post('/markMessageAsUnRead/{messageId}', [ChatController::class, 'markMessageAsUnRead']);
+        Route::get('/getMessagesByChatId/{chatId}', [ChatController::class, 'getMessagesByChatId']);
+    });
+
+    //Gestion de quelques stats
+    Route::prefix('stat')->group(function () {
+        Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
+        Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
+        Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);
+        Route::get('/getNumberOfReservationGroupedByTraveler', [AdminReservationController::class, 'getNumberOfReservationGroupedByTraveler']);
+        Route::get('/getNumberOfReservationGroupedByHousing', [AdminReservationController::class, 'getNumberOfReservationGroupedByHousing']);
+    });
+
 
     //Gestion des langues sous formes de CRUD.
     Route::prefix('language')->group(function () {
@@ -807,6 +827,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
        Route::post('/store', [NotificationController::class, 'store']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
+       Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
+       Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
        });
     });
     //Gestion des logements en favoris (ici il suffit d'etre connecté)
@@ -1176,6 +1198,10 @@ Route::prefix('portefeuille')->group(function () {
     Route::post('/transaction/update', [PortfeuilleTransactionController::class, 'updateTransaction'])
          ->name('portefeuille.transaction.update')
         ->middleware('role_or_permission:superAdmin');
+
+        Route::get('/transaction/{id}/history', [PortfeuilleTransactionController::class, 'getTransactionHistory'])
+        ->name('portefeuille.transaction.history')
+        ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.history');
 });
 
         //Crud de methode de paiement

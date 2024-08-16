@@ -30,6 +30,7 @@ use Carbon\Carbon;
 use App\Models\user_partenaire;
 use App\Models\PortfeuilleTransactionHistory ;
 use Illuminate\Support\Facades\DB ;
+use App\Jobs\SendRegistrationEmail;
 class PortfeuilleTransactionController extends Controller
 {
     /**
@@ -182,103 +183,346 @@ class PortfeuilleTransactionController extends Controller
 }
 
 
+/**
+ * @OA\Post(
+ *     path="/api/portefeuille/transaction/update",
+ *     summary="Mettre à jour une transaction",
+ *     description="Met à jour les commissions ou autres champs d'une transaction, puis met à jour les soldes correspondants et enregistre les modifications dans l'historique.",
+ *     operationId="updateTransaction",
+ *     tags={"Transaction"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="id", type="integer", description="ID de la transaction"),
+ *             @OA\Property(property="valeur_commission", type="number", description="Nouvelle valeur de commission"),
+ *             @OA\Property(property="valeur_commission_partenaire", type="number", description="Nouvelle valeur de commission pour le partenaire"),
+ *             @OA\Property(property="valeur_commission_admin", type="number", description="Nouvelle valeur de commission pour l'admin"),
+ *             @OA\Property(property="motif", type="string", description="Motif de la modification", example="Correction de la commission partenaire")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Transaction mise à jour avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Transaction updated successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Données de requête non valides",
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Transaction non trouvée",
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
 
 
-
-
-public function updateTransaction(Request $request)
-    {
-        $request->validate([
+ public function updateTransaction(Request $request)
+{
+    try {
+        $validatedData = Validator::make($request->all(), [
             'id' => 'required|integer|exists:portfeuille_transactions,id',
-            'valeur_commission' => 'nullable|numeric',
-            'valeur_commission_partenaire' => 'nullable|numeric',
-            'valeur_commission_admin' => 'nullable|numeric',
+            'valeur_commission' => 'nullable|numeric|min:0',
+            'valeur_commission_partenaire' => 'nullable|numeric|min:0|max:100',
+            'valeur_commission_admin' => 'nullable|numeric|min:0|max:100',
+            'motif' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $transaction =Portfeuille_transaction::findOrFail($request->id);
-            
-            // Déterminer quel champ est modifié
-            $modifiedField = null;
-            if ($request->has('valeur_commission')) {
-                $modifiedField = 'valeur_commission';
-            } elseif ($request->has('valeur_commission_partenaire')) {
-                $modifiedField = 'valeur_commission_partenaire';
-            } elseif ($request->has('valeur_commission_admin')) {
-                $modifiedField = 'valeur_commission_admin';
+        $message = [];
+
+        if ($validatedData->fails()) {
+            $message[] = $validatedData->errors();
+            return (new ServiceController())->apiResponse(505, [], $message);
+        }
+
+        $transaction = Portfeuille_transaction::find($request->id);
+
+        if (!$transaction) {
+            return (new ServiceController())->apiResponse(404, [], "Transaction non trouvée avec l'ID spécifié.");
+        }
+
+        // Vérifier si le partenaire_id est null
+        $isPartenaire = $transaction->partenaire_id !== null;
+
+        if (!$request->has('valeur_commission') && !$request->has('valeur_commission_partenaire') && !$request->has('valeur_commission_admin')) {
+            return (new ServiceController())->apiResponse(404, [], "Aucune modification détectée. Veuillez fournir au moins une valeur à modifier.");
+        }
+
+        $modificationCount = 0;
+        if ($request->has('valeur_commission')) $modificationCount++;
+        if ($request->has('valeur_commission_partenaire')) $modificationCount++;
+        if ($request->has('valeur_commission_admin')) $modificationCount++;
+
+        if ($modificationCount !== 1) {
+            return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez modifier qu'une seule valeur de commission à la fois.");
+        }
+
+        // Si le partenaire_id est null, les modifications concernant le partenaire sont inutiles
+        if (!$isPartenaire && ($request->has('valeur_commission_partenaire') || $request->has('valeur_commission_admin'))) {
+            return (new ServiceController())->apiResponse(404, [], "Modification de la commission partenaire ou admin impossible car aucun partenaire n'est associé à cette transaction.");
+        }
+
+        DB::beginTransaction();
+
+        $oldValues = [
+            'montant_commission' => $transaction->montant_commission,
+            'montant_commission_partenaire' => $transaction->montant_commission_partenaire,
+            'montant_commission_admin' => $transaction->montant_commission_admin,
+            'montant_restant' => $transaction->montant_restant,
+            'valeur_commission' => $transaction->valeur_commission,
+            'valeur_commission_partenaire' => $transaction->valeur_commission_partenaire,
+            'valeur_commission_admin' => $transaction->valeur_commission_admin,
+        ];
+
+        if ($request->has('valeur_commission')) {
+            if ($transaction->valeur_commission == $request->valeur_commission) {
+                return (new ServiceController())->apiResponse(404, [], "Aucune modification : la valeur de commission est déjà identique.");
             }
-
-            // Sauvegarder l'ancienne valeur
-            $oldValue = $transaction->$modifiedField;
-            
-            // Mise à jour du champ modifié
-            $transaction->$modifiedField = $request->$modifiedField;
+            $transaction->valeur_commission = $request->valeur_commission;
+            $transaction->montant_commission = $transaction->amount * ($request->valeur_commission / 100);
             $transaction->save();
+            $transaction->montant_restant = $transaction->amount - $transaction->montant_commission;
+            $transaction->montant_commission_partenaire = $transaction->montant_commission * ($transaction->valeur_commission_partenaire / 100);
+            $transaction->save();
+            $transaction->montant_commission_admin = $transaction->montant_commission - $transaction->montant_commission_partenaire;
+        }
 
-            // Enregistrer l'historique des modifications
-            PortfeuilleTransactionHistory ::create([
+        if ($isPartenaire && $request->has('valeur_commission_partenaire')) {
+            if ($transaction->valeur_commission_partenaire == $request->valeur_commission_partenaire) {
+                return (new ServiceController())->apiResponse(404, [], "Aucune modification : la valeur de commission partenaire est déjà identique.");
+            } 
+            $transaction->valeur_commission_partenaire = $request->valeur_commission_partenaire;
+            $transaction->valeur_commission_admin = 100 - $request->valeur_commission_partenaire;
+            $transaction->montant_commission_partenaire = $transaction->montant_commission * ($request->valeur_commission_partenaire / 100);
+            $transaction->save();
+            $transaction->montant_commission_admin = $transaction->montant_commission - $transaction->montant_commission_partenaire;
+        }
+
+        if ($isPartenaire && $request->has('valeur_commission_admin')) {
+            if ($transaction->valeur_commission_admin == $request->valeur_commission_admin) {
+                return (new ServiceController())->apiResponse(404, [], "Aucune modification : la valeur de commission admin est déjà identique.");
+            } 
+            $transaction->valeur_commission_admin = $request->valeur_commission_admin;
+            $transaction->valeur_commission_partenaire = 100 - $request->valeur_commission_admin;
+            $transaction->montant_commission_admin = $transaction->montant_commission * ($request->valeur_commission_admin / 100);
+            $transaction->save();
+            $transaction->montant_commission_partenaire = $transaction->montant_commission - $transaction->montant_commission_admin;
+        }
+
+        $transaction->save();
+
+        // Enregistrement dans l'historique
+        if ($request->has('valeur_commission') || $request->has('valeur_commission_partenaire') || $request->has('valeur_commission_admin')) {
+            $modifiedField = $request->has('valeur_commission') ? 'valeur_commission' : (
+                $request->has('valeur_commission_partenaire') ? 'valeur_commission_partenaire' : 'valeur_commission_admin'
+            );
+
+            PortfeuilleTransactionHistory::create([
                 'transaction_id' => $transaction->id,
-                'field_modified' => $modifiedField,
-                'old_value' => $oldValue,
-                'new_value' => $request->$modifiedField,
+                'column_name' => $modifiedField,
+                'old_value' => $oldValues[$modifiedField],
+                'new_value' => $request->input($modifiedField),
+                'motif' => $request->motif,
                 'modified_by' => auth()->user()->id,
                 'modified_at' => now(),
             ]);
-
-            // Recalcul des montants et des soldes
-            $this->recalculateFollowingTransactions($transaction, $modifiedField);
-        });
-
-        return response()->json(['message' => 'Transaction updated successfully']);
-    }
-
-    private function recalculateFollowingTransactions($transaction, $modifiedField)
-    {
-        $transactions = Portfeuille_transaction::where('id', '>=', $transaction->id)
-            ->orderBy('id')
-            ->get();
-
-        $runningTotal = 0;
-        $runningCommission = 0;
-        $runningCommissionPartenaire = 0;
-        $runningCommissionAdmin = 0;
-
-        foreach ($transactions as $trx) {
-            // Déterminer le montant de la commission
-            if ($modifiedField === 'valeur_commission') {
-                $trx->montant_commission = $trx->amount * ($trx->valeur_commission / 100);
-                $trx->montant_restant = $trx->amount - $trx->montant_commission;
-            }
-
-            if ($modifiedField === 'valeur_commission_partenaire' || $modifiedField === 'valeur_commission') {
-                $trx->montant_commission_partenaire = $trx->montant_commission * ($trx->valeur_commission_partenaire / 100);
-            }
-
-            if ($modifiedField === 'valeur_commission_admin' || $modifiedField === 'valeur_commission') {
-                $trx->montant_commission_admin = $trx->montant_commission * ($trx->valeur_commission_admin / 100);
-            }
-
-            // Mise à jour du solde total en fonction des booléens credit et debit
-            if ($trx->credit) {
-                $runningTotal += $trx->amount;
-            } elseif ($trx->debit) {
-                $runningTotal -= $trx->amount;
-            }
-
-            // Mise à jour des soldes cumulés
-            $trx->solde_total = $runningTotal;
-            $trx->solde_commission = $runningCommission + $trx->montant_commission;
-            $trx->solde_restant = $runningTotal - $trx->solde_commission;
-            $trx->solde_commission_partenaire = $runningCommissionPartenaire + $trx->montant_commission_partenaire;
-            $trx->new_solde_admin = $runningCommissionAdmin + $trx->montant_commission_admin;
-
-            // Accumuler les valeurs pour les prochaines transactions
-            $runningCommission = $trx->solde_commission;
-            $runningCommissionPartenaire = $trx->solde_commission_partenaire;
-            $runningCommissionAdmin = $trx->new_solde_admin;
-
-            $trx->save();
         }
+        $this->recalculerSoldes($transaction->id);
+        // Notifier le titulaire
+        if ($oldValues['montant_restant'] !== $transaction->montant_restant) {
+            $userPortefeuille = Portfeuille::where('id', $transaction->portfeuille_id)->first();
+            if ($userPortefeuille) {
+ 
+                // Mise à jour du portefeuille
+                $userPortefeuille->solde += $transaction->montant_restant - $oldValues['montant_restant'];
+                $userPortefeuille->save();
+                $mail = [
+                    "title" => "Mise à jour de votre portefeuille",
+                    "body" => "Une mise à jour a été effectuée sur votre portefeuille concernant la transaction {$transaction->id}. Ancien montant reçu de la transaction: {$oldValues['montant_restant']} FCFA. Nouveau montant reçu de la transaction : {$transaction->montant_restant} FCFA. Motif : {$request->motif}.Nouveau solde du portefeuille:{$userPortefeuille->solde}",
+                ];
+
+                dispatch(new SendRegistrationEmail(
+                    $userPortefeuille->user->email,
+                    $mail['body'],
+                    $mail['title'],
+                    2
+                ));
+            }
+        }
+
+        // Notifier le partenaire (si applicable)
+        
+        if ($isPartenaire) {
+          if ($oldValues['montant_commission_partenaire'] !== $transaction->montant_commission_partenaire) {
+            $partenaire = user_partenaire::where('id', $transaction->partenaire_id)->first();
+            
+            if ($partenaire) {
+                $partenaireUser = User::find($partenaire->user_id);
+                if ($partenaireUser) {
+                    $partenairePortefeuille = Portfeuille::where('user_id', $partenaireUser->id)->first();
+                    if ($partenairePortefeuille) {
+                        $partenairePortefeuille->solde += $transaction->montant_commission_partenaire - $oldValues['montant_commission_partenaire'];
+                        $partenairePortefeuille->save();
+                    }
+                    $mail = [
+                        "title" => "Mise à jour de votre portefeuille",
+                        "body" => "Une mise à jour a été effectuée sur votre portefeuille concernant la transaction {$transaction->id}.  Ancienne commission partenaire reçue   : {$oldValues['montant_commission_partenaire']} FCFA. Nouvelle commission partenaire : {$transaction->montant_commission_partenaire} FCFA. Motif : {$request->motif}. Nouveau solde du portefeuille:{$partenairePortefeuille->solde}",
+                    ];
+
+                    dispatch(new SendRegistrationEmail(
+                        $partenaireUser->email,
+                        $mail['body'],
+                        $mail['title'],
+                        2
+                    ));
+
+                    // Mise à jour du portefeuille du partenaire
+                   
+                }
+            }
+        }
+        }
+
+        DB::commit();
+
+        return (new ServiceController())->apiResponse(200, [], 'Transaction mise à jour avec succès.');
+    } catch (\Exception $e) {
+        DB::rollback();
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
+}
+
+
+
+
+     private function recalculerSoldes($transactionId)
+     {
+         $transactions = Portfeuille_transaction::where('id', '>', $transactionId)->orderBy('id', 'asc')->get();
+
+         $currentTransaction = Portfeuille_transaction::find($transactionId);
+
+         if (!$currentTransaction) {
+             return;
+         }
+
+         foreach ($transactions as $transaction) {
+             $transaction->solde_commission = $currentTransaction->solde_commission + $transaction->montant_commission;
+             $transaction->solde_commission_partenaire = $currentTransaction->solde_commission_partenaire + $transaction->montant_commission_partenaire;
+             $transaction->new_solde_admin = $currentTransaction->new_solde_admin + $transaction->montant_commission_admin;
+
+             $transaction->save();
+
+             $currentTransaction = $transaction;
+         }
+     }
+
+
+
+
+
+
+/**
+     * @OA\Get(
+     *     path="/api/portefeuille/transaction/{id}/history",
+     *     summary="Récupère l'historique des modifications d'une transaction",
+     *     description="Retourne l'historique des modifications pour une transaction spécifique en fonction de son ID.",
+     *     tags={"Transaction"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID de la transaction dont l'historique doit être récupéré",
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Historique des modifications de la transaction",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="transaction_id", type="integer", example=81),
+     *                 @OA\Property(property="field_modified", type="string", example="valeur_commission"),
+     *                 @OA\Property(property="old_value", type="string", example="10"),
+     *                 @OA\Property(property="new_value", type="string", example="15"),
+     *                 @OA\Property(property="modified_by", type="integer", example=2),
+     *                 @OA\Property(property="modified_at", type="string", format="date-time", example="2024-08-15T12:34:56Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Transaction non trouvée",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Transaction not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur serveur interne",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Une erreur est survenue lors de la récupération de l'historique.")
+     *         )
+     *     ),
+     *     security={{"bearerAuth":{}}}
+     * )
+     */
+
+     public function getTransactionHistory($id)
+{
+    try {
+        // Trouver la transaction
+        $transaction = Portfeuille_transaction::find($id);
+
+        if (!$transaction) {
+            return (new ServiceController())->apiResponse(404, [], 'Transaction non trouvée.');
+        }
+
+        $history = PortfeuilleTransactionHistory::where('transaction_id', $id)
+            ->with('user')
+            ->orderBy('modified_at', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'transaction_id' => $item->transaction_id,
+                    'column_name' => $item->column_name,
+                    'old_value' => $item->old_value,
+                    'new_value' => $item->new_value,
+                    'motif' => $item->motif,
+                    'modified_at' => $item->modified_at,
+                    'modified_by' => [
+                        'id' => $item->user->id,
+                        'first_name' => $item->user->firstname,
+                        'last_name' => $item->user->lastname
+                    ]
+                ];
+            });
+
+
+        $data = [
+            'data' => $history,
+            'nombre' => $history->count()
+        ];
+
+        return (new ServiceController())->apiResponse(200, $data, 'Historique des transactions récupéré avec succès.');
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
 
 }

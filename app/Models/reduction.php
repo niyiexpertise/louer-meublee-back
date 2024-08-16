@@ -20,6 +20,8 @@ class reduction extends Model
         'date_debut',
         'date_fin',
     ];
+
+    
     public function housing()
     {
         return $this->belongsTo(Housing::class, 'housing_id'); 

@@ -411,11 +411,11 @@ class DashBoardTravelerController extends Controller
             }
 
             if (!$reservation->is_tranche_paiement) {
-                return response()->json(['message' => "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche "], 400);
+                return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche.");
             }
 
             if ($reservation->montant_a_paye == $reservation->valeur_payee) {
-                return response()->json(['message' => "Logement déjà soldé "], 400);
+                return (new ServiceController())->apiResponse(404, [], 'Logement déjà soldé .');
             }
 
 
@@ -442,12 +442,12 @@ class DashBoardTravelerController extends Controller
                 if ($validatedData['payment_method'] == "portfeuille" ) {
 
                     if ($reservation->user_id != $user_id) {
-                        return response()->json(['message' => 'Vous n\'êtes pas autorisé à effectuer ce paiement'], 403);
+                        return (new ServiceController())->apiResponse(403, [], "Vous n'êtes pas autorisé à effectuer ce paiement");
                     }
 
                     $portefeuille = Portfeuille::where('user_id', $user_id)->first();
                     if($portefeuille->solde < $required_paid_value){
-                        return response()->json(['message' => "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement"], 400);
+                        return (new ServiceController())->apiResponse(404, [], "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement");
                     }
                     $portefeuille->solde -= $required_paid_value;
                     
@@ -490,17 +490,20 @@ class DashBoardTravelerController extends Controller
                 }
 
                 DB::commit();
-
-                return response()->json([
-                    'message' => 'Paiement effectué avec succès',
+                $data = [
                     'reservation' => $reservation,
                     'montant_a_payer' => $required_paid_value
-                ], 200);
+                ];
+
+                return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
+                
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);
             }
         }
+
+        
 
 
 }

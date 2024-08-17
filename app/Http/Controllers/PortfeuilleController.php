@@ -92,10 +92,10 @@ class PortfeuilleController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'amount' => 'required|numeric|min:0.01',
-                'paiement_methode' => 'required|string', 
+                'paiement_methode' => 'required|string',
                 'transaction_id' => 'required|string',
             ]);
-    
+
             $message = [];
 
             if ($validator->fails()) {
@@ -103,41 +103,41 @@ class PortfeuilleController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-    
+
             $userId = Auth::id();
             if (is_null($userId)) {
                 return (new ServiceController())->apiResponse(404, [], 'Utilisateur non authentifié');
 
             }
-    
+
             $amount = $request->input('amount');
-    
+
             $portefeuille = Portfeuille::where('user_id', $userId)->first();
-    
+
             if (!$portefeuille) {
                 return (new ServiceController())->apiResponse(404, [], 'Portefeuille non trouvé pour cet utilisateur.');
 
-                
+
             }
-    
+
             $soldeTotal = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
             $soldeCommission = Portfeuille_transaction::sum('montant_commission');
             $soldeRestant = Portfeuille_transaction::sum('montant_restant');
-    
+
             $portefeuille->solde += $amount;
             $portefeuille->save();
-    
+                
             $portefeuilleTransaction = new Portfeuille_transaction();
             $portefeuilleTransaction->debit = false;
             $portefeuilleTransaction->credit = true;
             $portefeuilleTransaction->amount = $amount;
             $portefeuilleTransaction->motif = "Recharge de portfeuille";
             $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-            $portefeuilleTransaction->id_transaction = $request->input('transaction_id'); 
+            $portefeuilleTransaction->id_transaction = $request->input('transaction_id');
             $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
-            
+
             $portefeuilleTransaction->solde_total = $soldeTotal  + $amount;
-            
+
             $portefeuilleTransaction->save();
             (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
 
@@ -145,8 +145,8 @@ class PortfeuilleController extends Controller
                 "title" => "Confirmation de dépôt sur votre portefeuille",
                 "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
             ];
-    
-    
+
+
           dispatch( new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
           $data =["solde" => $portefeuille->solde];
           return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
@@ -155,7 +155,7 @@ class PortfeuilleController extends Controller
         }catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
-        
+
 }
 
  }

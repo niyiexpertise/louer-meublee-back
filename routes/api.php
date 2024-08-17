@@ -243,7 +243,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     //Gestion des équipements.
     Route::prefix('equipment')->name('equipment.')->group(function () {
-        
+
         Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.VerifiedBlocknotDelete'])->group(function () {
             Route::get('/VerifiedBlocknotDelete', [EquipementController::class, 'VerifiedBlocknotDelete'])->name('VerifiedBlocknotDelete');
         });
@@ -1034,7 +1034,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         // Reviews
         Route::post('/reviews/note/add', [ReviewReservationController::class, 'AddReviewNote'])
             ->name('reservation.reviews.note.add')
-            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reviews.note.add');
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.reviews.note.add');
 
         Route::get('/{housingId}/reviews/note/get', [ReviewReservationController::class, 'LogementAvecMoyenneNotesCritereEtCommentairesAcceuil'])
             ->name('reservation.reviews.note.get');
@@ -1155,7 +1155,7 @@ Route::prefix('portefeuille')->group(function () {
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
         ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.all');
-        
+
     Route::post('/transaction/update', [PortfeuilleTransactionController::class, 'updateTransaction'])
          ->name('portefeuille.transaction.update')
         ->middleware('role_or_permission:superAdmin');
@@ -1408,7 +1408,7 @@ Route::prefix('portefeuille')->group(function () {
 
                 Route::get('users/transaction', [DashboardPartenaireController::class, 'getPartnerPortfeuilleDetails'])
                 ->name('portefeuille.user.transactionpartenaire');
-                
+
                 Route::get('users/reservation', [DashboardPartenaireController::class, 'getReservationsWithPromoCode'])
                 ->name('portefeuille.user.reservationpartenaire');
 

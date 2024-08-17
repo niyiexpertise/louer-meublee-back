@@ -831,10 +831,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::post('/store_step_17/{housingId}', [AddHousingZController::class, 'addHousing_step_17'])->name('logement.store_step_17');
             });
 
-            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.storeInProgress']], function () {
-                Route::post('/storeInProgress', [HousingController::class, 'addHousingInProgress'])->name('logement.storeInProgress');
-            });
-
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateSensible']], function () {
                 Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing'])->name('logement.updateSensible');
             });
@@ -963,9 +959,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         //Gestion des logements coté administrateur
        Route::get('/index/ListeDesLogementsValideBloque', [AdminHousingController::class, 'ListeDesLogementsValideBloque'])->name('logement.ListeDesLogementsValideBloque')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideBloque');
        Route::get('/index/ListeDesLogementsValideDelete', [AdminHousingController::class, 'ListeDesLogementsValideDelete'])->name('logement.ListeDesLogementsValideDelete')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideDelete');
-       Route::delete('/destroy/{id}', [HousingController::class, 'destroy'])->name('logement.destroy')->middleware('role_or_permission:superAdmin|admin|Managelogement.destroy');
-       Route::put('/block/{id}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
-       Route::put('/unblock/{id}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        Route::get('/index/ListeDesLogementsValideDisable', [AdminHousingController::class, 'ListeDesLogementsValideDisable'])->name('logement.ListeDesLogementsValideDisable')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideDisable');
        Route::get('/hote_with_many_housing', [AdminHousingController::class, 'hote_with_many_housing'])->name('logement.hote_with_many_housing')->middleware('role_or_permission:superAdmin|admin|Managelogement.hote_with_many_housing');
        Route::get('/country_with_many_housing', [AdminHousingController::class, 'country_with_many_housing'])->name('logement.country_with_many_housing')->middleware('role_or_permission:superAdmin|admin|Managelogement.country_with_many_housing');
@@ -991,6 +984,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/preference/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid'])->name('logement.ListHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingPreferenceInvalid');
        Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
        Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
+       Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
+       Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        //Gestion des photos de logement
        Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
        Route::put('/photos/validate/{photoId}', [HousingController::class, 'validatePhoto'])->name('logement.validatePhoto')->middleware('role_or_permission:superAdmin|admin|Managelogement.validatePhoto');
@@ -1298,11 +1293,11 @@ Route::prefix('portefeuille')->group(function () {
             });
 
 
-
+            //Gestion des charges
 
         Route::prefix('charge')->group(function() {
                     Route::get('index', [ChargeController::class, 'index'])
-                        ->name('charge.index');
+                        ->name('charge.index') ->middleware('role_or_permission:admin|superAdmin|Managecharge.index');
                     Route::post('store', [ChargeController::class, 'store'])
                         ->name('charge.store')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.store');

@@ -56,6 +56,7 @@ use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
+use App\Http\Controllers\AuditController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,9 +103,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
         Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.show'])->group(function () {
             Route::get('/show/{id}', [CategorieController::class, 'show'])->name('category.show');
-        });
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.update'])->group(function () {
-            Route::put('/update/{id}', [CategorieController::class, 'update'])->name('category.update');
         });
 
         Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.destroy'])->group(function () {
@@ -236,10 +234,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::get('/show/{id}', [RoleController::class, 'show'])->name('show');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|Managerole.update'])->group(function () {
-            Route::put('/update/{id}', [RoleController::class, 'update'])->name('update');
-        });
-
         Route::middleware(['role_or_permission:superAdmin|Managerole.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [RoleController::class, 'destroy'])->name('destroy');
         });
@@ -249,14 +243,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     //Gestion des équipements.
     Route::prefix('equipment')->name('equipment.')->group(function () {
-        Route::middleware(['role_or_permission:admin|superAdmin|ManageEquipment.indexAdmin'])->group(function () {
-            Route::get('/indexAdmin', [EquipementController::class, 'indexAdmin'])->name('indexAdmin');
-        });
-
-        Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.indexBlock'])->group(function () {
-            Route::get('/indexBlock', [EquipementController::class, 'indexBlock'])->name('indexBlock');
-        });
-
+        
         Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.VerifiedBlocknotDelete'])->group(function () {
             Route::get('/VerifiedBlocknotDelete', [EquipementController::class, 'VerifiedBlocknotDelete'])->name('VerifiedBlocknotDelete');
         });
@@ -349,36 +336,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/usersWithRole/{role}', [AuthController::class, 'usersWithRole'])->name('users.usersWithRole');
             });
 
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithRoleCount'])->group(function () {
-                Route::get('/usersWithRoleCount/{role}', [AuthController::class, 'usersWithRoleCount'])->name('users.usersWithRoleCount');
-            });
 
             Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithPerm'])->group(function () {
                 Route::get('/usersWithPerm/{permission}', [AuthController::class, 'usersWithPerm'])->name('users.usersWithPerm');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithPermCount'])->group(function () {
-                Route::get('/usersWithPermCount/{permission}', [AuthController::class, 'usersWithPermCount'])->name('users.usersWithPermCount');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithoutRole'])->group(function () {
-                Route::get('/usersWithoutRole/{role}', [AuthController::class, 'usersWithoutRole'])->name('users.usersWithoutRole');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithoutRoleCount'])->group(function () {
-                Route::get('/usersWithoutRoleCount/{role}', [AuthController::class, 'usersWithoutRoleCount'])->name('users.usersWithoutRoleCount');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithoutPerm'])->group(function () {
-                Route::get('/usersWithoutPerm/{permission}', [AuthController::class, 'usersWithoutPerm'])->name('users.usersWithoutPerm');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersWithoutPermCount'])->group(function () {
-                Route::get('/usersWithoutPermCount/{permission}', [AuthController::class, 'usersWithoutPermCount'])->name('users.usersWithoutPermCount');
-            });
-
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersPerms'])->group(function () {
-                Route::get('/usersPerms', [AuthController::class, 'usersPerms'])->name('users.usersPerms');
             });
 
             Route::middleware(['role_or_permission:superAdmin|Manageusers.rolesPerms'])->group(function () {
@@ -396,9 +356,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::middleware(['role_or_permission:superAdmin|Manageusers.usersRoles'])->group(function () {
                 Route::get('/usersRoles', [AuthController::class, 'usersRoles'])->name('users.usersRoles');
             });
-            Route::post('/switchToHote', [AuthController::class, 'switchToHote']);
-            Route::post('/switchToAdmin', [AuthController::class, 'switchToAdmin']);
-            Route::post('/switchToTraveler', [AuthController::class, 'switchToTraveler']);
 
             Route::post('/switchToAnotherRole/{roleName}', [AuthController::class, 'switchToAnotherRole']);
         });
@@ -538,7 +495,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     });
 
     //Gestion de quelques stats
-    Route::prefix('stat')->group(function () {
+    Route::prefix('stat')->middleware(['role:superAdmin|admin'])->group(function () {
         Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
         Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
         Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);
@@ -814,6 +771,15 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     });
 
+    //Gestion des audits
+    Route::group(['middleware' => ['role:superAdmin|admin']], function () {
+        Route::prefix('audit')->group(function () {
+         Route::get('/getAudits', [AuditController::class, 'getAudits']);
+         Route::get('/getAuditsByModelType/{modelType}', [AuditController::class, 'getAuditsByModelType']);
+         Route::get('/getAuditsByModelTypeAndId/{modelType}/{modelId}', [AuditController::class, 'getAuditsByModelTypeAndId']);
+         });
+      });
+
 
    // Gestion des Notifications (Pas besoin de permission ,ni de role,il suffit d'etre connecté)
      Route::prefix('notifications')->group(function () {
@@ -827,6 +793,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
        Route::post('/store', [NotificationController::class, 'store']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
+       Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
+       Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
        });
     });
     //Gestion des logements en favoris (ici il suffit d'etre connecté)
@@ -1191,7 +1159,15 @@ Route::prefix('portefeuille')->group(function () {
 
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
-        ->middleware('superAdmin');
+        ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.all');
+        
+    Route::post('/transaction/update', [PortfeuilleTransactionController::class, 'updateTransaction'])
+         ->name('portefeuille.transaction.update')
+        ->middleware('role_or_permission:superAdmin');
+
+        Route::get('/transaction/{id}/history', [PortfeuilleTransactionController::class, 'getTransactionHistory'])
+        ->name('portefeuille.transaction.history')
+        ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.history');
 });
 
         //Crud de methode de paiement
@@ -1517,6 +1493,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::prefix('reservation')->group(function () {
+            Route::get('showDetailReservation/{reservationId}', [DashBoardTravelerController::class, 'showDetailReservation'])
+            ->name('reservation.showDetailReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.showDetailReservation');
+
             Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
             ->name('reservation.getReservationsForTraveler')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');

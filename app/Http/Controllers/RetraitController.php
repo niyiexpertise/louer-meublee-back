@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Validation\Rule;
+use App\Models\User_right;
+use App\Models\Right;
 class RetraitController extends Controller
 {
                          /**
@@ -223,7 +225,7 @@ class RetraitController extends Controller
 
             if( $montant > $retrait->montant_reel ){
                 return response()->json([
-                    'error' => 'Vérifier bien le montant, il ne doit pas dépasser la somme demandé '
+                    'error' => 'Vérifier bien le montant, il ne doit pas dépasser la somme demandée '
                 ]);
             }
 
@@ -246,7 +248,7 @@ class RetraitController extends Controller
                 $transaction = new Portfeuille_transaction();
                 $transaction->debit = true;
                 $transaction->credit = false;
-                $transaction->amount = $montant;;
+                $transaction->amount = $montant;
                 $transaction->valeur_commission =0;
                 $transaction->montant_commission =0 ;
                 $transaction->montant_restant=0;
@@ -258,6 +260,7 @@ class RetraitController extends Controller
                 $transaction->payment_method = $retrait->payment_method;
                 $transaction->motif = "Virement sur le compte après une demande de retrait";
                 $transaction->save();
+                (new ReservationController())->initialisePortefeuilleTransaction($transaction->id);
 
                 $mail = [
                     'title' => 'Confirmation de la demande de retrait',
@@ -484,16 +487,21 @@ class RetraitController extends Controller
                     
                      dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
-                       $adminUsers = User::where('is_admin', 1)->get();
-                            foreach ($adminUsers as $adminUser) {
-                             
-                                $mail = [
-                                    'title' => 'Demande de retrait',
-                                    'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
-                                   ];
-
-                                 dispatch( new SendRegistrationEmail( $adminUser->email, $mail['body'], $mail['title'], 2));
-                            }
+                     $right = Right::where('name', 'admin')->first();
+                     $adminUsers = User_right::where('right_id', $right->id)->get();
+             
+                     foreach ($adminUsers as $adminUser) {
+                         
+             
+                        $mail = [
+                            'title' => 'Demande de retrait',
+                            'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
+                           ];
+                         dispatch(new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
+             
+             
+                     }
+ 
         return response()->json([
             'message' => 'save successfuly',
             'date' => $retrait

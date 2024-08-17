@@ -6,6 +6,7 @@ use App\Jobs\SendRegistrationEmail;
 use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Housing;
+use App\Models\Reservation;
 use App\Models\Right;
 use App\Models\User;
 use App\Models\User_right;
@@ -69,25 +70,37 @@ class ChatController extends Controller
      {
          try {
              $userId = auth()->id();
+
+             $models = (new AuditController)->getAllModels();
+             $modelMappings = [];
+            foreach ($models as $model) {
+                $modelName = class_basename($model);
+                $modelMappings[$modelName] = "App\Models\\$model";
+            }
+
+            if (!in_array($modelType, $models)) {
+                return (new ServiceController())->apiResponse(404, [], "Le modèle $modelType spécifié n'existe pas.");
+            }
   
+
              $chats = Chat::where('model_type_concerned', $modelType)
                           ->where(function($query) use ($userId) {
                               $query->where('sent_by', $userId)
                                     ->orWhere('sent_to', $userId);
                           })
                           ->get();
-     
+
              if ($chats->isEmpty()) {
                 return (new ServiceController())->apiResponse(404, [],'Aucune donnée disponible');
              }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');
-     
+
          } catch (Exception $e) {
              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
          }
      }
-     
+
 
 
     /**
@@ -147,17 +160,28 @@ class ChatController extends Controller
      public function getChatsByModelTypeAndId($modelType, $modelId)
      {
          try {
-             $userId = auth()->id();
 
-            $modelMappings = [
-                'Housing' => 'App\Models\Housing',
-                'Reservation' => 'App\Models\Reservation',
-            ];
+             $userId = auth()->id();
+             $models = (new AuditController)->getAllModels();
+             $modelMappings = [];
+            foreach ($models as $model) {
+                $modelName = class_basename($model);
+                $modelMappings[$modelName] = "App\Models\\$model";
+            }
+
+            if (!in_array($modelType, $models)) {
+                return (new ServiceController())->apiResponse(404, [], "Le modèle $modelType spécifié n'existe pas.");
+            }
+
+            // $modelMappings = [
+            //     'Housing' => 'App\Models\Housing',
+            //     'Reservation' => 'App\Models\Reservation',
+            // ];
 
             if ($modelType && isset($modelMappings[$modelType]) && $modelType!= "Support Information") {
                 $modelClass = $modelMappings[$modelType];
                 if (!(new $modelClass())::find($modelId)) {
-                    return (new ServiceController())->apiResponse(404, [], "$modelType non trouvé");
+                    return (new ServiceController())->apiResponse(404, [], "$modelType non trouvé pour l'id $modelId");
                 }
             }
 
@@ -179,14 +203,14 @@ class ChatController extends Controller
              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
          }
      }
-     
+
 
     /**
      * @OA\Post(
      *     path="/api/chats/markMessageAsRead/{messageId}",
      *     summary="Marque un message comme lu",
      *     tags={"Chats"},
-     *  security={{"bearerAuth": {}}}, 
+     *  security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="messageId",
      *         in="path",
@@ -236,12 +260,12 @@ class ChatController extends Controller
             if(!$message){
                 return (new ServiceController())->apiResponse(404, [],'Message non trouvé');
             }
-            
+
             if($message->receiver_id != Auth::user()->id && Chat::whereId($message->chat_id)->first()->model_type_concerned!= "Support Information"){
                 return (new ServiceController())->apiResponse(403, [],'Vous n\'avez pas le droit de marquer ce message comme lu');
             }
             $message->is_read = true;
-           
+
             Chat::whereId($message->chat_id)->first()->update(['is_read' => 1]);
 
             if(Chat::whereId($message->chat_id)->first()->model_type_concerned == "Support Information"){
@@ -251,7 +275,7 @@ class ChatController extends Controller
             $message->save();
 
             return (new ServiceController())->apiResponse(200, [],'Message marqué comme lu avec succès');
-           
+
         } catch(Exception $e) {
              return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
@@ -262,7 +286,7 @@ class ChatController extends Controller
      *     path="/api/chats/markMessageAsUnRead/{messageId}",
      *     summary="Marque un message comme non lu",
      *     tags={"Chats"},
-     *  security={{"bearerAuth": {}}}, 
+     *  security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="messageId",
      *         in="path",
@@ -451,7 +475,8 @@ class ChatController extends Controller
         try {
 
             $extensions = ['jpg','jpeg','png','gif','webp','bmp','svg','tiff','mp4','mov','avi','mkv','mpeg','webm'];
-
+              
+        
             if($request->file('files')){
                 foreach ($request->file('files') as $file) {
                     $extension = $file->getClientOriginalExtension();
@@ -475,21 +500,35 @@ class ChatController extends Controller
                 return (new ServiceController())->apiResponse(505, [],$sensitiferrors);
             }
 
-            $modelMappings = [
-                'Housing' => 'App\Models\Housing',
-                'Reservation' => 'App\Models\Reservation',
-            ];
+            // $modelMappings = [
+            //     'Housing' => 'App\Models\Housing',
+            //     'Reservation' => 'App\Models\Reservation',
+            // ];
 
             if (!User::find($recipientId) && $ModelType!= "Support Information") {
                 return (new ServiceController())->apiResponse(404, [], "Receveur non trouvé, vérifié l'id du receveur que vous envoyé");
 
             }
 
-            if ($ModelType && isset($modelMappings[$ModelType]) && $ModelType!= "Support Information") {
+            if ($ModelType && $ModelType!= "Support Information") {
+
+                $models = (new AuditController)->getAllModels();
+                if (!in_array( $request->query('ModelType'), $models)) {
+                    return (new ServiceController())->apiResponse(404, [], "Le modèle  {$request->query('ModelType')} spécifié n'existe pas.");
+                }
+
+                $modelMappings = [];
+                foreach ($models as $model) {
+                    $modelName = class_basename($model);
+                    $modelMappings[$modelName] = "App\Models\\$model";
+                }
+   
                 $modelClass = $modelMappings[$ModelType];
                 if (!(new $modelClass())::find($ModelId)) {
-                    return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé");
+                    return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé pour l'id $ModelId");
                 }
+            }else{
+                return (new ServiceController())->apiResponse(404, [], "Model comportant le nom $ModelType non trouvé");
             }
 
             if ($chatId) {
@@ -499,6 +538,10 @@ class ChatController extends Controller
                 if (!$chat) {
                     return (new ServiceController())->apiResponse(404, [], "Conversation non trouvé");
                 }
+                   if($chat->sent_to !==intval($recipientId))         {
+                    return (new ServiceController())->apiResponse(404, [], "Mauvaise valeur pour le recepteur donné. Le recepteur du message a normalement pour id {$chat->sent_to} et non {$recipientId}. ");
+
+                    }  
 
                 $message = new ChatMessage();
                 $message->content = $content;
@@ -520,6 +563,30 @@ class ChatController extends Controller
 
                 if(!$ModelType && $ModelType!= "Support Information"){
                     return (new ServiceController())->apiResponse(404, [], "Le type du model est important pour la création d'une nouvelle conversation");
+                }
+                $sentTo = $recipientId;
+                $sentBy = auth()->id();
+                $existingChat = Chat::where('model_id', $ModelId)
+                ->where('model_type_concerned', $ModelType)
+                ->where(function($query) use ($sentTo, $sentBy) {
+                    $query->where('sent_to', $sentTo)
+                          ->where('sent_by', $sentBy)
+                          ->orWhere(function($query) use ($sentTo, $sentBy) {
+                              $query->where('sent_to', $sentBy)
+                                    ->where('sent_by', $sentTo);
+                          });
+                })
+                ->first();
+                if ($existingChat) {
+                    // Récupérer les informations des utilisateurs
+                    $recipient = User::find($sentTo);
+                    $sender = User::find($sentBy);
+                    
+                    // Message clair avec les noms des utilisateurs
+                    $message = "Un chat entre {$sender->firstname} {$sender->lastname} et {$recipient->firstname} {$recipient->lastname} sur le sujet {$ModelType} ayant l'id {$ModelId}  existe déjà.";
+                    
+                    return (new ServiceController())->apiResponse(404, [], $message);
+
                 }
 
                 $chat = new Chat();
@@ -548,7 +615,7 @@ class ChatController extends Controller
                 $chat->save();
             }
 
-          
+
             if($request->file('files')){
                 $this->uploadFiles($request, $randomString,'ChatFile');
             }
@@ -815,20 +882,20 @@ class ChatController extends Controller
         try {
             $userId = auth()->id();
 
-           
+
             $chat = Chat::find($chatId);
 
-           
+
             if (!$chat) {
                 return (new ServiceController())->apiResponse(404,[],'Conversation non trouvée');
             }
 
-          
+
             if ($chat->sent_by !== $userId && $chat->sent_to !== $userId) {
                 return (new ServiceController())->apiResponse(403,[],'Vous n\'êtes pas autorisé à accéder à cette conversation');
             }
 
-           
+
             $messages = ChatMessage::with('file')->where('chat_id', $chatId)->where('is_deleted_by_receiver',false)->where('is_deleted_by_sender',false)->get();
 
             return (new ServiceController())->apiResponse(200, $messages,'Messages récupérés avec succès');
@@ -836,6 +903,10 @@ class ChatController extends Controller
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }
+
+
+    
+
 
 
 }

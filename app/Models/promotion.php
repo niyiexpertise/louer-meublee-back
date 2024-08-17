@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class Promotion extends Model
+class promotion extends Model implements Auditable
 {
     use HasFactory;
+    use AuditableTrait;
     protected $fillable = [
+        'housing_id', 
+        'number_of_reservation',
         'value',
-<<<<<<< HEAD
-        'number_of_reservation'
-    ];
-=======
         'is_encours', 
         'is_deleted',
         'date_debut',
@@ -25,5 +26,4 @@ class Promotion extends Model
     {
         return $this->belongsTo(Housing::class, 'housing_id'); 
     }
->>>>>>> 47466451b179ebc8658881198e8522a898727d72
 }

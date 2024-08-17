@@ -6,6 +6,7 @@ use App\Models\Review;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class ReviewController extends Controller
 {
@@ -224,7 +225,9 @@ public function store(Request $request)
     public function destroy(string $id)
     {
         try{
-            $review = Review::whereId($id)->update(['is_deleted' => true]);
+            $review = Review::whereId($id)->first();
+            $review->is_deleted = true;
+            $review->save();
 
             if (!$review) {
                 return response()->json(['error' => 'Commentaire non trouvé.'], 404);

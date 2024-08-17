@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendRegistrationEmail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\Notification;
+use App\Models\Right;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use App\Models\User_right;
+use Exception;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Spatie\Permission\Models\Role;
 
 class NotificationController extends Controller
 {
@@ -123,38 +129,7 @@ class NotificationController extends Controller
         ], 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Notification $notification)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Notification $notification)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Notification $notification)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Notification $notification)
-    {
-        //
-    }
-
+  
 
 /**
  * @OA\Get(
@@ -173,7 +148,7 @@ class NotificationController extends Controller
     public function getUserNotifications()
     {
         //$userID = auth()->user()->id;
-        $userId = 11;
+        $userId = Auth::user()->id;
         $notification = Notification::where('user_id', $userId)->get();
         if (!$notification ) {
             return response()->json(['error' => 'Notification non trouvée non trouvé'], 404);
@@ -186,4 +161,236 @@ class NotificationController extends Controller
             'total_user_notifications' => $totalUserNotifications
         ]);
     }
+
+      /**
+ * Notify users with specified roles.
+ *
+ * @OA\Post(
+ *     path="/api/notifications/notifyUserHaveRoles/{mode}",
+ *     tags={"Notification"},
+ *  security={{"bearerAuth": {}}},
+ *   @OA\Parameter(
+     *         name="mode",
+     *         in="path",
+     *         required=true,
+     *         description="Mode de transmission(avec email et mail ou l'un des deux)",
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+ *     @OA\RequestBody(
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 @OA\Property(
+ *                     property="roleIds",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="integer"
+ *                     ),
+ *                     description="Array of role IDs"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="object",
+ *                     type="string",
+ *                     description="Object of the notification"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="content",
+ *                     type="string",
+ *                     description="Content of the notification"
+ *                 ),
+ *                 required={"roleIds", "object", "content"}
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Success",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Message marked as unread successfully"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Role not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Role not found"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Server error"
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function notifyUserHaveRoles(Request $request,$mode){
+    try {
+
+            $request->validate([
+                    'roleIds' => 'required|array',
+                    'object' => 'required',
+                    'content' => 'required'
+            ]);
+
+            foreach($request->roleIds as $roleId){
+
+                $roleExist = Role::whereId($roleId)->first();
+
+                if(!$roleExist){
+                    return (new ServiceController())->apiResponse(404,[],'Role non trouvé');
+                }
+
+                $role = Right::where('id', $roleId)->first();
+
+                $userR = User_right::where('right_id', $role->id)->get();
+
+                // return $userR;
+                foreach($userR as $user){
+                    if(!User::find($user->user_id)){
+                        return (new ServiceController())->apiResponse(404,[],"Utilisateur non trouvé {$user->user_id} ");
+                    }
+                }
+
+
+            }
+            foreach($request->roleIds as $roleId){
+
+                $role = Right::where('id', $roleId)->first();
+
+                $userR = User_right::where('right_id', $role->id)->get();
+
+                foreach($userR as $user){
+                    dispatch( new SendRegistrationEmail(User::whereId($user->user_id)->first()->email, $request->content, $request->object, $mode));
+                }
+
+
+            }
+
+        return (new ServiceController())->apiResponse(200, [],'Notification envoyé avec succès');
+
+    } catch(Exception $e) {
+         return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+    }
+}
+
+
+/**
+* @OA\Post(
+*     path="/api/notifications/notifyUsers/{mode}",
+*     summary="Notify users",
+*     description="Send a notification to multiple users",
+*     tags={"Notification"},
+*    @OA\Parameter(
+ *         name="mode",
+ *         in="path",
+ *         required=true,
+ *         description="Mode de transmission(avec email et mail ou l'un des deux)",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+*     security={{"bearerAuth": {}}},
+*     @OA\RequestBody(
+*         required=true,
+*         @OA\MediaType(
+*             mediaType="application/json",
+*             @OA\Schema(
+*                 type="object",
+*                 required={"userIds", "object", "content"},
+*                 @OA\Property(
+*                     property="userIds",
+*                     type="array",
+*                     @OA\Items(type="integer"),
+*                     description="List of user IDs to notify"
+*                 ),
+*                 @OA\Property(
+*                     property="object",
+*                     type="string",
+*                     description="Notification object"
+*                 ),
+*                 @OA\Property(
+*                     property="content",
+*                     type="string",
+*                     description="Notification content"
+*                 )
+*             )
+*         )
+*     ),
+*     @OA\Response(
+*         response=200,
+*         description="Notification sent successfully",
+*         @OA\JsonContent(
+*             @OA\Property(
+*                 property="message",
+*                 type="string",
+*                 example="Message marqué comme lu avec succès"
+*             )
+*         )
+*     ),
+*     @OA\Response(
+*         response=404,
+*         description="User not found",
+*         @OA\JsonContent(
+*             @OA\Property(
+*                 property="message",
+*                 type="string",
+*                 example="Utilisateur non trouvé"
+*             )
+*         )
+*     ),
+*     @OA\Response(
+*         response=500,
+*         description="Internal server error",
+*         @OA\JsonContent(
+*             @OA\Property(
+*                 property="message",
+*                 type="string",
+*                 example="Error message"
+*             )
+*         )
+*     )
+* )
+*/
+
+public function notifyUsers(Request $request, $mode){
+    try {
+
+        $request->validate([
+            'userIds' => 'required|array',
+            'object' => 'required',
+            'content' => 'required'
+    ]);
+
+    foreach($request->userIds as $userId){
+        if(!User::find($userId)){
+            return (new ServiceController())->apiResponse(404,[],'Utilisateur non trouvé');
+        }
+    }
+
+    foreach($request->userIds as $userId){
+        dispatch( new SendRegistrationEmail(User::whereId($userId)->first()->email, $request->content, $request->object, $mode));
+    }
+
+    return (new ServiceController())->apiResponse(200, [],'Notification envoyé avec succès');
+       
+    } catch(Exception $e) {
+         return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+    }
+}
 }

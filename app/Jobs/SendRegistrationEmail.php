@@ -42,10 +42,8 @@ class SendRegistrationEmail implements ShouldQueue
             //     ;
             // }
             (new NotificationController())->store($this->email,$this->name,$this->object,$this->is_send_by_mail);
-            // return response()->json("ok");
         } catch (\Exception $e) {
             throw $e;
         }
-        
     }
 }

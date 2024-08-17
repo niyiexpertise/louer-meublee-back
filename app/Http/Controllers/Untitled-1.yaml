@@ -55,3 +55,134 @@
             // return 1;
         }
     }
+
+
+
+     private function returnFavoritesList($user_id, $message) {
+        $page = 1;
+        $perPage = 6;
+    
+        $db = DB::connection()->getPdo();
+    
+        $query = "
+        SELECT 
+            favorites.*, 
+            ads.id AS ad_id, 
+            ads.category_id AS ad_category_id, 
+            ads.owner_id AS ad_owner_id, 
+            ads.location_id AS ad_location_id, 
+            (
+                SELECT location 
+                FROM files 
+                WHERE ads.file_code = files.referencecode 
+                LIMIT 1
+            ) AS image,
+            ads.title AS title, 
+            ads.file_code AS ad_file_code, 
+            ads.final_price AS price, 
+            ads.uid AS ad_uid,
+            categories.title AS category_title
+        FROM 
+            favorites 
+        JOIN 
+            ads ON favorites.ad_id = ads.id 
+        LEFT JOIN 
+            categories ON ads.category_id = categories.id
+        WHERE 
+            favorites.user_id = :user_id 
+            AND ads.deleted = false 
+        ORDER BY 
+            ads.id DESC 
+        LIMIT :limit OFFSET :offset
+    ";
+    
+        $offset = $perPage * ($page - 1);
+    
+        $data = DB::select($query, ['user_id' => $user_id, 'limit' => $perPage, 'offset' => $offset]);
+    
+        $totalQuery = "
+            SELECT 
+                COUNT(*) AS total 
+            FROM 
+                favorites
+            WHERE 
+                favorites.user_id = :user_id
+        ";
+    
+        $total = DB::select($totalQuery, ['user_id' => $user_id])[0]->total;
+    
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator($data, $total, $perPage, $page, [
+            'path' => request()->url(),
+            'query' => request()->query(),
+        ]);
+    
+        return response()->json(['message' => $message, 'data' => $paginator], 200);
+
+
+
+        _____________________________
+
+
+
+        <?php
+
+return [
+    'enabled' => env('AUDITING_ENABLED', true),
+
+    'implementation' => OwenIt\Auditing\Models\Audit::class,
+
+    'user' => [
+        'morph_prefix' => 'user',
+        'guards' => [
+            'web',
+            'api',
+        ],
+        'resolver' => App\Resolvers\CustomUserResolver::class,
+    ],
+
+    'resolvers' => [
+        'ip_address' => OwenIt\Auditing\Resolvers\IpAddressResolver::class,
+        'user_agent' => OwenIt\Auditing\Resolvers\UserAgentResolver::class,
+        'url' => OwenIt\Auditing\Resolvers\UrlResolver::class,
+    ],
+
+    'events' => [
+        'created',
+        'updated',
+        'deleted',
+        'restored',
+    ],
+
+    'strict' => false,
+
+    'exclude' => [],
+
+    'empty_values' => true,
+    'allowed_empty_values' => [
+        'retrieved',
+    ],
+
+    'allowed_array_values' => false,
+
+    'timestamps' => false,
+
+    'threshold' => 0,
+
+    'driver' => 'database',
+
+    'drivers' => [
+        'database' => [
+            'table' => 'audits',
+            'connection' => null,
+        ],
+    ],
+
+    'queue' => [
+        'enable' => false,
+        'connection' => 'sync',
+        'queue' => 'default',
+        'delay' => 0,
+    ],
+
+    'console' => false,
+];

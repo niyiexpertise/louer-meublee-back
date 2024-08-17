@@ -3116,6 +3116,234 @@
                 ]
             }
         },
+        "/api/audit/getAudits": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère tous les audits",
+                "description": "Récupère l'ensemble des enregistrements de la table `audits`.",
+                "operationId": "getAudits",
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/audit/getAuditsByModelType/{modelType}": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère les audits par type de modèle",
+                "description": "Récupère les enregistrements de la table `audits` en fonction du `auditable_type`.",
+                "operationId": "getAuditsByModelType",
+                "parameters": [
+                    {
+                        "name": "modelType",
+                        "in": "path",
+                        "description": "Type de modèle (par exemple : 'App\\\\Models\\\\Review')",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "user_type": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "user_id": {
+                                                "type": "integer",
+                                                "nullable": true
+                                            },
+                                            "event": {
+                                                "type": "string"
+                                            },
+                                            "auditable_type": {
+                                                "type": "string"
+                                            },
+                                            "auditable_id": {
+                                                "type": "integer"
+                                            },
+                                            "old_values": {
+                                                "type": "string"
+                                            },
+                                            "new_values": {
+                                                "type": "string"
+                                            },
+                                            "url": {
+                                                "type": "string"
+                                            },
+                                            "ip_address": {
+                                                "type": "string"
+                                            },
+                                            "user_agent": {
+                                                "type": "string"
+                                            },
+                                            "tags": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/audit/getAuditsByModelTypeAndId/{modelType}/{modelId}": {
+            "get": {
+                "tags": [
+                    "Audits"
+                ],
+                "summary": "Récupère les audits par type de modèle et ID",
+                "description": "Récupère les enregistrements de la table `audits` en fonction du `auditable_type` et de l'`auditable_id`.",
+                "operationId": "getAuditsByModelTypeAndId",
+                "parameters": [
+                    {
+                        "name": "modelType",
+                        "in": "path",
+                        "description": "Type de modèle (par exemple : 'App\\\\Models\\\\Review')",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "modelId",
+                        "in": "path",
+                        "description": "ID du modèle",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des audits récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "user_type": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "user_id": {
+                                                "type": "integer",
+                                                "nullable": true
+                                            },
+                                            "event": {
+                                                "type": "string"
+                                            },
+                                            "auditable_type": {
+                                                "type": "string"
+                                            },
+                                            "auditable_id": {
+                                                "type": "integer"
+                                            },
+                                            "old_values": {
+                                                "type": "string"
+                                            },
+                                            "new_values": {
+                                                "type": "string"
+                                            },
+                                            "url": {
+                                                "type": "string"
+                                            },
+                                            "ip_address": {
+                                                "type": "string"
+                                            },
+                                            "user_agent": {
+                                                "type": "string"
+                                            },
+                                            "tags": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune donnée disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/assignPermsToRole/{role}": {
             "post": {
                 "tags": [
@@ -4066,63 +4294,6 @@
                                 }
                             }
                         }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/switchToHote": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role hote",
-                "operationId": "aedf1d55a26b5c612c813bb49f15a059",
-                "responses": {
-                    "200": {
-                        "description": "move to hote"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/switchToAdmin": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role admin",
-                "operationId": "ec66b9280a4e344d87c2cbdc24aa0e42",
-                "responses": {
-                    "200": {
-                        "description": "move to admin"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/users/switchToTraveler": {
-            "post": {
-                "tags": [
-                    "ManageAccess"
-                ],
-                "summary": "Passer au role voyageur",
-                "operationId": "0bf453f6289ad809f9cb3d5d8af08159",
-                "responses": {
-                    "200": {
-                        "description": "move to traveler"
                     }
                 },
                 "security": [
@@ -6552,6 +6723,72 @@
                                         "error": {
                                             "type": "string",
                                             "example": "Une erreur s'est produite : message de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/showDetailReservation/{reservationId}": {
+            "get": {
+                "tags": [
+                    "Dashboard traveler"
+                ],
+                "summary": "Afficher les détails d'une réservation",
+                "description": "Récupère les détails d'une réservation spécifique par ID. Seul le propriétaire de la réservation peut accéder à ces détails.",
+                "operationId": "showDetailReservation",
+                "parameters": [
+                    {
+                        "name": "reservationId",
+                        "in": "path",
+                        "description": "ID de la réservation",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la réservation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "detail de la reservation": {
+                                            "description": "Les détails de la réservation",
+                                            "type": "string",
+                                            "example": "[]"
+                                        },
+                                        "voyageur": {
+                                            "description": "Les détails du voyageur",
+                                            "type": "string",
+                                            "example": "[]"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée ou l'utilisateur n'est pas autorisé à accéder à cette réservation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
                                         }
                                     },
                                     "type": "object"
@@ -9511,6 +9748,16 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "requestBody": {
@@ -9862,6 +10109,16 @@
                 "operationId": "listingsFilteredByHousingType",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nom du pays",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
                         "name": "housingTypeId",
                         "in": "path",
                         "description": "ID du type de logement",
@@ -9897,6 +10154,16 @@
                 "operationId": "listingsFilteredByPropertyType",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "PropertyTypeId",
                         "in": "path",
                         "description": "ID du type de propriété",
@@ -9928,9 +10195,19 @@
                     "Housing"
                 ],
                 "summary": "Liste des logements filtrée par Pays",
-                "description": "Récupère la liste des logements filtrée par le paysspécifié.",
+                "description": "Récupère la liste des logements filtrée par le pays spécifié.",
                 "operationId": "579567a28bc3f4fe3efae14e21edfb56",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "country",
                         "in": "path",
@@ -9967,6 +10244,16 @@
                 "operationId": "2fd925a4f8e746457b691e3a4fbcb686",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "preference_id",
                         "in": "path",
                         "description": "Id du preference",
@@ -10002,6 +10289,16 @@
                 "operationId": "f668f23118bdd9677d89077e3a482231",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "city",
                         "in": "path",
                         "description": "Nom de la ville",
@@ -10027,15 +10324,25 @@
                 }
             }
         },
-        "/api/logement/filterby/departement/{departement}": {
+        "/api/logement/filterby/department/{departement}": {
             "get": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements filtrée par departement",
                 "description": "Récupère la liste des logements filtrée par departement spécifié.",
-                "operationId": "30b5f67f65e20095eaac05ee38aadc2b",
+                "operationId": "9c60c003503c8b0ba1486c6498496070",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "departement",
                         "in": "path",
@@ -10072,6 +10379,16 @@
                 "operationId": "b0f705915753ba229938a707728688e9",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "nbtraveler",
                         "in": "path",
                         "description": "Nombre de voyageur",
@@ -10106,6 +10423,16 @@
                 "description": "Récupère la liste des logements filtrée par un prix de nuit inférieur au montant spécifié.",
                 "operationId": "c6874caca3903c645fa5b08386ef8a96",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "price",
                         "in": "path",
@@ -10142,6 +10469,16 @@
                 "operationId": "0994d0b295cc90be26ba94c62df003ea",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
+                    {
                         "name": "price",
                         "in": "path",
                         "description": "Prix de nuit minimum",
@@ -10176,6 +10513,16 @@
                 "description": "Récupère la liste des logements pour un User donné.",
                 "operationId": "64be7cf1593a8edebb8d86386524ef7f",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": 1
+                        }
+                    },
                     {
                         "name": "UserID",
                         "in": "path",
@@ -14620,6 +14967,220 @@
                 }
             }
         },
+        "/api/notifications/notifyUserHaveRoles/{mode}": {
+            "post": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Notify users with specified roles.",
+                "operationId": "6ed486d9afb234760af4b07b320cbebf",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "path",
+                        "description": "Mode de transmission(avec email et mail ou l'un des deux)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "roleIds",
+                                    "object",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "roleIds": {
+                                        "description": "Array of role IDs",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "object": {
+                                        "description": "Object of the notification",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "Content of the notification",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marked as unread successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Role not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Role not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/notifyUsers/{mode}": {
+            "post": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Notify users",
+                "description": "Send a notification to multiple users",
+                "operationId": "cc326ab50884fe65d388b09a0d3ad202",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "path",
+                        "description": "Mode de transmission(avec email et mail ou l'un des deux)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "userIds",
+                                    "object",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "userIds": {
+                                        "description": "List of user IDs to notify",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "object": {
+                                        "description": "Notification object",
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "description": "Notification content",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marqué comme lu avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/paiement/reservation/user": {
             "get": {
                 "tags": [
@@ -15258,13 +15819,192 @@
         "/api/portefeuille/transaction/all": {
             "get": {
                 "tags": [
-                    "Portefeuille"
+                    "Transaction"
                 ],
                 "summary": "Voir toutes les transactions éffectué sur le site (Admin)",
                 "operationId": "a834e8ec09f88df3112d746515bc3b37",
                 "responses": {
                     "200": {
                         "description": "Liste de toutes les transactions éffectuées sur le site"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/transaction/update": {
+            "post": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Mettre à jour une transaction",
+                "description": "Met à jour les commissions ou autres champs d'une transaction, puis met à jour les soldes correspondants et enregistre les modifications dans l'historique.",
+                "operationId": "updateTransaction",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "ID de la transaction",
+                                        "type": "integer"
+                                    },
+                                    "valeur_commission": {
+                                        "description": "Nouvelle valeur de commission",
+                                        "type": "number"
+                                    },
+                                    "valeur_commission_partenaire": {
+                                        "description": "Nouvelle valeur de commission pour le partenaire",
+                                        "type": "number"
+                                    },
+                                    "valeur_commission_admin": {
+                                        "description": "Nouvelle valeur de commission pour l'admin",
+                                        "type": "number"
+                                    },
+                                    "motif": {
+                                        "description": "Motif de la modification",
+                                        "type": "string",
+                                        "example": "Correction de la commission partenaire"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Données de requête non valides"
+                    },
+                    "404": {
+                        "description": "Transaction non trouvée"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portefeuille/transaction/{id}/history": {
+            "get": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Récupère l'historique des modifications d'une transaction",
+                "description": "Retourne l'historique des modifications pour une transaction spécifique en fonction de son ID.",
+                "operationId": "1d2de0c090836c76cefbb49d71a11ce3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la transaction dont l'historique doit être récupéré",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique des modifications de la transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "transaction_id": {
+                                                "type": "integer",
+                                                "example": 81
+                                            },
+                                            "field_modified": {
+                                                "type": "string",
+                                                "example": "valeur_commission"
+                                            },
+                                            "old_value": {
+                                                "type": "string",
+                                                "example": "10"
+                                            },
+                                            "new_value": {
+                                                "type": "string",
+                                                "example": "15"
+                                            },
+                                            "modified_by": {
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "modified_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-08-15T12:34:56Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Transaction not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur est survenue lors de la récupération de l'historique."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

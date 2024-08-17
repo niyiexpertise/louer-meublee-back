@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\NotificationWithFile;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\verification_document_partenaire;
 use App\Models\verification_statut_partenaire;
@@ -288,7 +289,9 @@ public function index()
             ];
 
             try {
-                Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
+                dispatch(new NotificationWithFile($adminUser->email, $mail['body'], $mail['title'],$filePaths));
+
+                // Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
             } catch (\Exception $e) {
                    
             }

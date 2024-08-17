@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Housing;
 use App\Models\Payement;
 use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
@@ -411,11 +412,11 @@ class DashBoardTravelerController extends Controller
             }
 
             if (!$reservation->is_tranche_paiement) {
-                return response()->json(['message' => "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche "], 400);
+                return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche.");
             }
 
             if ($reservation->montant_a_paye == $reservation->valeur_payee) {
-                return response()->json(['message' => "Logement déjà soldé "], 400);
+                return (new ServiceController())->apiResponse(404, [], 'Logement déjà soldé .');
             }
 
 
@@ -442,12 +443,12 @@ class DashBoardTravelerController extends Controller
                 if ($validatedData['payment_method'] == "portfeuille" ) {
 
                     if ($reservation->user_id != $user_id) {
-                        return response()->json(['message' => 'Vous n\'êtes pas autorisé à effectuer ce paiement'], 403);
+                        return (new ServiceController())->apiResponse(403, [], "Vous n'êtes pas autorisé à effectuer ce paiement");
                     }
 
                     $portefeuille = Portfeuille::where('user_id', $user_id)->first();
                     if($portefeuille->solde < $required_paid_value){
-                        return response()->json(['message' => "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement"], 400);
+                        return (new ServiceController())->apiResponse(404, [], "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement");
                     }
                     $portefeuille->solde -= $required_paid_value;
                     
@@ -490,19 +491,97 @@ class DashBoardTravelerController extends Controller
                 }
 
                 DB::commit();
-
-                return response()->json([
-                    'message' => 'Paiement effectué avec succès',
+                $data = [
                     'reservation' => $reservation,
                     'montant_a_payer' => $required_paid_value
-                ], 200);
+                ];
+
+                return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
+                
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);
             }
         }
 
+        /**
+ * @OA\Get(
+ *     path="/api/reservation/showDetailReservation/{reservationId}",
+ *  security={{"bearerAuth": {}}},
+ *     summary="Afficher les détails d'une réservation",
+ *     description="Récupère les détails d'une réservation spécifique par ID. Seul le propriétaire de la réservation peut accéder à ces détails.",
+ *     operationId="showDetailReservation",
+ *     tags={"Dashboard traveler"},
+ *     @OA\Parameter(
+ *         name="reservationId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la réservation",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Détails de la réservation récupérés avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="detail de la reservation",
+ *                 description="Les détails de la réservation",
+ *                 type="string", example="[]"
+ *                
+ *             ),
+ *             @OA\Property(
+ *                 property="voyageur",
+ *                 description="Les détails du voyageur",
+ *                 type="string", example="[]"
+ *                
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation non trouvée ou l'utilisateur n'est pas autorisé à accéder à cette réservation",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
+ *             )
+ *         )
+ *     ),
+ *     @OA\SecurityScheme(
+ *         securityScheme="BearerToken",
+ *         type="http",
+ *         scheme="bearer",
+ *         bearerFormat="JWT"
+ *     )
+ * )
+ */
+    public function showDetailReservation($reservationId){
+        $reservation = Reservation::find($reservationId);
+         if(!$reservation){
+             return (new ServiceController())->apiResponse(404,[], "Reservation non trouvée. ");
+
+         }
+
+         if (!(Auth::user()->id == $reservation->user_id)) {
+              return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas consulter les détails d' une réservation qui ne vous concerne pas. ");
+         }
+
+         $data = [
+            'detail de la reservation' => $reservation->toArray(),
+            'propriétaire' => [
+                'id' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->id,
+                'nom' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->lastname,
+                'prenom' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->firstname,
+            ]
+         ];
         
+
+       return (new ServiceController())->apiResponse(200,$data, 'Detail de reservation recupéré avec succès');
+    }
 
 
 }

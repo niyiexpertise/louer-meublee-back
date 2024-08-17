@@ -1049,7 +1049,9 @@ class AddHousingController extends Controller
 
             $existPhoto = Photo::where('is_couverture',true)->where('housing_id',$housingId)->first();
             if($existPhoto){
-                $existPhoto->update(['is_couverture' => false]);
+                $p =  Photo::where('is_couverture',true)->where('housing_id',$housingId)->first();
+                $p->is_couverture = false;
+                $p->save();
             }
 
             $photo->is_couverture = true;

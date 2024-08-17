@@ -16,6 +16,7 @@ use App\Models\Equipment;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\Housing_category_file;
+use Exception;
 use Illuminate\Support\Facades\Validator;
 class PhotoController extends Controller
 {

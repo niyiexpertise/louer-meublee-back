@@ -1294,8 +1294,8 @@ public function ListeDesLogementsValideDisable()
            /**
      * @OA\Get(
      *     path="/api/logement/getTop10HousingByAverageNotes",
-     *     summary="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
-     * description="To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+     *     summary="Top 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+     * description="Top 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
      *     tags={"Administration"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(

@@ -133,48 +133,50 @@ class PermissionController extends Controller
      * )
      */
     public function indexbycategorie()
-{
-    try {
-        // Récupérer toutes les permissions
-        $permissions = Permission::all();
-
-        // Grouper les permissions par groupe
-        $groupedPermissions = $permissions->filter(function ($permission) {
-            return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
-        })->groupBy('groupe')->map(function ($group) {
-            return [
-                'permissions' => $group->map(function ($permission) {
-                    return [
-                        'id' => $permission->id,
-                        'name' => $permission->name,
-                        // Ajoutez d'autres champs pertinents ici
-                    ];
+    {
+        try {
+            // Récupérer toutes les permissions
+            $permissions = Permission::all();
+    
+            // Grouper les permissions par groupe
+            $groupedPermissions = $permissions->filter(function ($permission) {
+                return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
+            })->groupBy('groupe')->map(function ($group) {
+                return [
+                    'permissions' => $group->map(function ($permission) {
+                        return [
+                            'id' => $permission->id,
+                            'name' => $permission->name,
+                            'description' => $permission->description,
+                            // Ajoutez d'autres champs pertinents ici
+                        ];
+                    }),
+                    'count' => $group->count() // Nombre de permissions dans ce groupe
+                ];
+            });
+    
+            // Calculer le nombre total de permissions en faisant la somme des sous-totaux
+            $totalPermissionsCount = $groupedPermissions->sum('count');
+    
+            // Préparer la structure de la réponse
+            $response = [
+                'groups' => $groupedPermissions->mapWithKeys(function ($data, $group) {
+                    return [$group => [
+                        'permissions' => $data['permissions'],
+                        'count' => $data['count']
+                    ]];
                 }),
-                'count' => $group->count() // Nombre de permissions dans ce groupe
+                'total_permissions_count' => $totalPermissionsCount
             ];
-        });
-
-        // Calculer le nombre total de permissions
-        $totalPermissionsCount = $permissions->count();
-
-        // Préparer la structure de la réponse
-        $response = [
-            'groups' => $groupedPermissions->mapWithKeys(function ($data, $group) {
-                return [$group => [
-                    'permissions' => $data['permissions'],
-                    'count' => $data['count']
-                ]];
-            }),
-            'total_permissions_count' => $totalPermissionsCount
-        ];
-
-        // Retourner la réponse JSON
-        return response()->json($response, 200);
-
-    } catch (Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+    
+            // Retourner la réponse JSON
+            return response()->json($response, 200);
+    
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
-}
+    
 
 
 }

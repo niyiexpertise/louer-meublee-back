@@ -33,13 +33,6 @@ class SponsoringController extends Controller
                 }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -79,35 +72,122 @@ class SponsoringController extends Controller
                 }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Sponsoring $sponsoring)
+ 
+    public function update(Request $request,$id)
     {
-        //
+        try {
+           
+            $sponsoring = Sponsoring::find($id);
+
+            if(!$sponsoring){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            }
+
+            if(!is_int($request->duree)){
+                return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier');
+            }
+            if($request->duree <= 0){
+                return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier positif supérieur à 0');
+            }
+            if(!is_numeric($request->prix)){
+                return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre');
+            }
+
+            if($request->duree <= 0){
+                return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre positif supérieur à 0');
+            }
+
+            $sponsoring->duree = $request->duree??$sponsoring->duree;
+            $sponsoring->prix = $request->prix??$sponsoring->prix;
+            $sponsoring->description = $request->description??$sponsoring->description;
+            $sponsoring->save();
+
+            return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring modifié avec succès");
+                } catch(Exception $e) {
+                     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+                }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Sponsoring $sponsoring)
+
+
+    public function show($id)
     {
-        //
+        try {
+            $sponsoring = Sponsoring::find($id);
+
+            if(!$sponsoring){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            }
+
+            return (new ServiceController())->apiResponse(200, $sponsoring, "Détail d'un tarif.");
+        }catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Sponsoring $sponsoring)
+    public function destroy($id)
     {
-        //
+        try {
+            $sponsoring = Sponsoring::find($id);
+
+            if(!$sponsoring){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            }
+
+            if($sponsoring->is_deleted == true){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring déjà supprimé');
+            }
+
+            $sponsoring->is_deleted = true;
+            $sponsoring->save();
+
+            return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring supprimé avec succès.");
+        }catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Sponsoring $sponsoring)
+    public function active($id)
     {
-        //
+        try {
+            $sponsoring = Sponsoring::find($id);
+
+            if(!$sponsoring){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            }
+
+            if($sponsoring->is_actif == true){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring déjà supprimé');
+            }
+
+            $sponsoring->is_actif = true;
+            $sponsoring->save();
+
+            return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring activé avec succès.");
+        }catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
     }
+
+    public function desactive($id)
+    {
+        try {
+            $sponsoring = Sponsoring::find($id);
+
+            if(!$sponsoring){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            }
+
+            if($sponsoring->is_actif == false){
+                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring déjà supprimé');
+            }
+
+            $sponsoring->is_actif = false;
+            $sponsoring->save();
+
+            return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring désactivé avec succès.");
+        }catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    } 
 }

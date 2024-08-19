@@ -1,0 +1,265 @@
+<?php
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('permissions', function (Blueprint $table) {
+            $table->string('description')->nullable();
+        });
+        
+        // Ajouter les instructions SQL générées
+        $sql = "UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Voir la liste des catégories déjà vérifiées non bloquées mais supprimées' WHERE name = 'Managecategory.VerifiednotBlockDelete';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Ajouter une catégorie' WHERE name = 'Managecategory.store';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Voir detail d''une catégorie' WHERE name = 'Managecategory.show';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Supprimer une catégorie' WHERE name = 'Managecategory.destroy';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Bloquer une catégorie ' WHERE name = 'Managecategory.block';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Débloquer une catégorie' WHERE name = 'Managecategory.unblock';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Voir la liste des catégories déjà vérifiées non bloquées et non supprimées' WHERE name = 'Managecategory.VerifiednotBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Voir la liste des catégories déjà vérifiées mais bloquées et non supprimées' WHERE name = 'Managecategory.VerifiedBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Modifier le nom d''une catégorie' WHERE name = 'Managecategory.updateName';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Modifier l''icône d''une catégorie' WHERE name = 'Managecategory.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES', description = 'Valider une nouvelle catégorie' WHERE name = 'Managecategory.makeVerified';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Ajouter un type de logement' WHERE name = 'Managehousingtype.store';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Voir les détails d''un type de logement' WHERE name = 'Managehousingtype.show';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Modifier l''icône d''un type de logement' WHERE name = 'Managehousingtype.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Modifier un type de logement' WHERE name = 'Managehousingtype.update';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Supprimer un type de logement' WHERE name = 'Managehousingtype.destroy';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Supprimer plusieurs type de logement à la fois' WHERE name = 'Managehousingtype.destroymultiple';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Bloquer un type de logement' WHERE name = 'Managehousingtype.block';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Débloquer un type de logement' WHERE name = 'Managehousingtype.unblock';
+UPDATE permissions SET groupe = 'GESTION_ TYPE _LOGEMENT', description = 'Voir la liste des types de logement bloqués' WHERE name = 'Managehousingtype.indexBlock';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Ajouter un critère de note' WHERE name = 'Managecriteria.store';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Voir les détails d''un critère de note' WHERE name = 'Managecriteria.show';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Modifier le nom d''un critère de note' WHERE name = 'Managecriteria.updateName';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Modifier l''icône d''un critère de note' WHERE name = 'Managecriteria.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Supprimer un critère de note' WHERE name = 'Managecriteria.destroy';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Bloquer un critère de note' WHERE name = 'Managecriteria.block';
+UPDATE permissions SET groupe = 'GESTION_ CRITERE', description = 'Débloquer un critère de note' WHERE name = 'Managecriteria.unblock';
+UPDATE permissions SET groupe = 'GESTION_ROLE', description = 'Voir la liste des rôles ' WHERE name = 'Managerole.index';
+UPDATE permissions SET groupe = 'GESTION_ROLE', description = 'Ajouter rôle' WHERE name = 'Managerole.store';
+UPDATE permissions SET groupe = 'GESTION_ROLE', description = 'Voir les détail d''un rôle' WHERE name = 'Managerole.show';
+UPDATE permissions SET groupe = 'GESTION_ROLE', description = 'Supprimer un rôle ' WHERE name = 'Managerole.destroy';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Voir la liste des équipements vérifé, bloqué non supprimé' WHERE name = 'Manageequipment.VerifiedBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Voir la liste des équipements vérifié , non bloqué, non supprimé' WHERE name = 'Manageequipment.VerifiednotBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Voir la liste des équipements vérifié, non bloqué, supprimé' WHERE name = 'Manageequipment.VerifiednotBlockDelete';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Ajouter un équipement' WHERE name = 'Manageequipment.store';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Voir les détails d''un équipement donné' WHERE name = 'Manageequipment.show';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Modifier le nom d''un équipement donné' WHERE name = 'Manageequipment.updateName';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Modifier une catégorie associé à un équipement spécifique' WHERE name = 'Manageequipment.updateCategory';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Modifier l''icone d''un équipement' WHERE name = 'Manageequipment.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Supprimer un équipement ' WHERE name = 'Manageequipment.destroy';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Bloquer un équipement' WHERE name = 'Manageequipment.block';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Débloquer un équipement' WHERE name = 'Manageequipment.unblock';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Voir la liste des permissions qui ne sont pas validé' WHERE name = 'Manageequipment.indexUnverified';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT', description = 'Valider un nouveau équipement' WHERE name = 'Manageequipment.makeVerified';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Assigner les permissions à un rôle' WHERE name = 'Manageusers.assignPermsToRole';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Rétirerles permissions à un rôle' WHERE name = 'Manageusers.RevokePermsToRole';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Récuperer la liste des rôles assignés à un utilisateur' WHERE name = 'Manageusers.getUserRoles';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Assigner un rôle à un utilisateur' WHERE name = 'Manageusers.assignRoleToUser';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Rétirer un rôle à un utilisateur' WHERE name = 'Manageusers.RevokeRoleToUser';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Assigner les permissions à un utilisateur ' WHERE name = 'Manageusers.assignPermsToUser';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Rétirer les permissions à un utilisateur' WHERE name = 'Manageusers.revokePermsToUser';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir la liste des permissions assignées à un utilisateur' WHERE name = 'Manageusers.getUserPerms';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir la liste des utilisateur ayant un rôle donné' WHERE name = 'Manageusers.usersWithRole';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir la liste des utilisateurs ayant une permission donnée' WHERE name = 'Manageusers.usersWithPerm';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir la liste des permissions assignées à un rôle' WHERE name = 'Manageusers.rolesPerms';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir le nombre des permissions d''un rôle' WHERE name = 'Manageusers.rolesPermsCount';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir chaque role avec le nombre d''utilisateur associé' WHERE name = 'Manageusers.usersCountByRole';
+UPDATE permissions SET groupe = 'GESTION_ACCES', description = 'Voir la liste des utilisateurs et leur rôles' WHERE name = 'Manageusers.usersRoles';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste de tous les utilisateurs' WHERE name = 'Manageusers.index';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Supprimer un utilisateur' WHERE name = 'Manageusers.destroy';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Bloquer un utilisateur' WHERE name = 'Manageusers.block';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Débloquer un utilisateur' WHERE name = 'Manageusers.unblock';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste des utilisateurs filtrés par pays' WHERE name = 'Manageusers.getUsersByCountry';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste des utilisateurs ayant pour rôle Voyageur' WHERE name = 'Manageusers.getUsersWithRoletraveler';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste des utilisateurs ayant pour rôle Hôte' WHERE name = 'Manageusers.getUsersWithRoleHost';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste des utilisateurs partenaire' WHERE name = 'Manageusers.getUsersPartenaire';
+UPDATE permissions SET groupe = 'GESTION_DES_UTILISATEURS_COTE_ADMINISTRATEUR', description = 'Voir la liste des utilistaurs ayant pour rôle Administratreur' WHERE name = 'Manageusers.getUsersWithRoleAdmin';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Voir la liste des permissions' WHERE name = 'Managepermission.index';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Voir la liste des permissions groupé par modèle' WHERE name = 'Managepermission.indexbycategorie';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Ajouter une permission' WHERE name = 'Managepermission.store';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Voir les détails d''une permission' WHERE name = 'Managepermission.show';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Bloquer une permission' WHERE name = 'Managepermission.block';
+UPDATE permissions SET groupe = 'GESTION_PERMISSIONS', description = 'Débloquer une permission' WHERE name = 'Managepermission.unblock';
+UPDATE permissions SET groupe = 'GESTION_COMMENTAIRES', description = 'Ajouter un commentaire' WHERE name = 'Managereview.store';
+UPDATE permissions SET groupe = 'GESTION_COMMENTAIRES', description = 'Voir les détais d''un commentaire donné' WHERE name = 'Managereview.show';
+UPDATE permissions SET groupe = 'GESTION_COMMENTAIRES', description = 'Modifier un commentaire' WHERE name = 'Managereview.update';
+UPDATE permissions SET groupe = 'GESTION_COMMENTAIRES', description = 'Supprimer un commentaire' WHERE name = 'Managereview.destroy';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Voir la liste des documents' WHERE name = 'Managedocument.index';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Ajouter un document' WHERE name = 'Managedocument.store';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Voir les détails d''un document' WHERE name = 'Managedocument.show';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Modifier un document' WHERE name = 'Managedocument.update';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Supprimer un document' WHERE name = 'Managedocument.destroy';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Bloquer un document' WHERE name = 'Managedocument.block';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Débloquer un document' WHERE name = 'Managedocument.unblock';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Activer un document' WHERE name = 'Managedocument.active';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Désactiver un document' WHERE name = 'Managedocument.inactive';
+UPDATE permissions SET groupe = 'GESTION_DOCUMENT', description = 'Voir la liste des documents inactifs' WHERE name = 'Managedocument.document_inactif';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_HOTE', description = 'Voir la liste des documents de vérification par utilisateur' WHERE name = 'Manageverificationdocumenthote.index';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_HOTE', description = 'Voir les detail d''une demande pour être hôte' WHERE name = 'Manageverificationdocumenthote.show';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_HOTE', description = 'Valider tous les documents de vérification d''un utilisateur' WHERE name = 'Manageverificationdocumenthote.validateDocuments';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_HOTE', description = 'Valider un document de verification pour devenir hôte d''un utilisateur' WHERE name = 'Manageverificationdocumenthote.validateDocument';
+UPDATE permissions SET groupe = 'GESTION_LANGUES', description = 'Modifier l''icône d''une langue' WHERE name = 'Managelanguage.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_LANGUES', description = 'Supprimer une langue' WHERE name = 'Managelanguage.destroy';
+UPDATE permissions SET groupe = 'GESTION_LANGUES', description = 'Bloquer une langue' WHERE name = 'Managelanguage.block';
+UPDATE permissions SET groupe = 'GESTION_LANGUES', description = 'Débloquer une langue' WHERE name = 'Managelanguage.unblock';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Ajouter une préférence' WHERE name = 'Managepreference.store';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences non vérifiées' WHERE name = 'Managepreference.indexUnverified';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Ajouter une nouvelle préférence' WHERE name = 'Managepreference.storeUnexist';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences' WHERE name = 'Managepreference.show';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Modifier le nom d''une préférence' WHERE name = 'Managepreference.updateName';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Modifier l''icône d''une préférence' WHERE name = 'Managepreference.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Supprimer une préférence' WHERE name = 'Managepreference.destroy';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Valider une préférence inexistante' WHERE name = 'Managepreference.makeVerified';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences bloquées' WHERE name = 'Managepreference.block';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences débloquées' WHERE name = 'Managepreference.unblock';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences vérifiées, bloquées et non supprimées' WHERE name = 'Managepreference.VerifiedBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences vérifiées, non bloquées et non supprimées' WHERE name = 'Managepreference.VerifiednotBlocknotDelete';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCES', description = 'Voir la liste des préférences vérifiées, non bloquées et supprimées' WHERE name = 'Managepreference.VerifiednotBlockDelete';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Ajouter un type de propriété' WHERE name = 'ManagepropertyType.store';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Voir détail d''un type de propriété' WHERE name = 'ManagepropertyType.show';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Modifier le nom d''un type de propriété' WHERE name = 'ManagepropertyType.updateName';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Modifier l''icône d''un type de propriété' WHERE name = 'ManagepropertyType.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Supprimer un type de propriété' WHERE name = 'ManagepropertyType.destroy';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Bloquer un type de propriété' WHERE name = 'ManagepropertyType.block';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Voir la liste des types de propriété bloqués' WHERE name = 'ManagepropertyType.indexBlock';
+UPDATE permissions SET groupe = 'GESTION_TYPE_PROPRIETE', description = 'Débloquer un type de propriété' WHERE name = 'ManagepropertyType.unblock';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_PARTENAIRE', description = 'Voir la liste des documents de vérification par utilisateur' WHERE name = 'Manageverificationdocumentpartenaire.index';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_PARTENAIRE', description = 'Voir les detail d''une demande pour être partenaire' WHERE name = 'Manageverificationdocumentpartenaire.show';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_PARTENAIRE', description = 'Valider tous les documents de vérification d''un utilisateur' WHERE name = 'Manageverificationdocumentpartenaire.validateDocuments';
+UPDATE permissions SET groupe = 'GESTION_VERIFICATION_DOCUMENT_PARTENAIRE', description = 'Valider un document de vérification d''un utilisateur' WHERE name = 'Manageverificationdocumentpartenaire.validateDocument';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Ajouter un logement' WHERE name = 'Managelogement.store';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Modifier les informations sensibles d''un logement' WHERE name = 'Managelogement.updateSensible';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Modifier les informations insensibles d''un logement' WHERE name = 'Managelogement.updateInsensible';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Désactiver un logement' WHERE name = 'Managelogement.disable';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Activer un logement' WHERE name = 'Managelogement.enable';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Supprimer un logement' WHERE name = 'Managelogement.destroyHote';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Voir la liste des logements ajouté' WHERE name = 'Managelogement.getHousingForHote';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_HOTE', description = 'Voir la liste des logements non rempli complètement pour l''hôte connecté' WHERE name = 'Managelogement.HousingHoteInProgress';
+UPDATE permissions SET groupe = 'GESTION_COMMISSION_HOTE', description = 'Modifier les commissions pour un ou plusieurs utilisateurs' WHERE name = 'Managecommissionpartenaire.updateCommissionForSpecifiqueUser';
+UPDATE permissions SET groupe = 'GESTION_COMMISSION_HOTE', description = 'Remplacer la valeur d''une commission par défaut par une autre valeur' WHERE name = 'Managecommissionpartenaire.updateCommissionValueByAnother';
+UPDATE permissions SET groupe = 'GESTION_REDUCTION_PARTENAIRE', description = 'Modifier la valeur de la réduction pour un ou plusieurs partenaires' WHERE name = 'Managecommissionpartenaire.updatereductionForSpecifiqueUser';
+UPDATE permissions SET groupe = 'GESTION_REDUCTION_PARTENAIRE', description = 'Remplacer la valeur d''une réduction par défaut par une autre valeur' WHERE name = 'Managecommissionpartenaire.updatereductionValueByAnother';
+UPDATE permissions SET groupe = 'GESTION_NOMBRE_RESERVATION_PARTENAIRE', description = 'Modifier la valeur du nombre de réservation pour un ou plusieurs utilisateurs' WHERE name = 'Managecommissionpartenaire.updatenumberreservationForSpecifiqueUser';
+UPDATE permissions SET groupe = 'GESTION_NOMBRE_RESERVATION_PARTENAIRE', description = 'Remplacer la valeur du nombre de réservation par une autre valeur' WHERE name = 'Managecommissionpartenaire.updatenumberreservationValueByAnother';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT__HOTE_LOGEMENT', description = 'Créer un équipement inexistant' WHERE name = 'Managelogement.storeUnexistEquipment';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT__HOTE_LOGEMENT', description = 'Voir la liste des équipements d''un logement donné' WHERE name = 'Managelogement.equipementsHousing';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT__HOTE_LOGEMENT', description = 'Supprimer un équipement associé à un logement donné' WHERE name = 'Managelogement.deleteEquipement';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT__HOTE_LOGEMENT', description = 'Ajouter un équipement existant à un logement donné' WHERE name = 'Managelogement.addEquipment';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_HOTE_LOGEMENT', description = 'Voir la liste des préférences associées à un logement' WHERE name = 'Managelogement.housingPreference';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_HOTE_LOGEMENT', description = 'Supprimer une préférence associée à un logement' WHERE name = 'Managelogement.deletePreference';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_HOTE_LOGEMENT', description = 'Ajouter des préférences existentes à un logement donné' WHERE name = 'Managelogement.addPreference';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_HOTE_LOGEMENT', description = 'Créer une préférence inexistante' WHERE name = 'Managelogement.storeUnexistPreference';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES_HOTE_LOGEMENT', description = 'Supprimer une photo d''une catégorie' WHERE name = 'Managelogement.deletePhotoCategory';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES_HOTE_LOGEMENT', description = 'Ajouter une catégorie par défaut à un logement' WHERE name = 'Managelogement.addDefaultCategory';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES_HOTE_LOGEMENT', description = 'Ajouter une catégorie inexistante à un logement' WHERE name = 'Managelogement.addNewCategory';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES_HOTE_LOGEMENT', description = 'Supprimer une catégorie associée à un logement' WHERE name = 'Managelogement.deleteCategory';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIES_HOTE_LOGEMENT', description = 'Ajouter des photos à une catégorie d''un logement donné' WHERE name = 'Managelogement.addPhotoCategory';
+UPDATE permissions SET groupe = 'GESTION_PHOTO__HOTE_LOGEMENT', description = 'Modifier la photo d''un logement' WHERE name = 'Managelogement.updatePhoto';
+UPDATE permissions SET groupe = 'GESTION_PHOTO__HOTE_LOGEMENT', description = 'Définir une nouvelle photo comme photo de couverture pour un logement' WHERE name = 'Managelogement.setCoverPhoto';
+UPDATE permissions SET groupe = 'GESTION_PHOTO__HOTE_LOGEMENT', description = 'Supprimer une photo d''un logement' WHERE name = 'Managelogement.deletePhoto';
+UPDATE permissions SET groupe = 'GESTION_PHOTO__HOTE_LOGEMENT', description = 'Ajouter une ou plusieurs photos à un logement' WHERE name = 'Managelogement.addPhoto';
+UPDATE permissions SET groupe = 'GESTION_CHARGE__HOTE_LOGEMENT', description = 'Ajouter une charge à un logement' WHERE name = 'Managelogement.addCharge';
+UPDATE permissions SET groupe = 'GESTION_CHARGE__HOTE_LOGEMENT', description = 'Voir la liste des charges d''un logement ' WHERE name = 'Managelogement.listCharge';
+UPDATE permissions SET groupe = 'GESTION_CHARGE__HOTE_LOGEMENT', description = 'Supprimer les charges associés à un logement' WHERE name = 'Managelogement.deleteCharge';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Voir la liste des logements en attente d''être validé par l''administrateur' WHERE name = 'Managelogement.indexHousingForValidationForadmin';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Voir la liste des logements non entièrement remplie par les hôtes' WHERE name = 'Managelogement.HousingHoteInProgressForAdmin';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Voir la liste des logements en attente de mise à jour par l''administrateur' WHERE name = 'Managelogement.indexHousingForUpdateForadmin';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Voir la liste des détails possible d''un logement donné par l''administrateur' WHERE name = 'Managelogement.showHousingDetailForValidationForadmin';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Valider un logement spécifique en attente de vérification' WHERE name = 'Managelogement.ValidateOneHousing';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Valider plusieurs logement' WHERE name = 'Managelogement.ValidateManyHousing';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENTS_EN_ATTENTE_DE_VALIDATION_ADMIN', description = 'Valider un logement spécifique en attente de mise à jour' WHERE name = 'Managelogement.UpdateOneHousing';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir la liste des logements déjà vérifié mais bloqué' WHERE name = 'Managelogement.ListeDesLogementsValideBloque';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir la liste des logements déjà vérifié mais supprimé' WHERE name = 'Managelogement.ListeDesLogementsValideDelete';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir la liste des logements déjà vérifié mais désactivé par l''hôte' WHERE name = 'Managelogement.ListeDesLogementsValideDisable';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir le top 10 des utilisateurs(hotes) avec le plus grand nombre de logement' WHERE name = 'Managelogement.hote_with_many_housing';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir le top 10 des pays avec le plus grand nombre de logement sur la plateforme' WHERE name = 'Managelogement.country_with_many_housing';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir la liste des logements supprimés par les hôtes' WHERE name = 'Managelogement.getHousingDestroyedByHote';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Voir le top 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)' WHERE name = 'Managelogement.getTop10HousingByAverageNotes';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Bloquer un logement(l''empêcher de s''afficher à l''accueil)' WHERE name = 'Managelogement.block';
+UPDATE permissions SET groupe = 'GESTION_LOGEMENT_ADMIN', description = 'Débloquer un logement' WHERE name = 'Managelogement.unblock';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Valider une catégorie existante par défaut en attente de validation' WHERE name = 'Managelogement.validateDefaultCategoryHousing';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Voir la liste des catégories existantes par défaut des logement en attente de validation ' WHERE name = 'Managelogement.getCategoryDefaultInvalidHousings';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Voir la liste des catégories inexistantes par défaut des logement en attente de validation' WHERE name = 'Managelogement.getCategoryUnexistInvalidHousings';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Valider une catégorie inexistante par défaut en attente de validation ' WHERE name = 'Managelogement.validateUnexistCategoryHousing';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Voir les détails d''une catégorie de logement spécifique' WHERE name = 'Managelogement.getCategoryDetail';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = ' Voir la liste des photos des catégories en attente de validation' WHERE name = 'Managelogement.getUnverifiedHousingCategoryFilesWithDetails';
+UPDATE permissions SET groupe = 'GESTION_CATEGORIE_ADMIN_LOGEMENT', description = 'Valider la photo d''une catégorie' WHERE name = 'Managelogement.validateHousingCategoryFile';
+UPDATE permissions SET groupe = 'GESTION_PHOTO_ADMIN_LOGEMENT', description = 'Voir la liste des photos des logements en attente de validation' WHERE name = 'Managelogement.getUnverifiedPhotos';
+UPDATE permissions SET groupe = 'GESTION_PHOTO_ADMIN_LOGEMENT', description = 'Valider une photo d''un logement' WHERE name = 'Managelogement.validatePhoto';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT', description = 'Voir la liste des équipements existants par défaut des logements en attente de validation' WHERE name = 'Managelogement.ListHousingEquipmentInvalid';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT', description = 'Valider un équipement existant par défaut en attente de validation' WHERE name = 'Managelogement.makeVerifiedHousingEquipment';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT', description = 'Voir la liste des équipements inexistants par défaut des logements en attente de validation' WHERE name = 'Managelogement.ListEquipmentForHousingInvalid';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT', description = 'Voir la liste des équipements inexistantsassocié à des logements' WHERE name = 'Managelogement.getHousingEquipmentInvalid';
+UPDATE permissions SET groupe = 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT', description = 'Voir la liste des équipements inexistants en attente de validation' WHERE name = 'Managelogement.getUnexistEquipmentInvalidForHousing';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_ADMIN_LOGEMENT', description = 'Voir la liste des préférences existantes par défaut des logement en attente de validation ' WHERE name = 'Managelogement.getHousingPreferenceInvalid';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_ADMIN_LOGEMENT', description = 'Voir la liste des préférences inexistantes par défaut des logement en attente de validation ' WHERE name = 'Managelogement.getUnexistPreferenceInvalidForHousing';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_ADMIN_LOGEMENT', description = 'Voir la liste des préférences existantes par défaut d''un logement donnée en attente de validation ' WHERE name = 'Managelogement.ListHousingPreferenceInvalid';
+UPDATE permissions SET groupe = 'GESTION_PREFERENCE_ADMIN_LOGEMENT', description = 'Valider une préférence existante par défaut d''un logement' WHERE name = 'Managelogement.makeVerifiedHousingPreference';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_COMMENTAIRES', description = 'Stocker les notes pour chaque critère ainsi que le commentaire général de la réservation' WHERE name = 'Managereservation.reviews.note.add';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_COMMENTAIRES', description = 'Voir la liste des statistiques des notes obtenue par un utilisateur pour un logement donné' WHERE name = 'Managereservation.statistiques_notes.get';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Confirmer la réservation d''un voyageur par l''hôte pour l''un de ses biens' WHERE name = 'Managereservation.hote_confirm_reservation';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Rejeter la réservation d''un voyageur par l''hôte pour l''un de ses biens' WHERE name = 'Managereservation.hote_reject_reservation';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir les détails concernant une réservation par l''hôte' WHERE name = 'Managereservation.showDetailOfReservationForHote';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir la liste du nombre de réservations par logement' WHERE name = 'Managereservation.getReservationsByHousingId';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir la liste des réservations confirmée par l''hôte connecté' WHERE name = 'Managereservation.reservationsConfirmedByHost';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir la liste des réservations rejetée par l''hôte connecté' WHERE name = 'Managereservation.reservationsRejectedByHost';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir la liste des réservations appartenant à un hôte et qui sont annulées par le voyageur' WHERE name = 'Managereservation.reservationsCanceledByTravelerForHost';
+UPDATE permissions SET groupe = 'GESTION_RESERVATIONS_HOTE', description = 'Voir la liste des réservations en attente de confirmation pour l''hôte connecté' WHERE name = 'Managereservation.reservationsNotConfirmedYetByHost';
+UPDATE permissions SET groupe = 'GESTION_RESERVATION_ADMIN', description = 'Voir le nombre de réservations par année et par mois' WHERE name = 'Managereservation.housing_with_many_reservation';
+UPDATE permissions SET groupe = 'GESTION_RESERVATION_ADMIN', description = 'Voir la liste de toutes les réservations annuler par les voyageurs de la plateforme' WHERE name = 'Managereservation.getAllReservationCanceledByTravelerForAdmin';
+UPDATE permissions SET groupe = 'GESTION_RESERVATION_ADMIN', description = 'Voir la Liste de toutes les réservations rejetées par les hotes de la plateforme' WHERE name = 'Managereservation.getAllReservationRejectedForAdmin';
+UPDATE permissions SET groupe = 'GESTION_RESERVATION_ADMIN', description = 'Voir la liste de toutes les réservations confirmées par les hotes de la plateforme' WHERE name = 'Managereservation.getAllReservationConfirmedForAdmin';
+UPDATE permissions SET groupe = 'GESTION_TRANSACTION', description = 'Voir la liste de toutes les transactions sur la plateform' WHERE name = 'Manageportefeuille.transaction.all';
+UPDATE permissions SET groupe = 'GESTION_TRANSACTION', description = 'Voir l''historique d''une transaction donnée' WHERE name = 'Manageportefeuille.transaction.history';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Ajouter un méthode de paiement' WHERE name = 'ManagemethodPayement.store';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Voir la liste des méthode de paiement' WHERE name = 'ManagemethodPayement.index';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Voir detail d''une méthode de paiement' WHERE name = 'ManagemethodPayement.show';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Modifier nom d''une méthode donnée' WHERE name = 'ManagemethodPayement.updateName';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Modifier icone d''une méthode donnée' WHERE name = 'ManagemethodPayement.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Supprimer une méthode de paiement' WHERE name = 'ManagemethodPayement.destroy';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Bloquer une méthode de paiement' WHERE name = 'ManagemethodPayement.block';
+UPDATE permissions SET groupe = 'GESTION_METHODE_PAIEMENT', description = 'Debloquer une méthode de paiement' WHERE name = 'ManagemethodPayement.unblock';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Voir la liste des retraits en attente de validation sur la plateforme par l''administrateur' WHERE name = 'Manageretrait.ListRetraitWaitingConfirmationByAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Voir la liste des demandes de retraits des voyageurs en attente de validation sur la plateforme par l''administrateur' WHERE name = 'Manageretrait.ListRetraitOfTravelerWaitingConfirmationByAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Voir la liste des demandes de retraits des hôtes en attente de validation sur la plateforme par l''administrateur' WHERE name = 'Manageretrait.ListRetraitOfHoteWaitingConfirmationByAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Voir la liste des demandes de retraits confirmée par l''administrateur sur la plateforme' WHERE name = 'Manageretrait.ListRetraitConfirmedByAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Valider une demande de retrait par l''administrateur' WHERE name = 'Manageretrait.validateRetraitByAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Voir la liste des demandes de retraits rejetée par l''administrateur sur la plateforme' WHERE name = 'Manageretrait.ListRetraitRejectForAdmin';
+UPDATE permissions SET groupe = 'GESTION_RETRAIT_ADMIN', description = 'Rejeter une demande de retait par un administrateur' WHERE name = 'Manageretrait.rejectRetraitByAdmin';
+UPDATE permissions SET groupe = 'GESTION_CHARGE_ADMIN', description = 'Voir la liste des charges' WHERE name = 'Managecharge.index';
+UPDATE permissions SET groupe = 'GESTION_CHARGE_ADMIN', description = 'Ajouter une charge' WHERE name = 'Managecharge.store';
+UPDATE permissions SET groupe = 'GESTION_CHARGE_ADMIN', description = 'Modifier le nom d''une charge' WHERE name = 'Managecharge.updateName';
+UPDATE permissions SET groupe = 'GESTION_CHARGE_ADMIN', description = 'Modifier l''icône d''une charge' WHERE name = 'Managecharge.updateIcone';
+UPDATE permissions SET groupe = 'GESTION_CHARGE_ADMIN', description = 'Supprimer une charge' WHERE name = 'Managecharge.destroy';
+UPDATE permissions SET groupe = 'GESTION_TYPE_DE_DEMANDE', description = 'Créer une nouvelle méthode de aiement' WHERE name = 'Managetype_demande.store';
+UPDATE permissions SET groupe = 'GESTION_TYPE_DE_DEMANDE', description = 'Voir la liste des méthodes de paiement' WHERE name = 'Managetype_demande.index';
+UPDATE permissions SET groupe = 'GESTION_TYPE_DE_DEMANDE', description = 'Voir les détails concernant une méthode de paiement spécifique par son ID' WHERE name = 'Managetype_demande.show';
+UPDATE permissions SET groupe = 'GESTION_TYPE_DE_DEMANDE', description = 'Modifier le nom d''une méthode de paiement de par son ID' WHERE name = 'Managetype_demande.updateName';
+UPDATE permissions SET groupe = 'GESTION_TYPE_DE_DEMANDE', description = 'Supprimer une méthode de paiement' WHERE name = 'Managetype_demande.destroy';
+
+
+        ";
+
+        DB::unprepared($sql);
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('permissions', function (Blueprint $table) {
+            $table->dropColumn('description');
+
+        });
+    }
+};

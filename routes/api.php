@@ -1443,13 +1443,15 @@ Route::prefix('portefeuille')->group(function () {
        Route::prefix('partenaire')->group(function () {
                Route::get('/users', [DashboardPartenaireController::class, 'getUsersForPartenaire'])
                    ->name('partenaire.getUsersForPartenaire')
-                   ->middleware('role_or_permission:superAdmin|partenaire|Managepartenaire.getUsersForPartenaire');
+                   ->middleware('role_or_permission:superAdmin|partenaire');
 
                 Route::get('users/transaction', [DashboardPartenaireController::class, 'getPartnerPortfeuilleDetails'])
-                ->name('portefeuille.user.transactionpartenaire');
+                ->name('portefeuille.user.transactionpartenaire')
+                                  ->middleware('role_or_permission:superAdmin|partenaire');
 
                 Route::get('users/reservation', [DashboardPartenaireController::class, 'getReservationsWithPromoCode'])
-                ->name('portefeuille.user.reservationpartenaire');
+                                ->name('portefeuille.user.reservationpartenaire')
+                          ->middleware('role_or_permission:superAdmin|partenaire');
 
       });
 
@@ -1503,24 +1505,24 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('site')->group(function () {
         Route::get('/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatistics'])
             ->name('site.getSiteVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|Managesite.getSiteVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/date/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatisticsDate'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getSiteVisitStatisticsDate');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/current_month/visit_statistics', [UserVisiteSiteController::class, 'getCurrentMonthVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getCurrentMonthVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/current_year/visit_statistics', [UserVisiteSiteController::class, 'getCurrentYearVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getCurrentYearVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/yearly/visit_statistics', [UserVisiteSiteController::class, 'getYearlyVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getYearlyVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
     });
 
     Route::get('logement/admin/statistique', [AdminHousingController::class, 'getAdminStatistics'])
         ->name('logement.getAdminStatistics')
-        ->middleware('role_or_permission:Admin|superAdmin|Managelogement.getAdminStatistics');
+        ->middleware('role_or_permission:Admin|superAdmin|admin');
 
 
 });
@@ -1569,23 +1571,23 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('logement')->group(function () {
         Route::get('{housing_id}/date/visit_statistics', [UserVisiteHousingController::class, 'getVisitStatisticsDate'])
             ->name('logement.getVisitStatisticsDate')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate|admin');
 
         Route::get('{housing_id}/current_month/visit_statistics', [UserVisiteHousingController::class, 'getCurrentMonthVisitStatistics'])
             ->name('logement.getCurrentMonthVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics|admin');
 
         Route::get('{housing_id}/current_year/visit_statistics', [UserVisiteHousingController::class, 'getCurrentYearVisitStatistics'])
             ->name('logement.getCurrentYearVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics|admin');
 
         Route::get('{housing_id}/yearly/visit_statistics', [UserVisiteHousingController::class, 'getYearlyVisitStatistics'])
             ->name('logement.getYearlyVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics|admin');
 
         Route::get('/{housingId}/visit_statistics', [UserVisiteHousingController::class, 'getHousingVisitStatistics'])
             ->name('logement.getHousingVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics|admin');
     });
 
 

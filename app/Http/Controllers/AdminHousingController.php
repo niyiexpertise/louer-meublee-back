@@ -71,66 +71,67 @@ class AdminHousingController extends Controller
         }
         $data = $listings->map(function ($listing) {
             return [
-                'id_housing' => $listing->id,
-                'housing_type_name' => $listing->housingType->name,
-                'property_type_name' => $listing->propertyType->name,
-                'user_id' => $listing->user_id,
-                'name_housing' => $listing->name,
-                'description' => $listing->description,
-                'number_of_bed' => $listing->number_of_bed,
-                'number_of_traveller' => $listing->number_of_traveller,
-                'sit_geo_lat' => $listing->sit_geo_lat,
-                'sit_geo_lng' => $listing->sit_geo_lng,
-                'country' => $listing->country,
-                'address' => $listing->address,
-                'city' => $listing->city,
-                'department' => $listing->department,
-                'is_camera' => $listing->is_camera,
-                'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => $listing->is_animal_exist,
-                'is_disponible' => $listing->is_disponible,
-                'interior_regulation' => $listing->interior_regulation,
-                'telephone' => $listing->telephone,
-                'code_pays' => $listing->code_pays,
-                'status' => $listing->status,
-                'arrived_independently' => $listing->arrived_independently,
-                'is_instant_reservation' => $listing->is_instant_reservation,
-                'minimum_duration' => $listing->minimum_duration,
-                'time_before_reservation' => $listing->time_before_reservation,
-                'cancelation_condition' => $listing->cancelation_condition,
-                'departure_instruction' => $listing->departure_instruction,
-                'is_deleted' => $listing->is_deleted,
-                'is_blocked' => $listing->is_blocked,
-                'is_actif' => $listing->is_actif,
-                  'is_destroy' => $listing->is_destroy,
-    
+                'id_housing' => $listing->id ?? null,
+                'housing_type_name' => $listing->housingType->name ?? null,
+                'property_type_name' => $listing->propertyType->name ?? null,
+                'user_id' => $listing->user_id ?? null,
+                'name_housing' => $listing->name ?? null,
+                'description' => $listing->description ?? null,
+                'number_of_bed' => $listing->number_of_bed ?? null,
+                'number_of_traveller' => $listing->number_of_traveller ?? null,
+                'sit_geo_lat' => $listing->sit_geo_lat ?? null,
+                'sit_geo_lng' => $listing->sit_geo_lng ?? null,
+                'country' => $listing->country ?? null,
+                'address' => $listing->address ?? null,
+                'city' => $listing->city ?? null,
+                'department' => $listing->department ?? null,
+                'is_camera' => $listing->is_camera ?? null,
+                'is_accepted_animal' => $listing->is_accepted_animal ?? null,
+                'is_animal_exist' => $listing->is_animal_exist ?? null,
+                'is_disponible' => $listing->is_disponible ?? null,
+                'interior_regulation' => $listing->interior_regulation ?? null,
+                'telephone' => $listing->telephone ?? null,
+                'code_pays' => $listing->code_pays ?? null,
+                'status' => $listing->status ?? null,
+                'arrived_independently' => $listing->arrived_independently ?? null,
+                'is_instant_reservation' => $listing->is_instant_reservation ?? null,
+                'minimum_duration' => $listing->minimum_duration ?? null,
+                'time_before_reservation' => $listing->time_before_reservation ?? null,
+                'cancelation_condition' => $listing->cancelation_condition ?? null,
+                'departure_instruction' => $listing->departure_instruction ?? null,
+                'is_deleted' => $listing->is_deleted ?? null,
+                'is_blocked' => $listing->is_blocked ?? null,
+                'is_actif' => $listing->is_actif ?? null,
+                'is_destroy' => $listing->is_destroy ?? null,
+            
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
-                        'id_photo' => $photo->id,
-                        'path' => $photo->path,
-                        'extension' => $photo->extension,
-                        'is_couverture' => $photo->is_couverture,
+                        'id_photo' => $photo->id ?? null,
+                        'path' => $photo->path ?? null,
+                        'extension' => $photo->extension ?? null,
+                        'is_couverture' => $photo->is_couverture ?? null,
                     ];
-                }),
+                }) ?? null,
+            
                 'user' => [
-                    'id' => $listing->user->id,
-                    'lastname' => $listing->user->lastname,
-                    'firstname' => $listing->user->firstname,
-                    'telephone' => $listing->user->telephone,
-                    'code_pays' => $listing->user->code_pays,
-                    'email' => $listing->user->email,
-                    'country' => $listing->user->country,
-                    'file_profil' => $listing->user->file_profil,
-                    'city' => $listing->user->city,
-                    'address' => $listing->user->address,
-                    'sexe' => $listing->user->sexe,
-                    'postal_code' => $listing->user->postal_code,
-                    'is_admin' => $listing->user->is_admin,
-                    'is_traveller' => $listing->user->is_traveller,
-                    'is_hote' => $listing->user->is_hote,
-                ],
-    
+                    'id' => $listing->user->id ?? null,
+                    'lastname' => $listing->user->lastname ?? null,
+                    'firstname' => $listing->user->firstname ?? null,
+                    'telephone' => $listing->user->telephone ?? null,
+                    'code_pays' => $listing->user->code_pays ?? null,
+                    'email' => $listing->user->email ?? null,
+                    'country' => $listing->user->country ?? null,
+                    'file_profil' => $listing->user->file_profil ?? null,
+                    'city' => $listing->user->city ?? null,
+                    'address' => $listing->user->address ?? null,
+                    'sexe' => $listing->user->sexe ?? null,
+                    'postal_code' => $listing->user->postal_code ?? null,
+                    'is_admin' => $listing->user->is_admin ?? null,
+                    'is_traveller' => $listing->user->is_traveller ?? null,
+                    'is_hote' => $listing->user->is_hote ?? null,
+                ] ?? null,
             ];
+            
         });
         return response()->json(['data' => $data]);
     }
@@ -164,73 +165,74 @@ class AdminHousingController extends Controller
     
         $data = $listings->map(function ($listing) {
             return [
-                'id_housing' => $listing->id,
-                'housing_type_name' => $listing->housingType->name,
-                'housing_type_icone' => $listing->housingType->icone,
-                'property_type_name' => $listing->propertyType->name,
-                'property_type_icone' => $listing->propertyType->icone,
-                'user_id' => $listing->user_id,
-                'name_housing' => $listing->name,
-                'description' => $listing->description,
-                'number_of_bed' => $listing->number_of_bed,
-                'number_of_traveller' => $listing->number_of_traveller,
-                'sit_geo_lat' => $listing->sit_geo_lat,
-                'sit_geo_lng' => $listing->sit_geo_lng,
-                'country' => $listing->country,
-                'address' => $listing->address,
-                'city' => $listing->city,
-                'department' => $listing->department,
-                'is_camera' => $listing->is_camera,
-                'is_accepted_animal' => $listing->is_accepted_animal,
-                'is_animal_exist' => $listing->is_animal_exist,
-                'is_disponible' => $listing->is_disponible,
-                'interior_regulation' => $listing->interior_regulation,
-                'telephone' => $listing->telephone,
-                'code_pays' => $listing->code_pays,
-                'status' => $listing->status,
-                'arrived_independently' => $listing->arrived_independently,
-                'is_instant_reservation' => $listing->is_instant_reservation,
-                'minimum_duration' => $listing->minimum_duration,
-                'time_before_reservation' => $listing->time_before_reservation,
-                'cancelation_condition' => $listing->cancelation_condition,
-                'departure_instruction' => $listing->departure_instruction,
-                'is_deleted' => $listing->is_deleted,
-                'is_blocked' => $listing->is_blocked,
-                'is_actif' => $listing->is_actif,
-                'is_destroy' => $listing->is_destroy,
-                'is_accept_anulation'=> $listing->is_accept_anulation,
-                'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
-                'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
-                'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
-                'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
-    
+                'id_housing' => $listing->id ?? null,
+                'housing_type_name' => $listing->housingType->name ?? null,
+                'housing_type_icone' => $listing->housingType->icone ?? null,
+                'property_type_name' => $listing->propertyType->name ?? null,
+                'property_type_icone' => $listing->propertyType->icone ?? null,
+                'user_id' => $listing->user_id ?? null,
+                'name_housing' => $listing->name ?? null,
+                'description' => $listing->description ?? null,
+                'number_of_bed' => $listing->number_of_bed ?? null,
+                'number_of_traveller' => $listing->number_of_traveller ?? null,
+                'sit_geo_lat' => $listing->sit_geo_lat ?? null,
+                'sit_geo_lng' => $listing->sit_geo_lng ?? null,
+                'country' => $listing->country ?? null,
+                'address' => $listing->address ?? null,
+                'city' => $listing->city ?? null,
+                'department' => $listing->department ?? null,
+                'is_camera' => $listing->is_camera ?? null,
+                'is_accepted_animal' => $listing->is_accepted_animal ?? null,
+                'is_animal_exist' => $listing->is_animal_exist ?? null,
+                'is_disponible' => $listing->is_disponible ?? null,
+                'interior_regulation' => $listing->interior_regulation ?? null,
+                'telephone' => $listing->telephone ?? null,
+                'code_pays' => $listing->code_pays ?? null,
+                'status' => $listing->status ?? null,
+                'arrived_independently' => $listing->arrived_independently ?? null,
+                'is_instant_reservation' => $listing->is_instant_reservation ?? null,
+                'minimum_duration' => $listing->minimum_duration ?? null,
+                'time_before_reservation' => $listing->time_before_reservation ?? null,
+                'cancelation_condition' => $listing->cancelation_condition ?? null,
+                'departure_instruction' => $listing->departure_instruction ?? null,
+                'is_deleted' => $listing->is_deleted ?? null,
+                'is_blocked' => $listing->is_blocked ?? null,
+                'is_actif' => $listing->is_actif ?? null,
+                'is_destroy' => $listing->is_destroy ?? null,
+                'is_accept_anulation' => $listing->is_accept_anulation ?? null,
+                'delai_partiel_remboursement' => $listing->delai_partiel_remboursement ?? null,
+                'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? null,
+                'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? null,
+                'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? null,
+            
                 'photos_logement' => $listing->photos->map(function ($photo) {
                     return [
-                        'id_photo' => $photo->id,
-                        'path' => $photo->path,
-                        'extension' => $photo->extension,
-                        'is_couverture' => $photo->is_couverture,
+                        'id_photo' => $photo->id ?? null,
+                        'path' => $photo->path ?? null,
+                        'extension' => $photo->extension ?? null,
+                        'is_couverture' => $photo->is_couverture ?? null,
                     ];
-                }),
+                }) ?? null,
+            
                 'user' => [
-                    'id' => $listing->user->id,
-                    'lastname' => $listing->user->lastname,
-                    'firstname' => $listing->user->firstname,
-                    'telephone' => $listing->user->telephone,
-                    'code_pays' => $listing->user->code_pays,
-                    'email' => $listing->user->email,
-                    'country' => $listing->user->country,
-                    'file_profil' => $listing->user->file_profil,
-                    'city' => $listing->user->city,
-                    'address' => $listing->user->address,
-                    'sexe' => $listing->user->sexe,
-                    'postal_code' => $listing->user->postal_code,
-                    'is_admin' => $listing->user->is_admin,
-                    'is_traveller' => $listing->user->is_traveller,
-                    'is_hote' => $listing->user->is_hote,
-                ],
-    
+                    'id' => $listing->user->id ?? null,
+                    'lastname' => $listing->user->lastname ?? null,
+                    'firstname' => $listing->user->firstname ?? null,
+                    'telephone' => $listing->user->telephone ?? null,
+                    'code_pays' => $listing->user->code_pays ?? null,
+                    'email' => $listing->user->email ?? null,
+                    'country' => $listing->user->country ?? null,
+                    'file_profil' => $listing->user->file_profil ?? null,
+                    'city' => $listing->user->city ?? null,
+                    'address' => $listing->user->address ?? null,
+                    'sexe' => $listing->user->sexe ?? null,
+                    'postal_code' => $listing->user->postal_code ?? null,
+                    'is_admin' => $listing->user->is_admin ?? null,
+                    'is_traveller' => $listing->user->is_traveller ?? null,
+                    'is_hote' => $listing->user->is_hote ?? null,
+                ] ?? null,
             ];
+            
         });
         return response()->json(['data' => $data]);
     }
@@ -287,72 +289,68 @@ public function showHousingDetailForValidationForadmin($id)
     ->groupBy('category.name')
     ->map(function ($categoryEquipment, $categoryName) {
         return [
-            'category_id' => $categoryEquipment->first()->category_id,
-            'category_name' => $categoryName,
+            'category_id' => $categoryEquipment->first()->category_id ?? null,
+            'category_name' => $categoryName ?? null,
             'equipments' => $categoryEquipment->map(function ($housingEquipment) {
                 return [
-                    'equipment_id' => $housingEquipment->equipment_id,
-                    'name' => $housingEquipment->equipment->name,
-                    'icone' => $housingEquipment->equipment->icone,
-                    'valide' => $housingEquipment->is_verified,
-                    'id_housing_equipment' =>  $housingEquipment->id,
+                    'equipment_id' => $housingEquipment->equipment_id ?? null,
+                    'name' => $housingEquipment->equipment->name ?? null,
+                    'icone' => $housingEquipment->equipment->icone ?? null,
+                    'valide' => $housingEquipment->is_verified ?? null,
+                    'id_housing_equipment' =>  $housingEquipment->id ?? null,
                 ];
-            })->toArray(),
+            })->toArray() ?? null,
         ];
-    });
+    }) ?? null;
 
-    
-
-
-    $equipments_defaut_by_category = $listing->housingEquipments
+$equipments_defaut_by_category = $listing->housingEquipments
     ->where('is_verified', 1)
     ->groupBy('category.name')
     ->map(function ($categoryEquipment, $categoryName) {
         return [
-            'category_id' => $categoryEquipment->first()->category_id,
-            'category_name' => $categoryName,
+            'category_id' => $categoryEquipment->first()->category_id ?? null,
+            'category_name' => $categoryName ?? null,
             'equipments' => $categoryEquipment->map(function ($housingEquipment) {
                 return [
-                    'equipment_id' => $housingEquipment->equipment_id,
-                    'name' => $housingEquipment->equipment->name,
-                    'icone' => $housingEquipment->equipment->icone,
-                    'valide' => $housingEquipment->is_verified,
-                    'id_housing_equipment' =>  $housingEquipment->id,
+                    'equipment_id' => $housingEquipment->equipment_id ?? null,
+                    'name' => $housingEquipment->equipment->name ?? null,
+                    'icone' => $housingEquipment->equipment->icone ?? null,
+                    'valide' => $housingEquipment->is_verified ?? null,
+                    'id_housing_equipment' =>  $housingEquipment->id ?? null,
                 ];
-            })->toArray(),
+            })->toArray() ?? null,
         ];
-    });
+    }) ?? null;
 
-    
-    $hoteCharge_id = [];
-    $travelerCharge_id = [];
-    $totalHoteCharge = 0;
-    $totalTravelerCharge = 0;
+$hoteCharge_id = [];
+$travelerCharge_id = [];
+$totalHoteCharge = 0;
+$totalTravelerCharge = 0;
 
-    $housingCharges = Housing_charge::where('housing_id', $id)->get();
+$housingCharges = Housing_charge::where('housing_id', $id)->get();
 
-    
-    if (!$housingCharges->isEmpty()) {
-        foreach ($housingCharges as $housingCharge) {
-            $charge = Charge::find($housingCharge->charge_id);
-            $chargeData = [
-                'id_housing_charge' => $housingCharge->id,
-                'housing_id' => $housingCharge->housing_id,
-                'id_charge' => $charge->id,
-                'charge_name' => $charge->name,
-                'is_mycharge' => $housingCharge->is_mycharge,
-                'valeur_charge' => $housingCharge->valeur
-            ];
-    
-            if ($housingCharge->is_mycharge) {
-                $hoteCharge_id[] = $chargeData;
-                $totalHoteCharge += $housingCharge->valeur;
-            } else {
-                $travelerCharge_id[] = $chargeData;
-                $totalTravelerCharge += $housingCharge->valeur;
-            }
+if (!$housingCharges->isEmpty()) {
+    foreach ($housingCharges as $housingCharge) {
+        $charge = Charge::find($housingCharge->charge_id);
+        $chargeData = [
+            'id_housing_charge' => $housingCharge->id ?? null,
+            'housing_id' => $housingCharge->housing_id ?? null,
+            'id_charge' => $charge->id ?? null,
+            'charge_name' => $charge->name ?? null,
+            'is_mycharge' => $housingCharge->is_mycharge ?? null,
+            'valeur_charge' => $housingCharge->valeur ?? null
+        ];
+
+        if ($housingCharge->is_mycharge) {
+            $hoteCharge_id[] = $chargeData;
+            $totalHoteCharge += $housingCharge->valeur ?? 0;
+        } else {
+            $travelerCharge_id[] = $chargeData;
+            $totalTravelerCharge += $housingCharge->valeur ?? 0;
         }
     }
+}
+
     
 
     
@@ -365,158 +363,157 @@ public function showHousingDetailForValidationForadmin($id)
     return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas voir les détails de ce logement car il n'est pas entièrement rempli");
    }
 
-    $data = [
-        'id_housing' => $listing->id,
-        'housing_type_id' => $listing->housing_type_id,
-        'housing_type_name' => $listing->housingType->name,
-        'property_type_id' => $listing->property_type_id,
-        'property_type_name' => $listing->propertyType->name,
-        'user_id' => $listing->user_id,
-        'name_housing' => $listing->name,
-        'description' => $listing->description,
-        'number_of_bed' => $listing->number_of_bed,
-        'number_of_traveller' => $listing->number_of_traveller,
-        'sit_geo_lat' => $listing->sit_geo_lat,
-        'sit_geo_lng' => $listing->sit_geo_lng,
-        'country' => $listing->country,
-        'address' => $listing->address,
-        'city' => $listing->city,
-        'department' => $listing->department,
-        'is_camera' => $listing->is_camera,
-        'is_accepted_animal' => $listing->is_accepted_animal,
-        'is_animal_exist' => $listing->is_animal_exist,
-        'is_disponible' => $listing->is_disponible,
-        'interior_regulation' => $listing->interior_regulation,
-        'telephone' => $listing->telephone,
-        'code_pays' => $listing->code_pays,
-        'price' => $listing->price,
-        'status' => $listing->status,
-        'surface' => $listing->surface,
-        'arrived_independently' => $listing->arrived_independently,
-        'is_instant_reservation' => $listing->is_instant_reservation,
-        'minimum_duration' => $listing->minimum_duration,
-        'time_before_reservation' => $listing->time_before_reservation,
-        'cancelation_condition' => $listing->cancelation_condition,
-        'departure_instruction' => $listing->departure_instruction,
-        'is_accept_arm' => $listing->is_accept_arm,
-        'is_accept_noise' => $listing->is_accept_noise,
-        'is_accept_smoking' => $listing->is_accept_smoking,
-        'is_accept_chill' => $listing->is_accept_smoking,
-        'is_accept_alcool' => $listing->is_accept_alccol,
-        'is_deleted' => $listing->is_deleted,
-        'is_blocked' => $listing->is_blocked,
-        'is_actif' => $listing->is_actif,
-        'is_destroy' => $listing->is_destroy,
-        'is_accept_anulation'=> $listing->is_accept_anulation,
-        'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
-        'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
-        'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
-        'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
+   $data = [
+    'id_housing' => $listing->id ?? null,
+    'housing_type_id' => $listing->housing_type_id ?? null,
+    'housing_type_name' => $listing->housingType->name ?? null,
+    'property_type_id' => $listing->property_type_id ?? null,
+    'property_type_name' => $listing->propertyType->name ?? null,
+    'user_id' => $listing->user_id ?? null,
+    'name_housing' => $listing->name ?? null,
+    'description' => $listing->description ?? null,
+    'number_of_bed' => $listing->number_of_bed ?? null,
+    'number_of_traveller' => $listing->number_of_traveller ?? null,
+    'sit_geo_lat' => $listing->sit_geo_lat ?? null,
+    'sit_geo_lng' => $listing->sit_geo_lng ?? null,
+    'country' => $listing->country ?? null,
+    'address' => $listing->address ?? null,
+    'city' => $listing->city ?? null,
+    'department' => $listing->department ?? null,
+    'is_camera' => $listing->is_camera ?? null,
+    'is_accepted_animal' => $listing->is_accepted_animal ?? null,
+    'is_animal_exist' => $listing->is_animal_exist ?? null,
+    'is_disponible' => $listing->is_disponible ?? null,
+    'interior_regulation' => $listing->interior_regulation ?? null,
+    'telephone' => $listing->telephone ?? null,
+    'code_pays' => $listing->code_pays ?? null,
+    'price' => $listing->price ?? null,
+    'status' => $listing->status ?? null,
+    'surface' => $listing->surface ?? null,
+    'arrived_independently' => $listing->arrived_independently ?? null,
+    'is_instant_reservation' => $listing->is_instant_reservation ?? null,
+    'minimum_duration' => $listing->minimum_duration ?? null,
+    'time_before_reservation' => $listing->time_before_reservation ?? null,
+    'cancelation_condition' => $listing->cancelation_condition ?? null,
+    'departure_instruction' => $listing->departure_instruction ?? null,
+    'is_accept_arm' => $listing->is_accept_arm ?? null,
+    'is_accept_noise' => $listing->is_accept_noise ?? null,
+    'is_accept_smoking' => $listing->is_accept_smoking ?? null,
+    'is_accept_chill' => $listing->is_accept_smoking ?? null,
+    'is_accept_alcool' => $listing->is_accept_alccol ?? null,
+    'is_deleted' => $listing->is_deleted ?? null,
+    'is_blocked' => $listing->is_blocked ?? null,
+    'is_actif' => $listing->is_actif ?? null,
+    'is_destroy' => $listing->is_destroy ?? null,
+    'is_accept_anulation' => $listing->is_accept_anulation ?? null,
+    'delai_partiel_remboursement' => $listing->delai_partiel_remboursement ?? null,
+    'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? null,
+    'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? null,
+    'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? null,
 
-        'photos_logement' => $listing->photos->map(function ($photo) {
+    'photos_logement' => $listing->photos->map(function ($photo) {
+        return [
+            'id_photo' => $photo->id ?? null,
+            'path' => $photo->path ?? null,
+            'extension' => $photo->extension ?? null,
+            'is_couverture' => $photo->is_couverture ?? null,
+            'is_verified' => $photo->is_verified ?? null,
+        ];
+    })->toArray() ?? [],
+
+    'user' => [
+        'id' => $listing->user->id ?? null,
+        'lastname' => $listing->user->lastname ?? null,
+        'firstname' => $listing->user->firstname ?? null,
+        'telephone' => $listing->user->telephone ?? null,
+        'code_pays' => $listing->user->code_pays ?? null,
+        'email' => $listing->user->email ?? null,
+        'country' => $listing->user->country ?? null,
+        'file_profil' => $listing->user->file_profil ?? null,
+        'city' => $listing->user->city ?? null,
+        'address' => $listing->user->address ?? null,
+        'sexe' => $listing->user->sexe ?? null,
+        'postal_code' => $listing->user->postal_code ?? null,
+    ],
+
+    'housing_preference' => [
+        'nouveau' => $listing->housing_preference->filter(function ($preference) {
+            return !$preference->preference->is_verified ?? null;
+        })->map(function ($preference) {
             return [
-                'id_photo' => $photo->id,
-                'path' => $photo->path,
-                'extension' => $photo->extension,
-                'is_couverture' => $photo->is_couverture,
-                'is_verified' => $photo->is_verified,
+                'id' => $preference->id ?? null,
+                'preference_id' => $preference->preference_id ?? null,
+                'preference_name' => $preference->preference->name ?? null,
+                'preference_icone' => $preference->preference->icone ?? null,
+                'valide' => $preference->is_verified ?? null
             ];
-        }),
-        'user' => [
-            'id' => $listing->user->id,
-            'lastname' => $listing->user->lastname,
-            'firstname' => $listing->user->firstname,
-            'telephone' => $listing->user->telephone,
-            'code_pays' => $listing->user->code_pays,
-            'email' => $listing->user->email,
-            'country' => $listing->user->country,
-            'file_profil' => $listing->user->file_profil,
-            'city' => $listing->user->city,
-            'address' => $listing->user->address,
-            'sexe' => $listing->user->sexe,
-            'postal_code' => $listing->user->postal_code,
+        })->toArray() ?? [],
 
-        ],
+        'defaut' => $listing->housing_preference->filter(function ($preference) {
+            return $preference->preference->is_verified ?? null;
+        })->map(function ($preference) {
+            return [
+                'id' => $preference->id ?? null,
+                'preference_id' => $preference->preference_id ?? null,
+                'preference_name' => $preference->preference->name ?? null,
+                'preference_icone' => $preference->preference->icone ?? null,
+                'valide' => $preference->is_verified ?? null
+            ];
+        })->toArray() ?? [],
+    ],
 
-        'housing_preference' => [
-            'nouveau' => $listing->housing_preference->filter(function ($preference) {
-                return !$preference->preference->is_verified;
-            })->map(function ($preference) {
-                return [
-                    'id' => $preference->id,
-                    'preference_id' => $preference->preference_id,
-                    'preference_name' => $preference->preference->name,
-                    'preference_icone' => $preference->preference->icone,
-                    'valide' =>$preference->is_verified
-                ];
-            }),
-            'defaut' => $listing->housing_preference->filter(function ($preference) {
-                return $preference->preference->is_verified;
-            })->map(function ($preference) {
-                return [
-                    'id' => $preference->id,
-                    'preference_id' => $preference->preference_id,
-                    'preference_name' => $preference->preference->name,
-                    'preference_icone' => $preference->preference->icone,
-                    'valide' =>$preference->is_verified
-                ];
-            }),
-        ],
+    'reductions' => $listing->reductions->toArray() ?? [],
+    'promotions' => $listing->promotions->toArray() ?? [],
 
+    'categories' => [
+        'nouveau' => $listing->housingCategoryFiles->filter(function ($categoryFile) {
+            return !$categoryFile->category->is_verified ?? null;
+        })->groupBy('category.name')->map(function ($categoryFiles) {
+            return [
+                'category_id' => $categoryFiles->first()->category_id ?? null,
+                'category_name' => $categoryFiles->first()->category->name ?? null,
+                'number' => $categoryFiles->first()->number ?? null,
+                'photos_category' => $categoryFiles->map(function ($categoryFile) {
+                    return [
+                        'file_id' => $categoryFile->file->id ?? null,
+                        'path' => $categoryFile->file->path ?? null,
+                    ];
+                })->toArray() ?? [],
+                'valide' => $categoryFiles->first()->is_verified ?? null,
+            ];
+        })->values()->toArray() ?? [],
 
-        'reductions' => $listing->reductions,
+        'defaut' => $listing->housingCategoryFiles->filter(function ($categoryFile) {
+            return $categoryFile->category->is_verified ?? null;
+        })->groupBy('category.name')->map(function ($categoryFiles) {
+            return [
+                'category_id' => $categoryFiles->first()->category_id ?? null,
+                'category_name' => $categoryFiles->first()->category->name ?? null,
+                'number' => $categoryFiles->first()->number ?? null,
+                'photos_category' => $categoryFiles->map(function ($categoryFile) {
+                    return [
+                        'file_id' => $categoryFile->file->id ?? null,
+                        'path' => $categoryFile->file->path ?? null,
+                    ];
+                })->toArray() ?? [],
+                'valide' => $categoryFiles->first()->is_verified ?? null,
+            ];
+        })->values()->toArray() ?? [],
+    ],
 
-        'promotions' => $listing->promotions,
+    'equipments' => [
+        'nouveau' => $equipments_nouveau_by_category->values()->toArray() ?? [],
+        'defaut' => $equipments_defaut_by_category->values()->toArray() ?? [],
+    ],
+    'charges' => [
+        'hote_charges' => $hoteCharge_id ?? [],
+        'total_hote_charge' => $totalHoteCharge ?? 0,
+        'traveler_charges' => $travelerCharge_id ?? [],
+        'total_traveler_charge' => $totalTravelerCharge ?? 0,
+        'total_charge' => ($totalHoteCharge ?? 0) + ($totalTravelerCharge ?? 0),
+    ],
+];
 
-        'categories' => [
-            'nouveau' => $listing->housingCategoryFiles->filter(function ($categoryFile) {
-                return !$categoryFile->category->is_verified;
-            })->groupBy('category.name')->map(function ($categoryFiles) {
-                return [
-                    'category_id' => $categoryFiles->first()->category_id,
-                    'category_name' => $categoryFiles->first()->category->name,
-                    'number' => $categoryFiles->first()->number,
-                    'photos_category' => $categoryFiles->map(function ($categoryFile) {
-                        return [
-                            'file_id' => $categoryFile->file->id,
-                            'path' => $categoryFile->file->path,
-                        ];
-                    }),
-                    'valide' => $categoryFiles->first()->is_verified,
-                ];
-            })->values()->toArray(),
-
-            'defaut' => $listing->housingCategoryFiles->filter(function ($categoryFile) {
-                return $categoryFile->category->is_verified;
-            })->groupBy('category.name')->map(function ($categoryFiles) {
-                return [
-                    'category_id' => $categoryFiles->first()->category_id,
-                    'category_name' => $categoryFiles->first()->category->name,
-                    'number' => $categoryFiles->first()->number,
-                    'photos_category' => $categoryFiles->map(function ($categoryFile) {
-                        return [
-                            'file_id' => $categoryFile->file->id,
-                            'path' => $categoryFile->file->path,
-                        ];
-                    }),
-                    'valide' => $categoryFiles->first()->is_verified,
-                ];
-            })->values()->toArray(),
-        ],
-
-        'equipments' => [
-            'nouveau' => $equipments_nouveau_by_category->values()->toArray(), 
-            'defaut' => $equipments_defaut_by_category->values()->toArray(),  
-        ],
-        'charges' => [
-            'hote_charges' => $hoteCharge_id,
-            'total_hote_charge' => $totalHoteCharge,
-            'traveler_charges' => $travelerCharge_id,
-            'total_traveler_charge' => $totalTravelerCharge,
-            'total_charge' => $totalCharge
-
-        ]
-    ];
 
     // return 1;
 
@@ -684,7 +681,7 @@ public function showHousingDetailForValidationForadmin($id)
 
  /**
  * @OA\Get(
- *     path="/api/logements/index/ListeDesLogementsValideBloque",
+ *     path="/api/logement/index/ListeDesLogementsValideBloque",
  *     tags={"Housing"},
  *     summary="Liste des logements déjà verifiés mais bloqués par l'administrateur",
  *     description="Récupère la liste des logements qui sont déjà verifiés mais bloqués  par l'administrateur.",

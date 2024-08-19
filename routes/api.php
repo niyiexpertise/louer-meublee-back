@@ -985,6 +985,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
        Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
        Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
+       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
        Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        //Gestion des photos de logement
        Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
@@ -1379,7 +1380,7 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('type_demande')->group(function () {
             Route::post('/store', [TypeDemandeController::class, 'store'])
                 ->name('type_demande.store')
-                ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.store|superAdmin|admin');
 
             Route::get('/index', [TypeDemandeController::class, 'index'])
                 ->name('type_demande.index')
@@ -1395,7 +1396,7 @@ Route::prefix('portefeuille')->group(function () {
 
             Route::delete('/destroy/{id}', [TypeDemandeController::class, 'destroy'])
                 ->name('type_demande.destroy')
-                ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.destroy|superAdmin|admin');
 
 
         });

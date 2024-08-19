@@ -2290,14 +2290,14 @@
                 ]
             }
         },
-        "/api/logements/index/ListeDesLogementsValideBloque": {
+        "/api/logement/index/ListeDesLogementsValideBloque": {
             "get": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements déjà verifiés mais bloqués par l'administrateur",
                 "description": "Récupère la liste des logements qui sont déjà verifiés mais bloqués  par l'administrateur.",
-                "operationId": "b0d6f0e23d6a83e9a91b749f2695fdb6",
+                "operationId": "4efc13f670f8d5389b6e2053474fdc48",
                 "responses": {
                     "200": {
                         "description": "Succès - Liste des logements déjà verifiés mais bloqués  par l'administrateur",
@@ -11624,6 +11624,98 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Logement débloqué avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement spécifié n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/delete/{housinId}": {
+            "post": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Bloque un logement",
+                "description": "Marque un logement comme supprimé.",
+                "operationId": "deleteHousing",
+                "parameters": [
+                    {
+                        "name": "housinId",
+                        "in": "path",
+                        "description": "ID du logement à supprimé",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement supprimé avec succès"
                                         },
                                         "data": {
                                             "type": "array",

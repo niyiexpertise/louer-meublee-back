@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('housing_sponsorings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('housing_id')->nullable()->constrained('housings')->onDelete('cascade');
+            $table->foreignId('sponsoring_id')->nullable()->constrained('sponsorings')->onDelete('cascade');
+            $table->date('date_debut')->nullable();
+            $table->date('date_fin')->nullable();
+            $table->boolean('is_deleted')->default(false)->nullable();
+            $table->boolean('is_actif')->default(true)->nullable();
             $table->timestamps();
         });
     }

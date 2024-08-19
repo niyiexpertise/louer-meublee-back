@@ -43,15 +43,17 @@ class NotificationController extends Controller
 
 /**
  * @OA\Post(
- *     path="/api/notifications/store",
+ *     path="/api/notifications/store/{id}",
  *     summary="Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
  *     tags={"Notification"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             required={"user_id", "name"},
  *             @OA\Property(property="user_id", type="integer", example="1", description="ID de l'utilisateur"),
- *             @OA\Property(property="name", type="string", example="Notification Example", description="Nom de la notification")
+ *  @OA\Property(property="object", type="string", example="objet", description="Nom de la notification"),
+ *             @OA\Property(property="name", type="string", example="Notification Example", description="Nom de la notification"),
  *         )
  *     ),
  *     @OA\Response(
@@ -69,6 +71,25 @@ class NotificationController extends Controller
  *     )
  * )
  */
+
+ public function storeNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required',
+            'name' => 'required',
+            'object' => 'required',
+        ]);
+
+        if(!User::find($request->user_id)){
+            return (new ServiceController())->apiResponse(200, [],'User not found');
+        }
+            $notification = new Notification();
+            $notification->user_id = $request->user_id;
+            $notification->name = $request->name;
+            $notification->object = $request->object;
+            $notification->save();
+            return (new ServiceController())->apiResponse(404, [],'Notification créé');
+    }
 
 
     public function store($email,$name,$object,$is_send_by_mail=0)

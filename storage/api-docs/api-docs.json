@@ -12706,6 +12706,224 @@
                 ]
             }
         },
+        "/api/housingsponsoring/store": {
+            "post": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Créer une demande de sponsoring",
+                "description": "Permet à un utilisateur de créer une demande de sponsoring pour un logement spécifique.",
+                "operationId": "806a187e5a24afa8f86eff5d2b70488a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "housing_id",
+                                    "sponsoring_id",
+                                    "date_debut"
+                                ],
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement pour lequel la demande de sponsoring est faite.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "sponsoring_id": {
+                                        "description": "ID du tarif de sponsoring choisi.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date_debut": {
+                                        "description": "Date de début du sponsoring au format YYYY-MM-DD.",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-01"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de sponsoring créée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring créée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide, problème avec les données fournies.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 400
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La date de début doit être supérieur à la date d'aujourd'hui."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement ou le tarif de sponsoring n'a pas été trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur interne."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/hoteSponsoringRequest": {
+            "get": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Obtenir les demandes de sponsoring d'un hôte connecté",
+                "operationId": "2ca9267115b32b1830e753c123c4daab",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "duree": {
+                                                "type": "integer",
+                                                "example": 30
+                                            },
+                                            "prix": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 100.5
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Description du sponsoring"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_actif": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/housingtype/index": {
             "get": {
                 "tags": [
@@ -15161,13 +15379,13 @@
                 }
             }
         },
-        "/api/notifications/store": {
+        "/api/notifications/store/{id}": {
             "post": {
                 "tags": [
                     "Notification"
                 ],
                 "summary": "Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
-                "operationId": "c2aed4b34d3adeaa74c32156265397d8",
+                "operationId": "64c5be07b76ad9db3995e21f78088cc7",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -15182,6 +15400,11 @@
                                         "description": "ID de l'utilisateur",
                                         "type": "integer",
                                         "example": "1"
+                                    },
+                                    "object": {
+                                        "description": "Nom de la notification",
+                                        "type": "string",
+                                        "example": "objet"
                                     },
                                     "name": {
                                         "description": "Nom de la notification",
@@ -15219,7 +15442,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/users": {
@@ -20565,6 +20793,327 @@
                     },
                     "404": {
                         "description": "Role not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/indexAccueil": {
+            "get": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Liste des tarifs de sponsoring actifs",
+                "operationId": "106d054036b26e6ac3d5094afb581b6e",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/indexAdmin": {
+            "get": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Liste complète des tarifs de sponsoring",
+                "operationId": "4aa8e4334c55d2b8597d5d8c870deb10",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/store": {
+            "post": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Créer un nouveau tarif de sponsoring",
+                "operationId": "cb85d8bbb3e13584f960ca9654e2bdaa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duree": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "prix": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description du tarif"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring créé avec succès."
+                    },
+                    "404": {
+                        "description": "Erreur de validation des données."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/update/{id}": {
+            "post": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Mettre à jour un tarif de sponsoring",
+                "operationId": "1c8a675171d103b99430c262463c0317",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duree": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "prix": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description mise à jour"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring modifié avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou erreur de validation des données."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/show/{id}": {
+            "get": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Afficher un tarif de sponsoring",
+                "operationId": "e7623eec8beb22a3f26417002cea79e3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail d'un tarif.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": ""
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/destroy/{id}": {
+            "post": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Supprimer un tarif de sponsoring",
+                "operationId": "96c0f56b294ef62995ba346924673389",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring supprimé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà supprimé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/active/{id}": {
+            "post": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Activer un tarif de sponsoring",
+                "operationId": "fb4681eb1c696eb59768112259fe0537",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring activé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà actif."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/desactive/{id}": {
+            "post": {
+                "tags": [
+                    "Sponsoring"
+                ],
+                "summary": "Désactiver un tarif de sponsoring",
+                "operationId": "50c664859026a8be5e8e1bf324eb6312",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring désactivé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà désactivé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
                     }
                 },
                 "security": [

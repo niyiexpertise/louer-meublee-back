@@ -57,6 +57,8 @@ use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
+use App\Http\Controllers\SponsoringController;
+use App\Http\Controllers\HousingSponsoringController;
 
 /*
 |--------------------------------------------------------------------------
@@ -791,7 +793,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::group(['middleware' => ['role:superAdmin|admin']], function () {
       Route::prefix('notifications')->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
-       Route::post('/store', [NotificationController::class, 'store']);
+       Route::post('/store/{id}', [NotificationController::class, 'storeNotification']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
        Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
        Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
@@ -1312,6 +1314,42 @@ Route::prefix('portefeuille')->group(function () {
                         ->name('charge.destroy')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.destroy');
                 });
+
+                 //Gestion de Sponsoring (tarif de sponsoring)
+
+        Route::prefix('sponsoring')->group(function() {
+            Route::get('indexAccueil', [SponsoringController::class, 'indexAccueil'])
+                ->name('sponsoring.indexAccueil') ->middleware('role_or_permission:admin|superAdmin|hote');
+                Route::get('indexAdmin', [SponsoringController::class, 'indexAdmin'])
+                ->name('sponsoring.indexAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexAdmin');
+            Route::post('store', [SponsoringController::class, 'store'])
+                ->name('sponsoring.store')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.store');
+            Route::post('update/{id}', [SponsoringController::class, 'update'])
+                ->name('sponsoring.update')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.update');
+                Route::get('show/{id}', [SponsoringController::class, 'show'])
+                ->name('sponsoring.show')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.show');
+            Route::post('destroy/{id}', [SponsoringController::class, 'destroy'])
+                ->name('sponsoring.destroy')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.destroy');
+            Route::post('active/{id}', [SponsoringController::class, 'active'])
+                ->name('sponsoring.active')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.active');
+            Route::post('desactive/{id}', [SponsoringController::class, 'desactive'])
+                ->name('sponsoring.desactive')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.desactive');
+        });
+
+           //Gestion des housingsponsoring (demande de sponsoring)
+           Route::prefix('housingsponsoring')->group(function() {
+            Route::post('store', [HousingSponsoringController::class, 'store'])
+                ->name('housingsponsoring.store')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
+                Route::get('hoteSponsoringRequest', [HousingSponsoringController::class, 'hoteSponsoringRequest'])
+                ->name('sponsoring.hoteSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSponsoringRequest');
+        });
 
 
                   //  Gestion ajout promotion

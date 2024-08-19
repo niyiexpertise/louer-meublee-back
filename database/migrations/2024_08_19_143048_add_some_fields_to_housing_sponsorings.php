@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('portfeuille_transactions', function (Blueprint $table) {
-            $table->foreignId('sponsoring_id')->nullable()->references('id')->on('sponsorings');
+        Schema::table('housing_sponsorings', function (Blueprint $table) {
+            //
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('portefeuille_transactions', function (Blueprint $table) {
+        Schema::table('housing_sponsorings', function (Blueprint $table) {
             //
         });
     }

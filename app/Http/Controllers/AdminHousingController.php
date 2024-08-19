@@ -645,6 +645,9 @@ if (!$housingCharges->isEmpty()) {
  {
      try {
          $housingIds = $request->input('housing_ids');
+         if(count($housingIds) ==0){
+             return response()->json(['message' => 'Veuillez renseigner au moins un ID de logement'], 404);
+         }
          $existingHousingIds = Housing::whereIn('id', $housingIds)->pluck('id')->toArray();
  
          $missingIds = array_diff($housingIds, $existingHousingIds);

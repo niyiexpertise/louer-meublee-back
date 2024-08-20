@@ -385,6 +385,7 @@ if (!$housingCharges->isEmpty()) {
     'is_animal_exist' => $listing->is_animal_exist ?? null,
     'is_disponible' => $listing->is_disponible ?? null,
     'interior_regulation' => $listing->interior_regulation ?? null,
+    'interior_regulation_pdf' => $listing->interior_regulation_pdf ?? null,
     'telephone' => $listing->telephone ?? null,
     'code_pays' => $listing->code_pays ?? null,
     'price' => $listing->price ?? null,

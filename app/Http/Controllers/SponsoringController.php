@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sponsoring;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class SponsoringController extends Controller
 {
@@ -12,7 +13,7 @@ class SponsoringController extends Controller
      * @OA\Get(
      *     path="/api/sponsoring/indexAccueil",
      *     summary="Liste des tarifs de sponsoring actifs",
-     *     tags={"Tarif Sponsoring"},
+     *     tags={"Hote Housing Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -95,7 +96,7 @@ class SponsoringController extends Controller
     public function indexActifAdmin()
     {
         try {
-            $sponsoringActif = Sponsoring::where('is_actif', true)->where('is_delete', false)->get();
+            $sponsoringActif = Sponsoring::where('is_actif', true)->where('is_deleted', false)->get();
             return (new ServiceController())->apiResponse(200, $sponsoringActif, "Liste des tarifs de sponsoring actifs");
 
         } catch(Exception $e) {
@@ -127,7 +128,7 @@ class SponsoringController extends Controller
     public function indexInactifAdmin()
     {
         try {
-            $sponsoringInactif = Sponsoring::where('is_actif', false)->where('is_delete', false)->get();
+            $sponsoringInactif = Sponsoring::where('is_actif', false)->where('is_deleted', false)->get();
             return (new ServiceController())->apiResponse(200, $sponsoringInactif, "Liste des tarifs de sponsoring inactifs");
         } catch(Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -166,12 +167,18 @@ class SponsoringController extends Controller
     public function store(Request $request)
     {
           try {
-
-                    $request->validate([
-                        'duree' => 'required',
+                    $validator = Validator::make($request->all(), [
+                       'duree' => 'required',
                         'prix' => 'required',
                         'description' => 'required',
                     ]);
+
+                    $message = [];
+
+                    if ($validator->fails()) {
+                        $message[] = $validator->errors();
+                        return (new ServiceController())->apiResponse(505,[],$message);
+                    }
 
                     if(!is_int($request->duree)){
                         return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier');
@@ -183,15 +190,26 @@ class SponsoringController extends Controller
                         return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre');
                     }
 
-                    if($request->duree <= 0){
+                    if($request->prix <= 0){
                         return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre positif supérieur à 0');
                     }
 
-                    $exist = Sponsoring::whereDuree($request->duree)->wherePrix($request->prix)->exists();
-
-                    if($exist){
-                        return (new ServiceController())->apiResponse(404,[],'Le tarif de sponsoring existe de déjà');
+                    $existDescription = Sponsoring::whereDescription($request->description)->where('is_actif',true)->exists();
+                    if($existDescription){
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez un autre nom pour le plan car un tarif de sponsoring existe déjà avec lle même non ');
                     }
+
+                    $existDuree = Sponsoring::whereDescription($request->duree)->where('is_actif',true)->exists();
+                    if($existDuree){
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez une autre duree car un tarif de sponsoring existe déjà avec la même ');
+                    }
+
+                    $existPrix = Sponsoring::where('is_actif',true)->wherePrix($request->prix)->exists();
+
+                    if($existPrix){
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez un autre prix car un tarif de sponsoring existe déjà avec le prix');
+                    }
+
                     $sponsoring = new Sponsoring();
                     $sponsoring->duree = $request->duree;
                     $sponsoring->prix = $request->prix;

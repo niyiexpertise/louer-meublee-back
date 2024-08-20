@@ -57,6 +57,7 @@ use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
+use App\Http\Controllers\SettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1561,5 +1562,19 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 });
 
 
+// Gestion setting
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
+    Route::prefix('settings')->group(function () {
+
+        
+
+        Route::post('/update', [SettingController::class, 'update'])
+            ->name('settings.update')
+            ->middleware('role_or_permission:superAdmin|admin|Managesettings.update');
+    });
+});
+
+Route::get('settings/index', [SettingController::class, 'show'])
+            ->name('settings.index');
 
 /** end Route ne nécéssitant pas l'authentification */

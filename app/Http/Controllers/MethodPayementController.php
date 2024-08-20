@@ -21,7 +21,7 @@ class MethodPayementController extends Controller
    *     @OA\Response(
    *         response=200,
    *         description="List of methodPayements"
-   * 
+   *
    *     )
    * )
    */
@@ -30,11 +30,11 @@ class MethodPayementController extends Controller
     try{
             $methodPayements = MethodPayement::all();
             return response()->json(['data' => $methodPayements], 200);
-      } catch(Exception $e) {    
+      } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
      }
 
-  }  
+  }
 
 
 /**
@@ -72,7 +72,7 @@ class MethodPayementController extends Controller
     public function store(Request $request)
     {
           // try{
-          
+
             // } catch(Exception $e) {
             //     return response()->json([
             //         'error' => 'An error occurred',
@@ -102,7 +102,7 @@ class MethodPayementController extends Controller
                     'message' => $e->getMessage()
                 ], 500);
             }
-       
+
     }
 
 
@@ -142,7 +142,7 @@ class MethodPayementController extends Controller
         }
 
         return response()->json(['data' => $methodPayement], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -194,7 +194,7 @@ class MethodPayementController extends Controller
         ]);
         $methodPayement = MethodPayement::whereId($id)->update($data);
         return response()->json(['data' => 'Nom du Méthode de payement mise à jour avec succès.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
 
@@ -255,14 +255,14 @@ class MethodPayementController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $methodPayement = MethodPayement::find($id);
-            
+
             if (!$methodPayement) {
                 return response()->json(['error' => 'MethodPayement non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -275,15 +275,15 @@ class MethodPayementController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+
                 if ($request->hasFile('icone')) {
                     $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
                     $icone_path = $request->file('icone')->move(public_path('image/iconeMethodPayement'), $icone_name);
                     $base_url = url('/');
                     $icone_url = $base_url . '/image/iconeMethodPayement/' . $icone_name;
-                    
+
                     MethodPayement::whereId($id)->update(['icone' => $icone_url]);
-                    
+
                     return response()->json(['data' => 'icône du méthode de payement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");

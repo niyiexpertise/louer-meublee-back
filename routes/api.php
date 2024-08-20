@@ -57,6 +57,8 @@ use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
+use App\Http\Controllers\SponsoringController;
+use App\Http\Controllers\HousingSponsoringController;
 
 /*
 |--------------------------------------------------------------------------
@@ -243,7 +245,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     //Gestion des équipements.
     Route::prefix('equipment')->name('equipment.')->group(function () {
-        
+
         Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.VerifiedBlocknotDelete'])->group(function () {
             Route::get('/VerifiedBlocknotDelete', [EquipementController::class, 'VerifiedBlocknotDelete'])->name('VerifiedBlocknotDelete');
         });
@@ -791,7 +793,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::group(['middleware' => ['role:superAdmin|admin']], function () {
       Route::prefix('notifications')->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
-       Route::post('/store', [NotificationController::class, 'store']);
+       Route::post('/store', [NotificationController::class, 'storeNotification']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
        Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
        Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
@@ -985,6 +987,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
        Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
        Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
+       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
        Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        //Gestion des photos de logement
        Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
@@ -1034,7 +1037,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         // Reviews
         Route::post('/reviews/note/add', [ReviewReservationController::class, 'AddReviewNote'])
             ->name('reservation.reviews.note.add')
-            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reviews.note.add');
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.reviews.note.add');
 
         Route::get('/{housingId}/reviews/note/get', [ReviewReservationController::class, 'LogementAvecMoyenneNotesCritereEtCommentairesAcceuil'])
             ->name('reservation.reviews.note.get');
@@ -1155,7 +1158,7 @@ Route::prefix('portefeuille')->group(function () {
     Route::get('/transaction/all', [PortfeuilleTransactionController::class, 'getAllTransactions'])
         ->name('portefeuille.transaction.all')
         ->middleware('role_or_permission:superAdmin|Manageportefeuille.transaction.all');
-        
+
     Route::post('/transaction/update', [PortfeuilleTransactionController::class, 'updateTransaction'])
          ->name('portefeuille.transaction.update')
         ->middleware('role_or_permission:superAdmin');
@@ -1312,6 +1315,73 @@ Route::prefix('portefeuille')->group(function () {
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.destroy');
                 });
 
+                 //Gestion de Sponsoring (tarif de sponsoring)
+
+        Route::prefix('sponsoring')->group(function() {
+            Route::get('indexAccueil', [SponsoringController::class, 'indexAccueil'])
+                ->name('sponsoring.indexAccueil') ->middleware('role_or_permission:admin|superAdmin|hote');
+            Route::get('indexAdmin', [SponsoringController::class, 'indexAdmin'])
+                ->name('sponsoring.indexAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexAdmin');
+            Route::get('indexActifAdmin', [SponsoringController::class, 'indexActifAdmin'])
+                ->name('sponsoring.indexActifAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexActifAdmin');
+            Route::get('indexInactifAdmin', [SponsoringController::class, 'indexInactifAdmin'])
+                ->name('sponsoring.indexInactifAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexInactifAdmin');
+            Route::post('store', [SponsoringController::class, 'store'])
+                ->name('sponsoring.store')->middleware('role_or_permission:admin|superAdmin|Managesponsoring.store');
+            Route::post('update/{id}', [SponsoringController::class, 'update'])
+                ->name('sponsoring.update')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.update');
+            Route::get('show/{id}', [SponsoringController::class, 'show'])
+                ->name('sponsoring.show')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.show');
+            Route::post('destroy/{id}', [SponsoringController::class, 'destroy'])
+                ->name('sponsoring.destroy')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.destroy');
+            Route::post('active/{id}', [SponsoringController::class, 'active'])
+                ->name('sponsoring.active')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.active');
+            Route::post('desactive/{id}', [SponsoringController::class, 'desactive'])
+                ->name('sponsoring.desactive')
+                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.desactive');
+        });
+
+           //Gestion des housingsponsoring (demande de sponsoring) côté hôte
+           Route::prefix('housingsponsoring')->group(function() {
+                Route::post('store', [HousingSponsoringController::class, 'store'])
+                ->name('housingsponsoring.store')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
+                Route::post('hoteSupprimeDemande/{housingSponsoringId}', [HousingSponsoringController::class, 'hoteSupprimeDemande'])
+                ->name('housingsponsoring.hoteSupprimeDemande')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSupprimeDemande');
+                Route::get('hoteSponsoringRequest', [HousingSponsoringController::class, 'hoteSponsoringRequest'])
+                ->name('sponsoring.hoteSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSponsoringRequest');
+        });
+
+
+        //Gestion des housingsponsoring (demande de sponsoring) côté administrateur
+        Route::prefix('housingsponsoring')->group(function() {
+            Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
+                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteActiveSponsoringRequest');
+            Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
+                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteRejectSponsoringRequest');
+            Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
+                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hotePendingSponsoringRequest');
+            Route::get('demandeSponsoringNonvalidee', [HousingSponsoringController::class, 'demandeSponsoringNonvalidee'])
+                ->name('sponsoring.demandeSponsoringNonvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringNonvalidee');
+            Route::get('demandeSponsoringvalidee', [HousingSponsoringController::class, 'demandeSponsoringvalidee'])
+                ->name('sponsoring.demandeSponsoringvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringvalidee');
+            Route::post('rejectSponsoringRequest/{id}', [HousingSponsoringController::class, 'rejectSponsoringRequest'])
+                ->name('rejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.rejectSponsoringRequest');
+            Route::get('demandeSponsoringrejetee', [HousingSponsoringController::class, 'demandeSponsoringrejetee'])
+                ->name('demandeSponsoringrejetee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringrejetee');
+            Route::get('demandeSponsoringsupprimee', [HousingSponsoringController::class, 'demandeSponsoringsupprimee'])
+                ->name('demandeSponsoringsupprimee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringsupprimee');
+            Route::post('validSponsoringRequest/{id}', [HousingSponsoringController::class, 'validSponsoringRequest'])
+                ->name('validSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.validSponsoringRequest');
+            Route::post('invalidSponsoringRequest/{id}', [HousingSponsoringController::class, 'invalidSponsoringRequest'])
+                ->name('invalidSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.invalidSponsoringRequest');
+        });
+
 
                   //  Gestion ajout promotion
 
@@ -1379,7 +1449,7 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('type_demande')->group(function () {
             Route::post('/store', [TypeDemandeController::class, 'store'])
                 ->name('type_demande.store')
-                ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.store|superAdmin|admin');
 
             Route::get('/index', [TypeDemandeController::class, 'index'])
                 ->name('type_demande.index')
@@ -1395,7 +1465,7 @@ Route::prefix('portefeuille')->group(function () {
 
             Route::delete('/destroy/{id}', [TypeDemandeController::class, 'destroy'])
                 ->name('type_demande.destroy')
-                ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.destroy|superAdmin|admin');
 
 
         });
@@ -1404,13 +1474,15 @@ Route::prefix('portefeuille')->group(function () {
        Route::prefix('partenaire')->group(function () {
                Route::get('/users', [DashboardPartenaireController::class, 'getUsersForPartenaire'])
                    ->name('partenaire.getUsersForPartenaire')
-                   ->middleware('role_or_permission:superAdmin|partenaire|Managepartenaire.getUsersForPartenaire');
+                   ->middleware('role_or_permission:superAdmin|partenaire');
 
                 Route::get('users/transaction', [DashboardPartenaireController::class, 'getPartnerPortfeuilleDetails'])
-                ->name('portefeuille.user.transactionpartenaire');
-                
+                ->name('portefeuille.user.transactionpartenaire')
+                                  ->middleware('role_or_permission:superAdmin|partenaire');
+
                 Route::get('users/reservation', [DashboardPartenaireController::class, 'getReservationsWithPromoCode'])
-                ->name('portefeuille.user.reservationpartenaire');
+                                ->name('portefeuille.user.reservationpartenaire')
+                          ->middleware('role_or_permission:superAdmin|partenaire');
 
       });
 
@@ -1464,24 +1536,24 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('site')->group(function () {
         Route::get('/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatistics'])
             ->name('site.getSiteVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|Managesite.getSiteVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/date/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatisticsDate'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getSiteVisitStatisticsDate');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/current_month/visit_statistics', [UserVisiteSiteController::class, 'getCurrentMonthVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getCurrentMonthVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/current_year/visit_statistics', [UserVisiteSiteController::class, 'getCurrentYearVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getCurrentYearVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
 
         Route::get('/yearly/visit_statistics', [UserVisiteSiteController::class, 'getYearlyVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|Managesite.getYearlyVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|admin');
     });
 
     Route::get('logement/admin/statistique', [AdminHousingController::class, 'getAdminStatistics'])
         ->name('logement.getAdminStatistics')
-        ->middleware('role_or_permission:Admin|superAdmin|Managelogement.getAdminStatistics');
+        ->middleware('role_or_permission:Admin|superAdmin|admin');
 
 
 });
@@ -1530,23 +1602,23 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('logement')->group(function () {
         Route::get('{housing_id}/date/visit_statistics', [UserVisiteHousingController::class, 'getVisitStatisticsDate'])
             ->name('logement.getVisitStatisticsDate')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate|admin');
 
         Route::get('{housing_id}/current_month/visit_statistics', [UserVisiteHousingController::class, 'getCurrentMonthVisitStatistics'])
             ->name('logement.getCurrentMonthVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics|admin');
 
         Route::get('{housing_id}/current_year/visit_statistics', [UserVisiteHousingController::class, 'getCurrentYearVisitStatistics'])
             ->name('logement.getCurrentYearVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics|admin');
 
         Route::get('{housing_id}/yearly/visit_statistics', [UserVisiteHousingController::class, 'getYearlyVisitStatistics'])
             ->name('logement.getYearlyVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics|admin');
 
         Route::get('/{housingId}/visit_statistics', [UserVisiteHousingController::class, 'getHousingVisitStatistics'])
             ->name('logement.getHousingVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics|admin');
     });
 
 

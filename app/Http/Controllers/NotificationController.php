@@ -46,12 +46,14 @@ class NotificationController extends Controller
  *     path="/api/notifications/store",
  *     summary="Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
  *     tags={"Notification"},
+ * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             required={"user_id", "name"},
  *             @OA\Property(property="user_id", type="integer", example="1", description="ID de l'utilisateur"),
- *             @OA\Property(property="name", type="string", example="Notification Example", description="Nom de la notification")
+ *  @OA\Property(property="object", type="string", example="objet", description="Nom de la notification"),
+ *             @OA\Property(property="name", type="string", example="Notification Example", description="Nom de la notification"),
  *         )
  *     ),
  *     @OA\Response(
@@ -69,6 +71,20 @@ class NotificationController extends Controller
  *     )
  * )
  */
+
+ public function storeNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required',
+            'name' => 'required',
+            'object' => 'required',
+        ]);
+
+        $this->store(User::whereId($request->user_id)->first()->email,$request->name,$request->object,2);
+
+        $name = User::find($request->user_id)->firstname;
+        return (new ServiceController())->apiResponse(200, [],"Notification envoyée à $name avec succès ");
+    }
 
 
     public function store($email,$name,$object,$is_send_by_mail=0)

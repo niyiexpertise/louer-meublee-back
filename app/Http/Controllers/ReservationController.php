@@ -630,7 +630,7 @@ public function storeReservationWithPayment(Request $request)
             'is_rejected_hote'=>1,
             'motif_rejet_hote'=>$request->motif_rejet_hote
           ])){
-           
+
             $portfeuille =Portfeuille::where('user_id',$reservation->user_id)->first();
             $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->valeur_payee]);
             $transaction = new portfeuille_transaction();
@@ -645,7 +645,6 @@ public function storeReservationWithPayment(Request $request)
              $this->initialisePortefeuilleTransaction($transaction->id);
 
           }
-         
 
           $mail = [
             "title" => "Rejet de votre réservation",

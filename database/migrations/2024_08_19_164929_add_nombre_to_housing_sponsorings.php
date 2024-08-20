@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('housing_sponsorings', function (Blueprint $table) {
-            $table->boolean('is_rejected')->default(false)->nullable();
-            $table->text('motif')->nullable();
+            $table->integer('nombre')->nullable();
         });
     }
 

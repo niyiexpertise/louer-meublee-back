@@ -11,19 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('housing_sponsorings', function (Blueprint $table) {
-            $table->boolean('is_rejected')->default(false)->nullable();
-            $table->text('motif')->nullable();
+        Schema::table('portfeuille_transactions', function (Blueprint $table) {
+            $table->foreignId('housing_sponsoring_id')
+            ->nullable()
+            ->constrained('housing_sponsorings')
+            ->onDelete('cascade');
         });
     }
+    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('housing_sponsorings', function (Blueprint $table) {
-            //
-        });
+        //
     }
 };

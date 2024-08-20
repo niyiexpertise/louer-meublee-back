@@ -12,7 +12,7 @@ class SponsoringController extends Controller
      * @OA\Get(
      *     path="/api/sponsoring/indexAccueil",
      *     summary="Liste des tarifs de sponsoring actifs",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -43,7 +43,7 @@ class SponsoringController extends Controller
      * @OA\Get(
      *     path="/api/sponsoring/indexAdmin",
      *     summary="Liste complète des tarifs de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -71,12 +71,75 @@ class SponsoringController extends Controller
                 }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/sponsoring/indexActifAdmin",
+     *     summary="Liste complète des tarifs de sponsoring actifs",
+     *     tags={"Tarif Sponsoring"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des tarifs de sponsoring actifs.",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
+
+    public function indexActifAdmin()
+    {
+        try {
+            $sponsoringActif = Sponsoring::where('is_actif', true)->where('is_delete', false)->get();
+            return (new ServiceController())->apiResponse(200, $sponsoringActif, "Liste des tarifs de sponsoring actifs");
+
+        } catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/sponsoring/indexInactifAdmin",
+     *     summary="Liste complète des tarifs de sponsoring inactifs",
+     *     tags={"Tarif Sponsoring"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des tarifs de sponsoring inactifs.",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur."
+     *     )
+     * )
+     */
+
+    public function indexInactifAdmin()
+    {
+        try {
+            $sponsoringInactif = Sponsoring::where('is_actif', false)->where('is_delete', false)->get();
+            return (new ServiceController())->apiResponse(200, $sponsoringInactif, "Liste des tarifs de sponsoring inactifs");
+        } catch(Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
 
      /**
      * @OA\Post(
      *     path="/api/sponsoring/store",
      *     summary="Créer un nouveau tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -135,7 +198,7 @@ class SponsoringController extends Controller
                     $sponsoring->description = $request->description;
                     $sponsoring->save();
                    return (new ServiceController())->apiResponse(200,[],'Tarif de sponsoring créé avec succès');
-                
+
                 } catch(Exception $e) {
                      return (new ServiceController())->apiResponse(500,[],$e->getMessage());
                 }
@@ -145,7 +208,7 @@ class SponsoringController extends Controller
      * @OA\Post(
      *     path="/api/sponsoring/update/{id}",
      *     summary="Mettre à jour un tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -178,7 +241,7 @@ class SponsoringController extends Controller
     public function update(Request $request,$id)
     {
         try {
-           
+
             $sponsoring = Sponsoring::find($id);
 
             if(!$sponsoring){
@@ -221,7 +284,7 @@ class SponsoringController extends Controller
      * @OA\Get(
      *     path="/api/sponsoring/show/{id}",
      *     summary="Afficher un tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -264,7 +327,7 @@ class SponsoringController extends Controller
      * @OA\Post(
      *     path="/api/sponsoring/destroy/{id}",
      *     summary="Supprimer un tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -313,7 +376,7 @@ class SponsoringController extends Controller
      * @OA\Post(
      *     path="/api/sponsoring/active/{id}",
      *     summary="Activer un tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -362,7 +425,7 @@ class SponsoringController extends Controller
      * @OA\Post(
      *     path="/api/sponsoring/desactive/{id}",
      *     summary="Désactiver un tarif de sponsoring",
-     *     tags={"Sponsoring"},
+     *     tags={"Tarif Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -404,5 +467,5 @@ class SponsoringController extends Controller
         }catch(Exception $e) {
             return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
-    } 
+    }
 }

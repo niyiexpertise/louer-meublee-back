@@ -1146,6 +1146,8 @@ public function ListeDesLogementsAcceuil(Request $request)
          'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
          'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
          'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
+         "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average'] ?? 'non renseigné',
+
 
          'photos_logement' => $listing->photos->map(function ($photo) {
             if($photo->is_verified){

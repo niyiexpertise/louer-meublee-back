@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('date_debut')->nullable();
             $table->date('date_fin')->nullable();
             $table->boolean('is_deleted')->default(false)->nullable();
-            $table->boolean('is_actif')->default(true)->nullable();
+            $table->boolean('is_actif')->default(false)->nullable();
             $table->timestamps();
         });
     }

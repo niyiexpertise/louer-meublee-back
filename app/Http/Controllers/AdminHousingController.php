@@ -573,6 +573,10 @@ if (!$housingCharges->isEmpty()) {
          if (!$housing) {
              return response()->json(['message' => 'L\'ID du logement spécifié n\'existe pas'], 404);
          }
+
+         if ($housing->is_finished == 0) {
+            return response()->json(['message' => 'Repends toi mon ami,tu gagnes quoi en faisant ça. Ne sais tu pas que le processus d\'ajout de ce logement n\'est pas encore finalisé'], 404);
+        }
          (new PromotionController())->actionRepetitif($housing->id);
  
          $housing->status = 'verified';
@@ -658,6 +662,9 @@ if (!$housingCharges->isEmpty()) {
          foreach ($housingIds as $id) {
             (new PromotionController())->actionRepetitif($id);
              $housing = Housing::findOrFail($id);
+             if ($housing->is_finished == 0) {
+                return response()->json(['message' => 'Repends toi mon ami,tu gagnes quoi en faisant ça. Ne sais tu pas que le processus d\'ajout de ce logement n\'est pas encore finalisé'], 404);
+            }
              $housing->status = 'verified';
              $housing->save();
  

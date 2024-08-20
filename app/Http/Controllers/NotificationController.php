@@ -43,7 +43,7 @@ class NotificationController extends Controller
 
 /**
  * @OA\Post(
- *     path="/api/notifications/store/{id}",
+ *     path="/api/notifications/store",
  *     summary="Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
  *     tags={"Notification"},
  * security={{"bearerAuth": {}}},
@@ -80,15 +80,10 @@ class NotificationController extends Controller
             'object' => 'required',
         ]);
 
-        if(!User::find($request->user_id)){
-            return (new ServiceController())->apiResponse(200, [],'User not found');
-        }
-            $notification = new Notification();
-            $notification->user_id = $request->user_id;
-            $notification->name = $request->name;
-            $notification->object = $request->object;
-            $notification->save();
-            return (new ServiceController())->apiResponse(404, [],'Notification créé');
+        $this->store(User::whereId($request->user_id)->first()->email,$request->name,$request->object,2);
+
+        $name = User::find($request->user_id)->firstname;
+        return (new ServiceController())->apiResponse(200, [],"Notification envoyée à $name avec succès ");
     }
 
 

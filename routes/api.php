@@ -793,7 +793,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::group(['middleware' => ['role:superAdmin|admin']], function () {
       Route::prefix('notifications')->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
-       Route::post('/store/{id}', [NotificationController::class, 'storeNotification']);
+       Route::post('/store', [NotificationController::class, 'storeNotification']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
        Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);
        Route::post('/notifyUsers/{mode}', [NotificationController::class, 'notifyUsers']);
@@ -1320,15 +1320,18 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('sponsoring')->group(function() {
             Route::get('indexAccueil', [SponsoringController::class, 'indexAccueil'])
                 ->name('sponsoring.indexAccueil') ->middleware('role_or_permission:admin|superAdmin|hote');
-                Route::get('indexAdmin', [SponsoringController::class, 'indexAdmin'])
+            Route::get('indexAdmin', [SponsoringController::class, 'indexAdmin'])
                 ->name('sponsoring.indexAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexAdmin');
+            Route::get('indexActifAdmin', [SponsoringController::class, 'indexActifAdmin'])
+                ->name('sponsoring.indexActifAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexActifAdmin');
+            Route::get('indexInactifAdmin', [SponsoringController::class, 'indexInactifAdmin'])
+                ->name('sponsoring.indexInactifAdmin') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.indexInactifAdmin');
             Route::post('store', [SponsoringController::class, 'store'])
-                ->name('sponsoring.store')
-                ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.store');
+                ->name('sponsoring.store')->middleware('role_or_permission:admin|superAdmin|Managesponsoring.store');
             Route::post('update/{id}', [SponsoringController::class, 'update'])
                 ->name('sponsoring.update')
                 ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.update');
-                Route::get('show/{id}', [SponsoringController::class, 'show'])
+            Route::get('show/{id}', [SponsoringController::class, 'show'])
                 ->name('sponsoring.show')
                 ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.show');
             Route::post('destroy/{id}', [SponsoringController::class, 'destroy'])
@@ -1342,13 +1345,42 @@ Route::prefix('portefeuille')->group(function () {
                 ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.desactive');
         });
 
-           //Gestion des housingsponsoring (demande de sponsoring)
+           //Gestion des housingsponsoring (demande de sponsoring) côté hôte
            Route::prefix('housingsponsoring')->group(function() {
             Route::post('store', [HousingSponsoringController::class, 'store'])
                 ->name('housingsponsoring.store')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
-                Route::get('hoteSponsoringRequest', [HousingSponsoringController::class, 'hoteSponsoringRequest'])
-                ->name('sponsoring.hoteSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSponsoringRequest');
+                Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
+                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteActiveSponsoringRequest');
+                Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
+                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteRejectSponsoringRequest');
+                Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
+                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hotePendingSponsoringRequest');
+        });
+
+
+        //Gestion des housingsponsoring (demande de sponsoring) côté administrateur
+        Route::prefix('housingsponsoring')->group(function() {
+            Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
+                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteActiveSponsoringRequest');
+            Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
+                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteRejectSponsoringRequest');
+            Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
+                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hotePendingSponsoringRequest');
+            Route::get('demandeSponsoringNonvalidee', [HousingSponsoringController::class, 'demandeSponsoringNonvalidee'])
+                ->name('sponsoring.demandeSponsoringNonvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringNonvalidee');
+            Route::get('demandeSponsoringvalidee', [HousingSponsoringController::class, 'demandeSponsoringvalidee'])
+                ->name('sponsoring.demandeSponsoringvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringvalidee');
+            Route::post('rejectSponsoringRequest/{id}', [HousingSponsoringController::class, 'rejectSponsoringRequest'])
+                ->name('rejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.rejectSponsoringRequest');
+            Route::get('demandeSponsoringrejetee', [HousingSponsoringController::class, 'demandeSponsoringrejetee'])
+                ->name('demandeSponsoringrejetee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringrejetee');
+            Route::get('demandeSponsoringsupprimee', [HousingSponsoringController::class, 'demandeSponsoringsupprimee'])
+                ->name('demandeSponsoringsupprimee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringsupprimee');
+            Route::post('validSponsoringRequest/{id}', [HousingSponsoringController::class, 'validSponsoringRequest'])
+                ->name('validSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.validSponsoringRequest');
+            Route::post('invalidSponsoringRequest/{id}', [HousingSponsoringController::class, 'invalidSponsoringRequest'])
+                ->name('invalidSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.invalidSponsoringRequest');
         });
 
 

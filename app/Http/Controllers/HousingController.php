@@ -1141,6 +1141,7 @@ public function ListeDesLogementsAcceuil(Request $request)
          'is_accept_alcool' => $listing->is_accept_alccol,
          'is_deleted' => $listing->is_deleted,
          'is_blocked' => $listing->is_blocked,
+         'created_at' => $listing->created_at,
          'is_accept_anulation'=> $listing->is_accept_anulation,
          'delai_partiel_remboursement'=> $listing->delai_partiel_remboursement,
          'delai_integral_remboursement'=> $listing->delai_integral_remboursement,

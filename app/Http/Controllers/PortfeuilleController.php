@@ -31,6 +31,7 @@ use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
+use Exception;
 use Illuminate\Validation\Rule;
 class PortfeuilleController extends Controller
 {

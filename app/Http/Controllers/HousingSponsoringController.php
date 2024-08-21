@@ -25,7 +25,7 @@ class HousingSponsoringController extends Controller
  *     path="/api/housingsponsoring/store",
  *     summary="Créer une demande de sponsoring",
  *     description="Permet à un utilisateur de créer une demande de sponsoring pour un logement spécifique.",
- *     tags={"Housing sponsoring"},
+ *     tags={"Hote Housing Sponsoring"},
  * security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -36,8 +36,8 @@ class HousingSponsoringController extends Controller
  *             @OA\Property(property="date_debut", type="string", format="date", example="2024-09-01", description="Date de début du sponsoring au format YYYY-MM-DD."),
  *              @OA\Property(property="nombre", type="integer", example=1, description="nombre de fois que vous voulez bénéficier du tarif."),
  *              @OA\Property(property="payment_method", type="string", example="portfeuille", description="nombre de fois que vous voulez bénéficier du tarif."),
- *               @OA\Property(property="id_transaction", type="string", example="portfeuille", description="id de la transaction."),
- *               @OA\Property(property="statut_paiement", type="string", example="portfeuille", description="Statut du paiement."),
+ *               @OA\Property(property="id_transaction", type="string", example="txjshg4sp", description="id de la transaction."),
+ *               @OA\Property(property="statut_paiement", type="string", example=1, description="Statut du paiement."),
  *               @OA\Property(property="montant", type="integer", example=5, description="montant."),
  *         )
  *     ),
@@ -124,13 +124,7 @@ class HousingSponsoringController extends Controller
                 }
             }
 
-            if(!is_numeric($request->montant)){
-                return (new ServiceController())->apiResponse(404, [], 'Le montant doit être un entier');
-            }
-
-            if($request->montant<=0){
-                return (new ServiceController())->apiResponse(404, [], 'Le montant doit être supérieur à 0 ');
-            }
+           
 
             $dateDebut = Carbon::parse($request->date_debut);
 
@@ -140,10 +134,11 @@ class HousingSponsoringController extends Controller
 
             $duree= $nombre * $sponsoring->duree;
             $prix_tarif = $nombre * $sponsoring->prix;
+            $montant = $request->montant??$prix_tarif;
 
             $dateFin = $dateDebut->copy()->addDays($duree);
 
-            $exists = HousingSponsoring::where('housing_id',$request->housing_id)->where('sponsoring_id',$request->sponsoring_id)->get();
+            $exists = HousingSponsoring::where('housing_id',$request->housing_id)->where('sponsoring_id',$request->sponsoring_id)->where('is_deleted',false)->where('is_rejected',false)->get();
 
 
             foreach($exists as $exist){
@@ -161,7 +156,7 @@ class HousingSponsoringController extends Controller
                 $userPostefeuille = Portfeuille::where('user_id',Auth::user()->id)->first();
 
                 if($userPostefeuille->solde < $prix_tarif){
-                    return (new ServiceController())->apiResponse(404, [], 'Solde insuffisant. Veuillez recharger votre portefeuille.');
+                    return (new ServiceController())->apiResponse(404, [], "Solde insuffisant. Veuillez recharger votre portefeuille. Vous devez disposer de $prix_tarif XOF/FCFA ");
                 };
 
             }else{
@@ -170,8 +165,21 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], 'Veuillez renseigner le montant du paiement');
                 }
 
+                if(!is_numeric($request->montant)){
+                    return (new ServiceController())->apiResponse(404, [], 'Le montant doit être un entier');
+                }
+    
+                if($request->montant<=0){
+                    return (new ServiceController())->apiResponse(404, [], 'Le montant doit être supérieur à 0 ');
+                }
+
                 if($request->montant < $prix_tarif){
-                    return (new ServiceController())->apiResponse(404, [], "Le montant est insuffisant. Vous devez payer $prix_tarif XOF");
+                    return (new ServiceController())->apiResponse(404, [], "Le montant est insuffisant. Vous devez payer $prix_tarif XOF/FCFA");
+                }
+
+                $existTransaction = Payement::where('id_transaction')->exists();
+                if ($existTransaction) {
+                    return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction exise déjà');
                 }
 
             }
@@ -181,12 +189,15 @@ class HousingSponsoringController extends Controller
             $housingSponsoring->sponsoring_id = $request->sponsoring_id;
             $housingSponsoring->date_debut = $dateDebut;
             $housingSponsoring->date_fin = $dateFin;
-            $housingSponsoring->nombre = $request->sponsoring_id;
+            $housingSponsoring->nombre = $nombre;
+            $housingSponsoring->duree = $sponsoring->duree;
+            $housingSponsoring->prix = $sponsoring->prix;
+            $housingSponsoring->description = $sponsoring->description;
             $housingSponsoring->is_actif = false;
             $housingSponsoring->save();
 
             $payement = new Payement();
-            $payement->amount = $request->montant;
+            $payement->amount =  $montant;
             $payement->payment_method = $request->payment_method;
             $payement->id_transaction = $request->id_transaction;
             $payement->statut = $request->statut_paiement;
@@ -198,12 +209,11 @@ class HousingSponsoringController extends Controller
 
             if($request->payment_method =='portfeuille'){
                 $portefeuille = Portfeuille::where('user_id', Auth::user()->id)->first();
-                $portefeuille->solde -= $request->montant;
-
+                $portefeuille->solde -=  $prix_tarif;
                 $portefeuilleTransaction = new Portfeuille_transaction();
                 $portefeuilleTransaction->debit = true;
                 $portefeuilleTransaction->credit = false;
-                $portefeuilleTransaction->amount = $request->montant;
+                $portefeuilleTransaction->amount =  $prix_tarif;
                 $portefeuilleTransaction->motif = "Demande de sponsoring effectuée avec portefeuille";
                 $portefeuilleTransaction->housing_sponsoring_id = $housingSponsoring->id;
                 $portefeuilleTransaction->payment_method = $request->payment_method;
@@ -213,6 +223,17 @@ class HousingSponsoringController extends Controller
                 $portefeuilleTransaction->save();
                 $portefeuille->save();
 
+                (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+            }else{
+                $portefeuilleTransaction = new Portfeuille_transaction();
+                $portefeuilleTransaction->debit = false;
+                $portefeuilleTransaction->credit = true;
+                $portefeuilleTransaction->amount =  $montant;
+                $portefeuilleTransaction->motif = "Demande de sponsoring effectuée avec portefeuille";
+                $portefeuilleTransaction->housing_sponsoring_id = $housingSponsoring->id;
+                $portefeuilleTransaction->payment_method = $request->payment_method;
+                $portefeuilleTransaction->id_transaction = $request->id_transaction;
+                $portefeuilleTransaction->save();
                 (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
             }
 
@@ -239,9 +260,10 @@ class HousingSponsoringController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/housingsponsoring/hoteActiveSponsoringRequest",
-     *     summary="Obtenir les demandes de sponsoring actif d'un hôte connecté",
-     *     tags={"Housing sponsoring"},
+     *     path="/api/housingsponsoring/hoteSponsoringRequest",
+     *     summary="Obtenir les demandes de sponsoring d'un hôte connecté",
+     *     tags={"Hote Housing Sponsoring"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Liste des demandes de sponsoring de l'hôte connecté",
@@ -269,92 +291,31 @@ class HousingSponsoringController extends Controller
      *
      * )
      */
-    public function hoteActiveSponsoringRequest()
+    public function hoteSponsoringRequest()
     {
         try {
 
             $housingSponsorings = HousingSponsoring::where('is_deleted',false)
-            ->where('is_actif',true)
-            ->where('is_rejected',false)
             ->get();
             $data = [];
 
             foreach ($housingSponsorings as $housingSponsoring) {
                 if(Housing::whereId($housingSponsoring->housing_id)->first()->user_id == Auth::user()->id){
                     $data[] = [
-                        'duree' => Sponsoring::find($housingSponsoring->sponsoring_id)->duree,
-                        'prix' => Sponsoring::find($housingSponsoring->sponsoring_id)->prix,
-                        'description' => Sponsoring::find($housingSponsoring->sponsoring_id)->description,
-                        'Jour de la demande' => Sponsoring::find($housingSponsoring->sponsoring_id)->created_at,
-                        'date de commencement du sponsoring'=>  $housingSponsoring->date_debut,
-                        'date de fin du sponsoring' =>  $housingSponsoring->date_fin
+                        'id' => $housingSponsoring->id,
+                        'duree' => $housingSponsoring->duree,
+                        'prix_unitaire' => $housingSponsoring->prix,
+                        'prix_total' => $housingSponsoring->nombre * $housingSponsoring->prix,
+                        'description' => $housingSponsoring->description,
+                        'nombre_de_fois' =>  $housingSponsoring->nombre,
+                        'Jour_de_la_demande' => $housingSponsoring->created_at,
+                        'date_de_commencement_du_sponsoring'=>  $housingSponsoring->date_debut,
+                        'date de fin du sponsoring' =>  $housingSponsoring->date_fin,
                     ];
                 }
             }
 
-            return (new ServiceController())->apiResponse(200, $data, 'Liste des demandes de sponsoring actif d\'un hôte connecté');
-        } catch (Exception $e) {
-            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-        }
-    }
-
-     /**
-     * @OA\Get(
-     *     path="/api/housingsponsoring/hoteRejectSponsoringRequest",
-     *     summary="Obtenir les demandes de sponsoring d'un hôte connecté rejeté par un administrateur",
-     *     tags={"Housing sponsoring"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des demandes de sponsoring de l'hôte connecté",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="duree", type="integer", example=30),
-     *                 @OA\Property(property="prix", type="number", format="float", example=100.50),
-     *                 @OA\Property(property="description", type="string", example="Description du sponsoring"),
-     *                 @OA\Property(property="is_deleted", type="boolean", example=false),
-     *                 @OA\Property(property="is_actif", type="boolean", example=true),
-     *             ),
-     *         ),
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Erreur de traitement")
-     *         ),
-     *     ),
-     *     security={
-     *         {"bearerAuth": {}}
-     *     }
-     * )
-     */
-    public function hoteRejectSponsoringRequest()
-    {
-        try {
-
-            $housingSponsorings = HousingSponsoring::where('is_deleted',false)
-            ->where('is_actif',false)
-            ->where('is_rejected',true)
-            ->get();
-            $data = [];
-
-            foreach ($housingSponsorings as $housingSponsoring) {
-                if(Housing::whereId($housingSponsoring->housing_id)->first()->user_id == Auth::user()->id){
-                    $data[] = [
-                        'duree' => Sponsoring::find($housingSponsoring->sponsoring_id)->duree,
-                        'prix' => Sponsoring::find($housingSponsoring->sponsoring_id)->prix,
-                        'description' => Sponsoring::find($housingSponsoring->sponsoring_id)->description,
-                        'Jour de la demande' => Sponsoring::find($housingSponsoring->sponsoring_id)->created_at,
-                        'date de commencement du sponsoring'=>  $housingSponsoring->date_debut,
-                        'date de fin du sponsoring' =>  $housingSponsoring->date_fin
-                    ];
-                }
-            }
-
-            return (new ServiceController())->apiResponse(200, $data, 'Liste des demandes de sponsoring rejetéesd\'un hôte connecté');
+            return (new ServiceController())->apiResponse(200, $data, 'Liste des demandes de sponsoring d\'un hôte connecté');
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
@@ -362,63 +323,79 @@ class HousingSponsoringController extends Controller
 
 
     /**
-     * @OA\Get(
-     *     path="/api/housingsponsoring/hotePendingSponsoringRequest",
-     *     summary="Obtenir les demandes de sponsoring en cours de validation d'un hôte connecté",
-     *     tags={"Housing sponsoring"},
-     * 
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des demandes de sponsoring de l'hôte connecté",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="duree", type="integer", example=30),
-     *                 @OA\Property(property="prix", type="number", format="float", example=100.50),
-     *                 @OA\Property(property="description", type="string", example="Description du sponsoring"),
-     *                 @OA\Property(property="is_deleted", type="boolean", example=false),
-     *                 @OA\Property(property="is_actif", type="boolean", example=true),
-     *             ),
-     *         ),
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Erreur de traitement")
-     *         ),
-     *     ),
-     *     security={
-     *         {"bearerAuth": {}}
-     *     }
-     * )
-     */
-    public function hotePendingSponsoringRequest()
-    {
+ * @OA\Post(
+ *      path="/api/housingsponsoring/hoteSupprimeDemande/{sponsorinRequestId}",
+ *     operationId="hoteSupprimeDemande",
+ *     tags={"Hote Housing Sponsoring"},
+ *     summary="Supprimer une demande de sponsoring par un hôte",
+ *     description="Permet à un hôte de supprimer une demande de sponsoring qui n'est pas encore active.",
+ *     @OA\Parameter(
+ *         name="sponsorinRequestId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la demande de sponsoring",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Demande de sponsoring supprimée avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="string"), example={}),
+ *             @OA\Property(property="message", type="string", example="Demande de sponsoring supprimée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Demande de sponsoring introuvable ou déjà active",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="string"), example={}),
+ *             @OA\Property(property="message", type="string", example="Demande de sponsoring introuvable")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="string"), example={}),
+ *             @OA\Property(property="message", type="string", example="Erreur serveur")
+ *         )
+ *     ),
+ *     security={
+ *         {"bearerAuth": {}}
+ *     }
+ * )
+ */
+
+    public function hoteSupprimeDemande($sponsorinRequestId){
         try {
 
-            $housingSponsorings = HousingSponsoring::where('is_deleted',false)
-            ->where('is_actif',false)
-            ->where('is_rejected',false)
-            ->get();
-            $data = [];
-
-            foreach ($housingSponsorings as $housingSponsoring) {
-                if(Housing::whereId($housingSponsoring->housing_id)->first()->user_id == Auth::user()->id){
-                    $data[] = [
-                        'duree' => Sponsoring::find($housingSponsoring->sponsoring_id)->duree,
-                        'prix' => Sponsoring::find($housingSponsoring->sponsoring_id)->prix,
-                        'description' => Sponsoring::find($housingSponsoring->sponsoring_id)->description,
-                        'Jour de la demande' => Sponsoring::find($housingSponsoring->sponsoring_id)->created_at,
-                        'date de commencement du sponsoring'=>  $housingSponsoring->date_debut,
-                        'date de fin du sponsoring' =>  $housingSponsoring->date_fin
-                    ];
+            $housingSponsoring = HousingSponsoring::find($sponsorinRequestId);
+                if (!$housingSponsoring) {
+                    return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring introuvable');
                 }
-            }
 
-            return (new ServiceController())->apiResponse(200, $data, 'Liste des demandes de sponsoring rejetéesd\'un hôte connecté');
+                if ($housingSponsoring->is_actif == true) {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas supprimé une demande de sponsoring déjà active');
+                }
+
+                if ($housingSponsoring->is_deleted == true) {
+                    return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring déjà supprimée');
+                }
+                $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
+
+                if ($hote->id != Auth::user()->id) {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas supprimé une demande de sponsoring qui ne vous appartient pas');
+                }
+
+                $housingSponsoring->is_deleted = true;
+                $housingSponsoring->save();
+
+            return (new ServiceController())->apiResponse(200,[],'Demande de sponsoring supprimé avec succès');
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
@@ -428,7 +405,7 @@ class HousingSponsoringController extends Controller
      * @OA\Get(
      *     path="/api/housingsponsoring/demandeSponsoringNonvalidee",
      *     summary="Obtenir les demandes de sponsoring actif d'un hôte connecté",
-     *     tags={"Admin Housing sponsoring"},
+     *     tags={"Admin Housing Sponsoring"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -463,8 +440,17 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_actif',false)
             ->where('is_deleted',false)
             ->where('is_rejected',false)
-            ->with(['sponsoring','housing'])
+            // ->with(['sponsoring','housing'])
             ->get();
+
+            foreach($sponsoringrequests as $sponsoringrequest){
+                $sponsoringrequest->proprietaire_id = Housing::find($sponsoringrequest->housing_id)->user->id??null;
+                $sponsoringrequest->proprietaire_nom = Housing::find($sponsoringrequest->housing_id)->user->firstname??null;
+                $sponsoringrequest->proprietaire_prenom = Housing::find($sponsoringrequest->housing_id)->user->lastname??null;
+                $sponsoringrequest->proprietaire_email = Housing::find($sponsoringrequest->housing_id)->user->email??null;
+                $sponsoringrequest->detail_tarif = Sponsoring::find($sponsoringrequest->sponsoring_id)??null;
+            }
+
             return (new ServiceController())->apiResponse(200, $sponsoringrequests, 'Liste des demandes de sponsoring d\'un hôte connecté');
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -475,7 +461,7 @@ class HousingSponsoringController extends Controller
     /**
      * @OA\Get(
      *     path="/api/housingsponsoring/demandeSponsoringvalidee",
-     *     tags={"Admin Housing sponsoring"},
+     *     tags={"Admin Housing Sponsoring"},
      *     summary="Liste des demandes de sponsoring validées",
      *     description="Retourne la liste des demandes de sponsoring qui ont été validées.",
      *     operationId="demandeSponsoringvalidee",
@@ -517,8 +503,8 @@ class HousingSponsoringController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/housingsponsoring/demandeSponsoringsuprimee",
-     *     tags={"Admin Housing sponsoring"},
+     *     path="/api/housingsponsoring/demandeSponsoringrejetee",
+     *     tags={"Admin Housing Sponsoring"},
      *     summary="Liste des demandes de sponsoring rejetées",
      *     description="Retourne la liste des demandes de sponsoring qui ont été rejetées.",
      *     operationId="demandeSponsoringrejetee",
@@ -560,7 +546,7 @@ class HousingSponsoringController extends Controller
     /**
      * @OA\Get(
      *     path="/api/housingsponsoring/demandeSponsoringsupprimee",
-     *     tags={"Admin Housing sponsoring"},
+     *     tags={"Admin Housing Sponsoring"},
      *     summary="Liste des demandes de sponsoring supprimées",
      *     description="Retourne la liste des demandes de sponsoring qui ont été supprimées.",
      *     operationId="demandeSponsoringsupprimee",
@@ -603,7 +589,7 @@ class HousingSponsoringController extends Controller
  * @OA\Post(
  *     path="/api/housingsponsoring/rejectSponsoringRequest/{sponsorinRequestId}",
  *     summary="Rejeter une demande de sponsoring",
- *     tags={"Admin Housing sponsoring"},
+ *     tags={"Admin Housing Sponsoring"},
  *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="sponsorinRequestId",
@@ -664,15 +650,42 @@ class HousingSponsoringController extends Controller
                 $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
                 $sponsoring = Sponsoring::find($housingSponsoring->sponsoring_id);
                 $prix_tarif = $housingSponsoring->nombre * $sponsoring->prix;
+                $commission_amount = $prix_tarif ;
+                $remaining_amount = 0;
+
+                $previous_transactions = Portfeuille_transaction::all();
+                $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+                $solde_commission = $previous_transactions->sum('montant_commission');
+                $solde_restant = $previous_transactions->sum('montant_restant');
+                $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
+                $ancien_solde_commission_partenaire = 0;
+
+                $new_solde_commission = $solde_commission + $commission_amount;
+                $new_solde_restant = $solde_restant + $remaining_amount;
+                $new_solde_total = $solde_total + $prix_tarif;
+
 
                 $portfeuille =Portfeuille::where('user_id',$hote->id)->first();
-                $portfeuille->where('user_id',$hote->id)->update(['solde'=> $portfeuille->solde + $prix_tarif]);
+                $portfeuille->update(['solde'=> $portfeuille->solde + $prix_tarif]);
                 $transaction = new portfeuille_transaction();
                 $transaction->portfeuille_id = $portfeuille->id;
                 $transaction->amount = $prix_tarif;
+                $transaction->montant_restant = $remaining_amount;
                 $transaction->debit = 0;
                 $transaction->credit =1;
+                $transaction->valeur_commission = 0;
+                $transaction->montant_commission = 0;
+                $transaction->valeur_commission_admin=0;
+                $transaction->montant_commission_admin= 0;
+                $transaction->montant_commission_partenaire =0;
+                $transaction->valeur_commission_partenaire=0;
+                $transaction->solde_total = $new_solde_total;
+                $transaction->solde_commission = $new_solde_commission;
+                $transaction->solde_restant = $new_solde_restant;
+                $transaction->new_solde_admin=$solde_commission_admin;
+                $transaction->solde_commission_partenaire=$ancien_solde_commission_partenaire;
                 $transaction->housing_sponsoring_id = $housingSponsoring->id;
+                $transaction->id_transaction = "0";
                 $transaction->payment_method = "portfeuille";
                 $transaction->motif = "Remboursement suite à un rejet de la demande par un administateur";
                 $transaction->save();
@@ -685,7 +698,7 @@ class HousingSponsoringController extends Controller
 
                 $hotemail = [
                     'title' => "Rejet de votre demande de sponsoring",
-                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde $portfeuille->solde "
+                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde". Portfeuille::where('user_id',$hote->id)->first()->solde 
                 ];
 
             dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
@@ -702,7 +715,7 @@ class HousingSponsoringController extends Controller
      * @OA\Post(
      *     path="/api/housingsponsoring/invalidSponsoringRequest/{sponsorinRequestId}",
      *     summary="Désactiver une demande de sponsoring",
-     *     tags={"Admin Housing sponsoring"},
+     *     tags={"Admin Housing Sponsoring"},
      *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="sponsorinRequestId",
@@ -714,7 +727,8 @@ class HousingSponsoringController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="motif", type="string", example="Le motif du rejet")
+     *             @OA\Property(property="motif", type="string", example="Le motif du rejet"),
+     *             @OA\Property(property="montant", type="string", example=4)
      *         )
      *     ),
      *     @OA\Response(
@@ -756,7 +770,7 @@ class HousingSponsoringController extends Controller
                 }
 
                 if($housingSponsoring->is_actif == false){
-                    return (new ServiceController())->apiResponse(200,[],'Cette demande a déjà été désactivé');
+                    return (new ServiceController())->apiResponse(200,[],'Cette demande doit être activée avant que vous ne la désactivée');
                 }
 
                 if(!is_numeric($request->montant)){
@@ -774,7 +788,7 @@ class HousingSponsoringController extends Controller
                 $prix_tarif = $request->montant;
 
                 $portfeuille =Portfeuille::where('user_id',$hote->id)->first();
-                $portfeuille->where('user_id',$hote->id)->update(['solde'=> $portfeuille->solde + $prix_tarif]);
+                $portfeuille->update(['solde'=> $portfeuille->solde + $prix_tarif]);
                 $transaction = new portfeuille_transaction();
                 $transaction->portfeuille_id = $portfeuille->id;
                 $transaction->amount = $prix_tarif;
@@ -796,7 +810,7 @@ class HousingSponsoringController extends Controller
 
                 $hotemail = [
                     'title' => "Rejet de votre demande de sponsoring",
-                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde $portfeuille->solde "
+                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde". Portfeuille::where('user_id',$hote->id)->first()->solde
                 ];
 
             dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
@@ -812,7 +826,7 @@ class HousingSponsoringController extends Controller
     /**
      * @OA\Post(
      *     path="/api/housingsponsoring/validSponsoringRequest/{sponsorinRequestId}",
-     *     tags={"Admin Housing sponsoring"},
+     *     tags={"Admin Housing Sponsoring"},
      *     summary="Valider une demande de sponsoring",
      *     description="Cette fonction permet de valider une demande de sponsoring en activant la demande et en envoyant un email de confirmation à l'hôte.",
      *     operationId="validSponsoringRequest",
@@ -862,16 +876,86 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring introuvable');
                 }
 
+                if ($housingSponsoring->is_actif == true) {
+                    return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring déjà actif');
+                }
+
+                $sponsoring = Sponsoring::find($housingSponsoring->sponsoring_id);
+
+                if (!$sponsoring) {
+                    return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
+                }
+
                 $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
 
                 $housingSponsoring->is_actif = true;
                 $housingSponsoring->save();
 
-                $jour_demande = Sponsoring::find($housingSponsoring->sponsoring_id)->created_at;
+                $jour_demande = Carbon::parse(Sponsoring::find($housingSponsoring->sponsoring_id)->created_at)->format('d m Y');
+                $plan = $sponsoring->description;
+                $nombre = $housingSponsoring->nombre??1;
+
+                $housing = Housing::whereId($housingSponsoring->housing_id)->first();
+                $pieces = $housing->housingCategoryFiles;
+
+                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
+
+                if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
+                }
+
+                $prix_tarif = $nombre * $sponsoring->prix;
+                $commission_amount = $prix_tarif ;
+                $remaining_amount = 0;
+
+                $previous_transactions = Portfeuille_transaction::all();
+                $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+                $solde_commission = $previous_transactions->sum('montant_commission');
+                $solde_restant = $previous_transactions->sum('montant_restant');
+                $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
+                $ancien_solde_commission_partenaire = 0;
+
+                $new_solde_commission = $solde_commission + $commission_amount;
+                $new_solde_restant = $solde_restant + $remaining_amount;$n = 1;
+
+                $transaction =new Portfeuille_transaction();
+                $transaction->debit = true;
+                $transaction->credit = false;
+                // $n = $transaction->credit == true?1:-1;
+                $transaction->amount = $prix_tarif;
+                $new_solde_total = $solde_total + ($prix_tarif * $n);
+                $transaction->valeur_commission = 100;
+                $transaction->montant_commission = $commission_amount;
+                $transaction->montant_restant = $remaining_amount;
+                $transaction->valeur_commission_admin=100;
+                $transaction->montant_commission_admin= $transaction->montant_commission;
+                $transaction->montant_commission_partenaire =0;
+                $transaction->valeur_commission_partenaire=0;
+                $transaction->solde_total = $new_solde_total;
+                $transaction->solde_commission = $new_solde_commission;
+                $transaction->solde_restant = $new_solde_restant;
+                $transaction->new_solde_admin=$solde_commission_admin+$transaction->montant_commission;
+                $transaction->solde_commission_partenaire=$ancien_solde_commission_partenaire;
+                $transaction->motif = "Validation d'une demande de sponsoring";
+                $transaction->portfeuille_id = Portfeuille::where('user_id',$hote->id)->first()->id;
+                $transaction->id_transaction = "0";
+                $transaction->payment_method = "portfeuille";
+                $transaction->housing_sponsoring_id = $sponsorinRequestId;
+                $transaction->save();
+
+
+                $description = [];
+                foreach ($pieces as $piece) {
+                    $categoryName = $piece->category->name; 
+                    $description[] = "{$piece->number} x {$categoryName}";
+                }
+
+                $piecesDescription = implode(', ', $description);
 
                 $hotemail = [
                     'title' => "Confirmation de l'activation de votre demande de sponsoring",
-                    "body" => "Félicitation !!! Votre demande de sponsoring concernant que vous avez fait le {$jour_demande} "
+                    "body" => "Félicitations ! Votre demande de sponsoring effectuée le  **{$jour_demande}** concernant le **plan** : **{$plan}**  que vous avez demandé **{$nombre}** fois pour le logement suivant, qui contient : {$piecesDescription}, a été acceptée.
+                    Nous vous remercions pour votre confiance."
                 ];
 
             dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));

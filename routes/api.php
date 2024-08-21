@@ -1351,15 +1351,14 @@ Route::prefix('portefeuille')->group(function () {
 
            //Gestion des housingsponsoring (demande de sponsoring) côté hôte
            Route::prefix('housingsponsoring')->group(function() {
-            Route::post('store', [HousingSponsoringController::class, 'store'])
+                Route::post('store', [HousingSponsoringController::class, 'store'])
                 ->name('housingsponsoring.store')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
-                Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
-                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteActiveSponsoringRequest');
-                Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
-                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteRejectSponsoringRequest');
-                Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
-                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hotePendingSponsoringRequest');
+                Route::post('hoteSupprimeDemande/{housingSponsoringId}', [HousingSponsoringController::class, 'hoteSupprimeDemande'])
+                ->name('housingsponsoring.hoteSupprimeDemande')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSupprimeDemande');
+                Route::get('hoteSponsoringRequest', [HousingSponsoringController::class, 'hoteSponsoringRequest'])
+                ->name('sponsoring.hoteSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSponsoringRequest');
         });
 
 

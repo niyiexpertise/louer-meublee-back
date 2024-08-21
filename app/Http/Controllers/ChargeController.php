@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Charge;
 use App\Models\Housing_charge;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -13,6 +14,13 @@ use Illuminate\Validation\Rule;
 
 class ChargeController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
       /**
      * @OA\Get(
      *     path="/api/charge/index",
@@ -84,13 +92,11 @@ class ChargeController extends Controller
                 'name' => 'required|unique:charges|max:255',
             ]);
             $charge = new Charge();
+            $identity_profil_url = '';
             if ($request->hasFile('icone')) {
-                $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                $identity_profil_path = $request->file('icone')->move(public_path('image/iconeCharge'), $icone_name);
-                $base_url = url('/');
-                $icone_url = $base_url . '/image/iconeCharge/' . $icone_name;
-                $charge->icone = $icone_url;
-                }
+                $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge');;
+                $charge->icone = $identity_profil_url;
+            }
             $charge->name = $request->name;
             $charge->save();
             return response()->json(['data' => 'Type de charge créé avec succès.', 'charge' => $charge], 201);
@@ -232,15 +238,11 @@ class ChargeController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+            $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeCharge'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeCharge/' . $icone_name;
-                    
-                    Charge::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge');;
+
+                    Charge::whereId($id)->update(['icone' => $identity_profil_url]);
                     return response()->json(['data' => 'icône de la charge mis à jour avec succès.'], 200);
                 } else {
                 

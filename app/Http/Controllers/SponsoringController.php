@@ -199,7 +199,7 @@ class SponsoringController extends Controller
                         return (new ServiceController())->apiResponse(404,[],'Choisissez un autre nom pour le plan car un tarif de sponsoring existe déjà avec lle même non ');
                     }
 
-                    $existDuree = Sponsoring::whereDescription($request->duree)->where('is_actif',true)->exists();
+                    $existDuree = Sponsoring::whereDuree($request->duree)->where('is_actif',true)->exists();
                     if($existDuree){
                         return (new ServiceController())->apiResponse(404,[],'Choisissez une autre duree car un tarif de sponsoring existe déjà avec la même ');
                     }

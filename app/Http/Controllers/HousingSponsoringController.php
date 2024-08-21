@@ -190,6 +190,9 @@ class HousingSponsoringController extends Controller
             $housingSponsoring->date_debut = $dateDebut;
             $housingSponsoring->date_fin = $dateFin;
             $housingSponsoring->nombre = $nombre;
+            $housingSponsoring->duree = $sponsoring->duree;
+            $housingSponsoring->prix = $sponsoring->prix;
+            $housingSponsoring->description = $sponsoring->description;
             $housingSponsoring->is_actif = false;
             $housingSponsoring->save();
 
@@ -206,12 +209,11 @@ class HousingSponsoringController extends Controller
 
             if($request->payment_method =='portfeuille'){
                 $portefeuille = Portfeuille::where('user_id', Auth::user()->id)->first();
-                $portefeuille->solde -=  $montant;
-
+                $portefeuille->solde -=  $prix_tarif;
                 $portefeuilleTransaction = new Portfeuille_transaction();
                 $portefeuilleTransaction->debit = true;
                 $portefeuilleTransaction->credit = false;
-                $portefeuilleTransaction->amount =  $montant;
+                $portefeuilleTransaction->amount =  $prix_tarif;
                 $portefeuilleTransaction->motif = "Demande de sponsoring effectuée avec portefeuille";
                 $portefeuilleTransaction->housing_sponsoring_id = $housingSponsoring->id;
                 $portefeuilleTransaction->payment_method = $request->payment_method;
@@ -221,6 +223,17 @@ class HousingSponsoringController extends Controller
                 $portefeuilleTransaction->save();
                 $portefeuille->save();
 
+                (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+            }else{
+                $portefeuilleTransaction = new Portfeuille_transaction();
+                $portefeuilleTransaction->debit = false;
+                $portefeuilleTransaction->credit = true;
+                $portefeuilleTransaction->amount =  $montant;
+                $portefeuilleTransaction->motif = "Demande de sponsoring effectuée avec portefeuille";
+                $portefeuilleTransaction->housing_sponsoring_id = $housingSponsoring->id;
+                $portefeuilleTransaction->payment_method = $request->payment_method;
+                $portefeuilleTransaction->id_transaction = $request->id_transaction;
+                $portefeuilleTransaction->save();
                 (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
             }
 
@@ -290,12 +303,12 @@ class HousingSponsoringController extends Controller
                 if(Housing::whereId($housingSponsoring->housing_id)->first()->user_id == Auth::user()->id){
                     $data[] = [
                         'id' => $housingSponsoring->id,
-                        'duree' => Sponsoring::find($housingSponsoring->sponsoring_id)->duree,
-                        'prix_unitaire' => Sponsoring::find($housingSponsoring->sponsoring_id)->prix,
-                        'prix_total' => $housingSponsoring->nombre * Sponsoring::find($housingSponsoring->sponsoring_id)->prix,
-                        'description' => Sponsoring::find($housingSponsoring->sponsoring_id)->description,
+                        'duree' => $housingSponsoring->duree,
+                        'prix_unitaire' => $housingSponsoring->prix,
+                        'prix_total' => $housingSponsoring->nombre * $housingSponsoring->prix,
+                        'description' => $housingSponsoring->description,
                         'nombre_de_fois' =>  $housingSponsoring->nombre,
-                        'Jour_de_la_demande' => Sponsoring::find($housingSponsoring->sponsoring_id)->created_at,
+                        'Jour_de_la_demande' => $housingSponsoring->created_at,
                         'date_de_commencement_du_sponsoring'=>  $housingSponsoring->date_debut,
                         'date de fin du sponsoring' =>  $housingSponsoring->date_fin,
                     ];
@@ -637,15 +650,42 @@ class HousingSponsoringController extends Controller
                 $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
                 $sponsoring = Sponsoring::find($housingSponsoring->sponsoring_id);
                 $prix_tarif = $housingSponsoring->nombre * $sponsoring->prix;
+                $commission_amount = $prix_tarif ;
+                $remaining_amount = 0;
+
+                $previous_transactions = Portfeuille_transaction::all();
+                $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+                $solde_commission = $previous_transactions->sum('montant_commission');
+                $solde_restant = $previous_transactions->sum('montant_restant');
+                $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
+                $ancien_solde_commission_partenaire = 0;
+
+                $new_solde_commission = $solde_commission + $commission_amount;
+                $new_solde_restant = $solde_restant + $remaining_amount;
+                $new_solde_total = $solde_total + $prix_tarif;
+
 
                 $portfeuille =Portfeuille::where('user_id',$hote->id)->first();
-                $portfeuille->where('user_id',$hote->id)->update(['solde'=> $portfeuille->solde + $prix_tarif]);
+                $portfeuille->update(['solde'=> $portfeuille->solde + $prix_tarif]);
                 $transaction = new portfeuille_transaction();
                 $transaction->portfeuille_id = $portfeuille->id;
                 $transaction->amount = $prix_tarif;
+                $transaction->montant_restant = $remaining_amount;
                 $transaction->debit = 0;
                 $transaction->credit =1;
+                $transaction->valeur_commission = 0;
+                $transaction->montant_commission = 0;
+                $transaction->valeur_commission_admin=0;
+                $transaction->montant_commission_admin= 0;
+                $transaction->montant_commission_partenaire =0;
+                $transaction->valeur_commission_partenaire=0;
+                $transaction->solde_total = $new_solde_total;
+                $transaction->solde_commission = $new_solde_commission;
+                $transaction->solde_restant = $new_solde_restant;
+                $transaction->new_solde_admin=$solde_commission_admin;
+                $transaction->solde_commission_partenaire=$ancien_solde_commission_partenaire;
                 $transaction->housing_sponsoring_id = $housingSponsoring->id;
+                $transaction->id_transaction = "0";
                 $transaction->payment_method = "portfeuille";
                 $transaction->motif = "Remboursement suite à un rejet de la demande par un administateur";
                 $transaction->save();
@@ -748,7 +788,7 @@ class HousingSponsoringController extends Controller
                 $prix_tarif = $request->montant;
 
                 $portfeuille =Portfeuille::where('user_id',$hote->id)->first();
-                $portfeuille->where('user_id',$hote->id)->update(['solde'=> $portfeuille->solde + $prix_tarif]);
+                $portfeuille->update(['solde'=> $portfeuille->solde + $prix_tarif]);
                 $transaction = new portfeuille_transaction();
                 $transaction->portfeuille_id = $portfeuille->id;
                 $transaction->amount = $prix_tarif;
@@ -840,15 +880,21 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring déjà actif');
                 }
 
+                $sponsoring = Sponsoring::find($housingSponsoring->sponsoring_id);
+
+                if (!$sponsoring) {
+                    return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
+                }
+
                 $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
 
                 $housingSponsoring->is_actif = true;
                 $housingSponsoring->save();
 
                 $jour_demande = Carbon::parse(Sponsoring::find($housingSponsoring->sponsoring_id)->created_at)->format('d m Y');
-                $plan = Sponsoring::find($housingSponsoring->sponsoring_id)->description;
+                $plan = $sponsoring->description;
                 $nombre = $housingSponsoring->nombre??1;
-                
+
                 $housing = Housing::whereId($housingSponsoring->housing_id)->first();
                 $pieces = $housing->housingCategoryFiles;
 
@@ -857,7 +903,47 @@ class HousingSponsoringController extends Controller
                 if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
                     return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
                 }
-                
+
+                $prix_tarif = $nombre * $sponsoring->prix;
+                $commission_amount = $prix_tarif ;
+                $remaining_amount = 0;
+
+                $previous_transactions = Portfeuille_transaction::all();
+                $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+                $solde_commission = $previous_transactions->sum('montant_commission');
+                $solde_restant = $previous_transactions->sum('montant_restant');
+                $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
+                $ancien_solde_commission_partenaire = 0;
+
+                $new_solde_commission = $solde_commission + $commission_amount;
+                $new_solde_restant = $solde_restant + $remaining_amount;$n = 1;
+
+                $transaction =new Portfeuille_transaction();
+                $transaction->debit = true;
+                $transaction->credit = false;
+                // $n = $transaction->credit == true?1:-1;
+                $transaction->amount = $prix_tarif;
+                $new_solde_total = $solde_total + ($prix_tarif * $n);
+                $transaction->valeur_commission = 100;
+                $transaction->montant_commission = $commission_amount;
+                $transaction->montant_restant = $remaining_amount;
+                $transaction->valeur_commission_admin=100;
+                $transaction->montant_commission_admin= $transaction->montant_commission;
+                $transaction->montant_commission_partenaire =0;
+                $transaction->valeur_commission_partenaire=0;
+                $transaction->solde_total = $new_solde_total;
+                $transaction->solde_commission = $new_solde_commission;
+                $transaction->solde_restant = $new_solde_restant;
+                $transaction->new_solde_admin=$solde_commission_admin+$transaction->montant_commission;
+                $transaction->solde_commission_partenaire=$ancien_solde_commission_partenaire;
+                $transaction->motif = "Validation d'une demande de sponsoring";
+                $transaction->portfeuille_id = Portfeuille::where('user_id',$hote->id)->first()->id;
+                $transaction->id_transaction = "0";
+                $transaction->payment_method = "portfeuille";
+                $transaction->housing_sponsoring_id = $sponsorinRequestId;
+                $transaction->save();
+
+
                 $description = [];
                 foreach ($pieces as $piece) {
                     $categoryName = $piece->category->name; 

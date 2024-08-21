@@ -138,11 +138,11 @@ protected $fileService;
     $testEmail = new TestController();
     $test = $testEmail->verifyEmail($request->email);
 
-    if ($test == 'undeliverable') {
-        return response()->json([
-            'error' => "Nous vous prions de saisir une adresse mail fonctionnelle",
-        ], 200);
-    }
+    // if ($test == 'undeliverable') {
+    //     return response()->json([
+    //         'error' => "Nous vous prions de saisir une adresse mail fonctionnelle",
+    //     ], 200);
+    // }
 
     DB::beginTransaction();
 

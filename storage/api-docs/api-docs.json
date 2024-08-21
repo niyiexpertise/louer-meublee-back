@@ -21490,7 +21490,6 @@
                 ]
             }
         },
-<<<<<<< HEAD
         "/api/settings/update": {
             "post": {
                 "tags": [
@@ -21575,30 +21574,10 @@
                                         }
                                     },
                                     "type": "object"
-=======
-        "/api/sponsoring/indexAccueil": {
-            "get": {
-                "tags": [
-                    "Hote Housing Sponsoring"
-                ],
-                "summary": "Liste des tarifs de sponsoring actifs",
-                "operationId": "106d054036b26e6ac3d5094afb581b6e",
-                "responses": {
-                    "200": {
-                        "description": "Liste des tarifs de sponsoring.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": ""
-                                    }
->>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
-<<<<<<< HEAD
                     "400": {
                         "description": "Invalid input",
                         "content": {
@@ -21621,10 +21600,6 @@
                                 }
                             }
                         }
-=======
-                    "500": {
-                        "description": "Erreur interne du serveur."
->>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                     }
                 },
                 "security": [
@@ -21634,7 +21609,6 @@
                 ]
             }
         },
-<<<<<<< HEAD
         "/api/settings/index": {
             "get": {
                 "tags": [
@@ -21659,7 +21633,65 @@
                                         }
                                     },
                                     "type": "object"
-=======
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Settings not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Settings not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sponsoring/indexAccueil": {
+            "get": {
+                "tags": [
+                    "Hote Housing Sponsoring"
+                ],
+                "summary": "Liste des tarifs de sponsoring actifs",
+                "operationId": "106d054036b26e6ac3d5094afb581b6e",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/sponsoring/indexAdmin": {
             "get": {
                 "tags": [
@@ -21890,34 +21922,11 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": ""
->>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
                     "404": {
-<<<<<<< HEAD
-                        "description": "Settings not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Settings not found."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-=======
                         "description": "Tarif de sponsoring non trouvé."
                     },
                     "500": {
@@ -22034,7 +22043,6 @@
                         "bearerAuth": []
                     }
                 ]
->>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
             }
         },
         "/api/type_demande/index": {

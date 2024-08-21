@@ -153,11 +153,22 @@ class PhotoController extends Controller
  public function setCoverPhoto($housingId, $photoId)
 {
     try {
+        // Vérifiez d'abord si le logement existe
+        $housing = Housing::find($housingId);
+        if (!$housing) {
+            return response()->json(['message' => 'Le logement n\'existe pas.'], 404);
+        }
 
-        $housing = Housing::findOrFail($housingId);
+        // Vérifiez ensuite si la photo existe et est associée au logement
+        $photo = $housing->photos()->find($photoId);
+        if (!$photo) {
+            return response()->json(['message' => 'La photo n\'existe pas ou n\'est pas associée à ce logement.'], 404);
+        }
 
+        // Réinitialisez la photo de couverture pour ce logement
         $housing->photos()->update(['is_couverture' => false]);
-        $photo = $housing->photos()->findOrFail($photoId);
+
+       
         $photo->is_couverture = true;
         $photo->save();
 
@@ -166,6 +177,7 @@ class PhotoController extends Controller
         return response()->json(['message' => 'Une erreur s\'est produite lors de la définition de la nouvelle photo de couverture.'], 500);
     }
 }
+
 
     /**
  * @OA\Delete(

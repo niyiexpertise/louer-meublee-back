@@ -21490,6 +21490,92 @@
                 ]
             }
         },
+<<<<<<< HEAD
+        "/api/settings/update": {
+            "post": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Update settings",
+                "operationId": "3c1ce3a271e4feea9166216b90fb036f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "pagination_logement_acceuil": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "condition_tranche_paiement": {
+                                        "type": "string"
+                                    },
+                                    "condition_prix_logement": {
+                                        "type": "string"
+                                    },
+                                    "condition_sponsoring_logement": {
+                                        "type": "string"
+                                    },
+                                    "contact_email": {
+                                        "type": "string",
+                                        "example": "example@domain.com"
+                                    },
+                                    "contact_telephone": {
+                                        "type": "string"
+                                    },
+                                    "facebook_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    },
+                                    "twitter_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    },
+                                    "instagram_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    },
+                                    "linkedin_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    },
+                                    "logo": {
+                                        "description": "The logo image file to upload",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "app_mode": {
+                                        "type": "string"
+                                    },
+                                    "adresse_serveur_fichier": {
+                                        "type": "string",
+                                        "example": "https://example.com/files"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Settings updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Settings updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+=======
         "/api/sponsoring/indexAccueil": {
             "get": {
                 "tags": [
@@ -21507,12 +21593,38 @@
                                     "items": {
                                         "$ref": ""
                                     }
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
+<<<<<<< HEAD
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+=======
                     "500": {
                         "description": "Erreur interne du serveur."
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                     }
                 },
                 "security": [
@@ -21522,6 +21634,32 @@
                 ]
             }
         },
+<<<<<<< HEAD
+        "/api/settings/index": {
+            "get": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Get all settings",
+                "operationId": "985c093cc8b9a07db34486d397307da3",
+                "responses": {
+                    "200": {
+                        "description": "Settings retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Settings retrieved successfully."
+                                        }
+                                    },
+                                    "type": "object"
+=======
         "/api/sponsoring/indexAdmin": {
             "get": {
                 "tags": [
@@ -21752,11 +21890,34 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": ""
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
                     "404": {
+<<<<<<< HEAD
+                        "description": "Settings not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Settings not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+=======
                         "description": "Tarif de sponsoring non trouvé."
                     },
                     "500": {
@@ -21873,6 +22034,7 @@
                         "bearerAuth": []
                     }
                 ]
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
             }
         },
         "/api/type_demande/index": {

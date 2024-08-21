@@ -21,10 +21,16 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\DB;
-
+use App\Services\FileService;
 class VerificationDocumentPartenaireController extends Controller
 {
 
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
 /**
  * @OA\Get(
@@ -245,8 +251,7 @@ public function index()
 
             $imagePiece = $imagePieces[$key];
 
-            $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-            $path_url = url('/image/document_verification/' . $path_name);
+            $path_url = $this->fileService->uploadFiles($imagePiece, 'image/document_verification');
 
             $verificationDocument = new verification_document_partenaire();
             $verificationDocument->user_id = $user_id;
@@ -259,14 +264,12 @@ public function index()
             $verificationStatut->vpdocument_id = $verificationDocument->id;
             $verificationStatut->save();
 
-            $imagePiece->move(public_path('image/document_verification'), $path_name);
-
-            $filePath = public_path('image/document_verification/' . $path_name);
-            $filePaths[] = $filePath;
+            
+            $filePaths[] = $path_url;
             $verificationDocuments[] = $verificationDocument;
         }
 
-        $adminRole = DB::table('rights')->where('name', 'superAdmin')->first();
+        $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
         if (!$adminRole) {
             return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
@@ -278,20 +281,15 @@ public function index()
         ->get();
 
         foreach ($adminUsers as $adminUser) {
-            $notification = new Notification();
-            $notification->user_id = $adminUser->id;
-            $notification->name = "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname.";
-            $notification->save();
-
+           
             $mail = [
                 'title' => 'Demande d\'être partenaire',
-                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
+                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. "
             ];
 
             try {
-                dispatch(new NotificationWithFile($adminUser->email, $mail['body'], $mail['title'],$filePaths));
+                dispatch(new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'],2));
 
-                // Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
             } catch (\Exception $e) {
                    
             }

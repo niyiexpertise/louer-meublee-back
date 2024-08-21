@@ -38,10 +38,15 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\DB;
-
+use App\Services\FileService;
 class InscriptionController extends Controller
 {
+protected $fileService;
 
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
    /**
  * @OA\Post(
  *     path="/api/users/register",
@@ -126,10 +131,8 @@ class InscriptionController extends Controller
     $identity_profil_url = '';
 
     if ($request->hasFile('identity_profil')) {
-        $identity_profil_name = uniqid() . '.' . $request->file('identity_profil')->getClientOriginalExtension();
-        $identity_profil_path = $request->file('identity_profil')->move(public_path('image/photo_profil'), $identity_profil_name);
-        $base_url = url('/');
-        $identity_profil_url = $base_url . '/image/photo_profil/' . $identity_profil_name;
+        
+        $identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil');;
     }
 
     $testEmail = new TestController();

@@ -918,20 +918,32 @@ public function ListeDesPhotosLogementAcceuil($id)
 public function ListeDesLogementsAcceuil(Request $request)
     {
 
-        if(!$request->page){
-            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
-        }
-    $page = intval($request->query('page', 1));
-    $perPage = 15;
+        if($request->page){
+            $page = intval($request->query('page', 1));
+            $perPage = 2;
+        
+            $listings = Housing::where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('is_finished', 1)
+                ->paginate($perPage, ['*'], 'page', $page);
 
-    $listings = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->paginate($perPage, ['*'], 'page', $page);
+        }else{
+
+        
+            $listings = Housing::where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('is_finished', 1)
+                ->get();
+        }
+
 
         $userId = intval($request->query('id'));
 
@@ -1134,6 +1146,8 @@ public function ListeDesLogementsAcceuil(Request $request)
          'delai_integral_remboursement'=> $listing->delai_integral_remboursement,
          'valeur_integral_remboursement'=> $listing->valeur_integral_remboursement,
          'valeur_partiel_remboursement'=> $listing->valeur_partiel_remboursement,
+         "housing_note" => (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($listing->id)->original['data']['overall_average'] ?? 'non renseigné',
+
 
          'photos_logement' => $listing->photos->map(function ($photo) {
             if($photo->is_verified){
@@ -2940,5 +2954,203 @@ public function HousingHoteInProgress(){
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/api/logement/block/{housinId}",
+     *     summary="Bloque un logement",
+     * security={{"bearerAuth": {}}},
+     *     description="Marque un logement comme bloqué.",
+     *     operationId="blockHousing",
+     *     tags={"Housing"},
+     *     @OA\Parameter(
+     *         name="housinId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         ),
+     *         description="ID du logement à bloquer"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logement bloqué avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Logement bloqué avec succès"),
+     *             @OA\Property(property="data", type="array", @OA\Items())
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Le logement spécifié n'existe pas",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=500),
+     *             @OA\Property(property="message", type="string", example="Détails de l'erreur")
+     *         )
+     *     )
+     * )
+     */
+    public function block($housinId){
+        try {
+            $housing = Housing::find($housinId);
+            if (!$housing) {
+                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+            }
+            if($housing->is_blocked == true){
+                return (new ServiceController())->apiResponse(200,[],'Logement déjà bloqué');
+            }
+            $housing->is_blocked = true;
+            $housing->save();
+            return (new ServiceController())->apiResponse(200,[],'Logement bloqué avec succès');
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+
+    /**
+ * @OA\Post(
+ *     path="/api/logement/unblock/{housinId}",
+ *     summary="Débloque un logement",
+ *     description="Marque un logement comme débloqué.",
+ *     operationId="unblockHousing",
+ *     tags={"Housing"},
+ * security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housinId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         ),
+ *         description="ID du logement à débloquer"
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Logement débloqué avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Logement débloqué avec succès"),
+ *             @OA\Property(property="data", type="array", @OA\Items())
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Le logement spécifié n'existe pas",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="message", type="string", example="Détails de l'erreur")
+ *         )
+ *     )
+ * )
+ */
+
+
+    public function unblock($housinId){
+        try {
+            $housing = Housing::find($housinId);
+            if (!$housing) {
+                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+            }
+            if($housing->is_blocked == false){
+                return (new ServiceController())->apiResponse(200,[],'Logement déjà débloqué');
+            }
+
+            $housing->is_blocked = false;
+            $housing->save();
+            return (new ServiceController())->apiResponse(200,[],'Logement débloqué avec succès');
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/logement/delete/{housinId}",
+     *     summary="Bloque un logement",
+     * security={{"bearerAuth": {}}},
+     *     description="Marque un logement comme supprimé.",
+     *     operationId="deleteHousing",
+     *     tags={"Housing"},
+     *     @OA\Parameter(
+     *         name="housinId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         ),
+     *         description="ID du logement à supprimé"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logement supprimé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Logement supprimé avec succès"),
+     *             @OA\Property(property="data", type="array", @OA\Items())
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Le logement spécifié n'existe pas",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=500),
+     *             @OA\Property(property="message", type="string", example="Détails de l'erreur")
+     *         )
+     *     )
+     * )
+     */
+    public function delete($housinId){
+        try {
+            $housing = Housing::find($housinId);
+            if (!$housing) {
+                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+            }
+            if($housing->is_deleted == true){
+                return (new ServiceController())->apiResponse(200,[],'Logement déjà supprimé');
+            }
+            $housing->is_deleted = true;
+            $housing->save();
+            return (new ServiceController())->apiResponse(200,[],'Logement supprimé avec succès');
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
 
 }

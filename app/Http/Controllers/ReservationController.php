@@ -630,7 +630,7 @@ public function storeReservationWithPayment(Request $request)
             'is_rejected_hote'=>1,
             'motif_rejet_hote'=>$request->motif_rejet_hote
           ])){
-           
+
             $portfeuille =Portfeuille::where('user_id',$reservation->user_id)->first();
             $portfeuille->where('user_id',$reservation->user_id)->update(['solde'=>$reservation->user->portfeuille->solde + $reservation->valeur_payee]);
             $transaction = new portfeuille_transaction();
@@ -645,7 +645,6 @@ public function storeReservationWithPayment(Request $request)
              $this->initialisePortefeuilleTransaction($transaction->id);
 
           }
-         
 
           $mail = [
             "title" => "Rejet de votre réservation",
@@ -1206,16 +1205,34 @@ public function confirmIntegration(Request $request)
         if (!$commission) {
             return (new ServiceController())->apiResponse(404, [], "Commission non trouvée pour ce propriétaire.");
         }
+        if ($reservation->is_tranche_paiement) {
+            $paiementEspece = Payement::where('reservation_id', $reservation->id)
+                                        ->where('payment_method', 'espece')
+                                        ->where('statut', 1)
+                                        ->first();
+
+            if ($paiementEspece) {
+                $amount = $paiementEspece->amount;
+                $rest=$reservation->valeur_payee- $paiementEspece->amount;
+                 $message="Virement sur le compte de l'hôte de la première tranche(suite à la soustraction des commission) après confirmation de l'intégration .La deuxième tranche a été payé en espèce directement à l'hôte";
+
+
+            } else {
+                $rest=$reservation->valeur_payee;
+                 $message="Virement sur le compte de l'hôte du montant complet(suite à la soustraction des commission) après confirmation de l'intégration.";
+            }
+        }
+        
         
         $commission_percentage = $commission->valeur;
         $total_amount = $reservation->valeur_payee;
 
         $commission_amount = $total_amount * ($commission_percentage / 100);
-        $remaining_amount = $total_amount - $commission_amount;
+        $remaining_amount = $rest - $commission_amount;
 
         $reservation->is_integration = true;
         $reservation->save();
-
+        
         $previous_transactions = Portfeuille_transaction::all();
         $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
@@ -1228,14 +1245,14 @@ public function confirmIntegration(Request $request)
         $portefeuilleTransaction = new Portfeuille_transaction();
         $portefeuilleTransaction->debit = false;
         $portefeuilleTransaction->credit = true;
-        $portefeuilleTransaction->amount = $total_amount;
+        $portefeuilleTransaction->amount = $rest;
         $portefeuilleTransaction->valeur_commission = $commission_percentage;
         $portefeuilleTransaction->montant_commission = $commission_amount;
         $portefeuilleTransaction->montant_restant = $remaining_amount;
         $portefeuilleTransaction->solde_total = $new_solde_total;
         $portefeuilleTransaction->solde_commission = $new_solde_commission;
         $portefeuilleTransaction->solde_restant = $new_solde_restant;
-        $portefeuilleTransaction->motif = "Virement sur le compte de l'hôte après confirmation de l'intégration";
+        $portefeuilleTransaction->motif =$message;
         $portefeuilleTransaction->reservation_id = $reservation->id;
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";

@@ -912,11 +912,8 @@ class ChatController extends Controller
 }
 
 //   try {
-//             return response()->json([
-//                 'status_code' => 200,
-//                 'data' =>[],
-//                 'message' => 'notification created successffully'
-//             ]);
+//            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+//         }
 //         } catch(Exception $e) {
 //              return (new ServiceController())->apiResponse(500,[],$e->getMessage());
 //         }

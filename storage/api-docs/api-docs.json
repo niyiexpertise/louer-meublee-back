@@ -2290,14 +2290,14 @@
                 ]
             }
         },
-        "/api/logements/index/ListeDesLogementsValideBloque": {
+        "/api/logement/index/ListeDesLogementsValideBloque": {
             "get": {
                 "tags": [
                     "Housing"
                 ],
                 "summary": "Liste des logements déjà verifiés mais bloqués par l'administrateur",
                 "description": "Récupère la liste des logements qui sont déjà verifiés mais bloqués  par l'administrateur.",
-                "operationId": "b0d6f0e23d6a83e9a91b749f2695fdb6",
+                "operationId": "4efc13f670f8d5389b6e2053474fdc48",
                 "responses": {
                     "200": {
                         "description": "Succès - Liste des logements déjà verifiés mais bloqués  par l'administrateur",
@@ -2547,8 +2547,8 @@
                 "tags": [
                     "Administration"
                 ],
-                "summary": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
-                "description": "To 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+                "summary": "Top 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
+                "description": "Top 10 des logements avec le plus grand nombre de note de manière générale(moyenne des notes des critère qui sera considéré)",
                 "operationId": "9e333acddb9fe6c6d25e0ff2d7291ee5",
                 "responses": {
                     "200": {
@@ -11499,6 +11499,282 @@
                 ]
             }
         },
+        "/api/logement/block/{housinId}": {
+            "post": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Bloque un logement",
+                "description": "Marque un logement comme bloqué.",
+                "operationId": "blockHousing",
+                "parameters": [
+                    {
+                        "name": "housinId",
+                        "in": "path",
+                        "description": "ID du logement à bloquer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logement bloqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement bloqué avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement spécifié n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/unblock/{housinId}": {
+            "post": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Débloque un logement",
+                "description": "Marque un logement comme débloqué.",
+                "operationId": "unblockHousing",
+                "parameters": [
+                    {
+                        "name": "housinId",
+                        "in": "path",
+                        "description": "ID du logement à débloquer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logement débloqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement débloqué avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement spécifié n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/delete/{housinId}": {
+            "post": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Bloque un logement",
+                "description": "Marque un logement comme supprimé.",
+                "operationId": "deleteHousing",
+                "parameters": [
+                    {
+                        "name": "housinId",
+                        "in": "path",
+                        "description": "ID du logement à supprimé",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement supprimé avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement spécifié n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
@@ -12421,6 +12697,938 @@
                     },
                     "404": {
                         "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/store": {
+            "post": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Créer une demande de sponsoring",
+                "description": "Permet à un utilisateur de créer une demande de sponsoring pour un logement spécifique.",
+                "operationId": "806a187e5a24afa8f86eff5d2b70488a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "housing_id": {
+                                        "description": "ID du logement pour lequel la demande de sponsoring est faite.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "sponsoring_id": {
+                                        "description": "ID du tarif de sponsoring choisi.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date_debut": {
+                                        "description": "Date de début du sponsoring au format YYYY-MM-DD.",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-01"
+                                    },
+                                    "nombre": {
+                                        "description": "nombre de fois que vous voulez bénéficier du tarif.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "payment_method": {
+                                        "description": "nombre de fois que vous voulez bénéficier du tarif.",
+                                        "type": "string",
+                                        "example": "portfeuille"
+                                    },
+                                    "id_transaction": {
+                                        "description": "id de la transaction.",
+                                        "type": "string",
+                                        "example": "portfeuille"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement.",
+                                        "type": "string",
+                                        "example": "portfeuille"
+                                    },
+                                    "montant": {
+                                        "description": "montant.",
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de sponsoring créée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring créée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide, problème avec les données fournies.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 400
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La date de début doit être supérieur à la date d'aujourd'hui."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Le logement ou le tarif de sponsoring n'a pas été trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "data": {
+                                            "description": "Données de la réponse",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur interne."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/hoteActiveSponsoringRequest": {
+            "get": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Obtenir les demandes de sponsoring actif d'un hôte connecté",
+                "operationId": "31b1257202ab358bec17da41862806ee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "duree": {
+                                                "type": "integer",
+                                                "example": 30
+                                            },
+                                            "prix": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 100.5
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Description du sponsoring"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_actif": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/housingsponsoring/hoteRejectSponsoringRequest": {
+            "get": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Obtenir les demandes de sponsoring d'un hôte connecté rejeté par un administrateur",
+                "operationId": "7bba5f0ca317266833157682a046e7ee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "duree": {
+                                                "type": "integer",
+                                                "example": 30
+                                            },
+                                            "prix": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 100.5
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Description du sponsoring"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_actif": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/hotePendingSponsoringRequest": {
+            "get": {
+                "tags": [
+                    "Housing sponsoring"
+                ],
+                "summary": "Obtenir les demandes de sponsoring en cours de validation d'un hôte connecté",
+                "operationId": "81f1c43cc240f7a1a4e734248f00835d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "duree": {
+                                                "type": "integer",
+                                                "example": 30
+                                            },
+                                            "prix": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 100.5
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Description du sponsoring"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_actif": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/demandeSponsoringNonvalidee": {
+            "get": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Obtenir les demandes de sponsoring actif d'un hôte connecté",
+                "operationId": "7e9df8c2ff7e0186de81a2e0568a73ce",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "duree": {
+                                                "type": "integer",
+                                                "example": 30
+                                            },
+                                            "prix": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 100.5
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "example": "Description du sponsoring"
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_actif": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/demandeSponsoringvalidee": {
+            "get": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Liste des demandes de sponsoring validées",
+                "description": "Retourne la liste des demandes de sponsoring qui ont été validées.",
+                "operationId": "demandeSponsoringvalidee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring validées récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Liste des demandes de sponsoring validées récupérée avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": ""
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/demandeSponsoringsuprimee": {
+            "get": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Liste des demandes de sponsoring rejetées",
+                "description": "Retourne la liste des demandes de sponsoring qui ont été rejetées.",
+                "operationId": "demandeSponsoringrejetee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring rejetées récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Liste des demandes de sponsoring rejetées récupérée avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": ""
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/demandeSponsoringsupprimee": {
+            "get": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Liste des demandes de sponsoring supprimées",
+                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées.",
+                "operationId": "demandeSponsoringsupprimee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de sponsoring supprimées récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Liste des demandes de sponsoring supprimées récupérée avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": ""
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/rejectSponsoringRequest/{sponsorinRequestId}": {
+            "post": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Rejeter une demande de sponsoring",
+                "operationId": "8569fd49f9cf3de5d87954e34bd35287",
+                "parameters": [
+                    {
+                        "name": "sponsorinRequestId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring à rejeter",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "motif": {
+                                        "type": "string",
+                                        "example": "Le motif du rejet"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de sponsoring rejetée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring rejetée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Demande de sponsoring introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring introuvable"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/invalidSponsoringRequest/{sponsorinRequestId}": {
+            "post": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Désactiver une demande de sponsoring",
+                "operationId": "455da99b6a3d4058df9256fa003be246",
+                "parameters": [
+                    {
+                        "name": "sponsorinRequestId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "motif": {
+                                        "type": "string",
+                                        "example": "Le motif du rejet"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de sponsoring désactivé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring désactivé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Demande de sponsoring introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring introuvable"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur de traitement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/validSponsoringRequest/{sponsorinRequestId}": {
+            "post": {
+                "tags": [
+                    "Admin Housing sponsoring"
+                ],
+                "summary": "Valider une demande de sponsoring",
+                "description": "Cette fonction permet de valider une demande de sponsoring en activant la demande et en envoyant un email de confirmation à l'hôte.",
+                "operationId": "validSponsoringRequest",
+                "parameters": [
+                    {
+                        "name": "sponsorinRequestId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande de sponsoring activée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring activée avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Demande de sponsoring introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring introuvable"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -14891,7 +16099,7 @@
                     "Notification"
                 ],
                 "summary": "Ajouter une notification à un utilisateur,ce dernier verra dans sa liste de notification une fois connecté",
-                "operationId": "c2aed4b34d3adeaa74c32156265397d8",
+                "operationId": "422e3bb6d92027cad2cdf3bc82033a87",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -14906,6 +16114,11 @@
                                         "description": "ID de l'utilisateur",
                                         "type": "integer",
                                         "example": "1"
+                                    },
+                                    "object": {
+                                        "description": "Nom de la notification",
+                                        "type": "string",
+                                        "example": "objet"
                                     },
                                     "name": {
                                         "description": "Nom de la notification",
@@ -14943,7 +16156,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/users": {
@@ -20298,6 +21516,7 @@
                 ]
             }
         },
+<<<<<<< HEAD
         "/api/settings/update": {
             "post": {
                 "tags": [
@@ -20382,10 +21601,30 @@
                                         }
                                     },
                                     "type": "object"
+=======
+        "/api/sponsoring/indexAccueil": {
+            "get": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Liste des tarifs de sponsoring actifs",
+                "operationId": "106d054036b26e6ac3d5094afb581b6e",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
+<<<<<<< HEAD
                     "400": {
                         "description": "Invalid input",
                         "content": {
@@ -20408,6 +21647,10 @@
                                 }
                             }
                         }
+=======
+                    "500": {
+                        "description": "Erreur interne du serveur."
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                     }
                 },
                 "security": [
@@ -20417,6 +21660,7 @@
                 ]
             }
         },
+<<<<<<< HEAD
         "/api/settings/index": {
             "get": {
                 "tags": [
@@ -20441,11 +21685,244 @@
                                         }
                                     },
                                     "type": "object"
+=======
+        "/api/sponsoring/indexAdmin": {
+            "get": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Liste complète des tarifs de sponsoring",
+                "operationId": "4aa8e4334c55d2b8597d5d8c870deb10",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/indexActifAdmin": {
+            "get": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Liste complète des tarifs de sponsoring actifs",
+                "operationId": "482387f42eac055245a69377ec096146",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring actifs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/indexInactifAdmin": {
+            "get": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Liste complète des tarifs de sponsoring inactifs",
+                "operationId": "464f5da7e6a9c9ddee7deba7d7961138",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tarifs de sponsoring inactifs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/store": {
+            "post": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Créer un nouveau tarif de sponsoring",
+                "operationId": "cb85d8bbb3e13584f960ca9654e2bdaa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duree": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "prix": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description du tarif"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring créé avec succès."
+                    },
+                    "404": {
+                        "description": "Erreur de validation des données."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/update/{id}": {
+            "post": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Mettre à jour un tarif de sponsoring",
+                "operationId": "1c8a675171d103b99430c262463c0317",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "duree": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "prix": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99.99
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description mise à jour"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring modifié avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou erreur de validation des données."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/show/{id}": {
+            "get": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Afficher un tarif de sponsoring",
+                "operationId": "e7623eec8beb22a3f26417002cea79e3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail d'un tarif.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": ""
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
                                 }
                             }
                         }
                     },
                     "404": {
+<<<<<<< HEAD
                         "description": "Settings not found",
                         "content": {
                             "application/json": {
@@ -20466,6 +21943,124 @@
                         }
                     }
                 }
+=======
+                        "description": "Tarif de sponsoring non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/destroy/{id}": {
+            "post": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Supprimer un tarif de sponsoring",
+                "operationId": "96c0f56b294ef62995ba346924673389",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring supprimé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà supprimé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/active/{id}": {
+            "post": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Activer un tarif de sponsoring",
+                "operationId": "fb4681eb1c696eb59768112259fe0537",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring activé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà actif."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sponsoring/desactive/{id}": {
+            "post": {
+                "tags": [
+                    "Tarif Sponsoring"
+                ],
+                "summary": "Désactiver un tarif de sponsoring",
+                "operationId": "50c664859026a8be5e8e1bf324eb6312",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif de sponsoring désactivé avec succès."
+                    },
+                    "404": {
+                        "description": "Tarif de sponsoring non trouvé ou déjà désactivé."
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+>>>>>>> 0ffc0e44051ae6c43481b8d699731e62bf5929ad
             }
         },
         "/api/type_demande/index": {

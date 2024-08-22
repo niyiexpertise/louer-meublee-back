@@ -8,16 +8,25 @@ use App\Models\Equipment_category;
 use App\Models\EquipmentCategory;
 use App\Models\File;
 use App\Models\Housing_category_file;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder as DatabaseEloquentBuilder;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\File as F ;
+use Illuminate\Validation\ValidationException;
 
 class CategorieController extends Controller
 {
 
-    
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/category/VerifiednotBlocknotDelete",
@@ -35,8 +44,8 @@ class CategorieController extends Controller
         try {
             $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
             $data = [];
-            
-    
+
+
             foreach ($categories as $category) {
                 $a = [];
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
@@ -55,7 +64,7 @@ class CategorieController extends Controller
                             ];
                         }
                 }
-                
+
                 $data[] = [
                     'id_categorie' => $category->id,
                     'name' =>$category->name,
@@ -65,7 +74,7 @@ class CategorieController extends Controller
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
                     'equipments'  => $a,
-                    
+
                 ];
 
             }
@@ -94,8 +103,8 @@ class CategorieController extends Controller
         try {
             $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
             $data = [];
-            
-    
+
+
             foreach ($categories as $category) {
                 $a = [];
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
@@ -114,7 +123,7 @@ class CategorieController extends Controller
                             ];
                         }
                 }
-                
+
                 $data[] = [
                     'id_categorie' => $category->id,
                     'name' =>$category->name,
@@ -124,7 +133,7 @@ class CategorieController extends Controller
                     'created_at' =>$category->created_at,
                     'updated_at' =>$category->updated_at,
                     'equipments'  => $a,
-                    
+
                 ];
 
             }
@@ -153,8 +162,8 @@ class CategorieController extends Controller
         try {
             $categories = Category::with('equipment_category.equipment')->where('is_verified',true)->where('is_blocked', true)->where('is_deleted', false)->get();
             $data = [];
-            
-    
+
+
             foreach ($categories as $category) {
                 $a = [];
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
@@ -172,7 +181,7 @@ class CategorieController extends Controller
                             ];
                         }
                 }
-                
+
                 $data[] = [
                     'id' => $category->id,
                     'name' =>$category->name,
@@ -288,12 +297,10 @@ class CategorieController extends Controller
                          'name' => 'required|unique:categories|max:255',
                      ]);
                      $category = new Category();
+                     $identity_profil_url = '';
                      if ($request->hasFile('icone')) {
-                         $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                         $identity_profil_path = $request->file('icone')->move(public_path('image/iconeCategory'), $icone_name);
-                         $base_url = url('/');
-                         $icone_url = $base_url . '/image/iconeCategory/' . $icone_name;
-                         $category->icone = $icone_url;
+                        $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory');;
+                         $category->icone = $identity_profil_url;
                          }
                      $category->name = $request->name;
                      $category->is_verified = true;
@@ -302,11 +309,11 @@ class CategorieController extends Controller
                          'message' => 'Category is successfully created',
                          'data' => $category
                      ]);
-         
+
              } catch(Exception $e) {
                  return response()->json($e->getMessage());
              }
-     
+
          }
 
 
@@ -371,12 +378,12 @@ class CategorieController extends Controller
                     'equipments'  => $a
                 ]
             ], 200);
-    
-        } catch(Exception $e) {    
+
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
-    } 
+    }
 
 
     /**
@@ -432,7 +439,13 @@ class CategorieController extends Controller
                     Rule::unique('categories')->ignore($id),
                 ],
             ]);
-            $category = Category::whereId($id)->update($data);
+            $category = Category::find($id);
+            if (!$category) {
+                return response()->json(['error' => 'Catégorie non trouvé.'], 404);
+            }
+
+            $category->name = $request->name;
+            $category->save();
             return response()->json(['data' => 'Catégorie mise à jour avec succès.'], 200);
         } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
@@ -493,14 +506,14 @@ class CategorieController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $category = Category::find($id);
-            
+
             if (!$category) {
                 return response()->json(['error' => 'Category non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -513,15 +526,14 @@ class CategorieController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeCategory'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeCategory/' . $icone_name;
-                    
-                    Category::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory');;
+
+                   // Category::whereId($id)->update(['icone' => $identity_profil_url]);
+                   $category->icone = $identity_profil_url;
+                   $category->save();
+
                     return response()->json(['data' => 'icône de la catégorie mis à jour avec succès.'], 200);
                 } else {
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
@@ -561,21 +573,22 @@ class CategorieController extends Controller
     public function destroy(string $id)
     {
         try{
-                $category = Category::whereId($id)->update(['is_deleted' => true]);
+                $category = Category::find($id);
 
                 if (!$category) {
                     return response()->json(['error' => 'Catégorie non trouvé.'], 404);
                 }
-                $associatedHousing = Housing_category_file::where('categorie_id', $id)->count(); 
-        
+                $associatedHousing = Housing_category_file::where('category_id', $id)->count();
+
         if ($associatedHousing > 0) {
             return response()->json(['error' => "Suppression impossible car la catégorie est déjà associé à un logement."], 200);
 
         }
-
+            $category->is_deleted = true;
+            $category->save();
                 return response()->json(['data' => 'Catégorie supprimé avec succès.'], 200);
-    
-        } catch(Exception $e) {    
+
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -617,11 +630,13 @@ class CategorieController extends Controller
     public function block(string $id)
  {
     try{
-        $category = Category::whereId($id)->update(['is_blocked' => true]);
+        $category = Category::find($id);
 
         if (!$category) {
             return response()->json(['error' => 'catgegory non trouvé.'], 404);
         }
+            $category->is_blocked = true;
+            $category->save();
 
         return response()->json(['data' => 'This category is block successfuly.'], 200);
     } catch(Exception $e) {
@@ -666,10 +681,13 @@ class CategorieController extends Controller
  public function unblock(string $id)
 {
     try{
-            $category = Category::whereId($id)->update(['is_blocked' => false]);
+        $category = Category::find($id);
+           
             if (!$category) {
                 return response()->json(['error' => 'Catégorie non trouvé.'], 404);
             }
+            $category->is_blocked = false;
+            $category->save();
             return response()->json(['data' => 'this category is unblock successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\type_demande;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 class TypeDemandeController extends Controller

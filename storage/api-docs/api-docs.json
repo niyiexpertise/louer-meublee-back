@@ -5306,105 +5306,6 @@
                 ]
             }
         },
-        "/api/chats/markMessageAsRead/{messageId}": {
-            "post": {
-                "tags": [
-                    "Chats"
-                ],
-                "summary": "Marque un message comme lu",
-                "operationId": "6c348cadc010cdf4c1ed83a4d6203131",
-                "parameters": [
-                    {
-                        "name": "messageId",
-                        "in": "path",
-                        "description": "ID du message",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Message marqué comme lu avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Message marqué comme lu avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Message non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 404
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Message non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 500
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Erreur serveur"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/chats/markMessageAsUnRead/{messageId}": {
             "post": {
                 "tags": [
@@ -20396,9 +20297,29 @@
                 "tags": [
                     "Retraits"
                 ],
-                "summary": "Liste des retraits effectué par un utilisateur connecté",
+                "summary": "Liste des retraits effectué et accepté d'un utilisateur connecté",
                 "description": "Liste des retraits effectué par un utilisateur connecté",
                 "operationId": "cc9fe95e12f66cf8245f271dc49f98c4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits effectué par un utilisateur connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitOfUserPendingAuth": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits effectué mais en attente d'une réponse de l'admin par un utilisateur connecté",
+                "description": "Liste des retraits effectué par un utilisateur connecté",
+                "operationId": "baacc8114a56af3042482e89e1b4493b",
                 "responses": {
                     "200": {
                         "description": "Liste des retraits effectué par un utilisateur connecté"
@@ -20458,6 +20379,11 @@
                                     "montant_valid": {
                                         "description": "Montant validé pour le retrait",
                                         "type": "integer"
+                                    },
+                                    "id_transaction": {
+                                        "description": "id de la transaction",
+                                        "type": "string",
+                                        "example": "hf45e"
                                     }
                                 },
                                 "type": "object"
@@ -20770,6 +20696,127 @@
                 "responses": {
                     "200": {
                         "description": "Liste des demandes retrait des hotes en attente de validation sur la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/show/{id}": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Afficher les détails d'un retrait",
+                "description": "Récupère les détails d'un retrait spécifique par ID.",
+                "operationId": "showRetrait",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du retrait",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du retrait récupéré avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 150.5
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "validé"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-21T10:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-21T10:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détail d'un retrait."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Retrait non trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Retrait non trouvé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -21504,8 +21551,7 @@
                             "schema": {
                                 "properties": {
                                     "pagination_logement_acceuil": {
-                                        "type": "integer",
-                                        "example": 10
+                                        "type": "integer"
                                     },
                                     "condition_tranche_paiement": {
                                         "type": "string"
@@ -21517,8 +21563,7 @@
                                         "type": "string"
                                     },
                                     "contact_email": {
-                                        "type": "string",
-                                        "example": "example@domain.com"
+                                        "type": "string"
                                     },
                                     "contact_telephone": {
                                         "type": "string"
@@ -21545,11 +21590,34 @@
                                         "format": "binary"
                                     },
                                     "app_mode": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "PRODUCTION",
+                                            "DEVELOPPEMENT"
+                                        ]
                                     },
                                     "adresse_serveur_fichier": {
-                                        "type": "string",
-                                        "example": "https://example.com/files"
+                                        "type": "string"
+                                    },
+                                    "montant_maximum_recharge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_recharge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_retrait": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_maximum_retrait": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_solde_retrait": {
+                                        "type": "number",
+                                        "format": "float"
                                     }
                                 },
                                 "type": "object"
@@ -21571,6 +21639,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Settings updated successfully."
+                                        },
+                                        "setting": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -21630,6 +21701,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Settings retrieved successfully."
+                                        },
+                                        "setting": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

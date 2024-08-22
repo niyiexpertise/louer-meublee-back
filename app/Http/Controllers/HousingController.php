@@ -35,6 +35,7 @@ use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\Favoris;
 use App\Models\UserVisiteHousing;
+use App\Services\FileService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -45,6 +46,12 @@ use Illuminate\Pagination\Paginator;
 
 class HousingController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
  public function addHousing(Request $request)
  {
@@ -458,15 +465,14 @@ class HousingController extends Controller
      $housing->save();
 
      if ($request->hasFile('photos')) {
+        $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-             //$photoUrl = url('/image/photo_logement/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge');;
              $ip='http://192.168.100.158:8000';
-             $photoUrl = $ip.'/image/photo_logement/' . $photoName;
+            // $photoUrl = $ip.'/image/photo_logement/' . $photoName;
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $photoUrl;
+             $photoModel->path = $identity_profil_url;
              $photoModel->extension = $type;
              if ($index == $request->input('profile_photo_id')) {
                  $photoModel->is_couverture = true;
@@ -572,14 +578,15 @@ class HousingController extends Controller
         $housingCategoryId = $housing->id;
         $photoCategoryKey = 'photo_categories' . $categoryId;
         $photoFiles = $request->file($photoCategoryKey);
+
+        $identity_profil_url = '';
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
-            $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
-        //$photoUrl = url('/image/photo_category/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category');;
+
                         $ip='http://192.168.100.158:8000';
-                 $photoUrl =$ip.'/image/photo_category/' . $photoName;
-            $photoModel->path = $photoUrl;
+                 //$photoUrl =$ip.'/image/photo_category/' . $photoName;
+            $photoModel->path = $identity_profil_url;
             $photoModel->save();
             $housingCategoryFile = new Housing_category_file();
             $housingCategoryFile->housing_id = $housingCategoryId;
@@ -605,14 +612,14 @@ class HousingController extends Controller
         $category->is_verified = false;
         $category->save();
 
+        $identity_profil_url = '';
         foreach ($categoryPhotos as $photoFile) {
-            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
-            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
-                        $photoUrl = url('/image/photo_category/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category');;
+
                         $ip='http://192.168.100.158:8000';
-                        $photoUrl =$ip.'/image/photo_category/' . $photoName;
+                        //$photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photo = new File();
-            $photo->path = $photoUrl;
+            $photo->path = $identity_profil_url;
             $photo->save();
 
             $housingCategoryFile = new Housing_category_file();
@@ -921,7 +928,7 @@ public function ListeDesLogementsAcceuil(Request $request)
         if($request->page){
             $page = intval($request->query('page', 1));
             $perPage = 2;
-        
+
             $listings = Housing::where('status', 'verified')
                 ->where('is_deleted', 0)
                 ->where('is_blocked', 0)
@@ -933,7 +940,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         }else{
 
-        
+
             $listings = Housing::where('status', 'verified')
                 ->where('is_deleted', 0)
                 ->where('is_blocked', 0)
@@ -970,7 +977,7 @@ public function ListeDesLogementsAcceuil(Request $request)
             }
 
 
-   
+
 
 /**
  * @OA\Post(
@@ -2582,13 +2589,13 @@ public function enableHousing($housingId)
              return response()->json(['error' => 'Housing non trouvé.'], 404);
          }
 
+         $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-             $photoUrl = url('/image/photo_logement/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement');;
+
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $photoUrl;
+             $photoModel->path = $identity_profil_url;
              $photoModel->extension = $type;
              $photoModel->is_verified = false;
              $photoModel->housing_id = $housing->id;

@@ -250,7 +250,7 @@ class ChatController extends Controller
      * )
      */
 
-
+/*
     public function markMessageAsRead($messageId){
         try {
 
@@ -267,11 +267,11 @@ class ChatController extends Controller
             $message->is_read = true;
 
             Chat::whereId($message->chat_id)->first()->update(['is_read' => 1]);
-
+            $message = Chat::find($chat_id);
             if(Chat::whereId($message->chat_id)->first()->model_type_concerned == "Support Information"){
                 $message->done_by_id =  Auth::user()->id;
             }
-
+            $message-> is_read = 1;
             $message->save();
 
             return (new ServiceController())->apiResponse(200, [],'Message marqué comme lu avec succès');
@@ -280,6 +280,10 @@ class ChatController extends Controller
              return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
     }
+*/
+
+     
+
 
     /**
      * @OA\Post(

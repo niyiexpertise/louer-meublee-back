@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\UserVisiteHousing;
+use App\Services\FileService;
 use DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
@@ -44,6 +45,13 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 class AddHousingZController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
     public function checkOwner($housingId){
         if(Auth::user()->id != Housing::whereId($housingId)->first()->user_id){
@@ -620,10 +628,13 @@ public function addHousing_step_7(Request $request, $housingId){
             $housingCategoryId = $housing->id;
             $photoCategoryKey = 'photo_categories' . $categoryId;
             $photoFiles = $request->file($photoCategoryKey);
+            $identity_profil_url = '';
             foreach ($photoFiles as $fileId) {
                 $photoModel = new File();
-                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-                $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
+
+              //  $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+              /*  $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 if(env('MODE') == 'PRODUCTION'){
                     $photoUrl = url('/image/photo_logement/' . $photoName);
                 }
@@ -631,7 +642,9 @@ public function addHousing_step_7(Request $request, $housingId){
                     $ip=env('LOCAL_ADDRESS');
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
                 }
-                $photoModel->path = $photoUrl;
+                    */
+                $photoModel->path = $uploadedPath;
+
                 $photoModel->save();
 
 
@@ -667,8 +680,9 @@ public function addHousing_step_7(Request $request, $housingId){
         $category->save();
 
         foreach ($categoryPhotos as $photoFile) {
-            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
-            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
+            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category');
+
+          /*  $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
             if(env('MODE') == 'PRODUCTION')
             {
                     $photoUrl = url('/image/photo_logement/' . $photoName);
@@ -677,8 +691,9 @@ public function addHousing_step_7(Request $request, $housingId){
                     $ip=env('LOCAL_ADDRESS');
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
             }
+                    */
             $photo = new File();
-            $photo->path = $photoUrl;
+            $photo->path = $uploadedPath;
             $photo->save();
 
 
@@ -1640,11 +1655,11 @@ public function addHousing_step_16(Request $request, $housingId) {
  */
 public function addHousing_step_8(Request $request, $housingId){
     try {
+
         $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
-        
         $errorcheckOwner = $this->checkOwner($housingId);
         if ($errorcheckOwner) {
             return $errorcheckOwner;
@@ -1653,13 +1668,13 @@ public function addHousing_step_8(Request $request, $housingId){
         if ($validationResponse) {
             return $validationResponse;
         }
-        
+
         $this->deleteHousingData($housingId);
 
         // Validation des catégories
         foreach ($request->categories as $categorie) {
             // $categorie = json_decode($categorieA, true);
-
+            // return $categorie['id'];
             if (!Category::find($categorie['id'])) {
                 return (new ServiceController())->apiResponse(404, [], 'Pièce non trouvée');
             }
@@ -1828,10 +1843,14 @@ public function addHousing_step_8(Request $request, $housingId){
             // Enregistrement des photos
             foreach ($categorie['photos'] as $fileId) {
                 $photoModel = new File();
-                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
+
+               /* $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
-                $photoModel->path = $photoUrl;
+                */
+
+                $photoModel->path = $uploadedPath;
                 $photoModel->save();
 
                 $housingCategoryFile = new Housing_category_file();
@@ -1874,10 +1893,14 @@ public function addHousing_step_8(Request $request, $housingId){
             // Enregistrement des photos
             foreach ($piece['photos'] as $fileId) {
                 $photoModel = new File();
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
+/*
                 $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
-                $photoModel->path = $photoUrl;
+*/
+
+                $photoModel->path = $uploadedPath;
                 $photoModel->save();
 
                 $housingCategoryFile = new Housing_category_file();

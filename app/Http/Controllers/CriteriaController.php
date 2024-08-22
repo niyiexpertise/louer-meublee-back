@@ -8,7 +8,10 @@ use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\Note;
 use App\Services\FileService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
+use Illuminate\Validation\ValidationException;
+
 class CriteriaController extends Controller
 {
 
@@ -182,7 +185,13 @@ class CriteriaController extends Controller
                 Rule::unique('criterias')->ignore($id),
             ],
         ]);
-        $criteria = Criteria::whereId($id)->update($data);
+        $criteria = Criteria::find($id);
+        if (!$criteria) {
+            return response()->json(['error' => 'Critèrenon trouvé.'], 404);
+        }
+
+        $criteria->name = $request->name;
+        $criteria->save();
         return response()->json(['data' => 'Nom du Critère mise à jour avec succès.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
@@ -267,7 +276,8 @@ class CriteriaController extends Controller
                 if ($request->hasFile('icone')) {
                     $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria');;
 
-                    Criteria::whereId($id)->update(['icone' => $identity_profil_url]);
+                    $criteria->icone = $identity_profil_url;
+                    $criteria->save();
 
                     return response()->json(['data' => 'icône du critère mis à jour avec succès.'], 200);
                 } else {
@@ -309,7 +319,8 @@ class CriteriaController extends Controller
   public function destroy(string $id)
   {
     try{
-        $criteria = Criteria::whereId($id)->first();
+        $criteria = Criteria::find($id);
+
         if (!$criteria) {
             return response()->json(['error' => 'Critère non trouvé.'], 404);
         }
@@ -319,8 +330,8 @@ class CriteriaController extends Controller
             return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);
         }
 
-            $criteria = Criteria::whereId($id)->update(['is_deleted' => true]);
-
+        $criteria->is_deleted = true;
+        $criteria->save();
 
             return response()->json(['data' => 'Critère supprimé avec succès.'], 200);
 
@@ -366,12 +377,13 @@ class CriteriaController extends Controller
   public function block(string $id)
 {
     try{
-            $criteria = Criteria::whereId($id)->update(['is_blocked' => true]);
-
+        $criteria = Criteria::find($id);
             if (!$criteria) {
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
             }
 
+            $criteria->is_blocked = true;
+            $criteria->save();
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
 
     } catch(Exception $e) {
@@ -417,12 +429,13 @@ class CriteriaController extends Controller
 public function unblock(string $id)
 {
     try{
-            $criteria = Criteria::whereId($id)->update(['is_blocked' => false]);
+        $criteria = Criteria::find($id);
 
             if (!$criteria) {
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
             }
-
+            $criteria->is_blocked = false;
+            $criteria->save();
             return response()->json(['data' => 'this type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);

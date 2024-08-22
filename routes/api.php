@@ -1234,7 +1234,11 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.ListRetraitRejectForAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.ListRetraitRejectForAdmin');
 
-    Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
+    Route::get('/show/{retraitId}', [RetraitController::class, 'show'])
+        ->name('retrait.show')
+        ->middleware('role_or_permission:admin|superAdmin|Manageretrait.show');
+
+        Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
         ->name('retrait.rejectRetraitByAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.rejectRetraitByAdmin');
 
@@ -1243,6 +1247,9 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.store');
     Route::get('/ListRetraitOfUserAuth', [RetraitController::class, 'ListRetraitOfUserAuth'])
         ->name('retrait.ListRetraitOfUserAuth');
+
+        Route::get('/ListRetraitOfUserPendingAuth', [RetraitController::class, 'ListRetraitOfUserPendingAuth'])
+        ->name('retrait.ListRetraitOfUserPendingAuth');
 
     Route::get('/ListRetraitRejectOfUserAuth', [RetraitController::class, 'ListRetraitRejectOfUserAuth'])
         ->name('retrait.ListRetraitRejectOfUserAuth');

@@ -16,12 +16,19 @@ use App\Models\Equipment;
 use App\Models\Equipment_category;
 use App\Models\Housing_equipment;
 use App\Models\Housing_category_file;
+use App\Services\FileService;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 class PhotoController extends Controller
 {
 
- 
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
 /**
  * @OA\Post(
  *   path="/api/logement/updatephoto/{photo_id}",
@@ -77,14 +84,14 @@ class PhotoController extends Controller
      if (!$userId) {
          return response()->json(['error' => 'Unauthenticated'], 401);
      }
- 
+
      $photo = photo::find($photo_id);
-        
+
 
      $validator = Validator::make($request->all(), [
          'photo' => 'required|image',
      ]);
- 
+
      if ($validator->fails()) {
          return response()->json(['error' => $validator->errors()], 400);
      }
@@ -96,13 +103,13 @@ class PhotoController extends Controller
              File::delete($oldProfilePhotoPath);
          }
      }
- 
-     $profilePhotoName = uniqid() . '.' . $request->file('photo')->getClientOriginalExtension();
-     $profilePhotoPath = $request->file('photo')->move(public_path('image/photo_logement'), $profilePhotoName);
-     $base_url = url('/');
-     $photo->path= $base_url .'/image/photo_logement/' . $profilePhotoName;
+
+     $identity_profil_url = '';
+     $identity_profil_url = $this->fileService->uploadFiles($request->file('photo'), 'image/photo_logement');;
+
+     $photo->path= $identity_profil_url;
      $photo->save();
- 
+
      return response()->json(['message' => ' photo updated successfully'], 200);
  }
 /**
@@ -166,9 +173,10 @@ class PhotoController extends Controller
         }
 
         // Réinitialisez la photo de couverture pour ce logement
-        $housing->photos()->update(['is_couverture' => false]);
+        $housing->is_couverture = false;
+        $housing->save();
 
-       
+
         $photo->is_couverture = true;
         $photo->save();
 
@@ -230,21 +238,21 @@ class PhotoController extends Controller
     public function deletePhotoHousing(Request $request, $id)
     {
         $photo = photo::findOrFail($id);
-    
+
         if ($photo->is_couverture == 1) {
             return response()->json(['message' => 'La photo est actuellement utilisée comme photo de couverture et ne peut pas être supprimée.'], 400);
         }
 
         $path = parse_url($photo->path, PHP_URL_PATH);
         $photoPath = public_path($path);
-    
+
         if (File::exists($photoPath)) {
             File::delete($photoPath);
         }
-    
+
         $photo->delete();
-    
+
         return response()->json(['message' => 'La photo a été supprimée avec succès.'], 200);
     }
-    
+
 }

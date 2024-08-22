@@ -265,14 +265,14 @@ public function DeleteEquipementHousing(Request $request)
                     $housingEquipment->is_verified = false;
                     $housingEquipment->save();
                     $userId = Auth::id();
-                   
+
                     $mailhote = [
                         "title" => "Notification ajout d'un équipement à un logement",
                         "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
                      ];
 
                     dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
-                
+
                      $right = Right::where('name','admin')->first();
                      $adminUsers = User_right::where('right_id', $right->id)->get();
                      foreach ($adminUsers as $adminUser) {
@@ -340,30 +340,30 @@ public function DeleteEquipementHousing(Request $request)
                 if (count($request->input('equipmentId')) !== count($request->input('categoryId'))) {
                     return response()->json(['message' => 'Les équipements et les catégories doivent avoir le même nombre d\'éléments.'], 400);
                 }
-        
+
                 $equipmentIds = $request->input('equipmentId');
                 $categoryIds = $request->input('categoryId');
-                
+
                 $m = [];
                 $e = [];
-        
+
                 foreach ($equipmentIds as $index => $equipmentId) {
                     $categoryId = $categoryIds[$index];
-        
+
                     if (!Equipment::find($equipmentId)) {
                         return response()->json(['message' => 'L\'équipement avec ID ' . $equipmentId . ' n\'a pas été trouvé.'], 404);
                     }
-        
+
                     $existingAssociation = housing_equipment::where('housing_id', $request->housingId)
                         ->where('equipment_id', $equipmentId)
                         ->where('category_id', $categoryId)
                         ->exists();
-                    
+
                     if ($existingAssociation) {
                         $e[] = Equipment::find($equipmentId)->name . ' existe déjà dans la catégorie ' . Category::find($categoryId)->name;
                     } else {
                         $m[] = Equipment::find($equipmentId)->name . ' a été ajouté avec succès au logement.';
-        
+
                         $housingEquipment = new housing_equipment();
                         $housingEquipment->housing_id = $request->housingId;
                         $housingEquipment->equipment_id = $equipmentId;
@@ -372,38 +372,38 @@ public function DeleteEquipementHousing(Request $request)
                         $housingEquipment->save();
                     }
                 }
-        
+
                 $userId = Auth::id();
-                    
+
                     $mailhote = [
                         "title" => "Notification ajout d'un équipement à un logement",
                         "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
                      ];
 
                     dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
-                
+
                      $right = Right::where('name','admin')->first();
                      $adminUsers = User_right::where('right_id', $right->id)->get();
                      foreach ($adminUsers as $adminUser) {
-                    
-                
+
+
                      $mail = [
                         'title' => "Notification sur l'ajout d'un nouveau équipement",
                         'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
                     ];
                      dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
                        }
-        
+
                 return response()->json([
                     'message' => empty($m) ? 'Erreur' : $m,
                     'error' => empty($e) ? 'Pas d\'erreur' : $e,
                 ], 200);
-                
+
             } catch (Exception $ex) {
                 return response()->json(['message' => 'Erreur interne du serveur'], 500);
             }
         }
-        
+
 
 
 /**
@@ -539,13 +539,14 @@ public function makeVerifiedHousingEquipment(string $id)
         if ($housingEquipment->is_verified == true) {
             return response()->json(['data' => 'association equipement logement déjà vérifié.'], 200);
         }
-        Housing_equipment::whereId($id)->update(['is_verified' => true]);
+        $housingEquipment->is_verified = true;
+        $housingEquipment->save();
 
               $mail = [
                 'title' => "Notification sur la validation du nouveau équipement ajouté au logement",
                 'body' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
             ];
-            
+
             dispatch( new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
 
         return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
@@ -596,14 +597,14 @@ public function makeVerifiedHousingEquipment(string $id)
                     $query->where('is_verified', false);
                                  })
                 ->get();
- 
+
      $equipmentT = [];
      foreach ($invalidEquipments as $housingEquipment) {
 
          $equipment = $housingEquipment->equipment;
-         
+
          $category = Category::find($housingEquipment->category_id);
-         
+
          $equipmentT[] = [
              'equipment_id' => $equipment->id,
              'housing_id' => $housingId,
@@ -618,12 +619,12 @@ public function makeVerifiedHousingEquipment(string $id)
              'category_name' => $category->name
          ];
      }
- 
+
      return response()->json([
          "data" => $equipmentT,
      ], 200);
  }
- 
+
 
 
 /**
@@ -659,7 +660,7 @@ public function getHousingEquipmentInvalid()
             ->whereHas('housing', function ($query) {
                 $query->where('is_verified', false);
             })
-            ->with(['housing', 'category']) 
+            ->with(['housing', 'category'])
             ->get();
 
         foreach ($housingEquipments as $housingEquipment) {
@@ -677,7 +678,7 @@ public function getHousingEquipmentInvalid()
 
             if ($existingHousingIndex === null) {
                 $category = Category::find($housingEquipment->category_id);
-                
+
                 $housingData = [
                     'housing_equipment_id' => $housingEquipment->id,
                     'equipment_id' => $equipment->id,
@@ -752,7 +753,7 @@ public function getUnexistEquipmentInvalidForHousing()
 
             if ($existingHousingIndex === null) {
                 $category = Category::find($housingEquipment->category_id);
-                
+
                 $housingData = [
                     'housing_equipment_id' => $housingEquipment->id,
                     'equipment_id' => $equipment->id,
@@ -763,7 +764,7 @@ public function getUnexistEquipmentInvalidForHousing()
                     'is_verified' => $housingEquipment->is_verified,
                     'user_detail' =>$housingEquipment->housing->user,
                     'category_id' => $category->id,
-                    'category_name' =>$category->name, 
+                    'category_name' =>$category->name,
                 ];
                 $data[] = $housingData;
             }

@@ -21,6 +21,11 @@ class Setting extends Model
         'linkedin_url',
         'logo',
         'app_mode',
-        'adresse_serveur_fichier'
+        'adresse_serveur_fichier',
+        'montant_maximum_recharge',
+        'montant_minimum_recharge',
+        'montant_minimum_retrait',
+        'montant_maximum_retrait',
+        'montant_minimum_solde_retrait'
     ];
 }

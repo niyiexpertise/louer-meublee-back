@@ -807,6 +807,48 @@ class EquipementController extends Controller
     }
 }
 
+/**
+ * @OA\Get(
+ *     path="/api/equipment/all",
+ *     summary="Get all unique equipments (not blocked, not deleted)",
+ *     tags={"Equipment"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of all unique equipments without duplicates"
+ *     )
+ * )
+ */
+public function allEquipments()
+{
+    try {
+        $equipments = Equipment::where('is_blocked', false)
+            ->where('is_deleted', false)
+            ->get()
+            ->unique('name');
+
+        $equipmentList = $equipments->map(function($equipment) {
+            return [
+                'id' => $equipment->id,
+                'name' => $equipment->name,
+                'icone' => $equipment->icone,
+                'is_deleted' => $equipment->is_deleted,
+                'is_blocked' => $equipment->is_blocked,
+                'updated_at' => $equipment->updated_at,
+                'created_at' => $equipment->created_at,
+            ];
+        });
+
+        return response()->json([
+            'data' => $equipmentList
+        ]);
+
+    } catch(Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+
 
 
 }

@@ -1174,9 +1174,7 @@ public function ListeDesLogementsAcceuil(Request $request)
              'address' => $listing->user->address,
              'sexe' => $listing->user->sexe,
              'postal_code' => $listing->user->postal_code,
-             'is_admin' => $listing->user->is_admin,
-             'is_traveller' => $listing->user->is_traveller,
-             'is_hote' => $listing->user->is_hote,
+             "date_enregistrement_de_hote" => $listing->user->created_at,
          ],
 
          'housing_preference' => $listing->housing_preference->filter(function ($preference) {
@@ -1286,6 +1284,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         return response()->json(['data' => $data],200);
     }
+    
 
  /**
  * @OA\Get(
@@ -2119,9 +2118,8 @@ public function formatListingsData($listings,$userId=0)
                 'address' => $listing->user->address ?? 'non renseigné',
                 'sexe' => $listing->user->sexe ?? 'non renseigné',
                 'postal_code' => $listing->user->postal_code ?? 'non renseigné',
-                'is_admin' => $listing->user->is_admin ?? 'non renseigné',
-                'is_traveller' => $listing->user->is_traveller ?? 'non renseigné',
-                'is_hote' => $listing->user->is_hote ?? 'non renseigné',
+                
+                'created_at' => $listing->user->created_at ?? 'non renseigné',
             ],
             'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
                 return [
@@ -2415,7 +2413,7 @@ public function enableHousing($housingId)
             'total_housing_published' => $totalHousingPublished,
             'total_avis_for_housing' => $totalCommentsForHousing,
             'global_average_for_user' => $globalAverageForOwner,
-            'user' => $housing->user
+            
         ]);
     }
 

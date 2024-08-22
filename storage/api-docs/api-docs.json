@@ -8294,6 +8294,25 @@
                 ]
             }
         },
+        "/api/equipment/all": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get all unique equipments (not blocked, not deleted)",
+                "operationId": "90b18e038c6fcf42ed34e8ced01f137b",
+                "responses": {
+                    "200": {
+                        "description": "List of all unique equipments without duplicates"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/addfavorites": {
             "post": {
                 "tags": [

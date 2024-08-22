@@ -1644,5 +1644,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
 Route::get('settings/index', [SettingController::class, 'show'])
             ->name('settings.index');
+Route::get('equipment/all', [EquipementController::class, 'allEquipments'])->name('allEquipments');
+
+          
 
 /** end Route ne nécéssitant pas l'authentification */

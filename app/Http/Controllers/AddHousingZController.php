@@ -1639,13 +1639,18 @@ public function addHousing_step_16(Request $request, $housingId) {
  * )
  */
 public function addHousing_step_8(Request $request, $housingId){
+
     try {
+
         $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
         
+         return $request;
+
         $errorcheckOwner = $this->checkOwner($housingId);
+        
         if ($errorcheckOwner) {
             return $errorcheckOwner;
         }
@@ -1653,7 +1658,6 @@ public function addHousing_step_8(Request $request, $housingId){
         if ($validationResponse) {
             return $validationResponse;
         }
-        
         $this->deleteHousingData($housingId);
 
         // Validation des catégories
@@ -1689,12 +1693,12 @@ public function addHousing_step_8(Request $request, $housingId){
                 if (!is_int($equipmentId)) {
                     return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
                 }
-
+                               
                 $equipment = Equipment::find($equipmentId);
                 if (!$equipment) {
                     return (new ServiceController())->apiResponse(404, [], 'Équipement non trouvé pour le logement '.Category::find($categorie['id'])->name);
                 }
-
+ 
                 $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
                     ->where('category_id', $categorie['id'])->exists();
 

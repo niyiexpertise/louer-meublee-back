@@ -60,7 +60,7 @@ class ReviewReservationController extends Controller
  *     )
  * )
  */
-   
+
  public function AddReviewNote(Request $request)
  {
 
@@ -80,10 +80,10 @@ class ReviewReservationController extends Controller
      if($userId != $reservation->user_id){
         return (new ServiceController())->apiResponse(404,[], 'Vous ne pouvez pas donner votre avis ou une note sur une réservation qui ne vous appartient pas');
      }
- 
+
      $criteriaIds = [];
      $duplicateCriteriaIds = [];
- 
+
      foreach ($validatedData['criteria_notes'] as $criteriaNote) {
          if (in_array($criteriaNote['criteria_id'], $criteriaIds)) {
              $duplicateCriteriaIds[] = $criteriaNote['criteria_id'];
@@ -91,19 +91,19 @@ class ReviewReservationController extends Controller
              $criteriaIds[] = $criteriaNote['criteria_id'];
          }
      }
- 
+
      if (count($duplicateCriteriaIds) > 0) {
          return response()->json([
              'message' => 'Les ID des critères suivants se répètent : ' . implode(', ', $duplicateCriteriaIds)
          ], 400);
      }
- 
+
      foreach ($validatedData['criteria_notes'] as $criteriaNote) {
          $existingNote = Note::where('reservation_id', $validatedData['reservation_id'])
              ->where('user_id', $userId)
              ->where('criteria_id', $criteriaNote['criteria_id'])
              ->first();
- 
+
          if ($existingNote) {
              $criteriaName = Criteria::where('id', $criteriaNote['criteria_id'])->value('name');
              return response()->json([
@@ -111,7 +111,7 @@ class ReviewReservationController extends Controller
              ], 400);
          }
      }
- 
+
      if (isset($validatedData['general_comment'])) {
          if (Review_reservation::where('reservation_id', $validatedData['reservation_id'])
              ->where('user_id', $userId)
@@ -121,7 +121,7 @@ class ReviewReservationController extends Controller
              ], 400);
          }
      }
- 
+
      foreach ($validatedData['criteria_notes'] as $criteriaNote) {
          $note = new Note();
          $note->user_id = $userId;
@@ -130,7 +130,7 @@ class ReviewReservationController extends Controller
          $note->note = $criteriaNote['note'];
          $note->save();
      }
- 
+
      if (isset($validatedData['general_comment'])) {
          $review = new Review_reservation();
          $review->user_id = $userId;
@@ -138,10 +138,10 @@ class ReviewReservationController extends Controller
          $review->content = $validatedData['general_comment'];
          $review->save();
      }
- 
+
      return response()->json(['message' => 'Notes et commentaire ajoutés avec succès'], 200);
  }
- 
+
 
 
 /**
@@ -181,67 +181,77 @@ class ReviewReservationController extends Controller
  */
 
  public function LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($housingId)
- {
-     $reservations = Reservation::where('housing_id', $housingId)->get();
- 
-     $criteria_notes = [];
-     $user_comments = [];
- 
-     foreach ($reservations as $reservation) {
-         $notes = Note::where('reservation_id', $reservation->id)->get();
- 
-         foreach ($notes as $note) {
-             if (!isset($criteria_notes[$note->criteria_id])) {
-                 $criteria_notes[$note->criteria_id] = [
-                     'criteria_name' => $note->criteria->name,
-                     'total_notes' => 0,
-                     'note_sum' => 0
-                 ];
-             }
- 
-             $criteria_notes[$note->criteria_id]['total_notes'] += 1;
-             $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
-         }
- 
-         $review = Review_reservation::where('reservation_id', $reservation->id)->get();
-         if ($review) {
-            foreach ($review as $reviews) {
-                $user = User::find($reviews->user_id);
-                $user_comments[] = [
-                    'content' => $reviews->content,
-                    'created_at' => $reviews->created_at,
-                    'updated_at' => $reviews->updated_at,
-                    'user' => $user, 
+{
+    $reservations = Reservation::where('housing_id', $housingId)->get();
+
+    $criteria_notes = [];
+    $user_comments = [];
+
+    foreach ($reservations as $reservation) {
+        $notes = Note::where('reservation_id', $reservation->id)->get();
+
+        foreach ($notes as $note) {
+            if (!isset($criteria_notes[$note->criteria_id])) {
+                $criteria_notes[$note->criteria_id] = [
+                    'criteria_name' => $note->criteria->name,
+                    'total_notes' => 0,
+                    'note_sum' => 0
                 ];
-               }
-         }
-     }
- 
-     $average_notes_by_criteria = [];
-     $overall_note_sum = 0;
-     $total_criteria_count = 0;
- 
-     foreach ($criteria_notes as $details) {
-         $average_note = $details['note_sum'] / $details['total_notes'];
-         $average_notes_by_criteria[] = [
-             'criteria_name' => $details['criteria_name'],
-             'average_note' => round($average_note, 2),
-             'nb_personne' => $details['total_notes'] 
-         ];
- 
-         $overall_note_sum += $average_note;
-         $total_criteria_count += 1;
-     }
- 
-     $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
- 
-     return response()->json(['data' => [
-         'average_notes_by_criteria' => $average_notes_by_criteria,
-         'overall_average' => $overall_average,
-         'user_comments' => $user_comments
-     ]]);
- }
- 
+            }
+
+            $criteria_notes[$note->criteria_id]['total_notes'] += 1;
+            $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
+        }
+
+        $reviews = Review_reservation::where('reservation_id', $reservation->id)->get();
+        if ($reviews) {
+            foreach ($reviews as $review) {
+                $user = User::find($review->user_id);
+                $user_comments[] = [
+                    'content' => $review->content,
+                    'created_at' => $review->created_at,
+                    'updated_at' => $review->updated_at,
+                    'user' => [
+                        'id' => $user->id,
+                        'lastname' => $user->lastname,
+                        'firstname' => $user->firstname,
+                        'country' => $user->country,
+                        'city' => $user->city,
+                        'address' => $user->address,
+                        'file_profil' => $user->file_profil,
+                        'created_at' => $user->created_at,
+                    ],
+                ];
+            }
+        }
+    }
+
+    $average_notes_by_criteria = [];
+    $overall_note_sum = 0;
+    $total_criteria_count = 0;
+
+    foreach ($criteria_notes as $details) {
+        $average_note = $details['note_sum'] / $details['total_notes'];
+        $average_notes_by_criteria[] = [
+            'criteria_name' => $details['criteria_name'],
+            'average_note' => round($average_note, 2),
+            'nb_personne' => $details['total_notes']
+        ];
+
+        $overall_note_sum += $average_note;
+        $total_criteria_count += 1;
+    }
+
+    $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
+
+    return response()->json(['data' => [
+        'average_notes_by_criteria' => $average_notes_by_criteria,
+        'overall_average' => $overall_average,
+        'user_comments' => $user_comments
+    ]]);
+}
+
+
 
 /**
  * @OA\Get(
@@ -313,7 +323,7 @@ public function getStatistiquesDesNotes($logementId)
 
     $notesParUtilisateur = $notes->groupBy('user_id');
 
-    $nombreTotalUtilisateurs = $notesParUtilisateur->count(); 
+    $nombreTotalUtilisateurs = $notesParUtilisateur->count();
     $moyennesParUtilisateur = $notesParUtilisateur->map(function ($notesUtilisateur) {
         $somme = $notesUtilisateur->sum('note');
         $nombreDeNotes = $notesUtilisateur->count();

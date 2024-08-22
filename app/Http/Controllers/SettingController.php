@@ -16,7 +16,7 @@ class SettingController extends Controller
     {
         $this->fileService = $fileService;
     }
-
+      
     /**
      * @OA\Post(
      *     path="/api/settings/update",

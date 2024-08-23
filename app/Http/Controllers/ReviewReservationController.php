@@ -181,75 +181,117 @@ class ReviewReservationController extends Controller
  */
 
  public function LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($housingId)
-{
-    $reservations = Reservation::where('housing_id', $housingId)->get();
+ {
+     $reservations = Reservation::where('housing_id', $housingId)->get();
+ 
+     $criteria_notes = [];
+     $user_comments = [];
+     $user_notes = [];  // Pour stocker les notes par utilisateur
+ 
+     foreach ($reservations as $reservation) {
+         $notes = Note::where('reservation_id', $reservation->id)->get();
+ 
+         foreach ($notes as $note) {
+             if (!isset($criteria_notes[$note->criteria_id])) {
+                 $criteria_notes[$note->criteria_id] = [
+                     'criteria_name' => $note->criteria->name,
+                     'total_notes' => 0,
+                     'note_sum' => 0
+                 ];
+             }
+ 
+             $criteria_notes[$note->criteria_id]['total_notes'] += 1;
+             $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
+ 
+             // Ajouter les notes de l'utilisateur
+             if (!isset($user_notes[$note->user_id])) {
+                 $user_notes[$note->user_id] = [
+                     'note_sum' => 0,
+                     'total_notes' => 0
+                 ];
+             }
+ 
+             $user_notes[$note->user_id]['note_sum'] += $note->note;
+             $user_notes[$note->user_id]['total_notes'] += 1;
+         }
+ 
+         $reviews = Review_reservation::where('reservation_id', $reservation->id)->get();
+         if ($reviews) {
+             foreach ($reviews as $review) {
+                 $user = User::find($review->user_id);
+                 $user_comments[] = [
+                     'content' => $review->content,
+                     'created_at' => $review->created_at,
+                     'updated_at' => $review->updated_at,
+                     'user' => [
+                         'id' => $user->id,
+                         'lastname' => $user->lastname,
+                         'firstname' => $user->firstname,
+                         'country' => $user->country,
+                         'city' => $user->city,
+                         'address' => $user->address,
+                         'file_profil' => $user->file_profil,
+                         'created_at' => $user->created_at,
+                     ],
+                 ];
+             }
+         }
+     }
+ 
+     $average_notes_by_criteria = [];
+     $overall_note_sum = 0;
+     $total_criteria_count = 0;
+ 
+     foreach ($criteria_notes as $details) {
+         $average_note = $details['note_sum'] / $details['total_notes'];
+         $average_notes_by_criteria[] = [
+             'criteria_name' => $details['criteria_name'],
+             'average_note' => round($average_note, 2),
+             'nb_personne' => $details['total_notes']
+         ];
+ 
+         $overall_note_sum += $average_note;
+         $total_criteria_count += 1;
+     }
+ 
+     $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
+ 
+     // Calculer les moyennes des utilisateurs
+     $user_average_notes = [];
+     foreach ($user_notes as $user_id => $data) {
+         $average_note = $data['note_sum'] / $data['total_notes'];
+         $user_average_notes[$user_id] = round($average_note, 2);
+     }
+ 
+     // Compter les utilisateurs par note globale
+     $note_distribution = [];
+     $note_counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+     foreach ($user_average_notes as $average_note) {
+         $rounded_note = round($average_note);
+         if (isset($note_counts[$rounded_note])) {
+             $note_counts[$rounded_note]++;
+         }
+     }
+ 
+     // Transformer les données en format requis
+     foreach ($note_counts as $note => $count) {
+         $note_distribution[] = [
+             'note' => $note,
+             'effectif' => $count
+         ];
+     }
+ 
+     return response()->json([
+         'data' => [
+             'average_notes_by_criteria' => $average_notes_by_criteria,
+             'overall_average' => $overall_average,
+             'user_comments' => $user_comments,
+             'note_distribution' => $note_distribution // Distribution des notes au format requis
+         ]
+     ]);
+ }
+ 
 
-    $criteria_notes = [];
-    $user_comments = [];
-
-    foreach ($reservations as $reservation) {
-        $notes = Note::where('reservation_id', $reservation->id)->get();
-
-        foreach ($notes as $note) {
-            if (!isset($criteria_notes[$note->criteria_id])) {
-                $criteria_notes[$note->criteria_id] = [
-                    'criteria_name' => $note->criteria->name,
-                    'total_notes' => 0,
-                    'note_sum' => 0
-                ];
-            }
-
-            $criteria_notes[$note->criteria_id]['total_notes'] += 1;
-            $criteria_notes[$note->criteria_id]['note_sum'] += $note->note;
-        }
-
-        $reviews = Review_reservation::where('reservation_id', $reservation->id)->get();
-        if ($reviews) {
-            foreach ($reviews as $review) {
-                $user = User::find($review->user_id);
-                $user_comments[] = [
-                    'content' => $review->content,
-                    'created_at' => $review->created_at,
-                    'updated_at' => $review->updated_at,
-                    'user' => [
-                        'id' => $user->id,
-                        'lastname' => $user->lastname,
-                        'firstname' => $user->firstname,
-                        'country' => $user->country,
-                        'city' => $user->city,
-                        'address' => $user->address,
-                        'file_profil' => $user->file_profil,
-                        'created_at' => $user->created_at,
-                    ],
-                ];
-            }
-        }
-    }
-
-    $average_notes_by_criteria = [];
-    $overall_note_sum = 0;
-    $total_criteria_count = 0;
-
-    foreach ($criteria_notes as $details) {
-        $average_note = $details['note_sum'] / $details['total_notes'];
-        $average_notes_by_criteria[] = [
-            'criteria_name' => $details['criteria_name'],
-            'average_note' => round($average_note, 2),
-            'nb_personne' => $details['total_notes']
-        ];
-
-        $overall_note_sum += $average_note;
-        $total_criteria_count += 1;
-    }
-
-    $overall_average = $total_criteria_count > 0 ? round($overall_note_sum / $total_criteria_count, 2) : 0;
-
-    return response()->json(['data' => [
-        'average_notes_by_criteria' => $average_notes_by_criteria,
-        'overall_average' => $overall_average,
-        'user_comments' => $user_comments
-    ]]);
-}
 
 
 

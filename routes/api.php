@@ -1019,7 +1019,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin'])
         ->name('logement.showHousingDetailForValidationForadmin')
-        ->middleware('role_or_permission:superAdmin|Managelogement.showHousingDetailForValidationForadmin');
+        ->middleware('role_or_permission:superAdmin|hote|Managelogement.showHousingDetailForValidationForadmin');
 
     Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing'])
         ->name('logement.ValidateOneHousing')

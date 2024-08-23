@@ -49,9 +49,9 @@ class HousingController extends Controller
 {
     protected $fileService;
 
-    public function __construct(FileService $fileService)
+    public function __construct(FileService $fileService = null)
     {
-        $this->fileService = $fileService;
+        $this->fileService = $fileService ?: new FileService();
     }
 
  public function addHousing(Request $request)

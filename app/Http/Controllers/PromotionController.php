@@ -812,6 +812,7 @@ public function activePromotion($promotionId, $housingId) {
     public function actionRepetitif($housingId){
         $this->desactivePromotionByJob($housingId);
         $this->activatePromotionsForHousing($housingId);
+        (new HousingSponsoringController())->disableExpiredHousings();
     }
 
 }

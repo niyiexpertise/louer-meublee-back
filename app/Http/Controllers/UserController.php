@@ -368,7 +368,7 @@ public function userLanguages()
      $identity_profil_url = '';
 
      $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil');;
-     
+
      $user->file_profil = $identity_profil_url;
      $user->save();
 
@@ -412,12 +412,12 @@ public function userLanguages()
  public function block(string $id)
  {
     try{
-        $user = User::whereId($id)->update(['is_blocked' => true]);
-
+        $user = User::find($id);
         if (!$user) {
             return response()->json(['error' => 'User non trouvé.'], 404);
         }
-
+        $user->is_blocked = true;
+        $user->save();
         return response()->json(['data' => 'This user is block successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
@@ -461,12 +461,12 @@ public function userLanguages()
 public function unblock($id)
 {
     try{
-        $user= User::whereId($id)->update(['is_blocked' => false]);
-
+        $user = User::find($id);
         if (!$user) {
             return response()->json(['error' => 'User non trouvé.'], 404);
         }
-
+        $user->is_blocked = false;
+        $user->save();
         return response()->json(['data' => 'User débloqué avec succès.'], 200);
     }catch (Exception $e){
           return response()->json(['error' => $e->getMessage()], 500);

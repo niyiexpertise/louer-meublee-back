@@ -21,7 +21,7 @@ class DashBoardTravelerController extends Controller
         // } catch (Exception $e) {
         //     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         // }
-    
+
 
 
         /**
@@ -51,11 +51,11 @@ class DashBoardTravelerController extends Controller
         {
             try {
                 $userId = Auth::id();
-        
+
                 $data["data"] = Reservation::where('user_id', $userId)->get();
                 $data["nombre"] = count($data["data"]) ;
 
-        
+
                 return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations pour le voyageur connecté.');
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -93,6 +93,7 @@ class DashBoardTravelerController extends Controller
 
                 $data["data"] = Reservation::where('user_id', $userId)
                                 ->where('is_rejected_traveler', true)
+                                ->where('statut', 'payee')
                                 ->get();
                 $data["nombre"] = count($data["data"]) ;
 
@@ -134,6 +135,7 @@ class DashBoardTravelerController extends Controller
                 $data["data"] = Reservation::where('user_id', $userId)
                                 ->where('is_confirmed_hote', true)
                                 ->where('is_integration', true)
+                                ->where('statut', 'payee')
                                 ->get();
                 $data["nombre"] = count($data["data"]) ;
 
@@ -147,12 +149,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getRejectedReservationsByHost",
-         *     summary="Liste des réservations rejetées par l'hôte",
+         *     summary="Liste des réservations annulées par l'hôte",
          *     tags={"Dashboard traveler"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations rejetées par l'hôte.",
+         *         description="Liste des réservations annulées par l'hôte.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -171,12 +173,13 @@ class DashBoardTravelerController extends Controller
         {
             try {
                 $userId = Auth::id();
-        
+
                 $data["data"] = Reservation::where('user_id', $userId)
                                    ->where('is_rejected_hote', true)
+                                   ->where('statut', 'payee')
                                    ->get();
                 $data["nombre"] = count($data["data"]) ;
-        
+
                 return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations rejetées par l\'hôte.');
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -212,10 +215,11 @@ class DashBoardTravelerController extends Controller
             try {
                 $userId = Auth::id();
 
-                
+
                 $data["data"] = Reservation::where('user_id', $userId)
                 ->where('is_tranche_paiement', true)
                 ->whereColumn('valeur_payee', '<', 'montant_a_paye')
+                ->where('statut', 'payee')
                 ->get();
 
                 $data["nombre"] = count($data["data"]) ;
@@ -229,12 +233,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getPendingConfirmations",
-         *     summary="Liste des logements en attente de confirmation",
+         *     summary="Liste des réservations en attente de confirmation",
          *     tags={"Dashboard traveler"},
          *  security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des logements en attente de confirmation.",
+         *         description="Liste des réservations en attente de confirmation.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -257,6 +261,7 @@ class DashBoardTravelerController extends Controller
 
                 $data["data"] = Reservation::where('user_id', $userId)
                                     ->where('is_confirmed_hote', true)
+                                    ->where('statut', 'payee')
                                     ->get();
                 $data["nombre"] = count($data["data"]);
 
@@ -304,14 +309,14 @@ class DashBoardTravelerController extends Controller
  *                     type="string",
  *                     example="completed"
  *                 ),
- *                
+ *
  *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Paiement effectué avec succès",
- * 
+ *
  *         @OA\JsonContent(
  *             type="object",
  *             @OA\Property(
@@ -451,19 +456,19 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], "Vous n'avez pas assez d'argent sur votre portefeuille pour effectuer ce paiement");
                     }
                     $portefeuille->solde -= $required_paid_value;
-                    
+
 
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->debit = true;
                     $portefeuilleTransaction->credit = false;
                     $portefeuilleTransaction->amount = $required_paid_value;
                     $portefeuilleTransaction->motif = "Finalisation de paiement";
-                    
+
                     $portefeuilleTransaction->reservation_id = $reservation->id;
                     $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
                     $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-                    
+
                     $portefeuilleTransaction->save();
                     $portefeuille->save();
                     $portefeuilleTransaction->save();
@@ -473,19 +478,19 @@ class DashBoardTravelerController extends Controller
                 else {
 
                     $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
-                    
+
 
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->debit = true;
                     $portefeuilleTransaction->credit = false;
                     $portefeuilleTransaction->amount = $required_paid_value;
                     $portefeuilleTransaction->motif = "Finalisation de paiement";
-                    
+
                     $portefeuilleTransaction->reservation_id = $reservation->id;
                     $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
                     $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-                   
+
                     $portefeuilleTransaction->save();
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
                 }
@@ -497,7 +502,7 @@ class DashBoardTravelerController extends Controller
                 ];
 
                 return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
-                
+
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);
@@ -530,13 +535,13 @@ class DashBoardTravelerController extends Controller
  *                 property="detail de la reservation",
  *                 description="Les détails de la réservation",
  *                 type="string", example="[]"
- *                
+ *
  *             ),
  *             @OA\Property(
  *                 property="voyageur",
  *                 description="Les détails du voyageur",
  *                 type="string", example="[]"
- *                
+ *
  *             )
  *         )
  *     ),
@@ -578,7 +583,7 @@ class DashBoardTravelerController extends Controller
                 'prenom' => Housing::whereId(Reservation::find($reservationId)->housing_id)->first()->user->firstname,
             ]
          ];
-        
+
 
        return (new ServiceController())->apiResponse(200,$data, 'Detail de reservation recupéré avec succès');
     }

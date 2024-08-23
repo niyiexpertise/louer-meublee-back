@@ -1055,6 +1055,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::post('/store', [ReservationController::class, 'storeReservationWithPayment'])
             ->name('reservation.store')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.store');
+        Route::post('/payReservation/{reservationId}', [ReservationController::class, 'payReservation'])
+            ->name('reservation.payReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.payReservation');
 
         // Hote (Host)
         Route::put('/hote_confirm_reservation/{idReservation}', [ReservationController::class, 'hote_confirm_reservation'])
@@ -1651,5 +1654,12 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
 Route::get('settings/index', [SettingController::class, 'show'])
             ->name('settings.index');
+
+Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringController::class, 'getSponsoredHousings'])
+            ->name('housingsponsoring.getSponsoredHousings');
+
+
+Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
+            ->name('housingsponsoring.disableExpiredHousings');
 
 /** end Route ne nécéssitant pas l'authentification */

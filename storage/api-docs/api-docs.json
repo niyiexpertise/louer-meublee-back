@@ -6359,11 +6359,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations rejetées par l'hôte",
+                "summary": "Liste des réservations annulées par l'hôte",
                 "operationId": "43cadf527db032dbc6f8ad840d2ac81b",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations rejetées par l'hôte.",
+                        "description": "Liste des réservations annulées par l'hôte.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6449,11 +6449,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des logements en attente de confirmation",
+                "summary": "Liste des réservations en attente de confirmation",
                 "operationId": "6765a8b375f6b7fbe005b75aeb06b5ba",
                 "responses": {
                     "200": {
-                        "description": "Liste des logements en attente de confirmation.",
+                        "description": "Liste des réservations en attente de confirmation.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13513,6 +13513,49 @@
                 ]
             }
         },
+        "/api/housingsponsoring/getSponsoredHousings": {
+            "get": {
+                "tags": [
+                    "Home Housing Sponsoring"
+                ],
+                "summary": "Récupérer les logements sponsorisés",
+                "description": "Retourne la liste des logements sponsorisés en se basant sur la date actuelle.",
+                "operationId": "858816df004eac908d349cb23afc0733",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements sponsorisés retournée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur dans la récupération des logements sponsorisés."
+                    }
+                }
+            }
+        },
+        "/api/housingsponsoring/disableExpiredHousings": {
+            "post": {
+                "tags": [
+                    "Home Housing Sponsoring"
+                ],
+                "summary": "Désactiver les logements dont la date_fin est dépassée",
+                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
+                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
+                "responses": {
+                    "200": {
+                        "description": "Les logements expirés ont été désactivés avec succès."
+                    }
+                }
+            }
+        },
         "/api/housingtype/index": {
             "get": {
                 "tags": [
@@ -19930,6 +19973,212 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/reservation/payReservation/{reservationId}": {
+            "post": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Payer une réservation",
+                "description": "Permet de payer une réservation avec diverses méthodes de paiement, y compris le portefeuille.",
+                "operationId": "payReservation",
+                "parameters": [
+                    {
+                        "name": "reservationId",
+                        "in": "path",
+                        "description": "ID de la réservation à payer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "valeur_payee",
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement"
+                                ],
+                                "properties": {
+                                    "valeur_payee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "portefeuille"
+                                    },
+                                    "id_transaction": {
+                                        "type": "string",
+                                        "example": "abc123"
+                                    },
+                                    "statut_paiement": {
+                                        "type": "string",
+                                        "example": "payé"
+                                    },
+                                    "valeur_reduction_hote": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10,
+                                        "nullable": true
+                                    },
+                                    "valeur_promotion_hote": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "valeur_reduction_code_promo": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15,
+                                        "nullable": true
+                                    },
+                                    "valeur_reduction_staturp": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20,
+                                        "nullable": true
+                                    },
+                                    "montant_charge": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 3,
+                                        "nullable": true
+                                    },
+                                    "montant_housing": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100,
+                                        "nullable": true
+                                    },
+                                    "montant_a_paye": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 130,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement fait avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement fait avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "reservation_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150
+                                                },
+                                                "payment_method": {
+                                                    "type": "string",
+                                                    "example": "portefeuille"
+                                                },
+                                                "id_transaction": {
+                                                    "type": "string",
+                                                    "example": "abc123"
+                                                },
+                                                "statut": {
+                                                    "type": "string",
+                                                    "example": "payé"
+                                                },
+                                                "is_confirmed": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "is_canceled": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation non trouvée"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur détaillé"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/reservation/hote_confirm_reservation/{idReservation}": {

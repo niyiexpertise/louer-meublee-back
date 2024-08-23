@@ -14,7 +14,7 @@ class ServiceController extends Controller
 {
     public function apiResponse($status,$data,$message=''){
 
-        if(env('MODE') == 'PRODUCTION' && $status == 500){
+        if(Setting::first()->app_mode == 'PRODUCTION' && $status == 500){
             $message = "An error occured";
         }
 

@@ -641,8 +641,8 @@ public function addHousing_step_7(Request $request, $housingId){
                 if(env('MODE') == 'DEVELOPPEMENT'){
                     $ip=env('LOCAL_ADDRESS');
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
-                }
-                    */
+                }*/
+
                 $photoModel->path = $uploadedPath;
 
                 $photoModel->save();
@@ -1820,6 +1820,7 @@ public function addHousing_step_8(Request $request, $housingId){
 
             // Mise à jour pour les équipements inexistants
             foreach ($categorie['equipments'][0]['newEquipementName'] as $newEquipment) {
+                // return $newEquipment;
                 $equipment = Equipment::whereName($newEquipment)->first();
                 if (!$equipment) {
                     $equipment = new Equipment();

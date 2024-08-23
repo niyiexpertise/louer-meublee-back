@@ -39,9 +39,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\user_partenaire;
 use App\Jobs\SendRegistrationEmail;
-
-
-
+use App\Models\MethodPayement;
 
 class ReservationController extends Controller
 {
@@ -368,6 +366,8 @@ public function storeReservationWithPayment(Request $request)
         'montant_a_paye' => 'nullable|numeric',
     ]);
 
+    $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+
     $message = [];
 
     if ($validatedData->fails()) {
@@ -385,9 +385,13 @@ public function storeReservationWithPayment(Request $request)
 
     }
 
+    if(!MethodPayement::whereName($method_paiement)->exists()){
+        return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+    }
+
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
 
-    DB::beginTransaction();
+   
 
     try {
         $reservation = Reservation::create([
@@ -432,49 +436,199 @@ public function storeReservationWithPayment(Request $request)
             $reservation->save();
         }
 
-        $paymentData = [
-            'reservation_id' => $reservation->id,
-            'amount' => $validatedData['valeur_payee'],
-            'payment_method' => $validatedData['payment_method'],
-            'id_transaction' => $validatedData['id_transaction'],
-            'statut' => $validatedData['statut_paiement'],
-            'is_confirmed' => false,
-            'is_canceled' => false,
-        ];
 
         if ($request->has('country')) {
             $paymentData['country'] = $request->input('country');
         }
 
-        $payment = Payement::create($paymentData);
-
-        if ($validatedData['payment_method'] == "portfeuille") {
-            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-            $portefeuille->solde -= $validatedData['valeur_payee'];
-
-            $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->debit = true;
-            $portefeuilleTransaction->credit = false;
-            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
-            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
-            $portefeuilleTransaction->reservation_id = $reservation->id;
-            $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
-            $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
-            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-
-            $portefeuilleTransaction->save();
-            $portefeuille->save();
-
-            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-
-        }
-
-        DB::commit();
         $mail_to_traveler = [
             'title' => 'Confirmation de Réservation',
             'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
         ];
 
+        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
+
+
+        $data = ["reservation" => $reservation,
+            // "payment" =>$payment
+             ];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+    }
+}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/reservation/payReservation/{reservationId}",
+ *     summary="Payer une réservation",
+ *     description="Permet de payer une réservation avec diverses méthodes de paiement, y compris le portefeuille.",
+ *     operationId="payReservation",
+ *     tags={"Reservation"},
+ *     
+ *     @OA\Parameter(
+ *         name="reservationId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *         ),
+ *         description="ID de la réservation à payer",
+ *     ),
+ *     
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={
+ *                 "valeur_payee", "payment_method", "id_transaction", "statut_paiement"
+ *             },
+ *             @OA\Property(property="valeur_payee", type="number", format="float", example=150.00),
+ *             @OA\Property(property="payment_method", type="string", example="portefeuille"),
+ *             @OA\Property(property="id_transaction", type="string", example="abc123"),
+ *             @OA\Property(property="statut_paiement", type="string", example="payé"),
+ *             @OA\Property(property="valeur_reduction_hote", type="number", format="float", nullable=true, example=10.00),
+ *             @OA\Property(property="valeur_promotion_hote", type="number", format="float", nullable=true, example=5.00),
+ *             @OA\Property(property="valeur_reduction_code_promo", type="number", format="float", nullable=true, example=15.00),
+ *             @OA\Property(property="valeur_reduction_staturp", type="number", format="float", nullable=true, example=20.00),
+ *             @OA\Property(property="montant_charge", type="number", format="float", nullable=true, example=3.00),
+ *             @OA\Property(property="montant_housing", type="number", format="float", nullable=true, example=100.00),
+ *             @OA\Property(property="montant_a_paye", type="number", format="float", nullable=true, example=130.00),
+ *         )
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=200,
+ *         description="Paiement fait avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Paiement fait avec succès"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="reservation_id", type="integer", example=1),
+ *                 @OA\Property(property="amount", type="number", format="float", example=150.00),
+ *                 @OA\Property(property="payment_method", type="string", example="portefeuille"),
+ *                 @OA\Property(property="id_transaction", type="string", example="abc123"),
+ *                 @OA\Property(property="statut", type="string", example="payé"),
+ *                 @OA\Property(property="is_confirmed", type="boolean", example=true),
+ *                 @OA\Property(property="is_canceled", type="boolean", example=false),
+ *             ),
+ *         ),
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation non trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Réservation non trouvée"),
+ *             @OA\Property(property="data", type="object", nullable=true),
+ *         ),
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="message", type="string", example="Message d'erreur détaillé"),
+ *             @OA\Property(property="data", type="object", nullable=true),
+ *         ),
+ *     ),
+ *     
+ *     @OA\SecurityScheme(
+ *         securityScheme="bearerAuth",
+ *         type="http",
+ *         scheme="bearer",
+ *         bearerFormat="JWT"
+ *     )
+ * )
+ */
+
+
+public function payReservation(Request $request,$reservationId){
+    try {
+
+        $validatedData = Validator::make($request->all(), [
+            'valeur_payee' => 'required|numeric',
+            'payment_method' => 'required|string',
+            'id_transaction' => 'required|string',
+            'statut_paiement' => 'required',
+            'montant_a_paye' => 'nullable|numeric',
+        ]);
+
+        $reservation= Reservation::whereId($reservationId)->first();
+
+        if($reservation){
+            return (new ServiceController())->apiResponse(404,[], 'Reservation non trouvé');
+        }
+
+        if($reservation->statut == 'payee'){
+            return (new ServiceController())->apiResponse(404,[], 'Reservation déjà payée');
+        }
+
+        $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+
+        $portfeuille = $this->findSimilarPaymentMethod("portfeuille");
+
+        $paymentData = [
+            'reservation_id' => $reservation->id,
+            'amount' => $validatedData['valeur_payee'],
+            'payment_method' => $method_paiement,
+            'id_transaction' => $validatedData['id_transaction'],
+            'statut' => $validatedData['statut_paiement'],
+            'is_confirmed' => true,
+            'is_canceled' => false,
+        ];
+
+        DB::beginTransaction();
+
+        $payment = Payement::create($paymentData);
+        $user_id = Auth::id();
+
+        if ($method_paiement == $portfeuille) {
+            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+            $portefeuille->solde -= $validatedData['valeur_payee'];
+
+            $portefeuilleTransaction = new Portfeuille_transaction();
+            $portefeuilleTransaction->debit = false;
+            $portefeuilleTransaction->credit = false;
+            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
+            $portefeuilleTransaction->operation_type = 'debit';
+            $portefeuilleTransaction->reservation_id = $reservation->id;
+            $portefeuilleTransaction->payment_method = $method_paiement;
+            $portefeuilleTransaction->id_transaction = 0;
+            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+
+            $reservation->statut = 'payee';
+
+            $reservation->save();
+            $portefeuilleTransaction->save();
+            $portefeuille->save();
+
+            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+        }else{
+
+            $portefeuilleTransaction = new Portfeuille_transaction();
+            $portefeuilleTransaction->credit = true;
+            $portefeuilleTransaction->debit = false;
+            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+            $portefeuilleTransaction->motif = "Réservation effectuée avec autre moyen que le portefeuille";
+            $portefeuilleTransaction->reservation_id = $reservation->id;
+            $portefeuilleTransaction->payment_method = $method_paiement;
+            $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
+
+            $reservation->statut = 'payee';
+            $reservation->save();
+            $portefeuilleTransaction->save();
+
+            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+        }
+
+        DB::commit();
 
         $mail_to_host = [
             'title' => 'Nouvelle Réservation',
@@ -483,24 +637,48 @@ public function storeReservationWithPayment(Request $request)
                 " Date de fin : " . $reservation->date_of_end . "\n"
         ];
 
-        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
         dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
 
-        // Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
-        //Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
+        return (new ServiceController())->apiResponse(200,$payment, 'Paiement fait avec succès');
 
-        $data = ["reservation" => $reservation,
-            "payment" =>$payment
-             ];
-
-
-            return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-    }
+} catch(\Exception $e) {
+    DB::rollBack();
+    return (new ServiceController())->apiResponse(500,[],$e->getMessage());
 }
+}
+
+
+public function findSimilarPaymentMethod($inputMethod)
+{
+    // Récupère toutes les méthodes de paiement depuis la base de données
+    $paymentMethods = DB::table('method_payements')->pluck('name');
+
+    // Normalise l'entrée utilisateur
+    $normalizedInput = strtolower(trim($inputMethod));
+
+    // Initialisation de la variable pour la méthode la plus similaire
+    $closestMatch = null;
+    $highestSimilarity = 0;
+
+    // Parcourt toutes les méthodes de paiement disponibles
+    foreach ($paymentMethods as $method) {
+        // Normalise la méthode de paiement actuelle
+        $normalizedMethod = strtolower($method);
+
+        // Calcule la similarité entre l'entrée et la méthode courante
+        similar_text($normalizedInput, $normalizedMethod, $similarity);
+
+        // Si la similarité est la plus élevée rencontrée jusqu'à présent, on la garde
+        if ($similarity > $highestSimilarity) {
+            $highestSimilarity = $similarity;
+            $closestMatch = $method;
+        }
+    }
+
+    // Si la similarité est suffisante, retourne la méthode correspondante, sinon retourne l'entrée d'origine
+    return $highestSimilarity > 80 ? $closestMatch : $inputMethod;
+}
+
 
 
     /**

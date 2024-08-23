@@ -11,6 +11,7 @@ use App\Models\Portfeuille_transaction;
 use App\Models\Right;
 use App\Models\Sponsoring;
 use App\Models\User_right;
+use App\Services\FileService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -994,5 +995,86 @@ class HousingSponsoringController extends Controller
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }
+
+
+  /**
+ * @OA\Get(
+ *     path="/api/housingsponsoring/getSponsoredHousings",
+ *     tags={"Home Housing Sponsoring"},
+ *     summary="Récupérer les logements sponsorisés",
+ *     description="Retourne la liste des logements sponsorisés en se basant sur la date actuelle.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements sponsorisés retournée avec succès.",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur dans la récupération des logements sponsorisés.",
+ *     )
+ * )
+ */
+public function getSponsoredHousings()
+{
+    $today = date('Y-m-d');
+
+    $this->disableExpiredHousings();
+
+    $sponsoredHousings = DB::table('housing_sponsorings')
+        ->where('is_actif', true)
+        ->where('is_deleted', false)
+        ->where('date_debut', '<=', $today)
+        ->where('date_fin', '>=', $today)
+        ->get();
+    $data = [];
+
+        foreach($sponsoredHousings as $sponsoredHousing){
+            $listings = Housing::where('status', 'verified')
+            ->whereId($sponsoredHousing->housing_id)
+            ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+            ->where('is_updated', 0)
+            ->where('is_actif', 1)
+            ->where('is_destroy', 0)
+            ->where('is_finished', 1)
+            ->get();
+
+            $fileService = new FileService();
+
+            $data= (new HousingController($fileService))->formatListingsData($listings);
+        }
+
+    return (new ServiceController())->apiResponse(200, $data,"Liste des logements sponsorisés retournée avec succès.");
+}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/housingsponsoring/disableExpiredHousings",
+ *     tags={"Home Housing Sponsoring"},
+ *     summary="Désactiver les logements dont la date_fin est dépassée",
+ *     description="Désactive les logements sponsorisés où la date_fin est déjà passée.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Les logements expirés ont été désactivés avec succès.",
+ *     )
+ * )
+ */
+public function disableExpiredHousings()
+{
+    $currentDate = date('Y-m-d');
+
+    DB::table('housing_sponsorings')
+        ->where('date_fin', '<', $currentDate)
+        ->where('is_actif', true)
+        ->update(['is_actif' => false]);
+
+}
+
+
+
 
 }

@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\Favoris;
+use App\Models\Setting;
 use App\Models\UserVisiteHousing;
 use App\Services\FileService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -927,7 +928,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         if($request->page){
             $page = intval($request->query('page', 1));
-            $perPage = 2;
+            $perPage = Setting::first()->pagination_logement_acceuil;
 
             $listings = Housing::where('status', 'verified')
                 ->where('is_deleted', 0)
@@ -1278,7 +1279,7 @@ public function ListeDesLogementsAcceuil(Request $request)
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1337,7 +1338,7 @@ public function ListeDesLogementsAcceuil(Request $request)
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1397,7 +1398,7 @@ public function ListeDesLogementsAcceuil(Request $request)
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1455,7 +1456,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1512,7 +1513,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1570,7 +1571,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1625,7 +1626,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1741,7 +1742,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
     }
 
     $page = intval($request->query('page', 1));
-    $perPage = 15;
+    $perPage = Setting::first()->pagination_logement_acceuil;
     $listings = Housing::where('price', '>=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1799,7 +1800,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -2951,7 +2952,8 @@ public function HousingHoteInProgress(){
 }
 
 
-    public function paginateH($items, $perPage = 15, $page = null){
+    public function paginateH($items, $perPage = null, $page = null){
+        $perPage = $perPage ?: Setting::first()->pagination_logement_acceuil;
         $baseUrl = url('/');
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $total = count($items);

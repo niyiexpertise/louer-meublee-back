@@ -199,7 +199,7 @@ public function index()
      * )
      */
 
-   
+
 
      public function store(Request $request)
      {
@@ -459,9 +459,12 @@ public function validateDocuments(Request $request)
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
-            $verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
+            $verificationStatut = verification_statut::find($verification_document_id);
+            //$verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
             if ($verificationStatut) {
-                $verificationStatut->update(['status' => 1]);
+                //$verificationStatut->update(['status' => 1]);
+                $verificationStatut->status = 1;
+                $verificationStatut->save();
             }
         }
 

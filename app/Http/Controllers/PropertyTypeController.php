@@ -6,6 +6,7 @@ use App\Models\PropertyType;
 use Illuminate\Http\Request;
 use Exception;
 use App\Models\Housing;
+use App\Services\FileService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
@@ -13,6 +14,13 @@ use Illuminate\Validation\Rule;
 
 class PropertyTypeController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
       /**
      * @OA\Get(
      *     path="/api/propertyType/index",
@@ -61,7 +69,7 @@ class PropertyTypeController extends Controller
          } catch(Exception $e) {
              return response()->json($e->getMessage());
          }
- 
+
      }
 
     /**
@@ -112,12 +120,10 @@ class PropertyTypeController extends Controller
                     'name' => 'required|unique:property_types|max:255',
                 ]);
                 $propertyType = new PropertyType();
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeTypePropriete'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeTypePropriete/' . $icone_name;
-                    $propertyType->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete');;
+                    $propertyType->icone = $identity_profil_url;
                     }
                 $propertyType->name = $request->name;
                 $propertyType->save();
@@ -162,7 +168,7 @@ class PropertyTypeController extends Controller
                 }
 
                 return response()->json(['data' => $propertyType], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -222,9 +228,14 @@ class PropertyTypeController extends Controller
                     Rule::unique('property_types')->ignore($id),
                 ],
             ]);
-                $propertyType = PropertyType::whereId($id)->update($data);
-                return response()->json(['data' => 'Type de propriété  mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
+            $propertyType = PropertyType::find($id);
+
+                if (!$propertyType) {
+                    return response()->json(['error' => 'Type de propriété non trouvé.'], 404);
+                }
+                $propertyType->name = $request->name;
+                $propertyType->save();                return response()->json(['data' => 'Type de propriété  mise à jour avec succès.'], 200);
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -283,14 +294,14 @@ class PropertyTypeController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $propertyType = PropertyType::find($id);
-            
+
             if (!$propertyType) {
                 return response()->json(['error' => 'type de propriété non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -303,15 +314,13 @@ class PropertyTypeController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeTypePropriete'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeTypePropriete/' . $icone_name;
-                    
-                    PropertyType::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete');;
+
+                    $propertyType->icone = $identity_profil_url;
+                    $propertyType->save();
+
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");
@@ -353,21 +362,22 @@ class PropertyTypeController extends Controller
     public function destroy(string $id)
     {
         try{
-                $propertyType = PropertyType::whereId($id)->update(['is_deleted' => true]);
+            $propertyType = PropertyType::find($id);
 
                 if (!$propertyType) {
                     return response()->json(['error' => 'Type de propriété  non trouvé.'], 200);
                 }
-                $nbexist= Housing::where('property_type_id', $id)->count(); 
-        
+                $nbexist= Housing::where('property_type_id', $id)->count();
+
                 if ($nbexist > 0) {
                     return response()->json(['error' => "Suppression impossible car ce type de propriété est déjà associé à un logement."], 200);
-        
+
                 }
-                
+                $propertyType->is_deleted = true;
+                $propertyType->save();
 
                 return response()->json(['data' => 'Type de propriété supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -409,14 +419,15 @@ class PropertyTypeController extends Controller
  public function block(string $id)
  {
     try{
-            $propertyType = PropertyType::whereId($id)->update(['is_blocked' => true]);
+        $propertyType = PropertyType::find($id);
 
             if (!$propertyType) {
                 return response()->json(['error' => 'Type de propriété  non trouvé.'], 404);
             }
-
+            $propertyType->is_blocked = true;
+            $propertyType->save();
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
 
@@ -458,14 +469,15 @@ class PropertyTypeController extends Controller
 public function unblock(string $id)
 {
     try{
-            $propertyType = PropertyType::whereId($id)->update(['is_blocked' => false]);
+        $propertyType = PropertyType::find($id);
 
             if (!$propertyType) {
                 return response()->json(['error' => 'Type de propriété  non trouvé.'], 404);
             }
-
+            $propertyType->is_blocked = false;
+            $propertyType->save();
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
 

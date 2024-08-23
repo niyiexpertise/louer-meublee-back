@@ -13,9 +13,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\MethodPayement;
 use Illuminate\Validation\Rule;
 use App\Models\User_right;
 use App\Models\Right;
+use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
 class RetraitController extends Controller
 {
                          /**
@@ -86,7 +91,7 @@ class RetraitController extends Controller
     /**
      * @OA\Get(
      *     path="/api/retrait/ListRetraitOfUserAuth",
-     *     summary="Liste des retraits effectué par un utilisateur connecté",
+     *     summary="Liste des retraits effectué et accepté d'un utilisateur connecté",
      * description="Liste des retraits effectué par un utilisateur connecté",
      *     tags={"Retraits"},
      * security={{"bearerAuth": {}}},
@@ -98,6 +103,27 @@ class RetraitController extends Controller
      */
     public function ListRetraitOfUserAuth(){
         $retraits = Retrait::where('user_id', Auth::user()->id)->where('is_reject', false)->where('statut', true)->get();
+        return response()->json([
+            'data' => $retraits
+        ], 200);
+    }
+
+
+     /**
+     * @OA\Get(
+     *     path="/api/retrait/ListRetraitOfUserPendingAuth",
+     *     summary="Liste des retraits effectué mais en attente d'une réponse de l'admin par un utilisateur connecté",
+     * description="Liste des retraits effectué par un utilisateur connecté",
+     *     tags={"Retraits"},
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des retraits effectué par un utilisateur connecté"
+     *     )
+     * )
+     */
+    public function ListRetraitOfUserPendingAuth(){
+        $retraits = Retrait::where('user_id', Auth::user()->id)->where('is_reject', false)->where('statut', false)->get();
         return response()->json([
             'data' => $retraits
         ], 200);
@@ -149,6 +175,11 @@ class RetraitController extends Controller
  *                     property="montant_valid",
  *                     description="Montant validé pour le retrait",
  *                     type="integer"
+ *                 ),
+ *                  @OA\Property(
+ *                     property="id_transaction",
+ *                     description="id de la transaction",
+ *                     type="string",example="hf45e"
  *                 )
  *             )
  *         )
@@ -192,98 +223,96 @@ class RetraitController extends Controller
 
 
 
-    public function validateRetraitByAdmin(Request $request, $retraitId){
-
-        
-        try{
-            $retrait = Retrait::find($retraitId);
-           
-
-            if (!$retrait) {
-                return response()->json([
-                    'error' => 'Retrait not found for id ' 
-                ], 404);
-            }
-
-            $montant = $request->input('montant_valid');
-
-            if(empty($request->input('montant_valid'))){
-                $montant = $retrait->montant_reel;
+ public function validateRetraitByAdmin(Request $request, $retraitId)
+ {
+     try {
+         $retrait = Retrait::find($retraitId);
+ 
+         if (!$retrait) {
+             return (new ServiceController())->apiResponse(404, [], 'Retrait non trouvé');
+         }
+ 
+         if (!$request->id_transaction) {
+             return (new ServiceController())->apiResponse(404, [], 'Le champ id_transaction est obligatoire');
+         }
+ 
+         $existTransaction = Portfeuille_transaction::where('id_transaction', $request->id_transaction)->exists();
+         if ($existTransaction) {
+             return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
+         }
+ 
+         $montant_valid = $request->input('montant_valid');
+ 
+         // Vérifiez que montant_valid est renseigné et valide
+         if ($montant_valid !== null) {
+             if ($montant_valid <= 0) {
+                 return (new ServiceController())->apiResponse(404, [], 'Le montant doit être supérieur à 0');
              }
-
-            //  return response()->json([
-            //     'valid' =>     $montant,
-            //     'reel' =>     $retrait->montant_reel,
-            //     'valid > reel' => ( $montant > $retrait->montant_reel )
-            // ]);
-
-            if ($retrait->statut == 1) {
-                return response()->json([
-                    'error' => 'Retrait already validated ' 
-                ]);
-            }
-
-            if( $montant > $retrait->montant_reel ){
-                return response()->json([
-                    'error' => 'Vérifier bien le montant, il ne doit pas dépasser la somme demandée '
-                ]);
-            }
-
-                $retrait->update(['statut' => 1]);
-
-                $retrait->update(['montant_valid' => $montant]);
-
-                $portfeuille = Portfeuille::where('user_id',$retrait->user_id)->first();
-                $portfeuille->update(['solde' => $portfeuille->solde - $montant]);
-                $previous_transactions = Portfeuille_transaction::all();
-   
-                $solde_total = $previous_transactions->sum('amount');
-                $solde_commission = $previous_transactions->sum('montant_commission');
-                $solde_restant = $previous_transactions->sum('montant_restant');
-
-                $new_solde_total = $solde_total + $montant;
-                $new_solde_commission = $solde_commission + 0;
-                $new_solde_restant = $solde_restant + 0;
-
-                $transaction = new Portfeuille_transaction();
-                $transaction->debit = true;
-                $transaction->credit = false;
-                $transaction->amount = $montant;
-                $transaction->valeur_commission =0;
-                $transaction->montant_commission =0 ;
-                $transaction->montant_restant=0;
-                $transaction->solde_total = $new_solde_total;
-                $transaction->solde_commission = $new_solde_commission;
-                $transaction->solde_restant = $new_solde_restant;
-                $transaction->portfeuille_id =  $portfeuille->id;
-                $transaction->id_transaction = $retrait->identifiant_payement_method;
-                $transaction->payment_method = $retrait->payment_method;
-                $transaction->motif = "Virement sur le compte après une demande de retrait";
-                $transaction->save();
-                (new ReservationController())->initialisePortefeuilleTransaction($transaction->id);
-
-                $mail = [
-                    'title' => 'Confirmation de la demande de retrait',
-                    'body' => "Votre demande de retrait a été validée par l'administrateur. Le montant transféré est de {$montant} FCFA. Votre nouveau solde est de {$portfeuille->solde} FCFA."
-                ];
-                
-
-                 dispatch( new SendRegistrationEmail($retrait->user->email, $mail['body'], $mail['title'], 2));
-
-
-            return response()->json([
-                'message' => 'Retraits successfully validated',
-            ]);
-        } catch(Exception $e) {
-            return response()->json([
-                'error' => 'An error occurred',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
-            
-
-        }
+ 
+             if (!is_numeric($montant_valid)) {
+                 return (new ServiceController())->apiResponse(404, [], 'Le montant doit être un nombre');
+             }
+ 
+             if ($montant_valid > $retrait->montant_reel) {
+                 return (new ServiceController())->apiResponse(404, [], 'Vérifiez bien le montant, il ne doit pas dépasser la somme demandée qui est de '.$retrait->montant_reel." FCFA");
+             }
+ 
+             $montant = $montant_valid;
+         } else {
+             // Si montant_valid n'est pas renseigné, utilisez montant_reel
+             $montant = $retrait->montant_reel;
+         }
+ 
+         if ($retrait->statut == 1) {
+             return (new ServiceController())->apiResponse(404, [], 'Retrait déjà validé');
+         }
+ 
+         DB::beginTransaction();
+ 
+         // Mettre à jour le retrait avec le montant validé
+         $retrait->statut = 1;
+         $retrait->montant_valid = $montant;
+         $retrait->save();
+ 
+         // Mettre à jour le solde du portefeuille
+         $portfeuille = Portfeuille::where('user_id', $retrait->user_id)->first();
+         $portfeuille->update(['solde' => $portfeuille->solde - $montant]);
+ 
+         // Créer une nouvelle transaction
+         $transaction = new Portfeuille_transaction();
+         $transaction->credit = false;
+         $transaction->debit = true;
+         $transaction->amount = $montant;
+         $transaction->valeur_commission = 0;
+         $transaction->montant_commission = 0;
+         $transaction->operation_type = 'debit';
+         $transaction->portfeuille_id = $portfeuille->id;
+         $transaction->retrait_id = $retrait->id;
+         $transaction->id_transaction = $request->id_transaction;
+         $transaction->payment_method = $retrait->payment_method;
+         $transaction->motif = "Retrait portefeuille";
+         $transaction->save();
+ 
+         (new ReservationController())->initialisePortefeuilleTransaction($transaction->id);
+         DB::commit();
+ 
+         // Envoyer un email de confirmation
+         $mail = [
+             'title' => 'Confirmation de la demande de retrait',
+             'body' => "Votre demande de retrait a été validée par l'administrateur. Le montant transféré est de {$montant} FCFA. Votre nouveau solde est de {$portfeuille->solde} FCFA."
+         ];
+ 
+         dispatch(new SendRegistrationEmail($retrait->user->email, $mail['body'], $mail['title'], 2));
+ 
+         return (new ServiceController())->apiResponse(200, [], 'Retrait validé avec succès');
+     } catch (Exception $e) {
+         DB::rollback();
+         return response()->json([
+             'error' => 'Une erreur est survenue',
+             'message' => $e->getMessage()
+         ], 500);
+    }
+ }
 
         /**
  * Rejeter un retrait par un administrateur.
@@ -455,57 +484,100 @@ class RetraitController extends Controller
 
     public function store(Request $request)
     {
-         $request->validate([
-            'payment_method' => 'required',
-            'montant_reel' => 'required',
-            'identifiant_payement_method' => 'required',
-        ]);
 
-        $user = Auth::user();
-        if($user->portfeuille->solde <$request->input('montant_reel')){
-            return response()->json([
-                'message' => 'solde insuffisant'
+          try {
+            $validator = Validator::make($request->all(), [
+                'payment_method' => 'required',
+                'montant_reel' => 'required',
+                'identifiant_payement_method' => 'required',
             ]);
+            
+    
+            $message = [];
+    
+            if ($validator->fails()) {
+                $message[] = $validator->errors();
+                return (new ServiceController())->apiResponse(505,[],$message);
+            }
+    
+            if(!is_numeric($request->input('montant_reel'))){
+                return (new ServiceController())->apiResponse(404, [], 'Le montant doit être un entier');
+            }
+    
+            if($request->input('montant_reel')<=0){
+                return (new ServiceController())->apiResponse(404, [], 'Le montant doit être supérieur à 0 ');
+            }
+    
+            $user = Auth::user();
+            if($user->portfeuille->solde <$request->input('montant_reel')){
+                return (new ServiceController())->apiResponse(404, [], 'solde insuffisant');
+            }
+    
+            if(!is_null(Setting::first()->montant_minimum_retrait)){
+                if($request->input('montant_reel')< Setting::first()->montant_minimum_retrait){
+                    return (new ServiceController())->apiResponse(404, [], "Le montant minimum à retirer doit être supérieur à  ".Setting::first()->montant_minimum_recharge. " FCFA");
+                }
+            }
 
-        }
-        $retrait = new Retrait();
-        $roles = User::find($user->id)->getRoleNames('0');
-        $retrait->user_id = $user->id ;
-        $retrait->payment_method = $request->payment_method;
-        $retrait->montant_reel = $request->montant_reel;
-        $retrait->montant_valid = $request->montant_reel;
-        $retrait->libelle = $request->libelle;
-        $retrait->user_role = $roles[0] ;
-        $retrait->identifiant_payement_method = $request->identifiant_payement_method;
-        $retrait->save();
-
-                  
-                       $mail = [
-                        'title' => 'Demande de retrait',
-                        'body' => "Votre demande de retrait a été pris en compte, patientez un moment pour recevoir le paiement."
-                       ];
-                    
-                     dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-
-                     $right = Right::where('name', 'admin')->first();
-                     $adminUsers = User_right::where('right_id', $right->id)->get();
-             
-                     foreach ($adminUsers as $adminUser) {
-                         
-             
-                        $mail = [
+            if(!MethodPayement::whereName($request->payment_method)->exists()){
+                return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+            }
+    
+           if(!is_null(Setting::first()->montant_maximum_retrait)){
+                if($request->input('montant_reel')> Setting::first()->montant_maximum_retrait){
+                    return (new ServiceController())->apiResponse(404, [], "Le montant maximum à retirer doit être inférieur à  ".Setting::first()->montant_maximum_recharge. " FCFA");
+                }
+           }
+    
+           if(!is_null(Setting::first()->montant_minimum_solde_retrait)){
+            if($user->portfeuille->solde <Setting::first()->montant_minimum_solde_retrait){
+                return response()->json([
+                    'message' => 'Vous devez avoir une somme d\'au moins '.Setting::first()->montant_minimum_solde_retrait.' avant de faire une demande de retrait'
+                ]);
+            }
+            }
+    
+    
+            $retrait = new Retrait();
+            $roles = User::find($user->id)->getRoleNames('0');
+            $retrait->user_id = $user->id ;
+            $retrait->payment_method = $request->payment_method;
+            $retrait->montant_reel = $request->montant_reel;
+            $retrait->montant_valid = $request->montant_reel;
+            $retrait->libelle = $request->libelle;
+            $retrait->user_role = $roles[0] ;
+            $retrait->identifiant_payement_method = $request->identifiant_payement_method;
+            $retrait->save();
+    
+                      
+                           $mail = [
                             'title' => 'Demande de retrait',
-                            'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
+                            'body' => "Votre demande de retrait a été pris en compte, patientez un moment pour recevoir le paiement."
                            ];
-                         dispatch(new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-             
-             
-                     }
- 
-        return response()->json([
-            'message' => 'save successfuly',
-            'date' => $retrait
-        ], 200);
+                        
+                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+    
+                         $right = Right::where('name', 'admin')->first();
+                         $adminUsers = User_right::where('right_id', $right->id)->get();
+                 
+                         foreach ($adminUsers as $adminUser) {
+                             
+                 
+                            $mail = [
+                                'title' => 'Demande de retrait',
+                                'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
+                               ];
+                             dispatch(new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
+                 
+                 
+                         }
+                         return (new ServiceController())->apiResponse(200,$retrait, 'save successfuly');
+        
+        } catch(Exception $e) {
+             return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+
+        
     }
 
      /**
@@ -554,6 +626,82 @@ class RetraitController extends Controller
                 'nombre_demande' =>$retraits->count()
             ]
         ], 200);
+    }
+
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/retrait/show/{id}",
+ *     summary="Afficher les détails d'un retrait",
+ *     description="Récupère les détails d'un retrait spécifique par ID.",
+ *     operationId="showRetrait",
+ *     tags={"Retraits"},
+ *  security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID du retrait",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Détail du retrait récupéré avec succès.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="data", type="array", 
+ *                 @OA\Items(type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="amount", type="number", format="float", example=150.50),
+ *                     @OA\Property(property="status", type="string", example="validé"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time", example="2024-08-21T10:00:00Z"),
+ *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-08-21T10:00:00Z"),
+ *                 )
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Détail d'un retrait."),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Retrait non trouvé.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="data", type="array", 
+ *                 @OA\Items(type="object")
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Retrait non trouvé."),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="error", type="string", example="Détails de l'erreur"),
+ *         )
+ *     )
+ * )
+ */
+
+    public function show(string $id)
+    {
+        try{
+            $retraits = Retrait::with('user')->find($id);
+
+            if (!$retraits) {
+                return (new ServiceController())->apiResponse(404, [], "Retrait non trouvé.");
+            }
+
+            return (new ServiceController())->apiResponse(404, [$retraits], "Détail d'un retrait.");
+        } catch(Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 
 }

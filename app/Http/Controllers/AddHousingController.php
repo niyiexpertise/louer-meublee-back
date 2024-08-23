@@ -11,12 +11,20 @@ use App\Models\HousingType;
 use App\Models\photo;
 use App\Models\Preference;
 use App\Models\PropertyType;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class AddHousingController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
     /**
  * @OA\Post(
@@ -145,7 +153,7 @@ class AddHousingController extends Controller
         }
     }
 
-    
+
 
     /**
  * @OA\Post(
@@ -244,7 +252,7 @@ class AddHousingController extends Controller
                     return (new ServiceController())->apiResponse(404,[], 'Type de le nombre de voyageur doit avoir pour valeur minimale 1');
                 }
 
-               
+
 
                 $housing->housing_type_id = $request->housing_type_id;
                 $housing->step = 2;
@@ -399,7 +407,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-           
+
 
             $housing->country = $request->country;
             $housing->department = $request->department;
@@ -545,7 +553,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-           
+
 
             if($request->has('surface')){
                 if(!is_numeric($request->surface)){
@@ -570,7 +578,7 @@ class AddHousingController extends Controller
                 }
             }
 
-           
+
 
             $housing->number_of_traveller = $request->number_of_traveller;
             $housing->number_of_bed = $request->number_of_bed;
@@ -766,7 +774,7 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-           
+
 
             $housing->is_accept_chill = $request->is_accept_chill;
             $housing->is_accept_smoking = $request->is_accept_smoking;
@@ -819,7 +827,7 @@ class AddHousingController extends Controller
  *                         format="binary"
  *                     )
  *                 ),
- *                
+ *
  *             )
  *         )
  *     ),
@@ -864,81 +872,70 @@ class AddHousingController extends Controller
  *     }
  * )
  */
-    public function  addHousing_step_9(Request $request,$housingId){
-        try {
 
-            $housing = Housing::whereId($housingId)->first();
+    public function addHousing_step_9(Request $request, $housingId)
+    {
+    try {
+        $housing = Housing::whereId($housingId)->first();
 
-            if(!$housing){
-                return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
-            }
+        if (!$housing) {
+            return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+        }
 
-           $errorcheckOwner= $this->checkOwner($housingId);
-            if($errorcheckOwner){
-                return $errorcheckOwner;
-            }
+        $errorcheckOwner = $this->checkOwner($housingId);
+        if ($errorcheckOwner) {
+            return $errorcheckOwner;
+        }
 
-            $validationResponse =(new AddHousingZController)->validateStepOrder(9, $housingId);
-            if ($validationResponse) {
-                return $validationResponse;
-            }
+        $validationResponse = (new AddHousingZController)->validateStepOrder(9, $housingId);
+        if ($validationResponse) {
+            return $validationResponse;
+        }
 
-            $request->validate([
-                'photos' => 'nullable|array',
-                'photos.*' => 'file'
-            ]);
+        $request->validate([
+            'photos' => 'nullable|array',
+            'photos.*' => 'file'
+        ]);
 
-            $extensions = ['jpg','jpeg','png','gif','webp','bmp','svg','tiff','mp4','mov','avi','mkv','mpeg','webm'];
+        $extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'mp4', 'mov', 'avi', 'mkv', 'mpeg', 'webm'];
 
-           
-
+        if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
                 $extension = $file->getClientOriginalExtension();
                 if (!in_array($extension, $extensions)) {
                     $allowedExtensions = implode(', ', $extensions);
-                    return (new ServiceController())->apiResponse(404,[], "Les fichiers doivent avoir une des extensions suivantes : $allowedExtensions. Le fichier fourni a l'extension : $extension.");
+                    return (new ServiceController())->apiResponse(404, [], "Les fichiers doivent avoir une des extensions suivantes : $allowedExtensions. Le fichier fourni a l'extension : $extension.");
                 }
             }
 
-            foreach(photo::where('housing_id',$housingId)->get() as $exist){
-                $exist->delete();
-            }
+            photo::where('housing_id', $housingId)->delete();
 
             foreach ($request->file('photos') as $index => $photo) {
-                $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-                $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-
-                if(env('MODE') == 'PRODUCTION'){
-                    $photoUrl = url('/image/photo_logement/' . $photoName);
-                }
-
-                if(env('MODE') == 'DEVELOPPEMENT'){
-                    $ip= env('LOCAL_ADDRESS');
-                    $photoUrl = $ip.'/image/photo_logement/' . $photoName;
-                }
-               
+                $uploadedPath = $this->fileService->uploadFiles($photo, 'image/photo_logement');
                 $type = $photo->getClientOriginalExtension();
+
                 $photoModel = new photo();
-                $photoModel->path = $photoUrl;
+                $photoModel->path = $uploadedPath;
                 $photoModel->extension = $type;
-                $photoModel->housing_id = $housingId;;
+                $photoModel->housing_id = $housingId;
                 $photoModel->save();
             }
-
-            $housing->step = 9;
-            $housing->save();
-
-            $data = ["housing_id" => $housingId,
-            "housing_files" => photo::where('housing_id',$housingId)->where('is_deleted', false)->get()
-        ];
-            
-
-            return (new ServiceController())->apiResponse(200,$data, 'Etape 9 terminée avec succès');
-
-        } catch(\Exception $e) {
-            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
+
+        $housing->step = 9;
+        $housing->save();
+
+        $data = [
+            "housing_id" => $housingId,
+            "housing_files" => photo::where('housing_id', $housingId)->where('is_deleted', false)->get()
+        ];
+
+        return (new ServiceController())->apiResponse(200, $data, 'Etape 9 terminée avec succès');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
+    }
+
 
 
     /**
@@ -1035,7 +1032,7 @@ class AddHousingController extends Controller
                 'profile_photo_id' => 'required'
             ]);
 
-            
+
 
            $photo = Photo::whereId($request->profile_photo_id)->first();
 
@@ -1062,7 +1059,7 @@ class AddHousingController extends Controller
 
             $data =[
                 "housing_id" => $housingId,
-               
+
             ];
 
             return (new ServiceController())->apiResponse(200,$data, 'Etape 10 terminée avec succès');
@@ -1072,7 +1069,7 @@ class AddHousingController extends Controller
         }
     }
 
-    
+
     /**
  * @OA\Post(
  *      path="/api/logement/store_step_11/{housingId}",
@@ -1165,19 +1162,19 @@ class AddHousingController extends Controller
                 return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
 
-            
+
             $errorcheckOwner= $this->checkOwner($housingId);
             if($errorcheckOwner){
                 return $errorcheckOwner;
             }
-            
+
             $validationResponse =(new AddHousingZController)->validateStepOrder(11, $housingId);
             // return $validationResponse;
             if ($validationResponse) {
                 return $validationResponse;
             }
 
-            
+
 
             $housing->name = $request->name??null;
             $housing->description = $request->description??null;
@@ -1188,22 +1185,22 @@ class AddHousingController extends Controller
                         return (new ServiceController())->apiResponse(404,[], "La préférence n'existe pas");
                     }
                 }
-    
+
                 $items = $request->input('preferences');
-    
+
                     $uniqueItems = array_unique($items);
-        
+
                     if (count($uniqueItems) < count($items)) {
                          return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  préférences existants avec le même id.");
                     }
-    
+
                 if ($request->has('preferences')) {
                     foreach(housing_preference::where('housing_id',$housingId)->get() as $exist){
                         $exist->delete();
                     }
-    
-                    
-                    
+
+
+
                     foreach ($request->input('preferences') as $preference) {
                         if(!housing_preference::where('housing_id',$housingId)->where('preference_id',$preference)->exists()){
                             $housingPreference = new housing_preference();
@@ -1216,7 +1213,7 @@ class AddHousingController extends Controller
                 }
             }
 
-            
+
 
             $housing->step = 11;
             $housing->save();
@@ -1380,7 +1377,7 @@ class AddHousingController extends Controller
                 return $validationResponse;
             }
 
-            
+
 
             // return response()->json($request->Travelercharges) ;
             if ($request->has('Hotecharges')) {
@@ -1421,7 +1418,7 @@ class AddHousingController extends Controller
                $items = $request->input('Hotecharges');
 
                $uniqueItems = array_unique($items);
-   
+
                if (count($uniqueItems) < count($items)) {
                     return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Hotecharges existants avec le même id.");
                }
@@ -1429,7 +1426,7 @@ class AddHousingController extends Controller
                $items = $request->input('Travelercharges');
 
                $uniqueItems = array_unique($items);
-   
+
                if (count($uniqueItems) < count($items)) {
                     return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Travelercharges existants avec le même id.");
                }
@@ -1594,7 +1591,7 @@ class AddHousingController extends Controller
                 return $validationResponse;
             }
 
-            
+
 
            if($request->has('is_accept_anulation')){
 
@@ -1606,16 +1603,16 @@ class AddHousingController extends Controller
                     'valeur_partiel_remboursement' =>  'required|numeric',
                     'cancelation_condition' => 'required|string',
                 ]);
-    
+
                 $message = [];
-    
+
                 if ($validator->fails()) {
                     $message[] = $validator->errors();
                     return (new ServiceController())->apiResponse(505,[],$message);
                 }
-    
+
                 // return $this->isValuesPositif($request->input('delai_partiel_remboursement'));
-    
+
                 if ($this->isValuesPositif($request->input('delai_partiel_remboursement') == 0)) {
                     return (new ServiceController())->apiResponse(404,[], 'La valeur du délai du remboursement partiel doit être positif et non null.');
                 }
@@ -1636,7 +1633,7 @@ class AddHousingController extends Controller
                     $housing->save();
             }
 
-            
+
            }
 
             $housing->step = 14;

@@ -30,7 +30,7 @@ use Illuminate\Validation\Rule;
 
 class AdminReservationController extends Controller
 {
-    
+
 
 
                 /**
@@ -60,7 +60,7 @@ class AdminReservationController extends Controller
      }
 
 
-   
+
 
                          /**
      * @OA\Get(
@@ -89,7 +89,7 @@ class AdminReservationController extends Controller
         ]);
      }
 
-     
+
                          /**
      * @OA\Get(
      *     path="/api/reservation/housing_without_reservation",
@@ -191,14 +191,17 @@ class AdminReservationController extends Controller
      */
 public function getAllReservation(){
 
-    $reservations = Reservation::where('is_deleted', false)->with(['user','housing'])->get();
+    $reservations = Reservation::where('is_deleted', false)
+                    ->with(['user','housing'])
+                    ->where('statut', 'non_payee')
+                    ->get();
     return response()->json([
         'message' => $reservations
     ]);
 }
 
 
-                             /**
+    /**
      * @OA\Get(
      *     path="/api/reservation/getUserReservations/{user}",
      *     summary="Liste et nombres des réservations d'un voyageur",
@@ -302,7 +305,7 @@ function showDetailOfReservationForAdmin($idReservation){
                              ->orderByDesc('reservation_count')
                              ->limit(10)
                              ->get();
-     
+
          // Retourner le top 10 des voyageurs avec le plus grand nombre de réservations
          return response()->json(['data' => $topTravelers]);
      }
@@ -381,7 +384,7 @@ public function getAllReservationConfirmedForAdmin(){
         ]);
     }
 
-    
+
                          /**
      * @OA\Get(
      *     path="/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)",
@@ -481,7 +484,7 @@ public function getAllReservationCanceledByTravelerForAdmin(){
  */
 public function getReservationsCountByYearAndMonth()
 {
- 
+
     $monthNames = [
         1 => 'janvier',
         2 => 'février',

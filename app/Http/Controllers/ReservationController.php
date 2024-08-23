@@ -39,9 +39,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\user_partenaire;
 use App\Jobs\SendRegistrationEmail;
-
-
-
+use App\Models\MethodPayement;
 
 class ReservationController extends Controller
 {
@@ -368,15 +366,17 @@ public function storeReservationWithPayment(Request $request)
         'montant_a_paye' => 'nullable|numeric',
     ]);
 
+    $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+
     $message = [];
 
     if ($validatedData->fails()) {
         $message[] = $validatedData->errors();
         return (new ServiceController())->apiResponse(505,[],$message);
-    }   
-    
+    }
+
     $user_id = Auth::id();
-    $validatedData = $validatedData->validated(); 
+    $validatedData = $validatedData->validated();
 
     $validation_result = $this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'], $validatedData['date_of_end'], $validatedData['number_of_domestical_animal'], $validatedData['valeur_payee'], $validatedData['montant_a_paye'], $validatedData['id_transaction'], $validatedData['is_tranche_paiement'], $validatedData['payment_method']);
 
@@ -385,9 +385,13 @@ public function storeReservationWithPayment(Request $request)
 
     }
 
+    if(!MethodPayement::whereName($method_paiement)->exists()){
+        return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+    }
+
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
 
-    DB::beginTransaction();
+   
 
     try {
         $reservation = Reservation::create([
@@ -432,75 +436,249 @@ public function storeReservationWithPayment(Request $request)
             $reservation->save();
         }
 
-        $paymentData = [
-            'reservation_id' => $reservation->id,
-            'amount' => $validatedData['valeur_payee'],
-            'payment_method' => $validatedData['payment_method'],
-            'id_transaction' => $validatedData['id_transaction'],
-            'statut' => $validatedData['statut_paiement'],
-            'is_confirmed' => false,
-            'is_canceled' => false,
-        ];
 
         if ($request->has('country')) {
             $paymentData['country'] = $request->input('country');
         }
 
-        $payment = Payement::create($paymentData);
-
-        if ($validatedData['payment_method'] == "portfeuille") {
-            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-            $portefeuille->solde -= $validatedData['valeur_payee'];
-
-            $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->debit = true;
-            $portefeuilleTransaction->credit = false;
-            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
-            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
-            $portefeuilleTransaction->reservation_id = $reservation->id;
-            $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
-            $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
-            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-
-            $portefeuilleTransaction->save();
-            $portefeuille->save();
-
-            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-
-        }
-
-        DB::commit();
         $mail_to_traveler = [
             'title' => 'Confirmation de Réservation',
             'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
         ];
 
-        
+        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
+
+
+        $data = ["reservation" => $reservation,
+            // "payment" =>$payment
+             ];
+
+            return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+    }
+}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/reservation/payReservation/{reservationId}",
+ *     summary="Payer une réservation",
+ *     description="Permet de payer une réservation avec diverses méthodes de paiement, y compris le portefeuille.",
+ *     operationId="payReservation",
+ *     tags={"Reservation"},
+ *     
+ *     @OA\Parameter(
+ *         name="reservationId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *         ),
+ *         description="ID de la réservation à payer",
+ *     ),
+ *     
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={
+ *                 "valeur_payee", "payment_method", "id_transaction", "statut_paiement"
+ *             },
+ *             @OA\Property(property="valeur_payee", type="number", format="float", example=150.00),
+ *             @OA\Property(property="payment_method", type="string", example="portefeuille"),
+ *             @OA\Property(property="id_transaction", type="string", example="abc123"),
+ *             @OA\Property(property="statut_paiement", type="string", example="payé"),
+ *             @OA\Property(property="valeur_reduction_hote", type="number", format="float", nullable=true, example=10.00),
+ *             @OA\Property(property="valeur_promotion_hote", type="number", format="float", nullable=true, example=5.00),
+ *             @OA\Property(property="valeur_reduction_code_promo", type="number", format="float", nullable=true, example=15.00),
+ *             @OA\Property(property="valeur_reduction_staturp", type="number", format="float", nullable=true, example=20.00),
+ *             @OA\Property(property="montant_charge", type="number", format="float", nullable=true, example=3.00),
+ *             @OA\Property(property="montant_housing", type="number", format="float", nullable=true, example=100.00),
+ *             @OA\Property(property="montant_a_paye", type="number", format="float", nullable=true, example=130.00),
+ *         )
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=200,
+ *         description="Paiement fait avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="message", type="string", example="Paiement fait avec succès"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="reservation_id", type="integer", example=1),
+ *                 @OA\Property(property="amount", type="number", format="float", example=150.00),
+ *                 @OA\Property(property="payment_method", type="string", example="portefeuille"),
+ *                 @OA\Property(property="id_transaction", type="string", example="abc123"),
+ *                 @OA\Property(property="statut", type="string", example="payé"),
+ *                 @OA\Property(property="is_confirmed", type="boolean", example=true),
+ *                 @OA\Property(property="is_canceled", type="boolean", example=false),
+ *             ),
+ *         ),
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=404,
+ *         description="Réservation non trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=404),
+ *             @OA\Property(property="message", type="string", example="Réservation non trouvée"),
+ *             @OA\Property(property="data", type="object", nullable=true),
+ *         ),
+ *     ),
+ *     
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="message", type="string", example="Message d'erreur détaillé"),
+ *             @OA\Property(property="data", type="object", nullable=true),
+ *         ),
+ *     ),
+ *     
+ *     @OA\SecurityScheme(
+ *         securityScheme="bearerAuth",
+ *         type="http",
+ *         scheme="bearer",
+ *         bearerFormat="JWT"
+ *     )
+ * )
+ */
+
+
+public function payReservation(Request $request,$reservationId){
+    try {
+
+        $validatedData = Validator::make($request->all(), [
+            'valeur_payee' => 'required|numeric',
+            'payment_method' => 'required|string',
+            'id_transaction' => 'required|string',
+            'statut_paiement' => 'required',
+            'montant_a_paye' => 'nullable|numeric',
+        ]);
+
+        $reservation= Reservation::whereId($reservationId)->first();
+
+        if($reservation){
+            return (new ServiceController())->apiResponse(404,[], 'Reservation non trouvé');
+        }
+
+        if($reservation->statut == 'payee'){
+            return (new ServiceController())->apiResponse(404,[], 'Reservation déjà payée');
+        }
+
+        $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+
+        $portfeuille = $this->findSimilarPaymentMethod("portfeuille");
+
+        $paymentData = [
+            'reservation_id' => $reservation->id,
+            'amount' => $validatedData['valeur_payee'],
+            'payment_method' => $method_paiement,
+            'id_transaction' => $validatedData['id_transaction'],
+            'statut' => $validatedData['statut_paiement'],
+            'is_confirmed' => true,
+            'is_canceled' => false,
+        ];
+
+        DB::beginTransaction();
+
+        $payment = Payement::create($paymentData);
+        $user_id = Auth::id();
+
+        if ($method_paiement == $portfeuille) {
+            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+            $portefeuille->solde -= $validatedData['valeur_payee'];
+
+            $portefeuilleTransaction = new Portfeuille_transaction();
+            $portefeuilleTransaction->debit = false;
+            $portefeuilleTransaction->credit = false;
+            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
+            $portefeuilleTransaction->operation_type = 'debit';
+            $portefeuilleTransaction->reservation_id = $reservation->id;
+            $portefeuilleTransaction->payment_method = $method_paiement;
+            $portefeuilleTransaction->id_transaction = 0;
+            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+
+            $reservation->statut = 'payee';
+
+            $reservation->save();
+            $portefeuilleTransaction->save();
+            $portefeuille->save();
+
+            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+        }else{
+
+            $portefeuilleTransaction = new Portfeuille_transaction();
+            $portefeuilleTransaction->credit = true;
+            $portefeuilleTransaction->debit = false;
+            $portefeuilleTransaction->amount = $validatedData['valeur_payee'];
+            $portefeuilleTransaction->motif = "Réservation effectuée avec autre moyen que le portefeuille";
+            $portefeuilleTransaction->reservation_id = $reservation->id;
+            $portefeuilleTransaction->payment_method = $method_paiement;
+            $portefeuilleTransaction->id_transaction = $validatedData['id_transaction'];
+
+            $reservation->statut = 'payee';
+            $reservation->save();
+            $portefeuilleTransaction->save();
+
+            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+        }
+
+        DB::commit();
+
         $mail_to_host = [
             'title' => 'Nouvelle Réservation',
             'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .
                 " Date de début : " . $reservation->date_of_starting . "\n" .
                 " Date de fin : " . $reservation->date_of_end . "\n"
         ];
-               
-        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
+
         dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
 
-        // Mail::to(auth()->user()->email)->send(new NotificationEmailwithoutfile($mail_to_traveler));
-        //Mail::to($housing->user->email)->send(new NotificationEmailwithoutfile($mail_to_host));
+        return (new ServiceController())->apiResponse(200,$payment, 'Paiement fait avec succès');
 
-        $data = ["reservation" => $reservation,
-            "payment" =>$payment
-             ];
-            
-
-            return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-    }
+} catch(\Exception $e) {
+    DB::rollBack();
+    return (new ServiceController())->apiResponse(500,[],$e->getMessage());
 }
+}
+
+
+public function findSimilarPaymentMethod($inputMethod)
+{
+    // Récupère toutes les méthodes de paiement depuis la base de données
+    $paymentMethods = DB::table('method_payements')->pluck('name');
+
+    // Normalise l'entrée utilisateur
+    $normalizedInput = strtolower(trim($inputMethod));
+
+    // Initialisation de la variable pour la méthode la plus similaire
+    $closestMatch = null;
+    $highestSimilarity = 0;
+
+    // Parcourt toutes les méthodes de paiement disponibles
+    foreach ($paymentMethods as $method) {
+        // Normalise la méthode de paiement actuelle
+        $normalizedMethod = strtolower($method);
+
+        // Calcule la similarité entre l'entrée et la méthode courante
+        similar_text($normalizedInput, $normalizedMethod, $similarity);
+
+        // Si la similarité est la plus élevée rencontrée jusqu'à présent, on la garde
+        if ($similarity > $highestSimilarity) {
+            $highestSimilarity = $similarity;
+            $closestMatch = $method;
+        }
+    }
+
+    // Si la similarité est suffisante, retourne la méthode correspondante, sinon retourne l'entrée d'origine
+    return $highestSimilarity > 80 ? $closestMatch : $inputMethod;
+}
+
 
 
     /**
@@ -546,8 +724,8 @@ public function storeReservationWithPayment(Request $request)
             return (new ServiceController())->apiResponse(404,[], "La reservation avait déjà été confirmée auparavant.");
 
           }
-          Reservation::whereId($idReservation)->update(['is_confirmed_hote'=>1]);
-          
+          $reservation->is_confirmed_hote = 1;
+          $reservation->save();
           $mail_to_traveler = [
             "title" => "Confirmation  de  réservation",
             "body" => " Votre réservation concernant le logement '{$reservation->housing->name}'.   vient d'être confirmée par l'hôte"
@@ -607,7 +785,7 @@ public function storeReservationWithPayment(Request $request)
         if ($validatedData->fails()) {
             $message[] = $validatedData->errors();
             return (new ServiceController())->apiResponse(505,[],$message);
-        }   
+        }
            $reservation = Reservation::find($idReservation);
           if(!$reservation){
             return (new ServiceController())->apiResponse(404,[], "Reservation non trouvée");
@@ -682,10 +860,10 @@ public function storeReservationWithPayment(Request $request)
           }
      }
 
-     // Notification d'annulation d'une réservation par un voyageur  
+     // Notification d'annulation d'une réservation par un voyageur
      public function notifyAnnulation(Request $request,$reservation_id,$mailtraveler,$mailhote,$montant_commission){
         $reservation = Reservation::find($reservation_id);
- 
+
         dispatch( new SendRegistrationEmail($reservation->user->email, $mailtraveler['body'], $mailtraveler['title'], 2));
 
 
@@ -698,7 +876,7 @@ public function storeReservationWithPayment(Request $request)
       $right = Right::where('name','admin')->first();
       $adminUsers = User_right::where('right_id', $right->id)->get();
         foreach ($adminUsers as $adminUser) {
-            
+
             $mail = [
                 "title" => "Annulation d'une réservation par un voyageur",
                 "body" => "Une réservation vient d'être annulée par un client avec l'identifiant {$reservation->user->id}. Le motif de l'annulation est le suivant : « $request->motif_rejet_traveler ». Le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}, avec l'identifiant {$reservation->housing->user->id}. Vous recevez une commission de {$montant_commission} FCFA sur cette opération"
@@ -749,15 +927,15 @@ public function storeReservationWithPayment(Request $request)
             $validatedData = Validator::make($request->all(), [
                 'motif_rejet_traveler' =>'required | string',
             ]);
-    
+
             $message = [];
-    
+
             if ($validatedData->fails()) {
                 $message[] = $validatedData->errors();
                 return (new ServiceController())->apiResponse(505,[],$message);
-            }   
+            }
 
-            
+
             $reservation = Reservation::find($idReservation);
           if(!$reservation){
 
@@ -778,7 +956,7 @@ public function storeReservationWithPayment(Request $request)
         if ($reservation->is_rejected_hote) {
             return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas annuler une reservation déjà rejetée par l hote. ");
 
-     
+
         }
 
         if ($reservation->is_rejected_traveler) {
@@ -817,11 +995,10 @@ public function storeReservationWithPayment(Request $request)
 
         $dateIntegration->modify('-' . $diff->days . ' days');
 
-
-        Reservation::whereId($idReservation)->update([
-            'is_rejected_traveler'=>1,
-            'motif_rejet_traveler'=>$request->motif_rejet_traveler
-          ]);
+        $reservation->is_rejected_traveler = 1;
+        $reservation->motif_rejet_traveler = $request->motif_rejet_traveler;
+        $reservation->save();
+        
 
 
             $soldeTotal = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
@@ -880,10 +1057,10 @@ public function storeReservationWithPayment(Request $request)
                 'fraisLouerMeublee' =>$montant_commission,
                 'montant retourné au client' => $montantClient,
                     ];
-            
+
 
             return (new ServiceController())->apiResponse(200,$data, 'Reservation annulée avec succès');
-             
+
 
         }else if( $diffEnHeure >= $reservation->housing->delai_partiel_remboursement ){
 
@@ -963,7 +1140,7 @@ public function storeReservationWithPayment(Request $request)
                 'fraisLouerMeublee' =>$montant_commission,
                 'montant retourné au client' => $montantClient,
                     ];
-            
+
 
             return (new ServiceController())->apiResponse(200,$data, 'Reservation annulée avec succès');
 
@@ -1017,7 +1194,7 @@ public function storeReservationWithPayment(Request $request)
                 'fraisLouerMeublee' =>$montant_commission,
                 'montant retourné au client' => $montantClient,
                     ];
-            
+
 
             return (new ServiceController())->apiResponse(200,$data, 'Reservation annulée avec succès');
          }
@@ -1068,7 +1245,7 @@ public function storeReservationWithPayment(Request $request)
             'reservations' => $reservations,
             'reservation_count' => $reservationCount,
                 ];
-        
+
 
         return (new ServiceController())->apiResponse(200,$data, 'Liste des reservations recupérées avec succès');
        }
@@ -1112,10 +1289,10 @@ public function storeReservationWithPayment(Request $request)
             'detail de la reservation' => $reservation->toArray(),
             'voyageur' => $reservation->user->toArray()
          ];
-        
+
 
        return (new ServiceController())->apiResponse(200,$data, 'Detail de reservation recupéré avec succès');
-     }   
+     }
 
      /**
  * @OA\Post(
@@ -1171,37 +1348,37 @@ public function confirmIntegration(Request $request)
         if (!$reservation) {
             return (new ServiceController())->apiResponse(404, [], "Réservation non trouvée.");
         }
-        
+
         if (!$reservation->is_confirmed_hote) {
             return (new ServiceController())->apiResponse(400, [], "La réservation doit être confirmée par l'hôte.");
         }
-        
+
         if ($reservation->is_rejected_traveler || $reservation->is_rejected_hote) {
             return (new ServiceController())->apiResponse(400, [], "La réservation a été rejetée, donc vous ne pouvez pas confirmer l'intégration.");
         }
-        
+
         if ($reservation->montant_a_paye > $reservation->valeur_payee) {
             return (new ServiceController())->apiResponse(400, [], "Veuillez solder la deuxième tranche avant de confirmer l'intégration.");
         }
-        
+
         if ($reservation->is_integration) {
             return (new ServiceController())->apiResponse(400, [], "L'intégration a déjà été confirmée auparavant.");
         }
-        
+
         $housing = Housing::find($reservation->housing_id);
-        
+
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], "Logement non trouvé.");
         }
-        
+
         $owner = User::find($housing->user_id);
-        
+
         if (!$owner) {
             return (new ServiceController())->apiResponse(404, [], "Propriétaire non trouvé.");
         }
-        
+
         $commission = Commission::where('user_id', $owner->id)->first();
-        
+
         if (!$commission) {
             return (new ServiceController())->apiResponse(404, [], "Commission non trouvée pour ce propriétaire.");
         }
@@ -1222,8 +1399,8 @@ public function confirmIntegration(Request $request)
                  $message="Virement sur le compte de l'hôte du montant complet(suite à la soustraction des commission) après confirmation de l'intégration.";
             }
         }
-        
-        
+
+
         $commission_percentage = $commission->valeur;
         $total_amount = $reservation->valeur_payee;
 
@@ -1232,7 +1409,7 @@ public function confirmIntegration(Request $request)
 
         $reservation->is_integration = true;
         $reservation->save();
-        
+
         $previous_transactions = Portfeuille_transaction::all();
         $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
@@ -1292,7 +1469,7 @@ public function confirmIntegration(Request $request)
         $adminUsers = User_right::where('right_id', $right->id)->get();
 
         foreach ($adminUsers as $adminUser) {
-            
+
 
             $mail = [
                 "title" => " Confirmation de l'intégration d'un voyageur dans un logement",
@@ -1407,16 +1584,16 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
         $transaction->new_solde_admin=$ancien_solde_commission_admin+$montant_commission_admin;
         $transaction->valeur_commission_admin=100-$commission_partenaire;
         $transaction->save();
-       
+
         if($is_received==true){
-        
+
             $mail = [
                 "title" =>"{$titre}",
                 "body" => "Vous venez de recevoir un dépôt de {$montant_commission_partenaire} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille_partenaire->solde} FCFA"
             ];
 
         }else{
-            
+
             $mail = [
                 "title" => "{$titre}",
                 "body" => "L'annulation a entraîné un remboursement intégral au voyageur .Vous ne recevez donc rien à propos de cette opération de remboursement intégral."
@@ -1445,6 +1622,40 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
 
 }
 
+    // public function initialisePortefeuilleTransaction($id)
+    // {
+    //     $transaction = Portfeuille_transaction::find($id);
+
+    //     if (!$transaction) {
+    //         return response()->json(['error' => 'Transaction non trouvée.'], 404);
+    //     }
+
+    //     // Calculer les totaux nécessaires
+    //     $solde_commission = Portfeuille_transaction::sum('montant_commission');
+    //     $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+    //     $solde_commission_partenaire = Portfeuille_transaction::sum('montant_commission_partenaire');
+    //     $solde_restant = Portfeuille_transaction::sum('montant_restant');
+    //     $solde_commission_admin = Portfeuille_transaction::sum('montant_commission_admin');
+
+    //     // Mettre à jour les colonnes spécifiques
+    //     $transaction->valeur_commission = 0;
+    //     $transaction->montant_commission = 0;
+    //     $transaction->montant_restant = $transaction->amount;
+    //     $transaction->valeur_commission_partenaire = 0;
+    //     $transaction->montant_commission_partenaire = 0;
+    //     $transaction->valeur_commission_admin = 0;
+    //     $transaction->montant_commission_admin = 0;
+    //     $transaction->new_solde_admin = $solde_commission_admin;
+    //     $transaction->solde_total = $solde_total;
+    //     $transaction->solde_restant = $solde_restant + $transaction->amount;
+    //     $transaction->solde_commission = $solde_commission;
+    //     $transaction->solde_commission_partenaire = $solde_commission_partenaire;
+
+    //     // Sauvegarder les modifications
+    //     $transaction->save();
+
+    // }
+
     public function initialisePortefeuilleTransaction($id)
     {
         $transaction = Portfeuille_transaction::find($id);
@@ -1453,12 +1664,13 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
             return response()->json(['error' => 'Transaction non trouvée.'], 404);
         }
 
-        // Calculer les totaux nécessaires
-        $solde_commission = Portfeuille_transaction::sum('montant_commission');
-        $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
-        $solde_commission_partenaire = Portfeuille_transaction::sum('montant_commission_partenaire');
-        $solde_restant = Portfeuille_transaction::sum('montant_restant');
-        $solde_commission_admin = Portfeuille_transaction::sum('montant_commission_admin');
+        // Calculer les soldes nécessaires
+        $soldeCommission = Portfeuille_transaction::sum('montant_commission');
+        $soldeRestant = Portfeuille_transaction::sum('montant_restant');
+        $soldeCommissionPartenaire = Portfeuille_transaction::sum('montant_commission_partenaire');
+        $soldeCommissionAdmin = Portfeuille_transaction::sum('montant_commission_admin');
+        $soldeCredit = Portfeuille_transaction::where('credit', true)->sum('amount');
+        $soldeDebit = Portfeuille_transaction::where('debit', true)->sum('amount');
 
         // Mettre à jour les colonnes spécifiques
         $transaction->valeur_commission = 0;
@@ -1468,14 +1680,13 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
         $transaction->montant_commission_partenaire = 0;
         $transaction->valeur_commission_admin = 0;
         $transaction->montant_commission_admin = 0;
-        $transaction->new_solde_admin = $solde_commission_admin;
-        $transaction->solde_total = $solde_total;
-        $transaction->solde_restant = $solde_restant + $transaction->amount;
-        $transaction->solde_commission = $solde_commission;
-        $transaction->solde_commission_partenaire = $solde_commission_partenaire;
+        $transaction->solde_commission = $soldeCommission;
+        $transaction->solde_commission_partenaire = $soldeCommissionPartenaire;
+        $transaction->new_solde_admin = $soldeCommissionAdmin;
+        $transaction->solde_credit = $soldeCredit;
+        $transaction->solde_debit = $soldeDebit;
 
         // Sauvegarder les modifications
         $transaction->save();
-
     }
 }

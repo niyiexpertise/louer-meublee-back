@@ -31,7 +31,9 @@ use App\Models\Portfeuille_transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\MethodPayement;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 class PortfeuilleController extends Controller
 {
@@ -87,7 +89,6 @@ class PortfeuilleController extends Controller
  * )
  */
 
-
     public function creditPortfeuille(Request $request)
     {
         try {
@@ -101,62 +102,74 @@ class PortfeuilleController extends Controller
 
             if ($validator->fails()) {
                 $message[] = $validator->errors();
-                return (new ServiceController())->apiResponse(505,[],$message);
+                return (new ServiceController())->apiResponse(505, [], $message);
             }
-
 
             $userId = Auth::id();
             if (is_null($userId)) {
                 return (new ServiceController())->apiResponse(404, [], 'Utilisateur non authentifié');
-
             }
 
             $amount = $request->input('amount');
-
             $portefeuille = Portfeuille::where('user_id', $userId)->first();
 
             if (!$portefeuille) {
                 return (new ServiceController())->apiResponse(404, [], 'Portefeuille non trouvé pour cet utilisateur.');
-
-
             }
 
-            $soldeTotal = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
+           $errorPayement = (new ServiceController())->validatePayement($request->amount,$request->paiement_methode,$request->transaction_id);
+
+           if($errorPayement){
+            return $errorPayement;
+           }
+
+            DB::beginTransaction();
             $soldeCommission = Portfeuille_transaction::sum('montant_commission');
-            $soldeRestant = Portfeuille_transaction::sum('montant_restant');
 
             $portefeuille->solde += $amount;
             $portefeuille->save();
-                
+
+            $payement = new Payement();
+            $payement->amount =  $amount;
+            $payement->payment_method = $request->payment_method;
+            $payement->id_transaction = $request->transaction_id;
+            $payement->statut = 1;
+            $payement->motif = "Recharge de portefeuille";
+            $payement->is_confirmed = true;
+            $payement->is_canceled = false;
+            $payement->save();
+
             $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->debit = false;
             $portefeuilleTransaction->credit = true;
+            $portefeuilleTransaction->debit = false;
+            $portefeuilleTransaction->operation_type = 'credit';
             $portefeuilleTransaction->amount = $amount;
-            $portefeuilleTransaction->motif = "Recharge de portfeuille";
+            $portefeuilleTransaction->motif = "Recharge de portefeuille";
             $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-            $portefeuilleTransaction->id_transaction = $request->input('transaction_id');
+            $portefeuilleTransaction->id_transaction = 0;
             $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
 
-            $portefeuilleTransaction->solde_total = $soldeTotal  + $amount;
-
             $portefeuilleTransaction->save();
+
             (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+            DB::commit();
 
             $mail = [
                 "title" => "Confirmation de dépôt sur votre portefeuille",
                 "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
             ];
 
+            dispatch(new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
+            $data = ["solde" => $portefeuille->solde];
+            return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
 
-          dispatch( new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
-          $data =["solde" => $portefeuille->solde];
-          return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
-
-
-        }catch (Exception $e) {
+        } catch (Exception $e) {
+            DB::rollBack();
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
+    }
 
-}
+
+
 
  }

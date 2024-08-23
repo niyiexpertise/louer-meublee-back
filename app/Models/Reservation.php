@@ -41,6 +41,7 @@ class Reservation extends Model implements Auditable
     'montant_charge',
     'montant_housing',
     'montant_a_paye',
+    'statut'
     ];
     
     public function user()

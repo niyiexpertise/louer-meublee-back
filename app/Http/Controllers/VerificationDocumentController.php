@@ -20,10 +20,17 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Services\FileService;
 use Illuminate\Support\Facades\DB;
 
 class VerificationDocumentController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
 /**
  * @OA\Get(
@@ -192,7 +199,7 @@ public function index()
      * )
      */
 
-   
+
 
      public function store(Request $request)
      {
@@ -253,8 +260,7 @@ public function index()
                  }
 
                  $imagePiece = $imagePieces[$key];
-                 $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-                 $path_url = url('/image/document_verification/' . $path_name);
+                 $path_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/document_verification');;
 
                  $verificationDocument = new verification_document();
                  $verificationDocument->user_id = $user_id;
@@ -266,9 +272,7 @@ public function index()
                  $verificationStatut->verification_document_id = $verificationDocument->id;
                  $verificationStatut->save();
 
-                 $imagePiece->move(public_path('image/document_verification'), $path_name);
-                 $filePath = public_path('image/document_verification/' . $path_name);
-                 $filePaths[] = $filePath;
+                 $filePaths[] = $path_url;
                  $verificationDocuments[] = $verificationDocument;
              }
 
@@ -455,9 +459,12 @@ public function validateDocuments(Request $request)
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
-            $verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
+            $verificationStatut = verification_statut::find($verification_document_id);
+            //$verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
             if ($verificationStatut) {
-                $verificationStatut->update(['status' => 1]);
+                //$verificationStatut->update(['status' => 1]);
+                $verificationStatut->status = 1;
+                $verificationStatut->save();
             }
         }
 

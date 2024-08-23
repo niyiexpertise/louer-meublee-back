@@ -5306,105 +5306,6 @@
                 ]
             }
         },
-        "/api/chats/markMessageAsRead/{messageId}": {
-            "post": {
-                "tags": [
-                    "Chats"
-                ],
-                "summary": "Marque un message comme lu",
-                "operationId": "6c348cadc010cdf4c1ed83a4d6203131",
-                "parameters": [
-                    {
-                        "name": "messageId",
-                        "in": "path",
-                        "description": "ID du message",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Message marqué comme lu avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Message marqué comme lu avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Message non trouvé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 404
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Message non trouvé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status_code": {
-                                            "type": "integer",
-                                            "example": 500
-                                        },
-                                        "data": {
-                                            "type": "string",
-                                            "example": "[]"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Erreur serveur"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/chats/markMessageAsUnRead/{messageId}": {
             "post": {
                 "tags": [
@@ -6458,11 +6359,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations rejetées par l'hôte",
+                "summary": "Liste des réservations annulées par l'hôte",
                 "operationId": "43cadf527db032dbc6f8ad840d2ac81b",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations rejetées par l'hôte.",
+                        "description": "Liste des réservations annulées par l'hôte.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6548,11 +6449,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des logements en attente de confirmation",
+                "summary": "Liste des réservations en attente de confirmation",
                 "operationId": "6765a8b375f6b7fbe005b75aeb06b5ba",
                 "responses": {
                     "200": {
-                        "description": "Liste des logements en attente de confirmation.",
+                        "description": "Liste des réservations en attente de confirmation.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13631,6 +13532,49 @@
                 ]
             }
         },
+        "/api/housingsponsoring/getSponsoredHousings": {
+            "get": {
+                "tags": [
+                    "Home Housing Sponsoring"
+                ],
+                "summary": "Récupérer les logements sponsorisés",
+                "description": "Retourne la liste des logements sponsorisés en se basant sur la date actuelle.",
+                "operationId": "858816df004eac908d349cb23afc0733",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements sponsorisés retournée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur dans la récupération des logements sponsorisés."
+                    }
+                }
+            }
+        },
+        "/api/housingsponsoring/disableExpiredHousings": {
+            "post": {
+                "tags": [
+                    "Home Housing Sponsoring"
+                ],
+                "summary": "Désactiver les logements dont la date_fin est dépassée",
+                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
+                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
+                "responses": {
+                    "200": {
+                        "description": "Les logements expirés ont été désactivés avec succès."
+                    }
+                }
+            }
+        },
         "/api/housingtype/index": {
             "get": {
                 "tags": [
@@ -20050,6 +19994,212 @@
                 ]
             }
         },
+        "/api/reservation/payReservation/{reservationId}": {
+            "post": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Payer une réservation",
+                "description": "Permet de payer une réservation avec diverses méthodes de paiement, y compris le portefeuille.",
+                "operationId": "payReservation",
+                "parameters": [
+                    {
+                        "name": "reservationId",
+                        "in": "path",
+                        "description": "ID de la réservation à payer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "valeur_payee",
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement"
+                                ],
+                                "properties": {
+                                    "valeur_payee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "portefeuille"
+                                    },
+                                    "id_transaction": {
+                                        "type": "string",
+                                        "example": "abc123"
+                                    },
+                                    "statut_paiement": {
+                                        "type": "string",
+                                        "example": "payé"
+                                    },
+                                    "valeur_reduction_hote": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10,
+                                        "nullable": true
+                                    },
+                                    "valeur_promotion_hote": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "valeur_reduction_code_promo": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15,
+                                        "nullable": true
+                                    },
+                                    "valeur_reduction_staturp": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20,
+                                        "nullable": true
+                                    },
+                                    "montant_charge": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 3,
+                                        "nullable": true
+                                    },
+                                    "montant_housing": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100,
+                                        "nullable": true
+                                    },
+                                    "montant_a_paye": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 130,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement fait avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement fait avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "reservation_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150
+                                                },
+                                                "payment_method": {
+                                                    "type": "string",
+                                                    "example": "portefeuille"
+                                                },
+                                                "id_transaction": {
+                                                    "type": "string",
+                                                    "example": "abc123"
+                                                },
+                                                "statut": {
+                                                    "type": "string",
+                                                    "example": "payé"
+                                                },
+                                                "is_confirmed": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "is_canceled": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Réservation non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation non trouvée"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur détaillé"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/reservation/hote_confirm_reservation/{idReservation}": {
             "put": {
                 "tags": [
@@ -20415,9 +20565,29 @@
                 "tags": [
                     "Retraits"
                 ],
-                "summary": "Liste des retraits effectué par un utilisateur connecté",
+                "summary": "Liste des retraits effectué et accepté d'un utilisateur connecté",
                 "description": "Liste des retraits effectué par un utilisateur connecté",
                 "operationId": "cc9fe95e12f66cf8245f271dc49f98c4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des retraits effectué par un utilisateur connecté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/ListRetraitOfUserPendingAuth": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Liste des retraits effectué mais en attente d'une réponse de l'admin par un utilisateur connecté",
+                "description": "Liste des retraits effectué par un utilisateur connecté",
+                "operationId": "baacc8114a56af3042482e89e1b4493b",
                 "responses": {
                     "200": {
                         "description": "Liste des retraits effectué par un utilisateur connecté"
@@ -20477,6 +20647,11 @@
                                     "montant_valid": {
                                         "description": "Montant validé pour le retrait",
                                         "type": "integer"
+                                    },
+                                    "id_transaction": {
+                                        "description": "id de la transaction",
+                                        "type": "string",
+                                        "example": "hf45e"
                                     }
                                 },
                                 "type": "object"
@@ -20789,6 +20964,127 @@
                 "responses": {
                     "200": {
                         "description": "Liste des demandes retrait des hotes en attente de validation sur la plateforme(admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/retrait/show/{id}": {
+            "get": {
+                "tags": [
+                    "Retraits"
+                ],
+                "summary": "Afficher les détails d'un retrait",
+                "description": "Récupère les détails d'un retrait spécifique par ID.",
+                "operationId": "showRetrait",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du retrait",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du retrait récupéré avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 150.5
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "validé"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-21T10:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-08-21T10:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détail d'un retrait."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Retrait non trouvé.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Retrait non trouvé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Détails de l'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -21523,8 +21819,7 @@
                             "schema": {
                                 "properties": {
                                     "pagination_logement_acceuil": {
-                                        "type": "integer",
-                                        "example": 10
+                                        "type": "integer"
                                     },
                                     "condition_tranche_paiement": {
                                         "type": "string"
@@ -21536,8 +21831,7 @@
                                         "type": "string"
                                     },
                                     "contact_email": {
-                                        "type": "string",
-                                        "example": "example@domain.com"
+                                        "type": "string"
                                     },
                                     "contact_telephone": {
                                         "type": "string"
@@ -21564,11 +21858,34 @@
                                         "format": "binary"
                                     },
                                     "app_mode": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "PRODUCTION",
+                                            "DEVELOPPEMENT"
+                                        ]
                                     },
                                     "adresse_serveur_fichier": {
-                                        "type": "string",
-                                        "example": "https://example.com/files"
+                                        "type": "string"
+                                    },
+                                    "montant_maximum_recharge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_recharge": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_retrait": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_maximum_retrait": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "montant_minimum_solde_retrait": {
+                                        "type": "number",
+                                        "format": "float"
                                     }
                                 },
                                 "type": "object"
@@ -21590,6 +21907,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Settings updated successfully."
+                                        },
+                                        "setting": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -21649,6 +21969,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Settings retrieved successfully."
+                                        },
+                                        "setting": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

@@ -16,8 +16,10 @@ class SettingController extends Controller
     {
         $this->fileService = $fileService;
     }
+
       
     /**
+
      * @OA\Post(
      *     path="/api/settings/update",
      *     tags={"Settings"},
@@ -29,11 +31,11 @@ class SettingController extends Controller
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 type="object",
-     *                 @OA\Property(property="pagination_logement_acceuil", type="integer", example=10),
+     *                 @OA\Property(property="pagination_logement_acceuil", type="integer"),
      *                 @OA\Property(property="condition_tranche_paiement", type="string"),
      *                 @OA\Property(property="condition_prix_logement", type="string"),
      *                 @OA\Property(property="condition_sponsoring_logement", type="string"),
-     *                 @OA\Property(property="contact_email", type="string", example="example@domain.com"),
+     *                 @OA\Property(property="contact_email", type="string"),
      *                 @OA\Property(property="contact_telephone", type="string"),
      *                 @OA\Property(property="facebook_url", type="string", format="url"),
      *                 @OA\Property(property="twitter_url", type="string", format="url"),
@@ -45,8 +47,17 @@ class SettingController extends Controller
      *                     format="binary",
      *                     description="The logo image file to upload"
      *                 ),
-     *                 @OA\Property(property="app_mode", type="string"),
-     *                 @OA\Property(property="adresse_serveur_fichier", type="string", example="https://example.com/files")
+     *                 @OA\Property(
+     *                     property="app_mode", 
+     *                     type="string", 
+     *                     enum={"PRODUCTION", "DEVELOPPEMENT"}
+     *                 ),
+     *                 @OA\Property(property="adresse_serveur_fichier", type="string"),
+     *                 @OA\Property(property="montant_maximum_recharge", type="number", format="float"),
+     *                 @OA\Property(property="montant_minimum_recharge", type="number", format="float"),
+     *                 @OA\Property(property="montant_minimum_retrait", type="number", format="float"),
+     *                 @OA\Property(property="montant_maximum_retrait", type="number", format="float"),
+     *                 @OA\Property(property="montant_minimum_solde_retrait", type="number", format="float" )
      *             )
      *         )
      *     ),
@@ -56,7 +67,7 @@ class SettingController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Settings updated successfully."),
-
+     *             @OA\Property(property="setting", type="object")
      *         )
      *     ),
      *     @OA\Response(
@@ -88,14 +99,15 @@ class SettingController extends Controller
                 'linkedin_url' => '',
                 'logo' => '',
                 'app_mode' => '',
-                'adresse_serveur_fichier' => ''
+                'adresse_serveur_fichier' => '',
+
             ]);
         }
 
         $validationResult = $this->validateSettings($request);
 
         if ($validationResult['fails']) {
-            return (new ServiceController())->apiResponse(505, [], $validationResult['errors']);
+            return (new ServiceController())->apiResponse(400, [], $validationResult['errors']);
         }
 
         $validatedData = $validationResult['data'];
@@ -107,13 +119,9 @@ class SettingController extends Controller
         }
 
         $settings->save();
-        $data = ["setting" => $settings
+        $data = ["setting" => $settings];
 
-             ];
-            
-
-       return (new ServiceController())->apiResponse(200,$data, 'Modification éffectuée avec succès');
-
+        return (new ServiceController())->apiResponse(200, $data, 'Modification effectuée avec succès');
     }
 
     /**
@@ -126,7 +134,8 @@ class SettingController extends Controller
      *         description="Settings retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Settings retrieved successfully.")
+     *             @OA\Property(property="message", type="string", example="Settings retrieved successfully."),
+     *             @OA\Property(property="setting", type="object")
      *         )
      *     ),
      *     @OA\Response(
@@ -144,20 +153,13 @@ class SettingController extends Controller
         $settings = Setting::first();
 
         if (!$settings) {
-            return (new ServiceController())->apiResponse(404,[], "Aucun enregistrement trouvé");
-
+            return (new ServiceController())->apiResponse(404, [], "Aucun enregistrement trouvé");
         }
-        $data = ["setting" => $settings
 
-    ];
-   
+        $data = ["setting" => $settings];
 
-   return (new ServiceController())->apiResponse(200,$data, 'ok');
-
-       
+        return (new ServiceController())->apiResponse(200, $data, 'ok');
     }
-
-
 
     private function validateSettings(Request $request)
     {
@@ -172,8 +174,13 @@ class SettingController extends Controller
             'twitter_url' => 'nullable|url',
             'instagram_url' => 'nullable|url',
             'linkedin_url' => 'nullable|url',
-            'app_mode' => 'nullable|string',
+            'app_mode' => 'nullable|string|in:PRODUCTION,DEVELOPPEMENT',
             'adresse_serveur_fichier' => 'nullable|url',
+            'montant_maximum_recharge' => 'nullable|numeric',
+            'montant_minimum_recharge' => 'nullable|numeric',
+            'montant_minimum_retrait' => 'nullable|numeric',
+            'montant_maximum_retrait' => 'nullable|numeric',
+            'montant_minimum_solde_retrait' => 'nullable|numeric',
             'logo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 

@@ -20,6 +20,8 @@ class Payement extends Model implements Auditable
         'statut',
         'country',
         'is_confirmed',
-        'is_canceled'
+        'is_canceled',
+        'user_id',
+        'motif'
     ];
 }

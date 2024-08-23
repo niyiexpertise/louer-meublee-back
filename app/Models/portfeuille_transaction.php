@@ -23,7 +23,6 @@ class Portfeuille_transaction extends Model implements Auditable
         'valeur_commission',
         'montant_commission',
         'montant_restant',
-        'solde_total',
         'solde_commission',
         'solde_restant',
         'valeur_commission_partenaire',
@@ -37,13 +36,13 @@ class Portfeuille_transaction extends Model implements Auditable
         'updated_at',
         'solde_credit',
         'solde_debit',
+        'housing_sponsoring_id',
+        'operation_type',
     ];
     
     protected $hidden = [
         'solde_restant',
-        'montant_restant',
-        'solde_credit',
-        'solde_debit',
+        'solde_total',
     ];
     public function portfeuille()
     {

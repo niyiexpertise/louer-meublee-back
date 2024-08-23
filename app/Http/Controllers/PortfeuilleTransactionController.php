@@ -122,8 +122,7 @@ class PortfeuilleTransactionController extends Controller
      $filtered_transactions = $transactions->map(function($transaction) {
          return $transaction->only([
              'id',
-             'debit',
-             'credit',
+             'operation_type',
              'amount',
              'valeur_commission',
              'montant_commission',

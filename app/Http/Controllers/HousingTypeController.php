@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\HousingType;
 use App\Models\Housing;
+use App\Services\FileService;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -22,6 +23,13 @@ use Illuminate\Validation\Rule;
  */
 class HousingTypeController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
       /**
      * @OA\Get(
      *     path="/api/housingtype/index",
@@ -31,7 +39,7 @@ class HousingTypeController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="List of housing types"
-     *  
+     *
      *     )
      * )
      */
@@ -59,7 +67,7 @@ class HousingTypeController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="List of housing types"
-     *  
+     *
      *     )
      * )
      */
@@ -114,19 +122,16 @@ class HousingTypeController extends Controller
                     'name' => 'required|unique:housing_types|max:255',
                     'description' => 'required|string',
                 ]);
-               
+
 
                 $housingType =new HousingType();
-               
+
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeHousingType'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeHousingType/' . $icone_name;
-                    $housingType->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType');
+                    $housingType->icone = $identity_profil_url;
                     }
-                    
+
                 $housingType->name = $request->name;
                 $housingType->description = $request->description;
                 $housingType->save();
@@ -170,7 +175,7 @@ class HousingTypeController extends Controller
                 }
 
                 return response()->json(['data' => $housingType], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -213,19 +218,19 @@ class HousingTypeController extends Controller
             public function update(Request $request, $id)
         {
             try {
-            
+
 
                 $housingType = HousingType::find($id);
 
                 if (!$housingType) {
                     return response()->json(['error' => 'Type de logement non trouvé.'], 404);
                 }
-                
+
                 $validatedData = $request->validate([
                     'name' => ['required', 'string', Rule::unique('housing_types')->ignore($id)],
                     'description' => 'required|string',
                 ]);
-                
+
                 $existingHousingType = HousingType::where('name', $validatedData['name'])
                     ->where('id', '!=', $id)
                     ->first();
@@ -237,7 +242,7 @@ class HousingTypeController extends Controller
                 $housingType->update($validatedData);
 
                 return response()->json(['data' => 'Type de logement mis à jour avec succès.'], 200);
-            } catch(Exception $e) {    
+            } catch(Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 200);
             }
         }
@@ -297,14 +302,14 @@ class HousingTypeController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $housingType = HousingType::find($id);
-            
+
             if (!$housingType) {
                 return response()->json(['error' => 'type de logement non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -317,15 +322,12 @@ class HousingTypeController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeHousingType'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeHousingType/' . $icone_name;
-                    
-                    HousingType::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType');;
+
+                    $housingType->icone = $identity_profil_url;
+                    $housingType->save();
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");
@@ -371,18 +373,18 @@ class HousingTypeController extends Controller
             if (!$housingType) {
                 return response()->json(['error' => 'Type de logement  non trouvé.'], 200);
             }
-            $nbexist= Housing::where('housing_type_id', $id)->count(); 
-        
+            $nbexist= Housing::where('housing_type_id', $id)->count();
+
             if ($nbexist > 0) {
                 return response()->json(['error' => "Suppression impossible car ce type de logement est déjà associé à un logement."],200);
-    
+
             }
 
             $housingType->is_deleted = true;
             $housingType->save();
 
             return response()->json(['data' => 'Type de logement  supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -433,7 +435,7 @@ class HousingTypeController extends Controller
                 $housingType->save();
 
                 return response()->json(['data' => 'HousingType bloqué avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -484,7 +486,7 @@ class HousingTypeController extends Controller
                 $housingType->save();
 
                 return response()->json(['data' => 'HousingType débloquée avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
             return response()->json($e->getMessage());
         }
 
@@ -535,20 +537,20 @@ public function destroymultiple(Request $request)
             $housingType = HousingType::find($id);
 
             if (!$housingType) {
-                continue; 
+                continue;
             }
 
-            $nbexist = Housing::where('housing_type_id', $id)->count(); 
+            $nbexist = Housing::where('housing_type_id', $id)->count();
 
             if ($nbexist > 0) {
                 $notDeleted[] = $housingType->name;
-                continue; 
+                continue;
             }
 
             $housingType->is_deleted = true;
             $housingType->save();
 
-            $deleted[] = $housingType->name; 
+            $deleted[] = $housingType->name;
         }
 
         $response = [
@@ -557,7 +559,7 @@ public function destroymultiple(Request $request)
         ];
 
         return response()->json($response, 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\type_demande;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 class TypeDemandeController extends Controller
@@ -16,7 +17,7 @@ class TypeDemandeController extends Controller
    *     @OA\Response(
    *         response=200,
    *         description="List of type_demandes"
-   * 
+   *
    *     )
    * )
    */
@@ -25,11 +26,11 @@ class TypeDemandeController extends Controller
     try{
             $type_demandes = type_demande::all();
             return response()->json(['data' => $type_demandes], 200);
-      } catch(Exception $e) {    
+      } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 200);
      }
 
-  }  
+  }
 
 
 /**
@@ -75,7 +76,7 @@ class TypeDemandeController extends Controller
                     'error' => $e->getMessage()
                 ], 200);
             }
-       
+
     }
 
 
@@ -115,7 +116,7 @@ class TypeDemandeController extends Controller
         }
 
         return response()->json(['data' => $type_demande], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 200);
     }
 
@@ -165,9 +166,15 @@ class TypeDemandeController extends Controller
                 Rule::unique('type_demandes')->ignore($id),
             ],
         ]);
-        $type_demande = type_demande::whereId($id)->update($data);
+        $type_demande = type_demande::find($id);
+
+        if (!$type_demande) {
+            return response()->json(['error' => 'Type de demande non trouvé.'], 200);
+        }
+        $type_demande->name = $request->name;
+        $type_demande->save();
         return response()->json(['message' => 'Nom du Type de demande mise à jour avec succès.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
 

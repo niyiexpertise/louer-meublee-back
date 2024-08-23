@@ -1055,6 +1055,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::post('/store', [ReservationController::class, 'storeReservationWithPayment'])
             ->name('reservation.store')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.store');
+        Route::post('/payReservation/{reservationId}', [ReservationController::class, 'payReservation'])
+            ->name('reservation.payReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.payReservation');
 
         // Hote (Host)
         Route::put('/hote_confirm_reservation/{idReservation}', [ReservationController::class, 'hote_confirm_reservation'])
@@ -1234,7 +1237,11 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.ListRetraitRejectForAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.ListRetraitRejectForAdmin');
 
-    Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
+    Route::get('/show/{retraitId}', [RetraitController::class, 'show'])
+        ->name('retrait.show')
+        ->middleware('role_or_permission:admin|superAdmin|Manageretrait.show');
+
+        Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
         ->name('retrait.rejectRetraitByAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.rejectRetraitByAdmin');
 
@@ -1243,6 +1250,9 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.store');
     Route::get('/ListRetraitOfUserAuth', [RetraitController::class, 'ListRetraitOfUserAuth'])
         ->name('retrait.ListRetraitOfUserAuth');
+
+        Route::get('/ListRetraitOfUserPendingAuth', [RetraitController::class, 'ListRetraitOfUserPendingAuth'])
+        ->name('retrait.ListRetraitOfUserPendingAuth');
 
     Route::get('/ListRetraitRejectOfUserAuth', [RetraitController::class, 'ListRetraitRejectOfUserAuth'])
         ->name('retrait.ListRetraitRejectOfUserAuth');
@@ -1647,5 +1657,12 @@ Route::get('settings/index', [SettingController::class, 'show'])
 Route::get('equipment/all', [EquipementController::class, 'allEquipments'])->name('allEquipments');
 
           
+
+Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringController::class, 'getSponsoredHousings'])
+            ->name('housingsponsoring.getSponsoredHousings');
+
+
+Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
+            ->name('housingsponsoring.disableExpiredHousings');
 
 /** end Route ne nécéssitant pas l'authentification */

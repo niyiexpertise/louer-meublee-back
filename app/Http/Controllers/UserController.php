@@ -35,12 +35,21 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
+use App\Services\FileService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
  * @OA\Get(
  *     path="/api/users/index",
@@ -356,10 +365,11 @@ public function userLanguages()
          }
      }
 
-     $profilePhotoName = uniqid() . '.' . $request->file('profile_photo')->getClientOriginalExtension();
-     $profilePhotoPath = $request->file('profile_photo')->move(public_path('image/photo_profil'), $profilePhotoName);
-     $base_url = url('/');
-     $user->file_profil = $base_url .'/image/photo_profil/' . $profilePhotoName;
+     $identity_profil_url = '';
+
+     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil');;
+
+     $user->file_profil = $identity_profil_url;
      $user->save();
 
      return response()->json(['message' => 'Profile photo updated successfully', 'user' => $user], 200);
@@ -402,12 +412,12 @@ public function userLanguages()
  public function block(string $id)
  {
     try{
-        $user = User::whereId($id)->update(['is_blocked' => true]);
-
+        $user = User::find($id);
         if (!$user) {
             return response()->json(['error' => 'User non trouvé.'], 404);
         }
-
+        $user->is_blocked = true;
+        $user->save();
         return response()->json(['data' => 'This user is block successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
@@ -451,12 +461,12 @@ public function userLanguages()
 public function unblock($id)
 {
     try{
-        $user= User::whereId($id)->update(['is_blocked' => false]);
-
+        $user = User::find($id);
         if (!$user) {
             return response()->json(['error' => 'User non trouvé.'], 404);
         }
-
+        $user->is_blocked = false;
+        $user->save();
         return response()->json(['data' => 'User débloqué avec succès.'], 200);
     }catch (Exception $e){
           return response()->json(['error' => $e->getMessage()], 500);

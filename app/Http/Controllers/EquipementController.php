@@ -822,6 +822,7 @@ class EquipementController extends Controller
 public function allEquipments()
 {
     try {
+        // Récupération des équipements non bloqués et non supprimés, avec des noms uniques
         $equipments = Equipment::where('is_blocked', false)
             ->where('is_deleted', false)
             ->get()
@@ -831,19 +832,18 @@ public function allEquipments()
             return [
                 'id' => $equipment->id,
                 'name' => $equipment->name,
-                'icone' => $equipment->icone,
-                'is_deleted' => $equipment->is_deleted,
-                'is_blocked' => $equipment->is_blocked,
-                'updated_at' => $equipment->updated_at,
-                'created_at' => $equipment->created_at,
+                'icone' => $equipment->icone ?? null,  // Valeur par défaut si icône est null
+                
             ];
-        });
+        })->values();  // Utilisation de values() pour réindexer le tableau (au cas où)
 
+        // Retourne la réponse JSON avec le statut HTTP 200
         return response()->json([
             'data' => $equipmentList
-        ]);
+        ], 200);
 
-    } catch(Exception $e) {
+    } catch (Exception $e) {
+        // Retourne une erreur 500 en cas d'exception
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }

@@ -1647,7 +1647,7 @@ public function addHousing_step_8(Request $request, $housingId){
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
         
-         return $request;
+         
 
         $errorcheckOwner = $this->checkOwner($housingId);
         
@@ -1671,11 +1671,11 @@ public function addHousing_step_8(Request $request, $housingId){
             if (!isset($categorie['nombre']) || !$categorie['nombre']) {
                 return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " non renseigné");
             }
-
+            $categorie['nombre']=intval ($categorie['nombre']);                 
             if (!is_int($categorie['nombre'])) {
                 return (new ServiceController())->apiResponse(404, [], "Le nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " doit être un entier");
             }
-
+            
             // return  count($categorie['equipments'][0]['equipmentsId']);
 
             if (!$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
@@ -1690,6 +1690,7 @@ public function addHousing_step_8(Request $request, $housingId){
             }
 
             foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                $equipmentId=intval($equipmentId);  
                 if (!is_int($equipmentId)) {
                     return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
                 }
@@ -1756,23 +1757,26 @@ public function addHousing_step_8(Request $request, $housingId){
                 if (!isset($piece['nombre']) || !$piece['nombre']) {
                     return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . $piece['name'] . " non renseigné");
                 }
+                $piece['nombre']=intval ($piece['nombre']);                 
 
                 if (!is_int($piece['nombre'])) {
                     return (new ServiceController())->apiResponse(404, [], "Le nombre de  pièce " . $piece['name'] . " doit être un entier");
                 }
 
-                if (!isset($piece['equipments'][0]['equipmentsId']) || count($piece['equipments'][0]['equipmentsId']) == 0) {
+                if (!isset($piece['equipments']['equipmentsId']) || count($piece['equipments']['equipmentsId']) == 0) {
                     return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît à la pièce ". $piece['name'] );
                 }
 
-                $items = $piece['equipments'][0]['equipmentsId'];
+                $items = $piece['equipments']['equipmentsId'];
                 $uniqueItems = array_unique($items);
 
                 if (count($uniqueItems) < count($items)) {
                     return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id à la pièce ".$piece['name'] );
                 }
+                $piece['nombre']=intval ($piece['nombre']);                 
 
-                foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+                foreach ($piece['equipments']['equipmentsId'] as $equipmentId) {
+                    $equipmentId=intval ($equipmentId);    
                     if (!is_int($equipmentId)) {
                         return (new ServiceController())->apiResponse(404, [], "Les ids équipements de la pièce ".$piece['name']." doivent être des entiers");
                     }
@@ -1790,7 +1794,10 @@ public function addHousing_step_8(Request $request, $housingId){
         }
 
         // Mise à jour des éléments pour une catégorie existante
+       
+
         foreach ($request->categories as $categorie) {
+                
             // $categorie = json_decode($categorieA, true);
             $categorieModel = Category::find($categorie['id']);
 
@@ -1808,7 +1815,9 @@ public function addHousing_step_8(Request $request, $housingId){
             }
 
             // Mise à jour pour les équipements inexistants
+            if (isset($categorie['equipments'][0]['newEquipementName'])) {
             foreach ($categorie['equipments'][0]['newEquipementName'] as $newEquipment) {
+               
                 $equipment = Equipment::whereName($newEquipment)->first();
                 if (!$equipment) {
                     $equipment = new Equipment();
@@ -1828,16 +1837,16 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingEquipment->is_verified = false;
                 $housingEquipment->save();
             }
-
+            
             // Enregistrement des photos
             foreach ($categorie['photos'] as $fileId) {
+                
                 $photoModel = new File();
                 $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
                 $photoModel->path = $photoUrl;
                 $photoModel->save();
-
                 $housingCategoryFile = new Housing_category_file();
                 $housingCategoryFile->housing_id = $housing->id;
                 $housingCategoryFile->category_id = $categorie['id'];
@@ -1845,9 +1854,13 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingCategoryFile->number = count($categorie['photos']);
                 $housingCategoryFile->is_verified = true;
                 $housingCategoryFile->save();
-            }
-        }
+                
 
+            }
+           
+        }
+       }
+        
         // Mise à jour des éléments pour une catégorie inexistante
         foreach ($request->pieces as $piece) {
             // $piece = json_decode($pieceA, true);
@@ -1861,9 +1874,10 @@ public function addHousing_step_8(Request $request, $housingId){
             } else {
                 $newcategory = $existCategorie;
             }
+            
 
             // Mise à jour pour les équipements existants
-            foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+            foreach ($piece['equipments']['equipmentsId'] as $equipmentId) {
                 $equipment = Equipment::find($equipmentId);
                 if ($equipment) {
                     $housingEquipment = new Housing_equipment();
@@ -1893,7 +1907,6 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingCategoryFile->save();
             }
         }
-
         $housing->step = 8;
         $housing->save();
 

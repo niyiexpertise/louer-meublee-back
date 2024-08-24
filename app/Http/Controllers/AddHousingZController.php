@@ -1938,9 +1938,9 @@ public function addHousing_step_8(Request $request, $housingId){
         }
         $housing->step = 8;
         $housing->save();
-        $stocke=  (new AdminHousingController())->showHousingDetailForValidationForadmin($housing->id)->original['data'];    
+        //$stocke=  (new AdminHousingController())->showHousingDetailForValidationForadmin($housing->id);    
 
-        $data = ["housing_id" => $housing->id,"stocke" => $stocke];
+        $data = ["housing_id" => $housing->id];
 
         return (new ServiceController())->apiResponse(200, $data, 'Étape 8 terminée avec succès');
 

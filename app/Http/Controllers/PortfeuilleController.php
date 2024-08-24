@@ -123,6 +123,7 @@ class PortfeuilleController extends Controller
             return $errorPayement;
            }
 
+
             DB::beginTransaction();
             $soldeCommission = Portfeuille_transaction::sum('montant_commission');
 

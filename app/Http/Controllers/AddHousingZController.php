@@ -327,10 +327,8 @@ public function addHousing_step_7(Request $request, $housingId){
             if (strtolower($extension) !== 'pdf') {
                 return (new ServiceController())->apiResponse(404, [], 'Le fichier doit être au format PDF.');
             }
-            $pathName = uniqid() . '.' . $extension;
-            $pdfFile->move(public_path('reglement_interieur'), $pathName);
-            $pathUrl = url('/reglement_interieur/' . $pathName);
-            $housing->interior_regulation_pdf = $pathUrl;
+           
+            $housing->interior_regulation_pdf = $this->fileService->uploadFiles($pdfFile, 'reglement_interieur');
         }
 
         if (!empty($request->interior_regulation)) {
@@ -340,7 +338,7 @@ public function addHousing_step_7(Request $request, $housingId){
         $housing->step = 7;
         $housing->save();
 
-        $data = ["housing_id" => $housing->id];
+        $data = ["housing_id" => $housing->id,"pdf_reglement" => $housing->interior_regulation_pdf,"text_reglement" => $housing->interior_regulation];
 
         return (new ServiceController())->apiResponse(200, $data, 'Étape 7 terminée avec succès');
 
@@ -1654,13 +1652,18 @@ public function addHousing_step_16(Request $request, $housingId) {
  * )
  */
 public function addHousing_step_8(Request $request, $housingId){
+
     try {
 
         $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
+
+         return $request;
+
         $errorcheckOwner = $this->checkOwner($housingId);
+
         if ($errorcheckOwner) {
             return $errorcheckOwner;
         }
@@ -1668,7 +1671,6 @@ public function addHousing_step_8(Request $request, $housingId){
         if ($validationResponse) {
             return $validationResponse;
         }
-
         $this->deleteHousingData($housingId);
 
         // Validation des catégories

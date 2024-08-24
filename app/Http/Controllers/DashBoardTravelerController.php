@@ -26,13 +26,13 @@ class DashBoardTravelerController extends Controller
 
         /**
          * @OA\Get(
-         *     path="/api/reservation/getReservationsForTraveler",
-         *     summary="Liste des réservations pour le voyageur connecté",
+         *     path="/api/reservation/getUnpaidReservationsForTraveler",
+         *     summary="Liste des réservations non payées pour le voyageur connecté",
          *     tags={"Dashboard traveler"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations pour le voyageur connecté.",
+         *         description="Liste des réservations non payées pour le voyageur connecté.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -47,16 +47,16 @@ class DashBoardTravelerController extends Controller
          *     )
          * )
          */
-        public function getReservationsForTraveler()
+        public function getUnpaidReservationsForTraveler()
         {
             try {
                 $userId = Auth::id();
 
-                $data["data"] = Reservation::where('user_id', $userId)->get();
+                $data["data"] = Reservation::where('user_id', $userId)->where('statut', 'non_payee')->get();
                 $data["nombre"] = count($data["data"]) ;
 
 
-                return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations pour le voyageur connecté.');
+                return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations non payées pour le voyageur connecté.');
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
@@ -309,6 +309,12 @@ class DashBoardTravelerController extends Controller
  *                     type="string",
  *                     example="completed"
  *                 ),
+ *                @OA\Property(
+ *                     property="valeur_payee",
+ *                     description="Statut du paiement (facultatif)",
+ *                     type="integer",
+ *                     example=1000
+ *                 ),
  *
  *             )
  *         )
@@ -339,7 +345,7 @@ class DashBoardTravelerController extends Controller
  *                 ),
  *             ),
  *             @OA\Property(
- *                 property="montant_a_payer",
+ *                 property="valeur_payee",
  *                 type="number",
  *                 format="float",
  *                 example=50.00
@@ -407,6 +413,7 @@ class DashBoardTravelerController extends Controller
                 'payment_method' => 'required|string',
                 'id_transaction' => 'nullable|string',
                 'statut_paiement' => 'boolean',
+                'valeur_payee' => 'nullable|numeric'
             ]);
 
             $user_id = Auth::id();
@@ -427,25 +434,30 @@ class DashBoardTravelerController extends Controller
 
             $required_paid_value = $reservation->montant_a_paye / 2;
 
+            $method_paiement = (new ReservationController())->findSimilarPaymentMethod($request->payment_method);
+
+            $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
+
+            $espece = (new ReservationController())->findSimilarPaymentMethod("espece");
+
             DB::beginTransaction();
 
             try {
                 $reservation->valeur_payee += $required_paid_value;
                 $reservation->save();
 
-                $paymentData = [
-                    'reservation_id' => $reservation->id,
-                    'amount' => $required_paid_value,
-                    'payment_method' => $validatedData['payment_method'],
-                    'id_transaction' => $validatedData['id_transaction'],
-                    'statut' => $validatedData['statut_paiement'],
-                    'is_confirmed' => true,
-                    'is_canceled' => false,
-                ];
+                $payment = new Payement();
+                $payment->reservation_id = $reservation->id;
+                $payment->amount = $request->valeur_payee;
+                $payment->payment_method = $method_paiement;
+                $payment->id_transaction = $request->id_transaction;
+                $payment->statut = $request->statut_paiement;
+                $payment->is_confirmed = true;
+                $payment->is_canceled = false;
 
-                Payement::create($paymentData);
+                // return  $request->valeur_payee;
 
-                if ($validatedData['payment_method'] == "portfeuille" ) {
+                if ($method_paiement == $portfeuille) {
 
                     if ($reservation->user_id != $user_id) {
                         return (new ServiceController())->apiResponse(403, [], "Vous n'êtes pas autorisé à effectuer ce paiement");
@@ -457,39 +469,64 @@ class DashBoardTravelerController extends Controller
                     }
                     $portefeuille->solde -= $required_paid_value;
 
-
                     $portefeuilleTransaction = new Portfeuille_transaction();
-                    $portefeuilleTransaction->debit = true;
+                    $portefeuilleTransaction->debit = false;
                     $portefeuilleTransaction->credit = false;
                     $portefeuilleTransaction->amount = $required_paid_value;
-                    $portefeuilleTransaction->motif = "Finalisation de paiement";
+                    $portefeuilleTransaction->motif = "Finalisation de paiement avec le portefeuille";
 
                     $portefeuilleTransaction->reservation_id = $reservation->id;
-                    $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
-                    $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
+                    $portefeuilleTransaction->payment_method = $request->payment_method;
+                    $portefeuilleTransaction->operation_type = 'debit';
+                    $portefeuilleTransaction->id_transaction = "0";
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
 
                     $portefeuilleTransaction->save();
                     $portefeuille->save();
                     $portefeuilleTransaction->save();
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-                }
 
-                else {
+                }else if($method_paiement == $espece){
+
+                    $portefeuilleTransaction = new Portfeuille_transaction();
+                    $portefeuilleTransaction->debit = false;
+                    $portefeuilleTransaction->credit = false;
+                    $portefeuilleTransaction->amount = $required_paid_value;
+                    $portefeuilleTransaction->motif = "Finalisation de paiement (reçu en espèce par l'hote)";
+
+                    $portefeuilleTransaction->reservation_id = $reservation->id;
+                    $portefeuilleTransaction->payment_method = $request->payment_method;
+                    $portefeuilleTransaction->id_transaction = "0";
+
+                    $portefeuilleTransaction->save();
+                    (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+
+                }else {
+
+                    $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
+                    if ($existTransaction) {
+                        return $this->apiResponse(404, [], 'L\'id de la transaction existe déjà');
+                    }
 
                     $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
 
+                    if(!$request->valeur_payee){
+                        return (new ServiceController())->apiResponse(404, [], "Vous devez saisir la valeur à payer");
+                    }
+
+                    if($request->valeur_payee < $required_paid_value){
+                        return (new ServiceController())->apiResponse(404, [], "Montant insuffisant. Vous devez payer $required_paid_value FCFA ou plus");
+                    }
+
 
                     $portefeuilleTransaction = new Portfeuille_transaction();
-                    $portefeuilleTransaction->debit = true;
-                    $portefeuilleTransaction->credit = false;
-                    $portefeuilleTransaction->amount = $required_paid_value;
-                    $portefeuilleTransaction->motif = "Finalisation de paiement";
-
+                    $portefeuilleTransaction->credit = true;
+                    $portefeuilleTransaction->debit = false;
+                    $portefeuilleTransaction->amount = $request->valeur_payee ;
+                    $portefeuilleTransaction->motif = "Finalisation de paiement par un moyen de paiement autre que portefeuille et  espece";
                     $portefeuilleTransaction->reservation_id = $reservation->id;
-                    $portefeuilleTransaction->payment_method = $validatedData['payment_method'];
-                    $portefeuilleTransaction->id_transaction = $validatedData['id_transaction']??null;
-                    $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+                    $portefeuilleTransaction->payment_method = $request->payment_method;
+                    $portefeuilleTransaction->id_transaction =$request->id_transaction;
 
                     $portefeuilleTransaction->save();
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
@@ -498,7 +535,6 @@ class DashBoardTravelerController extends Controller
                 DB::commit();
                 $data = [
                     'reservation' => $reservation,
-                    'montant_a_payer' => $required_paid_value
                 ];
 
                 return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");

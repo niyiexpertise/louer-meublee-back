@@ -1118,9 +1118,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.getReservationsCountByYear')
             ->middleware('role_or_permission:superAdmin|Managereservation.getReservationsCountByYear');
 
-        Route::get('/getAllReservation', [AdminReservationController::class, 'getAllReservation'])
-            ->name('reservation.getAllReservation')
-            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservation');
+        Route::get('/getAllReservationUnpaid', [AdminReservationController::class, 'getAllReservationUnpaid'])
+            ->name('reservation.getAllReservationUnpaid')
+            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationUnpaid');
 
         Route::get('/getUserReservations/{user}', [AdminReservationController::class, 'getUserReservationsForAdmin'])
             ->name('reservation.getUserReservations')
@@ -1578,9 +1578,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.showDetailReservation')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.showDetailReservation');
 
-            Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
-            ->name('reservation.getReservationsForTraveler')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');
+            Route::get('getUnpaidReservationsForTraveler', [DashBoardTravelerController::class, 'getUnpaidReservationsForTraveler'])
+            ->name('reservation.getUnpaidReservationsForTraveler')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getUnpaidReservationsForTraveler');
 
             Route::get('getRejectedReservationsByTraveler', [DashBoardTravelerController::class, 'getRejectedReservationsByTraveler'])
             ->name('reservation.getRejectedReservationsByTraveler')
@@ -1644,7 +1644,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('settings')->group(function () {
 
-        
+
 
         Route::post('/update', [SettingController::class, 'update'])
             ->name('settings.update')
@@ -1654,6 +1654,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
 Route::get('settings/index', [SettingController::class, 'show'])
             ->name('settings.index');
+Route::get('equipment/all', [EquipementController::class, 'allEquipments'])->name('allEquipments');
+
+
 
 Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringController::class, 'getSponsoredHousings'])
             ->name('housingsponsoring.getSponsoredHousings');

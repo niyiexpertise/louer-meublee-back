@@ -2670,17 +2670,17 @@
                 ]
             }
         },
-        "/api/reservation/getAllReservation": {
+        "/api/reservation/getAllReservationUnpaid": {
             "get": {
                 "tags": [
                     "Reservation"
                 ],
-                "summary": "Liste de toutes les réservations de la plateforme",
-                "description": "Liste de toutes les réservations de la plateforme",
-                "operationId": "de59530e8b44d094c54ef598cb4d289f",
+                "summary": "Liste des réservations impayées côté admin",
+                "description": "Liste de toutes les réservations impayées concernant l'administrateur .",
+                "operationId": "c35334d803fa303e08d5c2385bee1430",
                 "responses": {
                     "200": {
-                        "description": "List of reservation"
+                        "description": "Liste des réservations impayées concernant l'administrateur"
                     }
                 },
                 "security": [
@@ -6219,16 +6219,16 @@
                 ]
             }
         },
-        "/api/reservation/getReservationsForTraveler": {
+        "/api/reservation/getUnpaidReservationsForTraveler": {
             "get": {
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations pour le voyageur connecté",
-                "operationId": "927864a2f8fe0e335e961d7e6b8f1732",
+                "summary": "Liste des réservations non payées pour le voyageur connecté",
+                "operationId": "18c0e80541eeec3a137791c9406deba0",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations pour le voyageur connecté.",
+                        "description": "Liste des réservations non payées pour le voyageur connecté.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6525,6 +6525,11 @@
                                         "description": "Statut du paiement (facultatif)",
                                         "type": "string",
                                         "example": "completed"
+                                    },
+                                    "valeur_payee": {
+                                        "description": "Statut du paiement (facultatif)",
+                                        "type": "integer",
+                                        "example": 1000
                                     }
                                 },
                                 "type": "object"
@@ -6556,7 +6561,7 @@
                                             },
                                             "type": "object"
                                         },
-                                        "montant_a_payer": {
+                                        "valeur_payee": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 50
@@ -8186,6 +8191,25 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/equipment/all": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get all unique equipments (not blocked, not deleted)",
+                "operationId": "90b18e038c6fcf42ed34e8ced01f137b",
+                "responses": {
+                    "200": {
+                        "description": "List of all unique equipments without duplicates"
                     }
                 },
                 "security": [
@@ -20006,11 +20030,6 @@
                                     "statut_paiement"
                                 ],
                                 "properties": {
-                                    "valeur_payee": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 150
-                                    },
                                     "payment_method": {
                                         "type": "string",
                                         "example": "portefeuille"
@@ -20023,43 +20042,7 @@
                                         "type": "string",
                                         "example": "payé"
                                     },
-                                    "valeur_reduction_hote": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10,
-                                        "nullable": true
-                                    },
-                                    "valeur_promotion_hote": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "valeur_reduction_code_promo": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 15,
-                                        "nullable": true
-                                    },
-                                    "valeur_reduction_staturp": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 20,
-                                        "nullable": true
-                                    },
-                                    "montant_charge": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 3,
-                                        "nullable": true
-                                    },
-                                    "montant_housing": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 100,
-                                        "nullable": true
-                                    },
-                                    "montant_a_paye": {
+                                    "valeur_payee": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 130,
@@ -20178,7 +20161,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/reservation/hote_confirm_reservation/{idReservation}": {

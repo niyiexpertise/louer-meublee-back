@@ -175,21 +175,20 @@ class AdminReservationController extends Controller
 
 
 
-                         /**
-     * @OA\Get(
-     *     path="/api/reservation/getAllReservation",
-     *     summary="Liste de toutes les réservations de la plateforme",
-     * description="Liste de toutes les réservations de la plateforme",
-     *     tags={"Reservation"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of reservation"
-     *
-     *     )
-     * )
-     */
-public function getAllReservation(){
+    /**
+ * @OA\Get(
+ *     path="/api/reservation/getAllReservationUnpaid",
+ *     summary="Liste des réservations impayées côté admin",
+ *     description="Liste de toutes les réservations impayées concernant l'administrateur .",
+ *     tags={"Reservation"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des réservations impayées concernant l'administrateur",
+ *     ),
+ * )
+ */
+public function getAllReservationUnpaid(){
 
     $reservations = Reservation::where('is_deleted', false)
                     ->with(['user','housing'])
@@ -385,7 +384,7 @@ public function getAllReservationConfirmedForAdmin(){
     }
 
 
-                         /**
+    /**
      * @OA\Get(
      *     path="/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)",
      *     summary="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",

@@ -105,7 +105,7 @@ class SettingController extends Controller
         $validationResult = $this->validateSettings($request);
 
         if ($validationResult['fails']) {
-            return (new ServiceController())->apiResponse(400, [], $validationResult['errors']);
+            return (new ServiceController())->apiResponse(404, [], $validationResult['errors']);
         }
 
         $validatedData = $validationResult['data'];
@@ -113,7 +113,14 @@ class SettingController extends Controller
         $this->updateFields($settings, $validatedData);
 
         if ($request->hasFile('logo')) {
-            $settings->logo = $this->fileService->uploadFiles($request->file('logo'), 'image/logos');
+
+            $validationResultFile = $this->fileService->uploadFiles($request->file('logo'), 'image/logos','extensionImage');
+
+            if ($validationResultFile['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+            }
+
+            $settings->logo = $validationResultFile['result'];
         }
 
         $settings->save();
@@ -179,7 +186,7 @@ class SettingController extends Controller
             'montant_minimum_retrait' => 'nullable|numeric',
             'montant_maximum_retrait' => 'nullable|numeric',
             'montant_minimum_solde_retrait' => 'nullable|numeric',
-            'logo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'logo' =>'nullable|max:2048',
         ]);
 
         if ($validator->fails()) {

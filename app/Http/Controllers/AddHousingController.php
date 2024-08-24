@@ -911,7 +911,7 @@ class AddHousingController extends Controller
             photo::where('housing_id', $housingId)->delete();
 
             foreach ($request->file('photos') as $index => $photo) {
-                $uploadedPath = $this->fileService->uploadFiles($photo, 'image/photo_logement');
+                $uploadedPath = $this->fileService->uploadFiles($photo, 'image/photo_logement',$type='extensionImageVideo');
                 $type = $photo->getClientOriginalExtension();
 
                 $photoModel = new photo();

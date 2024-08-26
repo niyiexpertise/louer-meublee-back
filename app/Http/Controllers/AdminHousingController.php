@@ -358,11 +358,11 @@ if (!$housingCharges->isEmpty()) {
     $totalCharge = $totalHoteCharge + $totalTravelerCharge;
 
 //    return $listing;
-
+        /*
    if(!$listing->is_finished){
     return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas voir les détails de ce logement car il n'est pas entièrement rempli");
    }
-
+*/
    $data = [
     'id_housing' => $listing->id ?? null,
     'housing_type_id' => $listing->housing_type_id ?? null,

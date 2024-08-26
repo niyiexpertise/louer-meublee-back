@@ -1019,7 +1019,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin'])
         ->name('logement.showHousingDetailForValidationForadmin')
-        ->middleware('role_or_permission:superAdmin|Managelogement.showHousingDetailForValidationForadmin');
+        ->middleware('role_or_permission:superAdmin|hote|Managelogement.showHousingDetailForValidationForadmin');
 
     Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing'])
         ->name('logement.ValidateOneHousing')
@@ -1374,12 +1374,6 @@ Route::prefix('portefeuille')->group(function () {
 
         //Gestion des housingsponsoring (demande de sponsoring) côté administrateur
         Route::prefix('housingsponsoring')->group(function() {
-            Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
-                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteActiveSponsoringRequest');
-            Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
-                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteRejectSponsoringRequest');
-            Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
-                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hotePendingSponsoringRequest');
             Route::get('demandeSponsoringNonvalidee', [HousingSponsoringController::class, 'demandeSponsoringNonvalidee'])
                 ->name('sponsoring.demandeSponsoringNonvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringNonvalidee');
             Route::get('demandeSponsoringvalidee', [HousingSponsoringController::class, 'demandeSponsoringvalidee'])

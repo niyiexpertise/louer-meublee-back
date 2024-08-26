@@ -300,8 +300,11 @@ class EquipementController extends Controller
                 $equipment  = new Equipment();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment');;
-                    $equipment->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
                     }
 
                 $equipment->name = $request->name;
@@ -567,9 +570,11 @@ class EquipementController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment');;
-
-                    $equipment->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
                     $equipment->save();
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
@@ -814,6 +819,7 @@ class EquipementController extends Controller
 public function allEquipments()
 {
     try {
+        // Récupération des équipements non bloqués et non supprimés, avec des noms uniques
         $equipments = Equipment::where('is_blocked', false)
             ->where('is_deleted', false)
             ->get()
@@ -823,19 +829,18 @@ public function allEquipments()
             return [
                 'id' => $equipment->id,
                 'name' => $equipment->name,
-                'icone' => $equipment->icone,
-                'is_deleted' => $equipment->is_deleted,
-                'is_blocked' => $equipment->is_blocked,
-                'updated_at' => $equipment->updated_at,
-                'created_at' => $equipment->created_at,
-            ];
-        });
+                'icone' => $equipment->icone ?? null,  // Valeur par défaut si icône est null
 
+            ];
+        })->values();  // Utilisation de values() pour réindexer le tableau (au cas où)
+
+        // Retourne la réponse JSON avec le statut HTTP 200
         return response()->json([
             'data' => $equipmentList
-        ]);
+        ], 200);
 
-    } catch(Exception $e) {
+    } catch (Exception $e) {
+        // Retourne une erreur 500 en cas d'exception
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }

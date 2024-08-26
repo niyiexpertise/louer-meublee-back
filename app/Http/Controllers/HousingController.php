@@ -49,9 +49,9 @@ class HousingController extends Controller
 {
     protected $fileService;
 
-    public function __construct(FileService $fileService)
+    public function __construct(FileService $fileService = null)
     {
-        $this->fileService = $fileService;
+        $this->fileService = $fileService ?: new FileService();
     }
 
  public function addHousing(Request $request)
@@ -468,7 +468,10 @@ class HousingController extends Controller
      if ($request->hasFile('photos')) {
         $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge');;
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $ip='http://192.168.100.158:8000';
             // $photoUrl = $ip.'/image/photo_logement/' . $photoName;
              $type = $photo->getClientOriginalExtension();
@@ -583,8 +586,10 @@ class HousingController extends Controller
         $identity_profil_url = '';
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
-            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
                  //$photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photoModel->path = $identity_profil_url;
@@ -615,12 +620,14 @@ class HousingController extends Controller
 
         $identity_profil_url = '';
         foreach ($categoryPhotos as $photoFile) {
-            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
                         //$photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photo = new File();
-            $photo->path = $identity_profil_url;
+            $photo->path = $identity_profil_url['result'];
             $photo->save();
 
             $housingCategoryFile = new Housing_category_file();
@@ -1292,7 +1299,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         return response()->json(['data' => $data],200);
     }
-    
+
 
  /**
  * @OA\Get(
@@ -2126,7 +2133,7 @@ public function formatListingsData($listings,$userId=0)
                 'address' => $listing->user->address ?? 'non renseigné',
                 'sexe' => $listing->user->sexe ?? 'non renseigné',
                 'postal_code' => $listing->user->postal_code ?? 'non renseigné',
-                
+
                 'created_at' => $listing->user->created_at ?? 'non renseigné',
             ],
             'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
@@ -2421,7 +2428,7 @@ public function enableHousing($housingId)
             'total_housing_published' => $totalHousingPublished,
             'total_avis_for_housing' => $totalCommentsForHousing,
             'global_average_for_user' => $globalAverageForOwner,
-            
+
         ]);
     }
 
@@ -2590,11 +2597,13 @@ public function enableHousing($housingId)
 
          $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement', 'extensionImageVideo');
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $identity_profil_url;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              $photoModel->is_verified = false;
              $photoModel->housing_id = $housing->id;

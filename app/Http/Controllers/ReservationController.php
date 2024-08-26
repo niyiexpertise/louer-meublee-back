@@ -44,7 +44,7 @@ use App\Models\MethodPayement;
 class ReservationController extends Controller
 {
 
-    private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal, $valeur_paye, $montant_total, $id_transaction, $is_tranche_paiement,$payementmethode) {
+    private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal) {
         $housing = Housing::where('id', $housing_id)
             ->where('is_deleted', 0)
             ->where('is_blocked', 0)
@@ -78,42 +78,49 @@ class ReservationController extends Controller
             return ['is_allowed' => false, 'message' => "La durée minimale de séjour est de {$housing->minimum_duration} jours"];
         }
 
-        if ($valeur_paye > $montant_total) {
+        // if ($valeur_paye > $montant_total) {
 
-            return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
+        //     return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
+        // }
+        // if (Payement::where('id_transaction', $id_transaction)->exists()) {
+        //     return ['is_allowed' => false, 'message' => 'L\'ID de transaction doit être unique. Cette transaction existe déjà.'];
+
+        // }
+        // if ($payementmethode == "portfeuille") {
+
+
+
+        //     $user_id = Auth::id();
+        //     $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+
+        //     if (!$portefeuille) {
+        //         return ['is_allowed' => false, 'message' => 'Portefeuille introuvable'];
+        //     }
+
+        //     if ($portefeuille->solde < $valeur_paye) {
+        //         return ['is_allowed' => false, 'message' => 'Solde insuffisant dans le portefeuille pour pouvoir réserver'];
+        //     }
+        // }
+
+        // if ($is_tranche_paiement == 1) {
+        //     $required_paid_value = $montant_total / 2;
+
+        //     if ($valeur_paye < $required_paid_value) {
+        //         return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
+        //     }
+        // } else {
+        //     if ($valeur_paye < $montant_total) {
+        //         return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant à payé"];
+        //     }
+        // }
+
+        $existing_traveler_reservation = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('date_of_starting',$new_start_date)->where('date_of_end',$new_end_date)->exists();
+
+        if($existing_traveler_reservation){
+            return ['is_allowed' => false, 'message' => 'Vous avez déjà ajouté une demande de réservation sur ce logement avec la même période de départ et de fin'];
         }
-        if (Payement::where('id_transaction', $id_transaction)->exists()) {
-            return ['is_allowed' => false, 'message' => 'L\'ID de transaction doit être unique. Cette transaction existe déjà.'];
 
-        }
-        if ($payementmethode == "portfeuille") {
-
-
-
-            $user_id = Auth::id();
-            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-
-            if (!$portefeuille) {
-                return ['is_allowed' => false, 'message' => 'Portefeuille introuvable'];
-            }
-
-            if ($portefeuille->solde < $valeur_paye) {
-                return ['is_allowed' => false, 'message' => 'Solde insuffisant dans le portefeuille pour pouvoir réserver'];
-            }
-        }
-
-        if ($is_tranche_paiement == 1) {
-            $required_paid_value = $montant_total / 2;
-
-            if ($valeur_paye < $required_paid_value) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
-            }
-        } else {
-            if ($valeur_paye < $montant_total) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant à payé"];
-            }
-        }
-        $existing_reservations = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->get();
+        $existing_reservations = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('is_confirmed_hote',true)->get();
 
         foreach ($existing_reservations as $reservation) {
             $time_before_reservation = $housing->time_before_reservation;
@@ -148,7 +155,7 @@ class ReservationController extends Controller
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 type="object",
- *                 required={"housing_id", "date_of_starting", "date_of_end", "number_of_adult", "code_pays", "telephone_traveler", "photo", "heure_arrivee_max", "heure_arrivee_min", "is_tranche_paiement", "montant_total", "valeur_payee", "payment_method", "id_transaction", "statut_paiement"},
+ *                 required={"housing_id", "date_of_starting", "date_of_end", "number_of_adult", "code_pays", "telephone_traveler", "photo", "heure_arrivee_max", "heure_arrivee_min", "is_tranche_paiement", "montant_total"},
  *                 @OA\Property(
  *                     property="housing_id",
  *                     type="integer",
@@ -244,31 +251,13 @@ class ReservationController extends Controller
  *                     example=500,
  *                     description="Montant total"
  *                 ),
- *                 @OA\Property(
+ *                @OA\Property(
  *                     property="valeur_payee",
- *                     type="number",
- *                     format="float",
- *                     example=250,
- *                     description="Montant déjà payé"
- *                 ),
- *                 @OA\Property(
- *                     property="payment_method",
- *                     type="string",
- *                     example="Credit Card",
- *                     description="Méthode de paiement"
- *                 ),
- *                 @OA\Property(
- *                     property="id_transaction",
- *                     type="string",
- *                     example="TX123456789",
- *                     description="Identifiant de la transaction"
- *                 ),
- *                 @OA\Property(
- *                     property="statut_paiement",
  *                      type="integer",
  *                     example=1,
- *                     description="Statut du paiement"
+ *                     description="valeur_payee"
  *                 ),
+ *
  *                 @OA\Property(
  *                     property="valeur_reduction_hote",
  *                      type="integer",
@@ -359,9 +348,9 @@ public function storeReservationWithPayment(Request $request)
         'is_tranche_paiement' => 'required',
         'montant_total' => 'required|numeric',
         'valeur_payee' => 'required|numeric',
-        'payment_method' => 'required|string',
-        'id_transaction' => 'required|string',
-        'statut_paiement' => 'required',
+        // 'payment_method' => 'required|string',
+        // 'id_transaction' => 'required|string',
+        // 'statut_paiement' => 'required',
         'valeur_reduction_hote' => 'nullable|numeric',
         'valeur_promotion_hote' => 'nullable|numeric',
         'valeur_reduction_code_promo' => 'nullable|numeric',
@@ -383,15 +372,17 @@ public function storeReservationWithPayment(Request $request)
     $user_id = Auth::id();
     $validatedData = $validatedData->validated();
 
-    $validation_result = $this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'], $validatedData['date_of_end'], $validatedData['number_of_domestical_animal'], $validatedData['valeur_payee'], $validatedData['montant_a_paye'], $validatedData['id_transaction'], $validatedData['is_tranche_paiement'], $validatedData['payment_method']);
+    $validation_result = $this->canCreateReservation($validatedData['housing_id'], $validatedData['date_of_starting'], $validatedData['date_of_end'], $validatedData['number_of_domestical_animal']);
 
     if (!$validation_result['is_allowed']) {
         return (new ServiceController())->apiResponse(404,[], $validation_result['message']);
 
     }
 
-    if(!MethodPayement::whereName($method_paiement)->exists()){
-        return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+    if($request->is_tranche_paiement == 1){
+        if($request->valeur_payee != ($request->montant_a_paye/2)){
+            return (new ServiceController())->apiResponse(404,[], "Lorsqu'il s'agit d'un paiement par tranche vous êtes prié de payer la moitié du montant à payer");
+        }
     }
 
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
@@ -569,28 +560,50 @@ public function payReservation(Request $request,$reservationId){
 
         $portfeuille = $this->findSimilarPaymentMethod("portfeuille");
 
-        
-    if ($method_paiement == $portfeuille) {
+
+        if($request->statut_paiement !=1 || $request->statut_paiement !="1"){
+            return (new ServiceController())->apiResponse(404, [], 'Statut paiement doit être un booléen');
+        }
+
         if ($reservation->is_tranche_paiement == 1) {
             $required_paid_value = $reservation->montant_a_paye / 2;
-            $montant = $required_paid_value;
-        } else {
-            $montant = $request->valeur_payee;
-        }
-    }else{
-        if ($reservation->is_tranche_paiement == 1) {
-            $required_paid_value = $reservation->montant_a_paye / 2;
-            if ($request->valeur_payee < $required_paid_value) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
+            if ($request->valeur_payee < $required_paid_value && $method_paiement != $portfeuille) {
+                return (new ServiceController())->apiResponse(404, [], 'Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé');
             }
-            $montant = $required_paid_value;
-        } else {
-            if ($request->valeur_payee <  $reservation->montant_a_paye) {
-                return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant à payé"];
+            if ($method_paiement == $portfeuille) {
+                $montant = $required_paid_value;
+            }else{
+                $montant = $required_paid_value;
             }
-            $montant = $request->valeur_payee;
+        } else {
+            if ($request->valeur_payee <  $reservation->montant_a_paye && $method_paiement != $portfeuille) {
+                return (new ServiceController())->apiResponse(404, [], 'Pour le paiement complet, la valeur payée doit être égale au montant à payé');
+            }
+            if ($method_paiement == $portfeuille) {
+                $montant = $reservation->montant_a_paye;
+            }else{
+                $montant = $request->valeur_payee;
+            }
         }
-    }
+
+
+        if ($method_paiement == $portfeuille) {
+            $user_id = Auth::id();
+                $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+    
+                if (!$portefeuille) {
+                    return (new ServiceController())->apiResponse(404, [], 'Portefeuille introuvable');
+                }
+    
+                if ($portefeuille->solde < $montant) {
+                    return (new ServiceController())->apiResponse(404, [], 'Solde insuffisant dans le portefeuille pour pouvoir réserver');
+                }
+            }
+
+            if ($method_paiement == $portfeuille) {
+                
+                }
+    
 
 
 
@@ -618,7 +631,7 @@ public function payReservation(Request $request,$reservationId){
 
         if ($method_paiement == $portfeuille) {
             $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-            $portefeuille->solde -= $request->valeur_payee;
+            $portefeuille->solde -= $montant;
 
             $portefeuilleTransaction = new Portfeuille_transaction();
             $portefeuilleTransaction->debit = false;
@@ -1416,6 +1429,7 @@ public function confirmIntegration(Request $request)
         if (!$commission) {
             return (new ServiceController())->apiResponse(404, [], "Commission non trouvée pour ce propriétaire.");
         }
+
         if ($reservation->is_tranche_paiement) {
             $paiementEspece = Payement::where('reservation_id', $reservation->id)
                                         ->where('payment_method', 'espece')
@@ -1428,12 +1442,13 @@ public function confirmIntegration(Request $request)
                  $message="Virement sur le compte de l'hôte de la première tranche(suite à la soustraction des commission) après confirmation de l'intégration .La deuxième tranche a été payé en espèce directement à l'hôte";
 
 
-            } else {
-                $rest=$reservation->valeur_payee;
-                 $message="Virement sur le compte de l'hôte du montant complet(suite à la soustraction des commission) après confirmation de l'intégration.";
             }
+        } else {
+            $rest=$reservation->valeur_payee;
+             $message="Virement sur le compte de l'hôte du montant complet(suite à la soustraction des commission) après confirmation de l'intégration.";
         }
-
+        $rest = $rest??$reservation->valeur_payee;
+        $message=  $message??"Virement sur le compte de l'hôte du montant après confirmation de l'intégration du voyageur.";
 
         $commission_percentage = $commission->valeur;
         $total_amount = $reservation->valeur_payee;
@@ -1455,25 +1470,28 @@ public function confirmIntegration(Request $request)
         $new_solde_restant = $solde_restant + $remaining_amount;
         $portefeuilleTransaction = new Portfeuille_transaction();
         $portefeuilleTransaction->debit = false;
-        $portefeuilleTransaction->credit = true;
+        $portefeuilleTransaction->credit = false;
         $portefeuilleTransaction->amount = $rest;
         $portefeuilleTransaction->valeur_commission = $commission_percentage;
         $portefeuilleTransaction->montant_commission = $commission_amount;
         $portefeuilleTransaction->montant_restant = $remaining_amount;
         $portefeuilleTransaction->solde_total = $new_solde_total;
         $portefeuilleTransaction->solde_commission = $new_solde_commission;
+        $portefeuilleTransaction->operation_type = 'credit';
         $portefeuilleTransaction->solde_restant = $new_solde_restant;
         $portefeuilleTransaction->motif =$message;
         $portefeuilleTransaction->reservation_id = $reservation->id;
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";
         $portefeuilleTransaction->payment_method = "portfeuille";
-
+        
         $portefeuilleTransaction->save();
         $titre_partenaire="Virement de votre part en tant que partenaire suite à la confirmation de l'intégration d'un voyageur";
+        
+        
+       $this->handlePartnerLogic($portefeuilleTransaction->id, true,$titre_partenaire);
+       
 
-
-        $this->handlePartnerLogic($portefeuilleTransaction->id, true,$titre_partenaire);
 
 
 
@@ -1584,7 +1602,7 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
     if (!$reservation) {
         return response()->json(['message' => 'Réservation non trouvée'], 404);
     }
-
+    
     if ($reservation->valeur_reduction_code_promo != 0) {
         $email_partenaire = $reservation->user->Partenaire->user->email;
         $user_id_partenaire = $reservation->user->Partenaire->user->id;

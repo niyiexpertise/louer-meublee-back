@@ -19793,11 +19793,7 @@
                                     "heure_arrivee_max",
                                     "heure_arrivee_min",
                                     "is_tranche_paiement",
-                                    "montant_total",
-                                    "valeur_payee",
-                                    "payment_method",
-                                    "id_transaction",
-                                    "statut_paiement"
+                                    "montant_total"
                                 ],
                                 "properties": {
                                     "housing_id": {
@@ -19881,23 +19877,7 @@
                                         "example": 500
                                     },
                                     "valeur_payee": {
-                                        "description": "Montant déjà payé",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 250
-                                    },
-                                    "payment_method": {
-                                        "description": "Méthode de paiement",
-                                        "type": "string",
-                                        "example": "Credit Card"
-                                    },
-                                    "id_transaction": {
-                                        "description": "Identifiant de la transaction",
-                                        "type": "string",
-                                        "example": "TX123456789"
-                                    },
-                                    "statut_paiement": {
-                                        "description": "Statut du paiement",
+                                        "description": "valeur_payee",
                                         "type": "integer",
                                         "example": 1
                                     },

@@ -15,7 +15,6 @@ use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
 class AddHousingController extends Controller
 {
 

@@ -575,7 +575,7 @@ class HousingSponsoringController extends Controller
      *     path="/api/housingsponsoring/demandeSponsoringsupprimee",
      *     tags={"Admin Housing Sponsoring"},
      *     summary="Liste des demandes de sponsoring supprimées",
-     *     description="Retourne la liste des demandes de sponsoring qui ont été supprimées.",
+     *     description="Retourne la liste des demandes de sponsoring qui ont été supprimées par les hôtes.",
      *     operationId="demandeSponsoringsupprimee",
      *     @OA\Response(
      *         response=200,

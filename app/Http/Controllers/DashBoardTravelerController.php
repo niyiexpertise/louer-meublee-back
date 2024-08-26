@@ -431,6 +431,11 @@ class DashBoardTravelerController extends Controller
                 return (new ServiceController())->apiResponse(404, [], 'Logement déjà soldé .');
             }
 
+            $existPremierTranche = Portfeuille_transaction::where('reservation_id',$request->reservation_id)->exists();
+                    if (!$existPremierTranche) {
+                        return (new ServiceController())->apiResponse(404, [], "Payé d'abord la première tranche avant de solder cette réservation.");
+                    }
+
 
             $required_paid_value = $reservation->montant_a_paye / 2;
 

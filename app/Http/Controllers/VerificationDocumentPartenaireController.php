@@ -251,12 +251,16 @@ public function index()
 
             $imagePiece = $imagePieces[$key];
 
-            $path_url = $this->fileService->uploadFiles($imagePiece, 'image/document_verification');
+            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocument');
+
+            if ($validationResultFile['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+            }
 
             $verificationDocument = new verification_document_partenaire();
             $verificationDocument->user_id = $user_id;
             $verificationDocument->document_id = $idDocument;
-            $verificationDocument->path = $path_url;
+            $verificationDocument->path = $validationResultFile['result'];
             $verificationDocument->code_promo = $codePromo;
             $verificationDocument->save();
 
@@ -265,7 +269,7 @@ public function index()
             $verificationStatut->save();
 
 
-            $filePaths[] = $path_url;
+            $filePaths[] = $validationResultFile['result'];
             $verificationDocuments[] = $verificationDocument;
         }
 

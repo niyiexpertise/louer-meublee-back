@@ -88,8 +88,11 @@ class CriteriaController extends Controller
                   $criteria = new Criteria();
                   $identity_profil_url = '';
                   if ($request->hasFile('icone')) {
-                        $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria');;
-                        $criteria->icone = $identity_profil_url;
+                        $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria', 'extensionImage');;
+                        if ($identity_profil_url['fails']) {
+                            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                        }
+                        $criteria->icone = $identity_profil_url['result'];
                   }
                   $criteria->name = $request->name;
                   $criteria->save();
@@ -274,9 +277,11 @@ class CriteriaController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria');;
-
-                    $criteria->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $criteria->icone = $identity_profil_url['result'];
                     $criteria->save();
 
                     return response()->json(['data' => 'icône du critère mis à jour avec succès.'], 200);

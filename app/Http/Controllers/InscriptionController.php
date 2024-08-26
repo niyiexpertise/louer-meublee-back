@@ -131,8 +131,12 @@ protected $fileService;
     $identity_profil_url = '';
 
     if ($request->hasFile('identity_profil')) {
-        
-        $identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil');;
+        $validationResultFile  = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');;
+        //$identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');;
+        if ($validationResultFile['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+        }
+        $identity_profil_url = $validationResultFile['result'];
     }
 
     $testEmail = new TestController();
@@ -212,9 +216,7 @@ protected $fileService;
             ], 404);
         }
 
-        for ($i = 0; $i < 20; $i++) {
-            dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
-        }
+         dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
 
         if ($request->has('code_promo') and !empty( $request->code_promo)) {
             $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();

@@ -149,9 +149,10 @@ class NotificationController extends Controller
 
 /**
  * @OA\Get(
- *     path="/api/notifications/users",
+ *     path="/api/users/notifications",
  *     summary="Récupérer la liste de notifications pour un utilisateur connecté",
  *     tags={"Notification"},
+ * security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
  *         description="Liste des notifications avec succès pour l'utilisateur",

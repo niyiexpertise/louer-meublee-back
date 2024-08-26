@@ -20,6 +20,7 @@ use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
 use App\Models\Notification;
 use App\Mail\NotificationEmailwithoutfile;
+use Dotenv\Exception\ValidationException as ExceptionValidationException;
 
 class AuthController extends Controller
 {
@@ -296,21 +297,21 @@ public function RevokePermsToRole(Request $request, $r){
     public function getUserRoles($id){
         try {
             $user = User::find($id);
-                   
+
             if (!$user) {
                 return response()->json('User not found');
             }
-            
-            
+
+
             $rights = $user->user_right()->with('right')->get();
-    
+
             if($rights->isEmpty()) {
                 return response()->json(['message' => 'Roles not found']);
             }
-    
-           
+
+
             $roles = $rights->pluck('right.name')->unique()->toArray();
-    
+
             return response()->json(['data' => $roles]);
         } catch(ValidationException $e) {
             return response()->json([
@@ -324,9 +325,9 @@ public function RevokePermsToRole(Request $request, $r){
             ], 500);
         }
     }
-    
-    
-    
+
+
+
 
        /**
  * @OA\Post(
@@ -374,11 +375,11 @@ public function RevokePermsToRole(Request $request, $r){
     //assigner un rôle à un utilisateur
     public function assignRoleToUser(Request $request,$id,$r){
         try{
-                
+
                 $role = Role::find($r);
 
                 $right = Right::find($r);
-               
+
                 $user = User::find($id);
                 if (!$role) {
                     return response()->json([
@@ -409,7 +410,7 @@ public function RevokePermsToRole(Request $request, $r){
                     $roles = Role::where('id',$utilisateur->right_id)->first();
                     $user->removeRole($roles);
                 }
-                
+
                 $user->assignRole($role);
                 $user_right = new User_right();
                 $user_right->user_id = $id;
@@ -421,15 +422,15 @@ public function RevokePermsToRole(Request $request, $r){
                     $permission_name .= " " . $pr['name'] . ",";
                 }
                 $message_notification ="Vous avez maintenant le rôle de ". $role->name .".";
-               
+
                     $mail = [
                         'title' => "Attribution du role de ".$role->name,
-                        'body' => $message_notification 
+                        'body' => $message_notification
                     ];
                     try {
                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
-                       
+
                     }
 
                 return response()->json([
@@ -454,7 +455,7 @@ public function RevokePermsToRole(Request $request, $r){
                         'role' => User::find($id)->getRoleNames(),
                     ]
                 ]);
-        }catch(ValidationException $e) {
+        }catch(ExceptionValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
                 'message' => $e->validator->errors()->first()
@@ -465,7 +466,7 @@ public function RevokePermsToRole(Request $request, $r){
                 'message' => $e->getMessage()
             ],500);
       };
-        
+
     }
 
            /**
@@ -517,7 +518,7 @@ public function RevokePermsToRole(Request $request, $r){
             $role = Role::find($r);
 
             $right = Right::find($r);
-           
+
             $user = User::find($id);
             if (!$role) {
                 return response()->json([
@@ -533,7 +534,7 @@ public function RevokePermsToRole(Request $request, $r){
             if (!$user) {
                 return response()->json('user not found');
             }
-                
+
                 if(!(User_right::where('user_id',$id)->where('right_id',$r)->exists())){
                     return response()->json([
                         'message' => 'Cet utilisateur n\'a pas le rôle que vous voulez lui retirer.'
@@ -546,33 +547,33 @@ public function RevokePermsToRole(Request $request, $r){
                         'error' => "L'utilisateur a un seul role dans le système actuellement qui est le role traveler;vous ne pouvez donc pas lui retirer ",
                         'message' => 'Merci bien de lui bloquer donc au lieu de le retirer le seul role restant'
                     ], 403);
-                } 
+                }
                 if ($user->hasRole($role->name)) {
                     $user->removeRole($role);
                 }
-                
+
                 User_right::where('user_id',$id)->where('right_id',$r)->delete();
 
                 $u = User_right::where('user_id',$id)->get();
                 foreach($u as $utilisateur){
                     $roles = Role::where('id',$utilisateur->right_id)->first();
-                    
+
                 }
-                
+
                 if($user->roles->count()!= 1){
                     $user->assignRole($roles);
                 }
                 $message_notification ="Vous n'avez plus maintenant le rôle de  ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
-                
+
                     $mail = [
                         'title' => "Retrait du role de ".$role->name,
-                        'body' => $message_notification 
+                        'body' => $message_notification
                     ];
                     try {
                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-                        
+
                     } catch (\Exception $e) {
-                       
+
                     }
                 return response()->json([
                     'message' => 'role retire avec success',
@@ -662,11 +663,11 @@ public function RevokePermsToRole(Request $request, $r){
                 'permissions' => 'required|array',
                 'permissions.*' => 'integer|exists:permissions,id'
             ]);
-            
+
             $user = User::find($id);
 
             $permissions=$request->input('permissions');
-            
+
             if (!$user) {
                 return response()->json('user not found');
             }
@@ -697,7 +698,7 @@ public function RevokePermsToRole(Request $request, $r){
                 $permission_name .= " " .  $permission->name . ",";
             }
         }
-            
+
             $permissionsDirect = $user->getDirectPermissions();
             //$permissionsRole = $user->getPermissionsViaRoles();
             $userRights = User_right::where('user_id', $id)->get();
@@ -715,13 +716,13 @@ public function RevokePermsToRole(Request $request, $r){
             $message_notification= "Vous avez maintenant les permissions suivantes: ". $permission_name . ".";
                     $mail = [
                         'title' => "Notification sur les nouvelle permissions attribuées",
-                        'body' => $message_notification 
+                        'body' => $message_notification
                     ];
                     try {
 
                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
-                       
+
                     }
             return response()->json([
                 'message'=>'permission add successfully',
@@ -814,7 +815,7 @@ public function RevokePermsToRole(Request $request, $r){
                 'permissions' => 'required|array',
                 'permissions.*' => 'integer|exists:permissions,id'
             ]);
-            
+
             $permissions=$request->input('permissions');
             $assignedPermissions =[];
             $permission_name= "";
@@ -824,11 +825,11 @@ public function RevokePermsToRole(Request $request, $r){
             }
             foreach ($permissions as $permissionId) {
                 $permission = Permission::find($permissionId);
-    
+
                 if (!$permission) {
                     return response()->json('Permission not found');
                 }
-    
+
                 if (!$user->hasDirectPermission($permission->name)) {
                     $retiredPermissions[] = [
                         'permission' => $permission->name,
@@ -841,16 +842,16 @@ public function RevokePermsToRole(Request $request, $r){
                         'status' => 'retired'
                     ];
                     $permission_name .= " " .  $permission->name . ",";
-                    
+
                 }
             }
-          
-            
+
+
             $permissionsDirect = $user->getDirectPermissions();
 
             //permissionsRole = $user->getPermissionsViaRoles();
             $userRights = User_right::where('user_id', $id)->get();
-            
+
             $permissions = [];
 
             foreach ($userRights as $userRight) {
@@ -864,14 +865,14 @@ public function RevokePermsToRole(Request $request, $r){
             $message_notification= "Vous n'avez plus les permissions suivantes: ". $permission_name . ".Elles vous ont été retiré par l'admin.";
                     $mail = [
                         'title' => "Notification sur le retrait des permissions ",
-                        'body' => $message_notification 
+                        'body' => $message_notification
                     ];
                     try {
-    
+
 
                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
                     } catch (\Exception $e) {
-                       
+
                     }
             return response()->json([
                 'message'=>'permission deny successfully',
@@ -1024,14 +1025,14 @@ public function RevokePermsToRole(Request $request, $r){
         try {
             // Recherche du rôle par son nom
             $role = Right::where('id', $r)->first();
-            
+
             if (!$role) {
                 return response()->json('Role not found');
             }
-    
+
             // Obtenez tous les utilisateurs associés à ce rôle
             $users = User_right::where('right_id', $role->id)->with('user')->get()->pluck('user');
-    
+
             return response()->json(['data' => $users]);
         } catch(ValidationException $e) {
             return response()->json([
@@ -1045,8 +1046,8 @@ public function RevokePermsToRole(Request $request, $r){
             ], 500);
         }
     }
-    
-    
+
+
 
         /**
  * @OA\Get(
@@ -1110,9 +1111,9 @@ public function RevokePermsToRole(Request $request, $r){
       };
     }
 
-              
 
-                       
+
+
               /**
      * @OA\Get(
      *     path="/api/users/usersRoles",
@@ -1122,7 +1123,7 @@ public function RevokePermsToRole(Request $request, $r){
      *     @OA\Response(
      *         response=200,
      *         description="list of users and their roles"
-     * 
+     *
      *     )
      * )
      */
@@ -1135,10 +1136,10 @@ public function RevokePermsToRole(Request $request, $r){
         $userRights = User_right::with(['user' => function ($query) {
             $query->where('is_deleted', false);
         }, 'right'])->get();
-        
+
         // Créer un tableau associatif pour stocker les rôles de chaque utilisateur
         $data = [];
-        
+
         foreach ($userRights as $userRight) {
             // Assurez-vous que l'utilisateur n'est pas null
             if (!$userRight->user) {
@@ -1272,7 +1273,7 @@ public function RevokePermsToRole(Request $request, $r){
            }
        }
 
-       
+
 /**
  * @OA\Get(
  *     path="/api/users/usersCountByRole",
@@ -1294,9 +1295,9 @@ public function RevokePermsToRole(Request $request, $r){
  */
            public function usersCountByRole(){
             try {
-               
+
                 $rolesCount = Right::withCount('user_right')->get()->pluck('user_right_count', 'name');
-                
+
                 return response()->json(['data' => $rolesCount]);
             } catch(Exception $e) {
                 return response()->json([
@@ -1305,7 +1306,7 @@ public function RevokePermsToRole(Request $request, $r){
                 ], 500);
             }
         }
-        
+
 
    /**
  * @OA\Post(

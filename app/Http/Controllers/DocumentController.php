@@ -8,9 +8,19 @@ use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\verification_document;
 use App\Models\document_type_demande;
+use App\Services\FileService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 class DocumentController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -24,7 +34,7 @@ class DocumentController extends Controller
    *     @OA\Response(
    *         response=200,
    *         description="List of documents"
-   * 
+   *
    *     )
    * )
    */
@@ -64,8 +74,8 @@ class DocumentController extends Controller
     }
 }
 
-  
-  
+
+
 
 
 
@@ -162,13 +172,13 @@ public function store(Request $request)
             $document = Document::where('id', $id)
             ->with('document_type_demande.type_demande')
             ->get();
-    
+
             if (!$document) {
                 return response()->json(['error' => 'Document non trouvé.'], 404);
             }
-    
+
             return response()->json(['data' => $document], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -275,21 +285,20 @@ public function update(Request $request, $id)
     {
         try{
 
-            
-            $document = Document::whereId($id)->first();
+            $document = Document::find($id);
             if (!$document) {
                 return response()->json(['error' => 'Document  non trouvé.'], 200);
             }
-            $nbexist=verification_document::where('document_id', $id)->count(); 
-        
+            $nbexist=verification_document::where('document_id', $id)->count();
+
             if ($nbexist > 0) {
                 return response()->json(['error' => "Suppression impossible car ce type de document a déjà été utilisé lors d'une soumission de la demande."],200);
             }
-            $document = Document::whereId($id)->update(['is_deleted' => true]);
-
+            $document->is_deleted = true;
+            $document->save();
             return response()->json(['data' => 'Document  supprimé avec succès.'], 200);
-    
-    } catch(Exception $e) {    
+
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
     }
@@ -330,14 +339,15 @@ public function update(Request $request, $id)
     public function block($id)
     {
         try{
-            $document = Document::whereId($id)->update(['is_blocked' => true]);
+            $document = Document::find($id);
 
             if (!$document) {
                 return response()->json(['error' => 'Document  non trouvé.'], 404);
             }
-
+            $document->is_blocked = true;
+            $document->save();
             return response()->json(['data' => 'This document is block successfuly.'], 200);
-    
+
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
@@ -379,12 +389,13 @@ public function update(Request $request, $id)
     public function unblock($id)
     {
         try{
-            $document = Document::whereId($id)->update(['is_blocked' => false]);
+            $document = Document::find($id);
 
             if (!$document) {
                 return response()->json(['error' => 'Document  non trouvé.'], 404);
             }
-
+            $document->is_blocked = false;
+            $document->save();
             return response()->json(['data' => 'this document is unblock successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
@@ -404,7 +415,7 @@ public function update(Request $request, $id)
    *     @OA\Response(
    *         response=200,
    *         description="List of inactif documents"
-   * 
+   *
    *     )
    * )
    */
@@ -416,11 +427,11 @@ public function update(Request $request, $id)
               ->where('is_blocked', false)
               ->with('document_type_demande.type_demande')
               ->get();
-  
+
           if ($documents->isEmpty()) {
               return response()->json(['error' => 'Document actif not found.'], 404);
           }
-  
+
           $formattedDocuments = $documents->map(function ($document) {
               return [
                   'id' => $document->id,
@@ -439,7 +450,7 @@ public function update(Request $request, $id)
                   })->filter()
               ];
           });
-  
+
           return response()->json([
               'data' => [
                   'documents' => $formattedDocuments,
@@ -450,7 +461,7 @@ public function update(Request $request, $id)
           return response()->json(['error' => $e->getMessage()], 500);
       }
   }
-  
+
 
             /**
      * Display a listing of the resource.
@@ -465,7 +476,7 @@ public function update(Request $request, $id)
    *     @OA\Response(
    *         response=200,
    *         description="List of actif documents"
-   * 
+   *
    *     )
    * )
    */
@@ -478,11 +489,11 @@ public function update(Request $request, $id)
                ->where('is_blocked', false)
                ->with('document_type_demande.type_demande')
                ->get();
-   
+
            if ($documents->isEmpty()) {
                return response()->json(['error' => 'Document actif not found.'], 404);
            }
-   
+
            $formattedDocuments = $documents->map(function ($document) {
                return [
                    'id' => $document->id,
@@ -501,7 +512,7 @@ public function update(Request $request, $id)
                    })->filter()
                ];
            });
-   
+
            return response()->json([
                'data' => [
                    'documents' => $formattedDocuments,
@@ -512,7 +523,7 @@ public function update(Request $request, $id)
            return response()->json(['error' => $e->getMessage()], 500);
        }
    }
-   
+
   /**
 * @OA\Put(
 *     path="/api/document/active/{id}",
@@ -549,12 +560,12 @@ public function update(Request $request, $id)
 public function active($id)
 {
     try{
-        $document = Document::whereId($id)->update(['is_actif' => true]);
-
+        $document = Document::find($id);
         if (!$document) {
             return response()->json(['error' => 'Document  non trouvé.'], 404);
         }
-
+        $document->is_actif = true;
+        $document->save();
         return response()->json(['data' => 'this document is active successfuly.'], 200);
 } catch(Exception $e) {
       return response()->json(['error' => $e->getMessage()], 500);
@@ -597,12 +608,12 @@ public function active($id)
 public function inactive($id)
 {
 try{
-    $document = Document::whereId($id)->update(['is_actif' => false]);
-
+    $document = Document::find($id);
     if (!$document) {
         return response()->json(['error' => 'Document  non trouvé.'], 404);
     }
-
+    $document->is_actif = false;
+    $document->save();
     return response()->json(['data' => 'this document is inactive successfuly.'], 200);
 } catch(Exception $e) {
   return response()->json(['error' => $e->getMessage()], 500);

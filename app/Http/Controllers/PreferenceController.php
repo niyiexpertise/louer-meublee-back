@@ -17,10 +17,17 @@ use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\housing_preference;
 use App\Models\User_preference;
-
+use App\Services\FileService;
 
 class PreferenceController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
         /**
      * @OA\Get(
      *     path="/api/preference/VerifiednotBlocknotDelete",
@@ -38,11 +45,11 @@ class PreferenceController extends Controller
         try{
                 $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
                 return response()->json(['data' => $preferences], 200);
-    
+
         } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
-   
+
     }
 
           /**
@@ -62,11 +69,11 @@ class PreferenceController extends Controller
         try{
                 $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', false)->get();
                 return response()->json(['data' => $preferences], 200);
-    
+
         } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
-   
+
     }
 
             /**
@@ -87,7 +94,7 @@ class PreferenceController extends Controller
                 $preferences = Preference::where('is_verified',true)->where('is_blocked', true)->where('is_deleted', false)->get();
             return response()->json(['data' => $preferences], 200);
 
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -110,12 +117,12 @@ class PreferenceController extends Controller
                 $preferences = Preference::where('is_verified',true)->where('is_blocked', false)->where('is_deleted', true)->get();
             return response()->json(['data' => $preferences], 200);
 
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    
+
        /**
      * @OA\Get(
      *     path="/api/preference/indexUnverified",
@@ -133,7 +140,7 @@ class PreferenceController extends Controller
             $preferences = Preference::where('is_verified',false)->where('is_deleted', false)->get();
         return response()->json(['data' => $preferences], 200);
 
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -186,29 +193,30 @@ class PreferenceController extends Controller
                     'name' => 'required|unique:preferences|max:255',
                 ]);
                 $preference = new Preference();
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconePreference'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconePreference/' . $icone_name;
-                    $preference->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $preference->icone = $identity_profil_url['result'];
                     }
                 $preference->name = $request->name;
                 $preference->is_verified = true;
                 $preference->save();
                 return response()->json(['data' => 'Type de preference créé avec succès.', 'preference' => $preference], 201);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
 
 
-      
 
 
-        
-    
+
+
+
 
  /**
      * @OA\Get(
@@ -242,7 +250,7 @@ class PreferenceController extends Controller
                     return response()->json(['error' => 'Préférence non trouvé.'], 404);
                 }
                 return response()->json(['data' => $preference], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -305,9 +313,9 @@ class PreferenceController extends Controller
                 return response()->json(['error' => 'Préférence non trouvé.'], 404);
             }
             // return response()->json(['error' =>$request->name ]);
-                Preference::whereId($id)->update(['name' => $request->name]);
-                return response()->json(['data' => 'Préférence mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
+            $preference->name = $request->name;
+            $preference->save();                return response()->json(['data' => 'Préférence mise à jour avec succès.'], 200);
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -366,14 +374,14 @@ class PreferenceController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $preference = Preference::find($id);
-            
+
             if (!$preference) {
                 return response()->json(['error' => 'Preference non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -386,15 +394,15 @@ class PreferenceController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconePreference'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconePreference/' . $icone_name;
-                    
-                    Preference::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $preference->icone = $identity_profil_url['result'];
+                    $preference->save();
+
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");
@@ -435,8 +443,7 @@ class PreferenceController extends Controller
     public function destroy(string $id)
     {
         try{
-           
-                 $preference = Preference::whereId($id)->first();
+            $preference = Preference::find($id);
                 if (!$preference) {
                     return response()->json(['error' => 'Préférence non trouvé.'],200);
                 }
@@ -450,11 +457,11 @@ class PreferenceController extends Controller
                 if ($existingPreference) {
                     return response()->json(['message' => 'Suppression impossible car la preference est déja associé à un utilisateur.'], 200);
 
-                } 
-                $preferences = Preference::whereId($id)->update(['is_deleted' => true]);        
-
+                }
+                $preference->is_deleted = true;
+                $preference->save();
                 return response()->json(['data' => 'Préférence supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -496,14 +503,15 @@ class PreferenceController extends Controller
     public function block(string $id)
  {
     try{
-            $preference = Preference::whereId($id)->update(['is_blocked' => true]);
+        $preference = Preference::find($id);
 
             if (!$preference) {
                 return response()->json(['error' => 'Préférence non trouvé.'], 404);
             }
-
+            $preference->is_blocked = true;
+            $preference->save();
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -546,14 +554,15 @@ class PreferenceController extends Controller
  public function unblock(string $id)
 {
     try{
-            $preference = Preference::whereId($id)->update(['is_blocked' => false]);
+        $preference = Preference::find($id);
 
             if (!$preference) {
                 return response()->json(['error' => 'Préférence non trouvé.'], 404);
             }
-
+            $preference->is_blocked = false;
+            $preference->save();
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -605,11 +614,11 @@ class PreferenceController extends Controller
         $preference->save();  // Assurez-vous de sauvegarder les changements
 
         // Récupérer la relation Housing_preference et la mettre à jour si elle existe
-        $housingPreference = Housing_preference::where('preference_id', $id)->first();
+        $housingPreference = Housing_preference::find($id);
 
         if ($housingPreference) {
-            $housingPreference->update(['is_verified' => true]);
-
+            $housingPreference->is_verified = true;
+            $housingPreference->save();
             // Envoyer un e-mail de notification
             $mail = [
                 'title' => "Validation de la nouvelle préférence ajoutée au logement",

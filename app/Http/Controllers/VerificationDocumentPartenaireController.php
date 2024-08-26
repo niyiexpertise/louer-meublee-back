@@ -20,11 +20,18 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
-
+use App\Services\FileService;
 class VerificationDocumentPartenaireController extends Controller
 {
 
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
 
 /**
  * @OA\Get(
@@ -245,13 +252,16 @@ public function index()
 
             $imagePiece = $imagePieces[$key];
 
-            $path_name = uniqid() . '.' . $imagePiece->getClientOriginalExtension();
-            $path_url = url('/image/document_verification/' . $path_name);
+            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocument');
+
+            if ($validationResultFile['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+            }
 
             $verificationDocument = new verification_document_partenaire();
             $verificationDocument->user_id = $user_id;
             $verificationDocument->document_id = $idDocument;
-            $verificationDocument->path = $path_url;
+            $verificationDocument->path = $validationResultFile['result'];
             $verificationDocument->code_promo = $codePromo;
             $verificationDocument->save();
 
@@ -259,14 +269,12 @@ public function index()
             $verificationStatut->vpdocument_id = $verificationDocument->id;
             $verificationStatut->save();
 
-            $imagePiece->move(public_path('image/document_verification'), $path_name);
 
-            $filePath = public_path('image/document_verification/' . $path_name);
-            $filePaths[] = $filePath;
+            $filePaths[] = $validationResultFile['result'];
             $verificationDocuments[] = $verificationDocument;
         }
 
-        $adminRole = DB::table('rights')->where('name', 'superAdmin')->first();
+        $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
         if (!$adminRole) {
             return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
@@ -278,24 +286,19 @@ public function index()
         ->get();
 
         foreach ($adminUsers as $adminUser) {
-            $notification = new Notification();
-            $notification->user_id = $adminUser->id;
-            $notification->name = "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname.";
-            $notification->save();
 
             $mail = [
                 'title' => 'Demande d\'être partenaire',
-                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
+                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. "
             ];
 
             try {
-                dispatch(new NotificationWithFile($adminUser->email, $mail['body'], $mail['title'],$filePaths));
+                dispatch(new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'],2));
 
-                // Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths)); 
             } catch (\Exception $e) {
-                   
+
             }
-        } 
+        }
 
         return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
     } catch (Exception $e) {
@@ -334,7 +337,7 @@ public function index()
                       ->whereHas('verificationDocumentspartenaire')
                       ->with('verificationDocumentspartenaire', 'verificationDocumentspartenaire.verificationStatutpartenaire', 'verificationDocumentspartenaire.document')
                       ->firstOrFail();
-          
+
           $verificationDocuments = $user->verificationDocumentspartenaire->map(function ($verificationDocument) {
               return [
                   'id_verification_document' => $verificationDocument->id,
@@ -344,9 +347,9 @@ public function index()
                   'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
               ];
           });
-  
+
           $code_promo = $user->verificationDocumentspartenaire->first()->code_promo;
-  
+
           $userInfo = [
               'id_user' => $user->id,
               'lastname' => $user->lastname,
@@ -363,21 +366,21 @@ public function index()
               'verification_documents' => $verificationDocuments,
               'code_promo' => $code_promo
           ];
-  
+
           return response()->json(['data' => $userInfo], 200);
       } catch (\Exception $e) {
           return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de l\'utilisateur.'], 500);
       }
   }
-  
 
- 
+
+
 
     /**
      * Valider les documents en un coup.
      *
      * Valide les documents de vérification pour un utilisateur et change son statut en tant qu'hôte.
-     * 
+     *
      * @OA\Post(
      *     path="/api/verificationdocumentpartenaire/partenaire/valider/all",
      *     summary="Valider les documents en un coup ,bref valider tout en un clic",
@@ -417,7 +420,7 @@ public function index()
      *         )
      *     )
      * )
-     */ 
+     */
 public function validateDocuments(Request $request)
 {
     $data = $request->validate([
@@ -442,9 +445,12 @@ public function validateDocuments(Request $request)
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
-            $verificationStatut = verification_statut_partenaire::where('vpdocument_id', $verification_document_id)->first();
+            $verificationStatut = verification_statut_partenaire::where($verification_document_id);
+           // $verificationStatut = verification_statut_partenaire::where('vpdocument_id', $verification_document_id)->first();
             if ($verificationStatut) {
-                $verificationStatut->update(['status' => 1]);
+                $verificationStatut->status = 1;
+                $verificationStatut->save();
+                //$verificationStatut->update(['status' => 1]);
             }
         }
         $verificationDocumentsExist = verification_statut_partenaire::whereIn('vpdocument_id', $verification_document_ids)->get();
@@ -454,9 +460,9 @@ public function validateDocuments(Request $request)
         $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
         $commission=new user_partenaire();
         $commission->user_id=$user->id;
-        $commission->commission=5;
-        $commission->reduction_traveler=3;
-        $commission->number_of_reservation=3;
+        $commission->commission = Setting::first()->commission_partenaire ?? 5;
+        $commission->reduction_traveler = Setting::first()->reduction_partenaire_defaut ?? 3;
+        $commission->number_of_reservation = Setting::first()->number_of_reservation_partenaire_defaut ?? 3;
         $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
         $commission->save();
         $mail = [
@@ -554,7 +560,7 @@ public function validateDocument(Request $request)
             $role = Role::where('name','partenaire')->first();
             $grant = new AuthController();
             $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
-            
+
             $commission=new user_partenaire();
                 $commission->user_id=$user->id;
                 $commission->commission=5;
@@ -567,7 +573,7 @@ public function validateDocument(Request $request)
                 'title' => 'Demande d\'être hôte',
                 'body' => "Votre demande d'être partenaire a été validée avec succès."
             ];
-            
+
              dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
         }
@@ -620,15 +626,15 @@ public function validateDocument(Request $request)
          $user = User::with(['verificationDocumentspartenaire' => function ($query) {
              $query->with('verificationStatutpartenaire');
          }])->findOrFail($userId);
- 
+
          $right = Right::where('name', 'partenaire')->first();
          $exist = User_right::where('user_id', $userId)->where('right_id', $right->id)->exists();
- 
-         
+
+
          $code_promo = "";
- 
+
          $verificationDocumentsWithStatus = $user->verificationDocumentspartenaire->map(function ($verificationDocument) use (&$code_promo) {
-             
+
              $code_promo = $verificationDocument->code_promo;
              return [
                  'document_id' => $verificationDocument->id,
@@ -637,19 +643,19 @@ public function validateDocument(Request $request)
                  'status' => $verificationDocument->verificationStatutpartenaire ? $verificationDocument->verificationStatutpartenaire->status : null,
              ];
          });
- 
+
          $requestStatus = $exist ? 'Validé' : 'Non validé';
- 
+
          return response()->json([
              'verification_documents' => $verificationDocumentsWithStatus,
              'Statut_demande' => $requestStatus,
-             'code_promo' => $code_promo, 
+             'code_promo' => $code_promo,
          ], 200);
      } catch (\Exception $e) {
          return response()->json(['error' => $e->getMessage()], 500);
      }
  }
- 
+
 
 /**
  * @OA\Post(
@@ -707,21 +713,25 @@ public function changeDocument(Request $request)
 
     try {
         $verificationDocument = verification_document_partenaire::findOrFail($verification_document_id);
-        
+
         if ($verificationDocument->verificationStatutpartenaire->status === 0) {
             $filename = basename($verificationDocument->path);
             $oldDocumentPath = public_path('image/document_verification/' . $filename);
                   if (file_exists($oldDocumentPath)) {
                          unlink($oldDocumentPath);
                     }
+                    $identity_profil_url = '';
+                    $identity_profil_url = $this->fileService->uploadFiles($new_document, 'image/document_verification', 'extensionDocument');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+           // $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
+           // $path_url = url('/image/document_verification/' . $path_name);
+           // $new_document->move(public_path('image/document_verification'), $path_name);
 
-            $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
-            $path_url = url('/image/document_verification/' . $path_name);
-            $new_document->move(public_path('image/document_verification'), $path_name);
-
-            $verificationDocument->path = $path_url;
+            $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
-                     
+
             return response()->json(['message' => 'Document changé avec succès.'], 200);
         } else {
             return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);

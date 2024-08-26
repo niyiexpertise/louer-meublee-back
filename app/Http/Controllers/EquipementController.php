@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Services\FileService;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -23,7 +24,12 @@ use Illuminate\Validation\ValidationException ;
 use Illuminate\Validation\Rule;
 class EquipementController extends Controller
 {
+    protected $fileService;
 
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
         /**
      * @OA\Get(
      *     path="/api/equipment/VerifiedBlocknotDelete",
@@ -71,11 +77,11 @@ class EquipementController extends Controller
                     return response()->json([
                         'data' => $equipmentsWithCategories
                     ]);
-    
-        } catch(Exception $e) {    
+
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
-        
+
     }
 
         /**
@@ -120,7 +126,7 @@ class EquipementController extends Controller
                     return response()->json([
                         'data' => $equipmentsWithCategories
                     ]);
-    
+
         } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -173,11 +179,11 @@ class EquipementController extends Controller
                     return response()->json([
                         'data' => $equipmentsWithCategories
                     ]);
-    
-        } catch(Exception $e) {    
+
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
-        
+
     }
 
        /**
@@ -201,7 +207,7 @@ class EquipementController extends Controller
                     $query->where('is_deleted', false)->where('is_verified', false);
                 })
                 ->get();
-            
+
                 foreach ($equipmentCategories as $equipment) {
                     $equipmentsWithCategories[] = [
                         'id' => $equipment->equipment->id,
@@ -210,7 +216,7 @@ class EquipementController extends Controller
                         'is_blocked' => $equipment->equipment->is_blocked,
                         'updated_at' => $equipment->equipment->updated_at,
                         'created_at' => $equipment->equipment->created_at,
-                        
+
                         'category' => $equipment->category,
                         'equipmentCategory' => Equipment_category::where([
                             'equipment_id' => $equipment->equipment->id,
@@ -222,16 +228,16 @@ class EquipementController extends Controller
             return response()->json([
                 'data' => $equipmentsWithCategories
             ]);
-            
-    
-        } catch(Exception $e) {    
+
+
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
-        
+
     }
 
-  
-      
+
+
 
 
 
@@ -290,14 +296,15 @@ class EquipementController extends Controller
                     "message" =>"La catégorie associée à l'équipement n'existe pas ou a déjà été supprimée",
                 ],200);
             }
-            
+
                 $equipment  = new Equipment();
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeEquipment'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeEquipment/' . $icone_name;
-                    $equipment->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
                     }
 
                 $equipment->name = $request->name;
@@ -313,13 +320,13 @@ class EquipementController extends Controller
                     "message" =>"save successfully",
                     "equipment" => $equipment
                 ],200);
-                } catch(Exception $e) {    
+                } catch(Exception $e) {
                       return response()->json(['error' => $e->getMessage()], 500);
                 }
 
         }
 
-         
+
         /**
      * @OA\Get(
      *     path="/api/equipment/show/{id}",
@@ -336,7 +343,7 @@ class EquipementController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Information about the specified equipment ",
-     *         
+     *
      *     ),
      *     @OA\Response(
      *         response=404,
@@ -359,13 +366,13 @@ class EquipementController extends Controller
 
 
                 return response()->json(['data' => $equipment], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
     }
 
-       
+
     /**
      * @OA\Put(
      *     path="/api/equipment/updateName/{id}",
@@ -412,22 +419,19 @@ class EquipementController extends Controller
     public function updateName(Request $request, string $id)
     {
         try{
-                $equipment = Equipment::whereId($id)->first();
-
-                if (!$equipment) {
-                    return response()->json(['error' => 'Equipement non trouvé.'], 404);
-                }
-
-                $data = $request->validate([
-                    'name' => [
-                        'required',
-                        'string',
-                        Rule::unique('equipment')->ignore($id),
-                    ],
-                ]);
-
-               Equipment::whereId($id)->update($data);
-
+            $data = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    Rule::unique('equipment')->ignore($id),
+                ],
+            ]);
+            $equipment = Equipment::find($id);
+            if (!$equipment) {
+                return response()->json(['error' => 'Équipement introuvable pour cette catégorie.'], 404);
+            }
+            $equipment->name = $request->name;
+            $equipment->save();
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
@@ -486,8 +490,8 @@ class EquipementController extends Controller
                     return response()->json(['error' => 'Relation equipmentCategory non trouvé.'], 404);
                 }
 
-               Equipment_category::whereId($equipmentCategory)->update(['category_id' => $request->category_id]);
-
+               $equipment->category_id = $request->category_id;
+               $equipment->save();
 
                 return response()->json(['data' => 'nom de l\'équipement mis à jour avec succès.'], 200);
         } catch(Exception $e) {
@@ -548,10 +552,10 @@ class EquipementController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $equipment = Equipment::find($id);
-            
+
             if (!$equipment) {
                 return response()->json(['error' => 'Equipement non trouvé.'], 404);
             }
@@ -564,15 +568,14 @@ class EquipementController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeEquipment'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeEquipment/' . $icone_name;
-                    
-                    Equipment::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
+                    $equipment->save();
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
                 // dd("h");
@@ -621,20 +624,20 @@ class EquipementController extends Controller
 {
     try {
         $equipment = Equipment::find($id);
-        
+
         if (!$equipment) {
             return response()->json(['error' => 'Équipement non trouvé.'], 200);
         }
-        
-        $associatedHousing = Housing_equipment::where('equipment_id', $id)->count(); 
-        
+
+        $associatedHousing = Housing_equipment::where('equipment_id', $id)->count();
+
         if ($associatedHousing > 0) {
             return response()->json(['error' => "Suppression impossible car l'équipement est déjà associé à un logement."], 200);
 
         }
 
-        $equipment->update(['is_deleted' => true]);
-        
+        $equipment->is_deleted = true;
+        $equipment->save();
         return response()->json(['data' => 'Équipement supprimé avec succès.'], 200);
     } catch (Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
@@ -681,11 +684,11 @@ class EquipementController extends Controller
                     return response()->json(['error' => 'Équipement non trouvé.'], 404);
                 }
 
-                Equipment::whereId($id)->update(['is_blocked' => true]);
-
+                $equipment->is_blocked = true;
+                $equipment->save();
                 // Retourner une réponse JSON pour indiquer que l'équipement a été bloqué avec succès
                 return response()->json(['data' => 'Équipement bloqué avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -727,10 +730,10 @@ class EquipementController extends Controller
                 if (!$equipment) {
                     return response()->json(['error' => 'Équipement non trouvé.'], 404);
                 }
-                Equipment::whereId($id)->update(['is_blocked' => false]);
-
+                $equipment->is_blocked = false;
+                $equipment->save();
                 return response()->json(['data' => 'Équipement débloqué avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -771,7 +774,7 @@ class EquipementController extends Controller
     try {
 
         $equipment = Equipment::find($id);
-        
+
         if (!$equipment) {
             return response()->json(['error' => 'Équipement non trouvé.'], 404);
         }
@@ -780,13 +783,13 @@ class EquipementController extends Controller
             return response()->json(['data' => 'Équipement déjà vérifié.'], 200);
         }
 
-        $equipment->update(['is_verified' => true]);
+        $equipment->is_verified = true;
+        $equipment->save();
 
-        $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
-        
+        $housingEquipment = Housing_equipment::find($id);
         if ($housingEquipment) {
-            $housingEquipment->update(['is_verified' => true]);
-
+            $housingEquipment->is_verified = true;
+            $housingEquipment->save();
             $mail = [
                 'title' => "Validation du nouvel équipement ajouté au logement",
                 'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
@@ -800,6 +803,48 @@ class EquipementController extends Controller
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
+
+/**
+ * @OA\Get(
+ *     path="/api/equipment/all",
+ *     summary="Get all unique equipments (not blocked, not deleted)",
+ *     tags={"Equipment"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of all unique equipments without duplicates"
+ *     )
+ * )
+ */
+public function allEquipments()
+{
+    try {
+        // Récupération des équipements non bloqués et non supprimés, avec des noms uniques
+        $equipments = Equipment::where('is_blocked', false)
+            ->where('is_deleted', false)
+            ->get()
+            ->unique('name');
+
+        $equipmentList = $equipments->map(function($equipment) {
+            return [
+                'id' => $equipment->id,
+                'name' => $equipment->name,
+                'icone' => $equipment->icone ?? null,  // Valeur par défaut si icône est null
+
+            ];
+        })->values();  // Utilisation de values() pour réindexer le tableau (au cas où)
+
+        // Retourne la réponse JSON avec le statut HTTP 200
+        return response()->json([
+            'data' => $equipmentList
+        ], 200);
+
+    } catch (Exception $e) {
+        // Retourne une erreur 500 en cas d'exception
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
 
 
 

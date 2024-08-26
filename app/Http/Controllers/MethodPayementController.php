@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MethodPayement;
+use App\Services\FileService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,14 @@ use Illuminate\Validation\ValidationException ;
 use Illuminate\Validation\Rule;
 class MethodPayementController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
      /**
    * @OA\Get(
    *     path="/api/methodPayement/index",
@@ -85,12 +94,13 @@ class MethodPayementController extends Controller
                     'name' => 'required|unique:method_payements|max:255',
                 ]);
                 $methodPayement = new MethodPayement();
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeMethodPayement'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeMethodPayement/' . $icone_name;
-                    $methodPayement->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $methodPayement->icone = $identity_profil_url['result'];
                     }
                     $methodPayement->name = $request->name;
                     $methodPayement->save();
@@ -192,8 +202,13 @@ class MethodPayementController extends Controller
                 Rule::unique('method_payements')->ignore($id),
             ],
         ]);
-        $methodPayement = MethodPayement::whereId($id)->update($data);
-        return response()->json(['data' => 'Nom du Méthode de payement mise à jour avec succès.'], 200);
+        $methodPayement = MethodPayement::find($id);
+
+        if (!$methodPayement) {
+            return response()->json(['error' => 'Méthode de payementnon trouvé.'], 404);
+        }
+        $methodPayement->name = $request->name;
+        $methodPayement->save();        return response()->json(['data' => 'Nom du Méthode de payement mise à jour avec succès.'], 200);
     } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
@@ -275,15 +290,14 @@ class MethodPayementController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeMethodPayement'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeMethodPayement/' . $icone_name;
-
-                    MethodPayement::whereId($id)->update(['icone' => $icone_url]);
-
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $methodPayement->icone = $identity_profil_url['result'];
+                    $methodPayement->save();
                     return response()->json(['data' => 'icône du méthode de payement mis à jour avec succès.'], 200);
                 } else {
                 dd("h");

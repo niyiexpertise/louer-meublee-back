@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\UserVisiteHousing;
+use App\Services\FileService;
 use DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
@@ -44,6 +45,14 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 class AddHousingZController extends Controller
 {
+
+    protected $fileService;
+
+public function __construct(FileService $fileService = null)
+{
+    $this->fileService = $fileService ?: new FileService();
+}
+
 
     public function checkOwner($housingId){
         if(Auth::user()->id != Housing::whereId($housingId)->first()->user_id){
@@ -282,7 +291,7 @@ class AddHousingZController extends Controller
  */
 
 
-public function addHousing_step_7(Request $request, $housingId){
+ public function addHousing_step_7(Request $request, $housingId){
     try {
         $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
@@ -298,7 +307,7 @@ public function addHousing_step_7(Request $request, $housingId){
         }
         $validator = Validator::make($request->all(), [
             'interior_regulation' => 'nullable|string',
-            'interior_regulation_pdf' => 'nullable|file'
+            'interior_regulation_pdf' => 'nullable'
         ]);
 
         $message = [];
@@ -312,18 +321,33 @@ public function addHousing_step_7(Request $request, $housingId){
         }
 
 
+        if ($request->hasFile('interior_regulation_pdf') && is_array($request->file('interior_regulation_pdf'))) {
+            $pdfArray = $request->file('interior_regulation_pdf');
+            
+            // Vérifiez que le premier élément du tableau est un fichier
+            if (isset($pdfArray[0])) {
+                $pdfFile = $pdfArray[0];
+                // $extension = $pdfFile->getClientOriginalExtension();
+        
+                // if (strtolower($extension) !== 'pdf') {
+                //     return (new ServiceController())->apiResponse(404, [], 'Le fichier doit être au format PDF.');
+                // }
+        
+                // Téléchargez le fichier PDF
+                $validationResultFile= $this->fileService->uploadFiles($pdfFile, 'reglement_interieur','extensionDocument');
 
-        if ($request->hasFile('interior_regulation_pdf')) {
-            $pdfFile = $request->file('interior_regulation_pdf');
-            $extension = $pdfFile->getClientOriginalExtension();
-            if (strtolower($extension) !== 'pdf') {
-                return (new ServiceController())->apiResponse(404, [], 'Le fichier doit être au format PDF.');
+                if ($validationResultFile['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+                }
+
+                 $housing->interior_regulation_pdf =  $validationResultFile['result'];
+            } else {
+                return (new ServiceController())->apiResponse(404, [], 'Le fichier PDF n\'a pas été correctement envoyé.');
             }
-            $pathName = uniqid() . '.' . $extension;
-            $pdfFile->move(public_path('reglement_interieur'), $pathName);
-            $pathUrl = url('/reglement_interieur/' . $pathName);
-            $housing->interior_regulation_pdf = $pathUrl;
+        } else {
+            return (new ServiceController())->apiResponse(404, [], 'Aucun fichier PDF trouvé dans les données.');
         }
+        
 
         if (!empty($request->interior_regulation)) {
             $housing->interior_regulation = $request->interior_regulation;
@@ -332,8 +356,7 @@ public function addHousing_step_7(Request $request, $housingId){
         $housing->step = 7;
         $housing->save();
 
-        $data = ["housing_id" => $housing->id];
-
+        $data = ["housing_id" => $housing->id,"pdf_reglement" => $housing->interior_regulation_pdf,"text_reglement" => $housing->interior_regulation];
         return (new ServiceController())->apiResponse(200, $data, 'Étape 7 terminée avec succès');
 
     } catch(\Exception $e) {
@@ -620,18 +643,25 @@ public function addHousing_step_7(Request $request, $housingId){
             $housingCategoryId = $housing->id;
             $photoCategoryKey = 'photo_categories' . $categoryId;
             $photoFiles = $request->file($photoCategoryKey);
+            $identity_profil_url = '';
             foreach ($photoFiles as $fileId) {
                 $photoModel = new File();
-                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-                $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
+              //  $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
+              /*  $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 if(env('MODE') == 'PRODUCTION'){
                     $photoUrl = url('/image/photo_logement/' . $photoName);
                 }
                 if(env('MODE') == 'DEVELOPPEMENT'){
                     $ip=env('LOCAL_ADDRESS');
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
-                }
-                $photoModel->path = $photoUrl;
+                }*/
+
+                $photoModel->path = $uploadedPath['result'];
+
                 $photoModel->save();
 
 
@@ -667,8 +697,12 @@ public function addHousing_step_7(Request $request, $housingId){
         $category->save();
 
         foreach ($categoryPhotos as $photoFile) {
-            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
-            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
+            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');
+            if ($uploadedPath['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+            }
+
+          /*  $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
             if(env('MODE') == 'PRODUCTION')
             {
                     $photoUrl = url('/image/photo_logement/' . $photoName);
@@ -677,8 +711,9 @@ public function addHousing_step_7(Request $request, $housingId){
                     $ip=env('LOCAL_ADDRESS');
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
             }
+                    */
             $photo = new File();
-            $photo->path = $photoUrl;
+            $photo->path = $uploadedPath['result'];
             $photo->save();
 
 
@@ -1162,73 +1197,63 @@ public function addHousing_step_15(Request $request, $housingId) {
  */
 public function addHousing_step_16(Request $request, $housingId) {
     try {
-          $housing = Housing::whereId($housingId)->first();
+        $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
-       $errorcheckOwner= $this->checkOwner($housingId);
-        if($errorcheckOwner){
+
+        $errorcheckOwner = $this->checkOwner($housingId);
+        if ($errorcheckOwner) {
             return $errorcheckOwner;
         }
-        $validationResponse =$this->validateStepOrder(16, $housingId);
+
+        $validationResponse = $this->validateStepOrder(16, $housingId);
         if ($validationResponse) {
             return $validationResponse;
         }
+
         // Validation des champs requis
         $validator = Validator::make($request->all(), [
-            'reduction_night_number' => 'required|array',
-            'reduction_value_night_number' => 'required|array',
+            'reduction_night_number' => 'nullable|array',
+            'reduction_value_night_number' => 'nullable|array',
         ]);
 
-
-        $message = [];
         if ($validator->fails()) {
-            $message[] = $validator->errors();
-            return (new ServiceController())->apiResponse(505, [], $message);
+            return (new ServiceController())->apiResponse(505, [], $validator->errors());
         }
 
-        $nightNumbers = $request->input('reduction_night_number');
-        $values = $request->input('reduction_value_night_number');
+        // Récupération des champs avec vérification d'existence
+        $nightNumbers = $request->input('reduction_night_number', []);
+        $values = $request->input('reduction_value_night_number', []);
 
-        // Validation de la taille des tableaux
-        if (count($nightNumbers) !== count($values)) {
+        // Validation de la taille des tableaux seulement s'ils existent
+        if (!empty($nightNumbers) && !empty($values) && count($nightNumbers) !== count($values)) {
             return (new ServiceController())->apiResponse(404, [], 'Les tailles des tableaux de réductions ne correspondent pas.');
         }
 
         // Validation des doublons dans reduction_night_number
-        if (count($nightNumbers) !== count(array_unique($nightNumbers))) {
+        if (!empty($nightNumbers) && count($nightNumbers) !== count(array_unique($nightNumbers))) {
             return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits contiennent des doublons.');
         }
 
         // Validation des nombres de nuits
-        // foreach ($nightNumbers as $nightNumber) {
-        //     if (!is_int($nightNumber) || $nightNumber <= 0) {
-        //         return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
-        //     }
-        // }
-
-        // foreach ($values as $value) {
-        //     if (!is_numeric($value) || $value <= 0) {
-        //         return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nulle.');
-        //     }
-        // }
-
-        foreach ($nightNumbers as $index => $nightNumber) {
-            if( intval($nightNumber) <= 0){
-                        return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
-                    }
-        }
-
-        foreach ($values as $value) {
-            if (floatval($value) <= 0) {
-                return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nulle.');
+        foreach ($nightNumbers as $nightNumber) {
+            if (intval($nightNumber) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
             }
         }
 
+        // Validation des valeurs des réductions
+        foreach ($values as $value) {
+            if (floatval($value) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nuls.');
+            }
+        }
 
-
+        // Suppression des réductions existantes
         $reductionsDeleted = Reduction::where('housing_id', $housingId)->delete();
 
+        // Sauvegarde des nouvelles réductions
         foreach ($nightNumbers as $index => $nightNumber) {
             $reduction = new Reduction();
             $reduction->night_number = intval($nightNumber);
@@ -1241,9 +1266,10 @@ public function addHousing_step_16(Request $request, $housingId) {
         $data = ["housing_id" => $housing->id];
         $housing->step = 16;
         $housing->save();
+
         return (new ServiceController())->apiResponse(200, $data, 'Étape 16 terminée avec succès');
 
-    } catch(\Exception $e) {
+    } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
@@ -1639,13 +1665,19 @@ public function addHousing_step_16(Request $request, $housingId) {
  * )
  */
 public function addHousing_step_8(Request $request, $housingId){
+
     try {
+
+
         $housing = Housing::whereId($housingId)->first();
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
         
+         
+
         $errorcheckOwner = $this->checkOwner($housingId);
+
         if ($errorcheckOwner) {
             return $errorcheckOwner;
         }
@@ -1653,13 +1685,14 @@ public function addHousing_step_8(Request $request, $housingId){
         if ($validationResponse) {
             return $validationResponse;
         }
-        
-        $this->deleteHousingData($housingId);
 
+        $this->deleteHousingData($housingId);
+        $storedCategories = [];
+        $storedPieces = [];
         // Validation des catégories
         foreach ($request->categories as $categorie) {
             // $categorie = json_decode($categorieA, true);
-
+            // return $categorie['id'];
             if (!Category::find($categorie['id'])) {
                 return (new ServiceController())->apiResponse(404, [], 'Pièce non trouvée');
             }
@@ -1667,11 +1700,11 @@ public function addHousing_step_8(Request $request, $housingId){
             if (!isset($categorie['nombre']) || !$categorie['nombre']) {
                 return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " non renseigné");
             }
-
+            $categorie['nombre']=intval ($categorie['nombre']);                 
             if (!is_int($categorie['nombre'])) {
                 return (new ServiceController())->apiResponse(404, [], "Le nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " doit être un entier");
             }
-
+            
             // return  count($categorie['equipments'][0]['equipmentsId']);
 
             if (!$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
@@ -1684,8 +1717,9 @@ public function addHousing_step_8(Request $request, $housingId){
             if (count($uniqueItems) < count($items)) {
                 return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id.");
             }
-
+            
             foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                $equipmentId=intval($equipmentId);  
                 if (!is_int($equipmentId)) {
                     return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
                 }
@@ -1752,23 +1786,26 @@ public function addHousing_step_8(Request $request, $housingId){
                 if (!isset($piece['nombre']) || !$piece['nombre']) {
                     return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . $piece['name'] . " non renseigné");
                 }
+                $piece['nombre']=intval ($piece['nombre']);                 
 
                 if (!is_int($piece['nombre'])) {
                     return (new ServiceController())->apiResponse(404, [], "Le nombre de  pièce " . $piece['name'] . " doit être un entier");
                 }
 
-                if (!isset($piece['equipments'][0]['equipmentsId']) || count($piece['equipments'][0]['equipmentsId']) == 0) {
+                if (!isset($piece['equipments']['equipmentsId']) || count($piece['equipments']['equipmentsId']) == 0) {
                     return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît à la pièce ". $piece['name'] );
                 }
 
-                $items = $piece['equipments'][0]['equipmentsId'];
+                $items = $piece['equipments']['equipmentsId'];
                 $uniqueItems = array_unique($items);
 
                 if (count($uniqueItems) < count($items)) {
                     return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id à la pièce ".$piece['name'] );
                 }
+                $piece['nombre']=intval ($piece['nombre']);                 
 
-                foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+                foreach ($piece['equipments']['equipmentsId'] as $equipmentId) {
+                    $equipmentId=intval ($equipmentId);    
                     if (!is_int($equipmentId)) {
                         return (new ServiceController())->apiResponse(404, [], "Les ids équipements de la pièce ".$piece['name']." doivent être des entiers");
                     }
@@ -1786,10 +1823,12 @@ public function addHousing_step_8(Request $request, $housingId){
         }
 
         // Mise à jour des éléments pour une catégorie existante
+       
+
         foreach ($request->categories as $categorie) {
+                
             // $categorie = json_decode($categorieA, true);
             $categorieModel = Category::find($categorie['id']);
-
             // Mise à jour pour les équipements existants
             foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
                 $equipment = Equipment::find($equipmentId);
@@ -1800,17 +1839,23 @@ public function addHousing_step_8(Request $request, $housingId){
                     $housingEquipment->housing_id = $housing->id;
                     $housingEquipment->is_verified = true;
                     $housingEquipment->save();
+                    $equipmentIds[] = $equipmentId;
                 }
             }
 
             // Mise à jour pour les équipements inexistants
+            
+            if (isset($categorie['equipments'][0]['newEquipementName'])) {
             foreach ($categorie['equipments'][0]['newEquipementName'] as $newEquipment) {
+               
+                // return $newEquipment;
                 $equipment = Equipment::whereName($newEquipment)->first();
                 if (!$equipment) {
                     $equipment = new Equipment();
                     $equipment->name = $newEquipment;
                     $equipment->is_verified = false;
                     $equipment->save();
+                    
                 }
                 $equipmentCategory = new Equipment_category();
                 $equipmentCategory->equipment_id = $equipment->id;
@@ -1824,16 +1869,22 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingEquipment->is_verified = false;
                 $housingEquipment->save();
             }
-
+            
             // Enregistrement des photos
             foreach ($categorie['photos'] as $fileId) {
+                
                 $photoModel = new File();
-                $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
+               /* $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
-                $photoModel->path = $photoUrl;
-                $photoModel->save();
+                */
 
+                $photoModel->path = $uploadedPath['result'];
+                $photoModel->save();
                 $housingCategoryFile = new Housing_category_file();
                 $housingCategoryFile->housing_id = $housing->id;
                 $housingCategoryFile->category_id = $categorie['id'];
@@ -1841,9 +1892,13 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingCategoryFile->number = count($categorie['photos']);
                 $housingCategoryFile->is_verified = true;
                 $housingCategoryFile->save();
-            }
-        }
+                
 
+            }
+           
+        }
+       }
+        
         // Mise à jour des éléments pour une catégorie inexistante
         foreach ($request->pieces as $piece) {
             // $piece = json_decode($pieceA, true);
@@ -1857,9 +1912,10 @@ public function addHousing_step_8(Request $request, $housingId){
             } else {
                 $newcategory = $existCategorie;
             }
+            
 
             // Mise à jour pour les équipements existants
-            foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
+            foreach ($piece['equipments']['equipmentsId'] as $equipmentId) {
                 $equipment = Equipment::find($equipmentId);
                 if ($equipment) {
                     $housingEquipment = new Housing_equipment();
@@ -1874,10 +1930,17 @@ public function addHousing_step_8(Request $request, $housingId){
             // Enregistrement des photos
             foreach ($piece['photos'] as $fileId) {
                 $photoModel = new File();
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
+/*
                 $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
-                $photoModel->path = $photoUrl;
+*/
+
+                $photoModel->path = $uploadedPath['result'];
                 $photoModel->save();
 
                 $housingCategoryFile = new Housing_category_file();
@@ -1889,9 +1952,9 @@ public function addHousing_step_8(Request $request, $housingId){
                 $housingCategoryFile->save();
             }
         }
-
         $housing->step = 8;
         $housing->save();
+        //$stocke=  (new AdminHousingController())->showHousingDetailForValidationForadmin($housing->id);    
 
         $data = ["housing_id" => $housing->id];
 

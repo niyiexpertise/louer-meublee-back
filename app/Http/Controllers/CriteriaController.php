@@ -7,9 +7,21 @@ use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\Note;
+use App\Services\FileService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
+use Illuminate\Validation\ValidationException;
+
 class CriteriaController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
    * @OA\Get(
    *     path="/api/criteria/index",
@@ -19,7 +31,7 @@ class CriteriaController extends Controller
    *     @OA\Response(
    *         response=200,
    *         description="List of criterias"
-   * 
+   *
    *     )
    * )
    */
@@ -28,7 +40,7 @@ class CriteriaController extends Controller
     try{
             $criterias = Criteria::all()->where('is_deleted', false);
                 return response()->json(['data' => $criterias], 200);
-  } catch(Exception $e) {    
+  } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
   }
 
@@ -74,13 +86,14 @@ class CriteriaController extends Controller
                       'name' => 'required|unique:criterias|max:255',
                   ]);
                   $criteria = new Criteria();
+                  $identity_profil_url = '';
                   if ($request->hasFile('icone')) {
-                      $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                      $identity_profil_path = $request->file('icone')->move(public_path('image/iconeCriteria'), $icone_name);
-                      $base_url = url('/');
-                      $icone_url = $base_url . '/image/iconeCriteria/' . $icone_name;
-                      $criteria->icone = $icone_url;
-                      }
+                        $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria', 'extensionImage');;
+                        if ($identity_profil_url['fails']) {
+                            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                        }
+                        $criteria->icone = $identity_profil_url['result'];
+                  }
                   $criteria->name = $request->name;
                   $criteria->save();
                   return response()->json(['data' => 'Critère créé avec succès.'
@@ -89,7 +102,7 @@ class CriteriaController extends Controller
           } catch(Exception $e) {
               return response()->json($e->getMessage(), 500);
           }
-      
+
         }
 
 /**
@@ -125,7 +138,7 @@ class CriteriaController extends Controller
         }
 
         return response()->json(['data' => $criteria], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -175,9 +188,15 @@ class CriteriaController extends Controller
                 Rule::unique('criterias')->ignore($id),
             ],
         ]);
-        $criteria = Criteria::whereId($id)->update($data);
+        $criteria = Criteria::find($id);
+        if (!$criteria) {
+            return response()->json(['error' => 'Critèrenon trouvé.'], 404);
+        }
+
+        $criteria->name = $request->name;
+        $criteria->save();
         return response()->json(['data' => 'Nom du Critère mise à jour avec succès.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -236,14 +255,14 @@ class CriteriaController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $criteria = Criteria::find($id);
-            
+
             if (!$criteria) {
                 return response()->json(['error' => 'Criteria non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -256,18 +275,18 @@ class CriteriaController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeCriteria'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeCriteria/' . $icone_name;
-                    
-                    Criteria::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCriteria', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $criteria->icone = $identity_profil_url['result'];
+                    $criteria->save();
+
                     return response()->json(['data' => 'icône du critère mis à jour avec succès.'], 200);
                 } else {
-                
+
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {
@@ -305,22 +324,23 @@ class CriteriaController extends Controller
   public function destroy(string $id)
   {
     try{
-        $criteria = Criteria::whereId($id)->first();
+        $criteria = Criteria::find($id);
+
         if (!$criteria) {
             return response()->json(['error' => 'Critère non trouvé.'], 404);
         }
-        $nbexist=Note::where('criteria_id', $id)->count(); 
-    
+        $nbexist=Note::where('criteria_id', $id)->count();
+
         if ($nbexist > 0) {
             return response()->json(['error' => "Suppression impossible car ce critère a déjà été utilisé dans une note d'un logement."],200);
         }
 
-            $criteria = Criteria::whereId($id)->update(['is_deleted' => true]);
+        $criteria->is_deleted = true;
+        $criteria->save();
 
-            
             return response()->json(['data' => 'Critère supprimé avec succès.'], 200);
-    
-    } catch(Exception $e) {    
+
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -362,15 +382,16 @@ class CriteriaController extends Controller
   public function block(string $id)
 {
     try{
-            $criteria = Criteria::whereId($id)->update(['is_blocked' => true]);
-
+        $criteria = Criteria::find($id);
             if (!$criteria) {
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
             }
 
+            $criteria->is_blocked = true;
+            $criteria->save();
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
-    
-    } catch(Exception $e) {    
+
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 
@@ -413,12 +434,13 @@ class CriteriaController extends Controller
 public function unblock(string $id)
 {
     try{
-            $criteria = Criteria::whereId($id)->update(['is_blocked' => false]);
+        $criteria = Criteria::find($id);
 
             if (!$criteria) {
                 return response()->json(['error' => 'Critère non trouvé.'], 404);
             }
-
+            $criteria->is_blocked = false;
+            $criteria->save();
             return response()->json(['data' => 'this type of propriety is unblock successfuly.'], 200);
     } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);

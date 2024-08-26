@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Charge;
 use App\Models\Housing_charge;
+use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -13,6 +14,13 @@ use Illuminate\Validation\Rule;
 
 class ChargeController extends Controller
 {
+
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
       /**
      * @OA\Get(
      *     path="/api/charge/index",
@@ -37,7 +45,7 @@ class ChargeController extends Controller
          } catch(Exception $e) {
              return response()->json($e->getMessage());
          }
- 
+
      }
 
     /**
@@ -84,17 +92,20 @@ class ChargeController extends Controller
                 'name' => 'required|unique:charges|max:255',
             ]);
             $charge = new Charge();
+            $identity_profil_url = '';
             if ($request->hasFile('icone')) {
-                $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                $identity_profil_path = $request->file('icone')->move(public_path('image/iconeCharge'), $icone_name);
-                $base_url = url('/');
-                $icone_url = $base_url . '/image/iconeCharge/' . $icone_name;
-                $charge->icone = $icone_url;
+                $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge', 'extensionImage');;
+                
+                if ($identity_profil_url['fails']) {
+
+                    return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                 }
+                $charge->icone = $identity_profil_url['result'];
+            }
             $charge->name = $request->name;
             $charge->save();
             return response()->json(['data' => 'Type de charge créé avec succès.', 'charge' => $charge], 201);
-    } catch(Exception $e) { 
+    } catch(Exception $e) {
         return response()->json($e->getMessage());
     }
     }
@@ -150,10 +161,10 @@ class ChargeController extends Controller
             if(!$charge){
                 return response()->json(['error' => 'charge non trouvé.'], 404);
             }
-            // return response()->json(['error' =>$request->name ]);
-                Charge::whereId($id)->update(['name' => $request->name]);
+            $charge->name = $request->name;
+            $charge->save();
                 return response()->json(['data' => 'charge mise à jour avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -212,14 +223,14 @@ class ChargeController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $charge = Charge::find($id);
-            
+
             if (!$charge) {
                 return response()->json(['error' => 'Charge non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -232,18 +243,17 @@ class ChargeController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+            $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeCharge'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeCharge/' . $icone_name;
-                    
-                    Charge::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $charge->icone = $identity_profil_url['result'];
+                    $charge->save();
                     return response()->json(['data' => 'icône de la charge mis à jour avec succès.'], 200);
                 } else {
-                
+
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {

@@ -30,7 +30,7 @@ use Illuminate\Validation\Rule;
 
 class AdminReservationController extends Controller
 {
-    
+
 
 
                 /**
@@ -60,7 +60,7 @@ class AdminReservationController extends Controller
      }
 
 
-   
+
 
                          /**
      * @OA\Get(
@@ -89,7 +89,7 @@ class AdminReservationController extends Controller
         ]);
      }
 
-     
+
                          /**
      * @OA\Get(
      *     path="/api/reservation/housing_without_reservation",
@@ -175,30 +175,32 @@ class AdminReservationController extends Controller
 
 
 
-                         /**
-     * @OA\Get(
-     *     path="/api/reservation/getAllReservation",
-     *     summary="Liste de toutes les réservations de la plateforme",
-     * description="Liste de toutes les réservations de la plateforme",
-     *     tags={"Reservation"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of reservation"
-     *
-     *     )
-     * )
-     */
-public function getAllReservation(){
+    /**
+ * @OA\Get(
+ *     path="/api/reservation/getAllReservationUnpaid",
+ *     summary="Liste des réservations impayées côté admin",
+ *     description="Liste de toutes les réservations impayées concernant l'administrateur .",
+ *     tags={"Reservation"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des réservations impayées concernant l'administrateur",
+ *     ),
+ * )
+ */
+public function getAllReservationUnpaid(){
 
-    $reservations = Reservation::where('is_deleted', false)->with(['user','housing'])->get();
+    $reservations = Reservation::where('is_deleted', false)
+                    ->with(['user','housing'])
+                    ->where('statut', 'non_payee')
+                    ->get();
     return response()->json([
         'message' => $reservations
     ]);
 }
 
 
-                             /**
+    /**
      * @OA\Get(
      *     path="/api/reservation/getUserReservations/{user}",
      *     summary="Liste et nombres des réservations d'un voyageur",
@@ -302,7 +304,7 @@ function showDetailOfReservationForAdmin($idReservation){
                              ->orderByDesc('reservation_count')
                              ->limit(10)
                              ->get();
-     
+
          // Retourner le top 10 des voyageurs avec le plus grand nombre de réservations
          return response()->json(['data' => $topTravelers]);
      }
@@ -381,8 +383,8 @@ public function getAllReservationConfirmedForAdmin(){
         ]);
     }
 
-    
-                         /**
+
+    /**
      * @OA\Get(
      *     path="/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)",
      *     summary="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
@@ -481,7 +483,7 @@ public function getAllReservationCanceledByTravelerForAdmin(){
  */
 public function getReservationsCountByYearAndMonth()
 {
- 
+
     $monthNames = [
         1 => 'janvier',
         2 => 'février',
@@ -589,7 +591,7 @@ public function getUsersGroupedByCountry()
                 ];
             });
 
-            return (new ServiceController())->apiResponse(200, [$usersGroupedByCountry], 'Groupe les utilisateurs par pays');
+            return (new ServiceController())->apiResponse(200, $usersGroupedByCountry, 'Groupe les utilisateurs par pays');
 
     }
 

@@ -27,11 +27,18 @@ use App\Mail\NotificationEmailwithoutfile;
 use Illuminate\Support\Facades\Response;
 use App\Models\User_right;
 use App\Models\Right;
+use App\Services\FileService;
 use Illuminate\Support\Facades\DB;
 
 class HousingCategoryFileController extends Controller
 {
-  
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
  * @OA\Delete(
  *     path="/api/logement/category/photo/{photoid}",
@@ -76,16 +83,16 @@ class HousingCategoryFileController extends Controller
  public function deletePhotoHousingCategory(Request $request, $id)
  {
      $photo = File::findOrFail($id);
- 
+
      $path = parse_url($photo->path, PHP_URL_PATH);
      $photoPath = public_path($path);
- 
+
      if (F::exists($photoPath)) {
          F::delete($photoPath);
      }
- 
+
      $photo->delete();
- 
+
      return response()->json(['message' => 'La photo a été supprimée avec succès.'], 200);
  }
 
@@ -148,26 +155,28 @@ class HousingCategoryFileController extends Controller
          'photos' => 'required',
          'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
      ]);
- 
+
      if ($validator->fails()) {
          return response()->json(['error' => $validator->errors()], 400);
      }
- 
+
      $existingEntry = Housing_category_file::where('housing_id', $request->housing_id)
          ->where('category_id', $request->category_id)
          ->first();
- 
+
      if ($existingEntry) {
          return response()->json(['error' => 'Une entrée pour cette catégorie et ce logement existe déjà'], 409);
      }
+     $identity_profil_url = '';
      foreach ($request->file('photos') as $photo) {
          $photoModel = new File();
-         $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-         $photoPath = $photo->move(public_path('image/photo_category'), $photoName);
-         $photoUrl = url('/image/photo_category/' . $photoName);
-         $photoModel->path = $photoUrl;
+         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+         if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+         $photoModel->path = $identity_profil_url['result'];
          $photoModel->save();
- 
+
          $housingCategoryFile = new Housing_category_file();
          $housingCategoryFile->housing_id = $request->housing_id;
          $housingCategoryFile->category_id = $request->category_id;
@@ -188,7 +197,7 @@ class HousingCategoryFileController extends Controller
      $right = Right::where('name','admin')->first();
      $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
-  
+
 
      $mail = [
          "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
@@ -199,7 +208,7 @@ class HousingCategoryFileController extends Controller
        }
      return response()->json(['message' => 'Catégorie ajoutée avec succès au logement'], 201);
  }
- 
+
 
 /**
  * @OA\Post(
@@ -273,12 +282,14 @@ class HousingCategoryFileController extends Controller
     $category->save();
     $category_id = $category->id;
 
+    $identity_profil_url = '';
     foreach ($request->file('photos') as $photo) {
         $photoModel = new File();
-        $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-        $photoPath = $photo->move(public_path('image/photo_category'), $photoName);
-        $photoUrl = url('/image/photo_category/' . $photoName);
-        $photoModel->path = $photoUrl;
+        $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+        if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+        $photoModel->path = $identity_profil_url['result'];
         $photoModel->save();
 
         $housingCategoryFile = new Housing_category_file();
@@ -309,7 +320,7 @@ class HousingCategoryFileController extends Controller
          "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
          "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
      ];
-   
+
 
      dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
        }
@@ -695,10 +706,10 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
             'category' => [
                 'id' => $category->id,
                 'name' => $category->name,
-                'number' => $number, 
-                'is_verified' => $category->is_verified, 
+                'number' => $number,
+                'is_verified' => $category->is_verified,
                 'photos' => $photos,
-                
+
             ],
         ], 200);
 
@@ -708,13 +719,13 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 }
 
 
- 
+
 /**
  * @OA\Delete(
  *     path="/api/logement/{housingId}/category/{categoryId}/delete",
  *     summary="Supprimer une catégorie et ses fichiers associés d'un logement",
  *     tags={"Housing Category Photo"},
- *     security={{"bearerAuth": {}}}, 
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="housingId",
  *         in="path",
@@ -861,11 +872,11 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
          'photos' => 'required',
          'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
      ]);
- 
+
      if ($validator->fails()) {
          return response()->json(['error' => $validator->errors()], 400);
      }
- 
+
      $housingCategoryFile = Housing_category_file::where('housing_id', $housingId)
             ->where('category_id', $categoryId)
             ->first();
@@ -878,14 +889,17 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
      $constantNumber = $housingCategoryFile->number;
 
         $savedFiles = [];
+
+        $identity_profil_url = '';
      foreach ($request->file('photos') as $photo) {
          $photoModel = new File();
-         $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-         $photoPath = $photo->move(public_path('image/photo_category'), $photoName);
-         $photoUrl = url('/image/photo_category/' . $photoName);
-         $photoModel->path = $photoUrl;
+         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+         if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+         $photoModel->path = $identity_profil_url['result'];
          $photoModel->save();
- 
+
          $housingCategoryFile = new Housing_category_file();
          $housingCategoryFile->housing_id = $housingId;
          $housingCategoryFile->category_id = $categoryId;
@@ -916,7 +930,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 
      dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
            }
- 
+
      return response()->json([
             'message' => 'Photos ajoutées avec succès',
             'housing_id' => $housingId,
@@ -924,7 +938,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
             'saved_files' => $savedFiles,
         ], 201);
  }
- 
+
 /**
      * @OA\Get(
      *     path="/api/logement/category/photo/unverified",
@@ -979,7 +993,7 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
      * @OA\Put(
      *     path="/api/logement/category/photo/{id}/validate",
      *     summary="Mettre à jour le statut de vérification d'un fichier de logement",
-     *     tags={"Housing Category Photo"}, 
+     *     tags={"Housing Category Photo"},
      *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -1026,7 +1040,7 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             }
             $housingCategoryFile->is_verified = true;
             $housingCategoryFile->save();
-  
+
             $mail = [
                 'title' => "Validation de  la photo ajoutée à la catégorie de votre logement",
                 'body' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur.",
@@ -1040,7 +1054,8 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Une erreur s\'est produite',
+
+               'message' => 'Une erreur s\'est produite',
             ], 500);
         }
     }

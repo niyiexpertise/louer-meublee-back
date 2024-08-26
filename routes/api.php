@@ -57,8 +57,12 @@ use App\Http\Controllers\AddHousingZController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
+
+use App\Http\Controllers\SettingController;
+
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -1015,7 +1019,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::get('/withoutvalidation/show/{id}', [AdminHousingController::class, 'showHousingDetailForValidationForadmin'])
         ->name('logement.showHousingDetailForValidationForadmin')
-        ->middleware('role_or_permission:superAdmin|Managelogement.showHousingDetailForValidationForadmin');
+        ->middleware('role_or_permission:superAdmin|hote|Managelogement.showHousingDetailForValidationForadmin');
 
     Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing'])
         ->name('logement.ValidateOneHousing')
@@ -1051,6 +1055,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::post('/store', [ReservationController::class, 'storeReservationWithPayment'])
             ->name('reservation.store')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.store');
+        Route::post('/payReservation/{reservationId}', [ReservationController::class, 'payReservation'])
+            ->name('reservation.payReservation')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.payReservation');
 
         // Hote (Host)
         Route::put('/hote_confirm_reservation/{idReservation}', [ReservationController::class, 'hote_confirm_reservation'])
@@ -1111,9 +1118,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.getReservationsCountByYear')
             ->middleware('role_or_permission:superAdmin|Managereservation.getReservationsCountByYear');
 
-        Route::get('/getAllReservation', [AdminReservationController::class, 'getAllReservation'])
-            ->name('reservation.getAllReservation')
-            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservation');
+        Route::get('/getAllReservationUnpaid', [AdminReservationController::class, 'getAllReservationUnpaid'])
+            ->name('reservation.getAllReservationUnpaid')
+            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationUnpaid');
 
         Route::get('/getUserReservations/{user}', [AdminReservationController::class, 'getUserReservationsForAdmin'])
             ->name('reservation.getUserReservations')
@@ -1230,7 +1237,11 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.ListRetraitRejectForAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.ListRetraitRejectForAdmin');
 
-    Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
+    Route::get('/show/{retraitId}', [RetraitController::class, 'show'])
+        ->name('retrait.show')
+        ->middleware('role_or_permission:admin|superAdmin|Manageretrait.show');
+
+        Route::put('/rejectRetraitByAdmin/{retraitId}', [RetraitController::class, 'rejectRetraitByAdmin'])
         ->name('retrait.rejectRetraitByAdmin')
         ->middleware('role_or_permission:admin|superAdmin|Manageretrait.rejectRetraitByAdmin');
 
@@ -1239,6 +1250,9 @@ Route::prefix('portefeuille')->group(function () {
         ->name('retrait.store');
     Route::get('/ListRetraitOfUserAuth', [RetraitController::class, 'ListRetraitOfUserAuth'])
         ->name('retrait.ListRetraitOfUserAuth');
+
+        Route::get('/ListRetraitOfUserPendingAuth', [RetraitController::class, 'ListRetraitOfUserPendingAuth'])
+        ->name('retrait.ListRetraitOfUserPendingAuth');
 
     Route::get('/ListRetraitRejectOfUserAuth', [RetraitController::class, 'ListRetraitRejectOfUserAuth'])
         ->name('retrait.ListRetraitRejectOfUserAuth');
@@ -1360,12 +1374,6 @@ Route::prefix('portefeuille')->group(function () {
 
         //Gestion des housingsponsoring (demande de sponsoring) côté administrateur
         Route::prefix('housingsponsoring')->group(function() {
-            Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
-                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteActiveSponsoringRequest');
-            Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
-                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteRejectSponsoringRequest');
-            Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
-                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hotePendingSponsoringRequest');
             Route::get('demandeSponsoringNonvalidee', [HousingSponsoringController::class, 'demandeSponsoringNonvalidee'])
                 ->name('sponsoring.demandeSponsoringNonvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringNonvalidee');
             Route::get('demandeSponsoringvalidee', [HousingSponsoringController::class, 'demandeSponsoringvalidee'])
@@ -1564,9 +1572,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.showDetailReservation')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.showDetailReservation');
 
-            Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
-            ->name('reservation.getReservationsForTraveler')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');
+            Route::get('getUnpaidReservationsForTraveler', [DashBoardTravelerController::class, 'getUnpaidReservationsForTraveler'])
+            ->name('reservation.getUnpaidReservationsForTraveler')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getUnpaidReservationsForTraveler');
 
             Route::get('getRejectedReservationsByTraveler', [DashBoardTravelerController::class, 'getRejectedReservationsByTraveler'])
             ->name('reservation.getRejectedReservationsByTraveler')
@@ -1590,7 +1598,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             Route::post('soldeReservation', [DashBoardTravelerController::class, 'soldeReservation'])
             ->name('reservation.soldeReservation')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.soldeReservation');
+            ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.soldeReservation');
 
 
         });
@@ -1626,5 +1634,29 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 });
 
 
+// Gestion setting
+Route::middleware(['auth:sanctum', '2fa'])->group(function () {
+    Route::prefix('settings')->group(function () {
+
+
+
+        Route::post('/update', [SettingController::class, 'update'])
+            ->name('settings.update')
+            ->middleware('role_or_permission:superAdmin|admin|Managesettings.update');
+    });
+});
+
+Route::get('settings/index', [SettingController::class, 'show'])
+            ->name('settings.index');
+Route::get('equipment/all', [EquipementController::class, 'allEquipments'])->name('allEquipments');
+
+
+
+Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringController::class, 'getSponsoredHousings'])
+            ->name('housingsponsoring.getSponsoredHousings');
+
+
+Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
+            ->name('housingsponsoring.disableExpiredHousings');
 
 /** end Route ne nécéssitant pas l'authentification */

@@ -9,6 +9,7 @@ use App\Models\User_language;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User_preference;
 use App\Models\Preference;
+use Illuminate\Database\QueryException;
 use Validator;
 use Illuminate\Validation\Rule;
 class User_preferenceController extends Controller
@@ -214,7 +215,7 @@ public function AddUserPreferences(Request $request)
          *         response=200,
          *         description="Liste des préférences de l'utilisateur connecté",
          *         @OA\JsonContent(
-         *         
+         *
          *         )
          *     ),
          *     @OA\Response(
@@ -225,7 +226,7 @@ public function AddUserPreferences(Request $request)
          */
         public function showUserPreferences()
         {
-            
+
             $userId = Auth::id();
             $user = User::findOrFail($userId);
 

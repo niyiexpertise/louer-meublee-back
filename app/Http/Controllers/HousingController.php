@@ -34,7 +34,9 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\Favoris;
+use App\Models\Setting;
 use App\Models\UserVisiteHousing;
+use App\Services\FileService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -45,6 +47,12 @@ use Illuminate\Pagination\Paginator;
 
 class HousingController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService = null)
+    {
+        $this->fileService = $fileService ?: new FileService();
+    }
 
  public function addHousing(Request $request)
  {
@@ -458,15 +466,17 @@ class HousingController extends Controller
      $housing->save();
 
      if ($request->hasFile('photos')) {
+        $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-             //$photoUrl = url('/image/photo_logement/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $ip='http://192.168.100.158:8000';
-             $photoUrl = $ip.'/image/photo_logement/' . $photoName;
+            // $photoUrl = $ip.'/image/photo_logement/' . $photoName;
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $photoUrl;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              if ($index == $request->input('profile_photo_id')) {
                  $photoModel->is_couverture = true;
@@ -572,14 +582,17 @@ class HousingController extends Controller
         $housingCategoryId = $housing->id;
         $photoCategoryKey = 'photo_categories' . $categoryId;
         $photoFiles = $request->file($photoCategoryKey);
+
+        $identity_profil_url = '';
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
-            $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
-            $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
-        //$photoUrl = url('/image/photo_category/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
-                 $photoUrl =$ip.'/image/photo_category/' . $photoName;
-            $photoModel->path = $photoUrl;
+                 //$photoUrl =$ip.'/image/photo_category/' . $photoName;
+            $photoModel->path = $identity_profil_url['result'];
             $photoModel->save();
             $housingCategoryFile = new Housing_category_file();
             $housingCategoryFile->housing_id = $housingCategoryId;
@@ -605,14 +618,16 @@ class HousingController extends Controller
         $category->is_verified = false;
         $category->save();
 
+        $identity_profil_url = '';
         foreach ($categoryPhotos as $photoFile) {
-            $photoName = uniqid() . '.' . $photoFile->getClientOriginalExtension();
-            $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
-                        $photoUrl = url('/image/photo_category/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
-                        $photoUrl =$ip.'/image/photo_category/' . $photoName;
+                        //$photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photo = new File();
-            $photo->path = $photoUrl;
+            $photo->path = $identity_profil_url['result'];
             $photo->save();
 
             $housingCategoryFile = new Housing_category_file();
@@ -920,8 +935,8 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         if($request->page){
             $page = intval($request->query('page', 1));
-            $perPage = 2;
-        
+            $perPage = Setting::first()->pagination_logement_acceuil;
+
             $listings = Housing::where('status', 'verified')
                 ->where('is_deleted', 0)
                 ->where('is_blocked', 0)
@@ -933,7 +948,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         }else{
 
-        
+
             $listings = Housing::where('status', 'verified')
                 ->where('is_deleted', 0)
                 ->where('is_blocked', 0)
@@ -970,7 +985,7 @@ public function ListeDesLogementsAcceuil(Request $request)
             }
 
 
-   
+
 
 /**
  * @OA\Post(
@@ -1174,9 +1189,7 @@ public function ListeDesLogementsAcceuil(Request $request)
              'address' => $listing->user->address,
              'sexe' => $listing->user->sexe,
              'postal_code' => $listing->user->postal_code,
-             'is_admin' => $listing->user->is_admin,
-             'is_traveller' => $listing->user->is_traveller,
-             'is_hote' => $listing->user->is_hote,
+             "date_enregistrement_de_hote" => $listing->user->created_at,
          ],
 
          'housing_preference' => $listing->housing_preference->filter(function ($preference) {
@@ -1271,7 +1284,7 @@ public function ListeDesLogementsAcceuil(Request $request)
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1286,6 +1299,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         return response()->json(['data' => $data],200);
     }
+
 
  /**
  * @OA\Get(
@@ -1330,7 +1344,7 @@ public function ListeDesLogementsAcceuil(Request $request)
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1390,7 +1404,7 @@ public function ListeDesLogementsAcceuil(Request $request)
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1448,7 +1462,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1505,7 +1519,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1563,7 +1577,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
 
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1618,7 +1632,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -1734,7 +1748,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
     }
 
     $page = intval($request->query('page', 1));
-    $perPage = 15;
+    $perPage = Setting::first()->pagination_logement_acceuil;
     $listings = Housing::where('price', '>=', $price)
     ->where('status', 'verified')
     ->where('is_deleted', 0)
@@ -1792,7 +1806,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
         $page = intval($request->query('page', 1));
-        $perPage = 15;
+        $perPage = Setting::first()->pagination_logement_acceuil;
         $listings = Housing::where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
@@ -2119,9 +2133,8 @@ public function formatListingsData($listings,$userId=0)
                 'address' => $listing->user->address ?? 'non renseigné',
                 'sexe' => $listing->user->sexe ?? 'non renseigné',
                 'postal_code' => $listing->user->postal_code ?? 'non renseigné',
-                'is_admin' => $listing->user->is_admin ?? 'non renseigné',
-                'is_traveller' => $listing->user->is_traveller ?? 'non renseigné',
-                'is_hote' => $listing->user->is_hote ?? 'non renseigné',
+
+                'created_at' => $listing->user->created_at ?? 'non renseigné',
             ],
             'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
                 return [
@@ -2415,7 +2428,7 @@ public function enableHousing($housingId)
             'total_housing_published' => $totalHousingPublished,
             'total_avis_for_housing' => $totalCommentsForHousing,
             'global_average_for_user' => $globalAverageForOwner,
-            'user' => $housing->user
+
         ]);
     }
 
@@ -2582,13 +2595,15 @@ public function enableHousing($housingId)
              return response()->json(['error' => 'Housing non trouvé.'], 404);
          }
 
+         $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-             $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-             $photoPath = $photo->move(public_path('image/photo_logement'), $photoName);
-             $photoUrl = url('/image/photo_logement/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement', 'extensionImageVideo');
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $photoUrl;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              $photoModel->is_verified = false;
              $photoModel->housing_id = $housing->id;
@@ -2944,7 +2959,8 @@ public function HousingHoteInProgress(){
 }
 
 
-    public function paginateH($items, $perPage = 15, $page = null){
+    public function paginateH($items, $perPage = null, $page = null){
+        $perPage = $perPage ?: Setting::first()->pagination_logement_acceuil;
         $baseUrl = url('/');
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $total = count($items);

@@ -115,7 +115,7 @@ class ReductionController extends Controller
      *     path="/api/reduction/user",
      *     summary="Obtenir les réductions de l'utilisateur connecté",
      *     tags={"Reduction hote"},
-     *     security={{"bearerAuth": {}}}, 
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
  *         response=200,
  *         description="Réductions associées à l'utilisateur connecté",
@@ -183,7 +183,7 @@ class ReductionController extends Controller
      *     path="/api/reduction/housing/{housingId}",
      *     summary="Obtenir toutes les réductions d'un logement donné",
      *     tags={"Reduction hote"},
-     *     security={{"bearerAuth": {}}}, 
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="housingId",
      *         in="path",
@@ -354,8 +354,8 @@ public function DeleteReduction($id)
             return (new ServiceController())->apiResponse(404,[], 'Réduction déjà supprimée');
         }
 
-        $reduction->update(['is_deleted' => true]);
-
+        $reduction->is_deleted = true;
+        $reduction->save();
         return (new ServiceController())->apiResponse(200,[], 'Réduction supprimée avec succès.');
 
     } catch (Exception $e) {
@@ -393,8 +393,8 @@ public function activateReductionsForHousing($housingId)
 {
     $currentDate = Carbon::now();
     $reductions = Reduction::where('housing_id', $housingId)
-        ->where('is_encours', false) 
-        ->where('is_deleted', false) 
+        ->where('is_encours', false)
+        ->where('is_deleted', false)
         ->where('is_blocked', false)
         ->get();
 
@@ -679,7 +679,7 @@ public function desactiveReduction($reductionId,$housingId){
             if ($currentReductionEnabled) {
                 return (new ServiceController())->apiResponse(404,[], 'Ce logement a déjà une réduction en cours avec le même nombre de nuits, vous pouvez modifier la valeur.');
             }
-            
+
             if ($currentReductionDisabled) {
                 return (new ServiceController())->apiResponse(404,[], "Ce logement a déjà une réduction en cours avec le même nombre de nuits mais cette réduction est désactivée. Veuillez l'activez à nouveau.");
             }
@@ -799,11 +799,11 @@ public function desactiveReduction($reductionId,$housingId){
             }
 
             $housing = Housing::find($reduction->housing_id);
- 
+
             if (!$housing) {
              return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
             }
- 
+
             $errorcheckOwner= (new AddHousingController)->checkOwner($housing->id);
             if($errorcheckOwner){
                 return $errorcheckOwner;
@@ -827,9 +827,9 @@ public function desactiveReduction($reductionId,$housingId){
             $reduction->night_number = $reduction->night_number;
             $reduction->value = $request->value;
             $reduction->save();
- 
+
             return (new ServiceController())->apiResponse(200,[], 'Réduction modifié avec succès');
- 
+
         } catch (Exception $e) {
          return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }

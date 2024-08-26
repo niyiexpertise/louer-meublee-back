@@ -8,9 +8,20 @@ use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Validation\Rule;
 use App\Models\User_language;
+use App\Services\FileService;
+use Illuminate\Support\Facades\File as F ;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 
 class LanguageController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
       /**
      * @OA\Get(
      *     path="/api/language/index",
@@ -77,18 +88,19 @@ class LanguageController extends Controller
                 $data = $request->validate([
                     'name' => 'required|unique:languages|max:255',
                 ]);
-        
+
                 $language = new Language();
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $identity_profil_path = $request->file('icone')->move(public_path('image/iconeLanguage'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeLanguage/' . $icone_name;
-                    $language->icone = $icone_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $language->icone = $identity_profil_url['result'];
                     }
                 $language->name = $request->name;
                 $language->save();
-        
+
                 return response()->json([
                     'message' => 'Language created successfully',
                     'data' => $language
@@ -139,7 +151,7 @@ class LanguageController extends Controller
                 }
 
                 return response()->json(['data' => $language], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -180,7 +192,7 @@ class LanguageController extends Controller
      *     )
      * )
      */
-    
+
     public function updateName(Request $request, string $id)
     {
         try {
@@ -191,15 +203,19 @@ class LanguageController extends Controller
                     Rule::unique('languages')->ignore($id),
                 ],
             ]);
-    
-            $language = Language::whereId($id)->update($data);
-            
+            $language = Language::find($id);
+            if (!$language) {
+                return response()->json(['error' => 'Langue non trouvé.'], 404);
+            }
+
+            $language->name = $request->name;
+            $language->save();
             return response()->json(['data' => 'Langage mis à jour avec succès.'], 200);
         } catch(Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
+
 
     /**
      * @OA\Post(
@@ -254,14 +270,14 @@ class LanguageController extends Controller
      */
     public function updateIcone(Request $request, string $id)
     {
-        
+
         try {
             $language = Language::find($id);
-            
+
             if (!$language) {
                 return response()->json(['error' => 'Language non trouvé.'], 404);
             }
-            
+
             // $request->validate([
             //         'icone' => 'image|mimes:jpeg,jpg,png,gif'
             //     ]);
@@ -274,15 +290,14 @@ class LanguageController extends Controller
                     F::delete($oldProfilePhotoPath);
                 }
             }
-                
+                $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $icone_name = uniqid() . '.' . $request->file('icone')->getClientOriginalExtension();
-                    $icone_path = $request->file('icone')->move(public_path('image/iconeLanguage'), $icone_name);
-                    $base_url = url('/');
-                    $icone_url = $base_url . '/image/iconeLanguage/' . $icone_name;
-                    
-                    Language::whereId($id)->update(['icone' => $icone_url]);
-                    
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $language->icone = $identity_profil_url['result'];
+                    $language->save();
                     return response()->json(['data' => 'icône de la langue mis à jour avec succès.'], 200);
                 } else {
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
@@ -322,20 +337,21 @@ class LanguageController extends Controller
     public function destroy(string $id)
     {
         try{
-                $language = Language::whereId($id)->update(['is_deleted' => true]);
+            $language = Language::find($id);
 
                 if (!$language) {
                     return response()->json(['error' => 'Language non trouvé.'], 200);
                 }
-                $nbexist= User_language::where('language_id', $id)->count(); 
-        
+                $nbexist= User_language::where('language_id', $id)->count();
+
             if ($nbexist > 0) {
                 return response()->json(['error' => "Suppression impossible car la langue est déjà associé à un utilisateur."],200);
-    
-            }
 
+            }
+            $language->is_deleted = true;
+            $language->save();
                 return response()->json(['data' => 'language supprimé avec succès.'], 200);
-        } catch(Exception $e) {    
+        } catch(Exception $e) {
               return response()->json(['error' => $e->getMessage()], 500);
         }
 
@@ -377,14 +393,14 @@ class LanguageController extends Controller
     public function block(string $id)
  {
     try{
-            $language = Language::whereId($id)->update(['is_blocked' => true]);
-
+        $language = Language::find($id);
             if (!$language) {
                 return response()->json(['error' => 'Logement non trouvé.'], 404);
             }
-
+            $language->is_blocked = true;
+            $language->save();
             return response()->json(['data' => 'This type of propriety is block successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
  }
@@ -425,13 +441,14 @@ class LanguageController extends Controller
  public function unblock(string $id)
 {
     try{
-            $language = Language::whereId($id)->update(['is_blocked' => false]);
-
+        $language = Language::find($id);
             if (!$language) {
                 return response()->json(['error' => 'Logement non trouvé.'], 404);
             }
+            $language->is_blocked = false;
+            $language->save();
             return response()->json(['data' => 'his type of propriety is unblock successfuly.'], 200);
-    } catch(Exception $e) {    
+    } catch(Exception $e) {
           return response()->json(['error' => $e->getMessage()], 500);
     }
 

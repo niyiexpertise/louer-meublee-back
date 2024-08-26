@@ -646,8 +646,10 @@ public function __construct(FileService $fileService = null)
             $identity_profil_url = '';
             foreach ($photoFiles as $fileId) {
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
-
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
               //  $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
               /*  $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 if(env('MODE') == 'PRODUCTION'){
@@ -658,7 +660,7 @@ public function __construct(FileService $fileService = null)
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
                 }*/
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
 
                 $photoModel->save();
 
@@ -695,7 +697,10 @@ public function __construct(FileService $fileService = null)
         $category->save();
 
         foreach ($categoryPhotos as $photoFile) {
-            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category');
+            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');
+            if ($uploadedPath['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+            }
 
           /*  $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
             if(env('MODE') == 'PRODUCTION')
@@ -708,7 +713,7 @@ public function __construct(FileService $fileService = null)
             }
                     */
             $photo = new File();
-            $photo->path = $uploadedPath;
+            $photo->path = $uploadedPath['result'];
             $photo->save();
 
 
@@ -1869,14 +1874,16 @@ public function addHousing_step_8(Request $request, $housingId){
             foreach ($categorie['photos'] as $fileId) {
                 
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
-
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
                /* $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
                 */
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
                 $photoModel->save();
                 $housingCategoryFile = new Housing_category_file();
                 $housingCategoryFile->housing_id = $housing->id;
@@ -1923,14 +1930,17 @@ public function addHousing_step_8(Request $request, $housingId){
             // Enregistrement des photos
             foreach ($piece['photos'] as $fileId) {
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
 /*
                 $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
 */
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
                 $photoModel->save();
 
                 $housingCategoryFile = new Housing_category_file();

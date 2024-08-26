@@ -1598,7 +1598,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             Route::post('soldeReservation', [DashBoardTravelerController::class, 'soldeReservation'])
             ->name('reservation.soldeReservation')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.soldeReservation');
+            ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.soldeReservation');
 
 
         });

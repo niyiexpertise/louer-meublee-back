@@ -537,7 +537,7 @@ class CategorieController extends Controller
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
-                   $category->icone = $identity_profil_url;
+                   $category->icone = $identity_profil_url['result'];
                    $category->save();
 
                     return response()->json(['data' => 'icône de la catégorie mis à jour avec succès.'], 200);

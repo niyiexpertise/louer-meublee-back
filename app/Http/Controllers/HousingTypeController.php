@@ -128,8 +128,11 @@ class HousingTypeController extends Controller
 
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType');
-                    $housingType->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType', 'extensionImage');
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $housingType->icone = $identity_profil_url['result'];
                     }
 
                 $housingType->name = $request->name;
@@ -324,9 +327,11 @@ class HousingTypeController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType');;
-
-                    $housingType->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeHousingType', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $housingType->icone = $identity_profil_url['result'];
                     $housingType->save();
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {

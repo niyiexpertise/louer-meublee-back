@@ -39,11 +39,11 @@ class FileService
     private function uploadSingleFile($file, string $directory,$type)
     {
 
-        $extensionImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff'];
+        $extensionImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'jfif'];
 
         $extensionImageVideo = [
             'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 
-            'mp4', 'mov', 'avi', 'mkv', 'mpeg', 'webm'
+            'mp4', 'mov', 'avi', 'mkv', 'mpeg', 'webm', 'jfif'
         ];
 
         $extensionDocument = [

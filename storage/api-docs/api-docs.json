@@ -13190,7 +13190,7 @@
                     "Admin Housing Sponsoring"
                 ],
                 "summary": "Liste des demandes de sponsoring supprimées",
-                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées.",
+                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées par les hôtes.",
                 "operationId": "demandeSponsoringsupprimee",
                 "responses": {
                     "200": {
@@ -16106,13 +16106,13 @@
                 ]
             }
         },
-        "/api/notifications/users": {
+        "/api/users/notifications": {
             "get": {
                 "tags": [
                     "Notification"
                 ],
                 "summary": "Récupérer la liste de notifications pour un utilisateur connecté",
-                "operationId": "3837af30e379118ab3830607350739c6",
+                "operationId": "70ed0f4638e037e5a5f00911fc4b1c71",
                 "responses": {
                     "200": {
                         "description": "Liste des notifications avec succès pour l'utilisateur",
@@ -16124,7 +16124,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/notifyUserHaveRoles/{mode}": {
@@ -16346,12 +16351,12 @@
                 "tags": [
                     "Paiement"
                 ],
-                "summary": "Liste des paiements éffectués par le voyageur lors des reservations",
-                "description": "Liste des paiements éffectués par le voyageur lors des reservations.",
+                "summary": "Liste des paiements éffectués par le voyageur",
+                "description": "Liste des paiements éffectués par le voyageur.",
                 "operationId": "662319232b772e2d94de8e51010b8296",
                 "responses": {
                     "200": {
-                        "description": "Liste des paiements éffectués par le voyageur lors des reservations",
+                        "description": "Liste des paiements éffectués par le voyageur",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -16374,12 +16379,12 @@
                 "tags": [
                     "Paiement"
                 ],
-                "summary": "Liste des paiements éffectués sur le site lors des reservations",
-                "description": "Liste des paiements éffectués sur le site lors des reservations.",
+                "summary": "Liste des paiements éffectués sur le site",
+                "description": "Liste des paiements éffectués sur le site.",
                 "operationId": "4359353960f64ea0b8a5a99bf8cced4d",
                 "responses": {
                     "200": {
-                        "description": "Liste des paiements éffectués sur le site lors des reservations",
+                        "description": "Liste des paiements éffectués sur le site",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -16804,6 +16809,11 @@
                                         "description": "ID de transaction unique",
                                         "type": "string",
                                         "example": "12345-abcde"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "statut du paiement",
+                                        "type": "boolean",
+                                        "example": "0"
                                     }
                                 },
                                 "type": "object"
@@ -19876,11 +19886,6 @@
                                         "format": "float",
                                         "example": 500
                                     },
-                                    "valeur_payee": {
-                                        "description": "valeur_payee",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "valeur_reduction_hote": {
                                         "description": "valeur_reduction_hote",
                                         "type": "integer",
@@ -21833,6 +21838,21 @@
                                         "format": "float"
                                     },
                                     "montant_minimum_solde_retrait": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "commission_partenaire_defaut": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "reduction_partenaire_defaut": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "number_of_reservation_partenaire_defaut": {
+                                        "type": "integer"
+                                    },
+                                    "commission_hote_defaut": {
                                         "type": "number",
                                         "format": "float"
                                     }

@@ -54,6 +54,7 @@ class PortfeuilleController extends Controller
  *             @OA\Property(property="amount", type="number", format="double", description="Le montant à créditer", example=100.0),
  *             @OA\Property(property="paiement_methode", type="string", description="Méthode de paiement utilisée", example="carte"),
  *             @OA\Property(property="transaction_id", type="string", description="ID de transaction unique", example="12345-abcde"),
+ *              @OA\Property(property="statut_paiement", type="boolean", description="statut du paiement", example="0"),
  *         )
  *     ),
  *     @OA\Response(
@@ -96,6 +97,7 @@ class PortfeuilleController extends Controller
                 'amount' => 'required|numeric|min:0.01',
                 'paiement_methode' => 'required|string',
                 'transaction_id' => 'required|string',
+                'statut_paiement' => 'nullable|boolean'
             ]);
 
             $message = [];
@@ -125,44 +127,57 @@ class PortfeuilleController extends Controller
 
 
             DB::beginTransaction();
-            $soldeCommission = Portfeuille_transaction::sum('montant_commission');
 
-            $portefeuille->solde += $amount;
-            $portefeuille->save();
+            
 
             $payement = new Payement();
             $payement->amount =  $amount;
-            $payement->payment_method = $request->payment_method;
+            $payement->payment_method = $request->paiement_methode;
             $payement->id_transaction = $request->transaction_id;
-            $payement->statut = 1;
-            $payement->motif = "Recharge de portefeuille";
+            $payement->statut = $request->statut_paiement;
+            $payement->user_id = Auth::user()->id;
             $payement->is_confirmed = true;
             $payement->is_canceled = false;
+          
+
+            if( $request->statut_paiement ==1){
+                $portefeuille->solde += $amount;
+                $portefeuille->save();
+    
+                $portefeuilleTransaction = new Portfeuille_transaction();
+                $portefeuilleTransaction->credit = true;
+                $portefeuilleTransaction->debit = false;
+                $portefeuilleTransaction->operation_type = 'credit';
+                $portefeuilleTransaction->amount = $amount;
+                $portefeuilleTransaction->motif = "Recharge de portefeuille";
+                $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+                $portefeuilleTransaction->id_transaction = 0;
+                $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
+                $portefeuilleTransaction->save();
+                (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+            }
+
+            $payement->motif =  $portefeuilleTransaction->motif ?? "Echec de Payement lors de l'approvisionnement de son portefeuille";
             $payement->save();
 
-            $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->credit = true;
-            $portefeuilleTransaction->debit = false;
-            $portefeuilleTransaction->operation_type = 'credit';
-            $portefeuilleTransaction->amount = $amount;
-            $portefeuilleTransaction->motif = "Recharge de portefeuille";
-            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-            $portefeuilleTransaction->id_transaction = 0;
-            $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
 
-            $portefeuilleTransaction->save();
-
-            (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+           
             DB::commit();
 
-            $mail = [
-                "title" => "Confirmation de dépôt sur votre portefeuille",
-                "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
-            ];
+            
 
-            dispatch(new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
-            $data = ["solde" => $portefeuille->solde];
-            return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
+            if( $request->statut_paiement ==1){
+                $mail = [
+                    "title" => "Confirmation de dépôt sur votre portefeuille",
+                    "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
+                ];
+    
+                dispatch(new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
+                $data = ["solde" => $portefeuille->solde];
+                return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
+            }else{
+                return (new ServiceController())->apiResponse(200,[], "Echec de paiement");
+            }
 
         } catch (Exception $e) {
             DB::rollBack();

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
 use App\Services\FileService;
 class VerificationDocumentPartenaireController extends Controller
@@ -459,9 +460,9 @@ public function validateDocuments(Request $request)
         $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
         $commission=new user_partenaire();
         $commission->user_id=$user->id;
-        $commission->commission=5;
-        $commission->reduction_traveler=3;
-        $commission->number_of_reservation=3;
+        $commission->commission = Setting::first()->commission_partenaire ?? 5;
+        $commission->reduction_traveler = Setting::first()->reduction_partenaire_defaut ?? 3;
+        $commission->number_of_reservation = Setting::first()->number_of_reservation_partenaire_defaut ?? 3;
         $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
         $commission->save();
         $mail = [
@@ -719,12 +720,16 @@ public function changeDocument(Request $request)
                   if (file_exists($oldDocumentPath)) {
                          unlink($oldDocumentPath);
                     }
+                    $identity_profil_url = '';
+                    $identity_profil_url = $this->fileService->uploadFiles($new_document, 'image/document_verification', 'extensionDocument');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+           // $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
+           // $path_url = url('/image/document_verification/' . $path_name);
+           // $new_document->move(public_path('image/document_verification'), $path_name);
 
-            $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
-            $path_url = url('/image/document_verification/' . $path_name);
-            $new_document->move(public_path('image/document_verification'), $path_name);
-
-            $verificationDocument->path = $path_url;
+            $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
 
             return response()->json(['message' => 'Document changé avec succès.'], 200);

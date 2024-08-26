@@ -591,7 +591,7 @@ public function getUsersGroupedByCountry()
                 ];
             });
 
-            return (new ServiceController())->apiResponse(200, [$usersGroupedByCountry], 'Groupe les utilisateurs par pays');
+            return (new ServiceController())->apiResponse(200, $usersGroupedByCountry, 'Groupe les utilisateurs par pays');
 
     }
 

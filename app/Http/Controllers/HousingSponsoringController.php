@@ -17,6 +17,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class HousingSponsoringController extends Controller
 {
@@ -85,16 +86,30 @@ class HousingSponsoringController extends Controller
     {
         try {
 
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'housing_id' => 'required',
                 'sponsoring_id' => 'required',
                 'date_debut' => 'required',
                 'nombre',
-                'payment_method' => 'required|string',
-                'id_transaction' => 'required|string',
-                'statut_paiement' => 'required',
-                'montant' => 'nullable|numeric'
             ]);
+
+            $message = [];
+
+            if ($validator->fails()) {
+                $message[] = $validator->errors();
+                return (new ServiceController())->apiResponse(505,[],$message);
+            }
+
+            // $request->validate([
+            //     'housing_id' => 'required',
+            //     'sponsoring_id' => 'required',
+            //     'date_debut' => 'required',
+            //     'nombre',
+            //     'payment_method' => 'required|string',
+            //     'id_transaction' => 'required|string',
+            //     'statut_paiement' => 'required',
+            //     'montant' => 'nullable|numeric'
+            // ]);
 
 
             $housing = Housing::find($request->housing_id);
@@ -125,8 +140,6 @@ class HousingSponsoringController extends Controller
                 }
             }
 
-           
-
             $dateDebut = Carbon::parse($request->date_debut);
 
             if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
@@ -151,13 +164,86 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], 'Vous avez déjà déjà fait une demande de sponsoring pour cette période, attendez la validation de l\'admin.');
                 }
             }
-            DB::beginTransaction();
+           
 
-            if($request->payment_method =='portfeuille'){
+            
+
+            $housingSponsoring = new HousingSponsoring();
+            $housingSponsoring->housing_id = $request->housing_id;
+            $housingSponsoring->sponsoring_id = $request->sponsoring_id;
+            $housingSponsoring->date_debut = $dateDebut;
+            $housingSponsoring->date_fin = $dateFin;
+            $housingSponsoring->nombre = $nombre;
+            $housingSponsoring->duree = $sponsoring->duree;
+            $housingSponsoring->prix = $sponsoring->prix;
+            $housingSponsoring->description = $sponsoring->description;
+            $housingSponsoring->is_actif = false;
+            $housingSponsoring->save();
+
+            $right = Right::where('name','admin')->first();
+                    $adminUsers = User_right::where('right_id', $right->id)->get();
+                    foreach ($adminUsers as $adminUser) {
+
+                        $mailadmin = [
+                            'title' => "Demande de sponsoring",
+                            "body" => "Une demande de sponsoring vient d'être fait par un hôte, veuillez vous connectez pour la valider"
+                        ];
+                    dispatch( new SendRegistrationEmail($adminUser->user->email, $mailadmin['body'], $mailadmin['title'], 2));
+                }
+
+            return (new ServiceController())->apiResponse(200, [], 'Demande de sponsoring créée avec succès');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+
+    public function payHousingSponsoringRequest(Request $request, $housingSponsoringId){
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'payment_method' => 'required|string',
+                'id_transaction' => 'required|string',
+                'statut_paiement' => 'required',
+                'montant' => 'nullable|numeric'
+            ]);
+
+            $message = [];
+
+            if ($validator->fails()) {
+                $message[] = $validator->errors();
+                return (new ServiceController())->apiResponse(505,[],$message);
+            }
+
+            $housingSponsoring = HousingSponsoring::find($housingSponsoringId);
+
+            if (!$housingSponsoring) {
+                return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+            }
+
+            $sponsoring = Sponsoring::find($housingSponsoring->sponsoring_id);
+            $housing = Housing::find($housingSponsoring->housing_id);
+
+            if (!$housing) {
+                return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+            }
+
+            if (!$sponsoring) {
+                return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
+            }
+
+            $nombre =  $housingSponsoring->nombre;
+
+            $duree= $nombre * $sponsoring->duree;
+            $prix_tarif = $nombre * $sponsoring->prix;
+            $montant = $request->montant??$prix_tarif;
+
+            if($request->payment_method == 'portfeuille'){
                 $userPostefeuille = Portfeuille::where('user_id',Auth::user()->id)->first();
 
                 if($userPostefeuille->solde < $prix_tarif){
-                    return (new ServiceController())->apiResponse(404, [], "Solde insuffisant. Veuillez recharger votre portefeuille. Vous devez disposer de $prix_tarif XOF/FCFA ");
+                    return (new ServiceController())->apiResponse(404, [], "Solde insuffisant. Veuillez recharger votre portefeuille. Vous devez disposer de $prix_tarif FCFA ");
                 };
 
             }else{
@@ -175,7 +261,7 @@ class HousingSponsoringController extends Controller
                 }
 
                 if($request->montant < $prix_tarif){
-                    return (new ServiceController())->apiResponse(404, [], "Le montant est insuffisant. Vous devez payer $prix_tarif XOF/FCFA");
+                    return (new ServiceController())->apiResponse(404, [], "Le montant est insuffisant. Vous devez payer $prix_tarif FCFA");
                 }
 
                 $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
@@ -184,18 +270,7 @@ class HousingSponsoringController extends Controller
                 }
             }
 
-            $housingSponsoring = new HousingSponsoring();
-            $housingSponsoring->housing_id = $request->housing_id;
-            $housingSponsoring->sponsoring_id = $request->sponsoring_id;
-            $housingSponsoring->date_debut = $dateDebut;
-            $housingSponsoring->date_fin = $dateFin;
-            $housingSponsoring->nombre = $nombre;
-            $housingSponsoring->duree = $sponsoring->duree;
-            $housingSponsoring->prix = $sponsoring->prix;
-            $housingSponsoring->description = $sponsoring->description;
-            $housingSponsoring->is_actif = false;
-            $housingSponsoring->save();
-
+            DB::beginTransaction();
             $payement = new Payement();
             $payement->amount =  $montant;
             $payement->payment_method = $request->payment_method;
@@ -266,20 +341,8 @@ class HousingSponsoringController extends Controller
 
             DB::commit();
 
-            $right = Right::where('name','admin')->first();
-                    $adminUsers = User_right::where('right_id', $right->id)->get();
-                    foreach ($adminUsers as $adminUser) {
-
-                        $mailadmin = [
-                            'title' => "Demande de sponsoring",
-                            "body" => "Une demande de sponsoring vient d'être fait par un hôte, veuillez vous connectez pour la valider"
-                        ];
-                    dispatch( new SendRegistrationEmail($adminUser->user->email, $mailadmin['body'], $mailadmin['title'], 2));
-                }
-
-            return (new ServiceController())->apiResponse(200, [], 'Demande de sponsoring créée avec succès');
+            return (new ServiceController())->apiResponse(200,[],'Demande de sponsoring supprimé avec succès');
         } catch (Exception $e) {
-            DB::rollBack();
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }

@@ -367,9 +367,11 @@ public function userLanguages()
 
      $identity_profil_url = '';
 
-     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil');;
-
-     $user->file_profil = $identity_profil_url;
+     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil', 'extensionImageVideo');;
+     if ($identity_profil_url['fails']) {
+        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+    }
+     $user->file_profil = $identity_profil_url['result'];
      $user->save();
 
      return response()->json(['message' => 'Profile photo updated successfully', 'user' => $user], 200);

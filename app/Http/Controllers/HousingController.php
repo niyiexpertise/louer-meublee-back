@@ -476,7 +476,7 @@ class HousingController extends Controller
             // $photoUrl = $ip.'/image/photo_logement/' . $photoName;
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $identity_profil_url;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              if ($index == $request->input('profile_photo_id')) {
                  $photoModel->is_couverture = true;
@@ -592,7 +592,7 @@ class HousingController extends Controller
             }
                         $ip='http://192.168.100.158:8000';
                  //$photoUrl =$ip.'/image/photo_category/' . $photoName;
-            $photoModel->path = $identity_profil_url;
+            $photoModel->path = $identity_profil_url['result'];
             $photoModel->save();
             $housingCategoryFile = new Housing_category_file();
             $housingCategoryFile->housing_id = $housingCategoryId;

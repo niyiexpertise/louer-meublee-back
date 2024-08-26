@@ -428,7 +428,7 @@ class DashBoardTravelerController extends Controller
             }
 
             if ($reservation->montant_a_paye == $reservation->valeur_payee) {
-                return (new ServiceController())->apiResponse(404, [], 'Logement déjà soldé .');
+                return (new ServiceController())->apiResponse(404, [], 'Réservation déjà soldé .');
             }
 
             $existPremierTranche = Portfeuille_transaction::where('reservation_id',$request->reservation_id)->exists();
@@ -439,6 +439,10 @@ class DashBoardTravelerController extends Controller
 
             $required_paid_value = $reservation->montant_a_paye / 2;
 
+            if ($required_paid_value != $reservation->valeur_payee) {
+                return (new ServiceController())->apiResponse(404, [], "Vous devez payer $required_paid_value FCFA.");
+            }
+
             $method_paiement = (new ReservationController())->findSimilarPaymentMethod($request->payment_method);
 
             $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
@@ -448,12 +452,26 @@ class DashBoardTravelerController extends Controller
             DB::beginTransaction();
 
             try {
-                $reservation->valeur_payee += $required_paid_value;
-                $reservation->save();
+                $statut_paiement =0;
+                if( $request->statut_paiement ==1 || $method_paiement == $portfeuille ||$method_paiement == $espece){
+                    $statut_paiement = 1;
+                    $reservation->valeur_payee += $required_paid_value;
+                    $reservation->save();
+                }
 
                 $payment = new Payement();
                 $payment->reservation_id = $reservation->id;
-                $payment->amount = $request->valeur_payee;
+                if($method_paiement == $portfeuille ||$method_paiement == $espece){
+                    if($method_paiement == $espece){
+                        if($required_paid_value != $request->valeur_payee){
+                            return (new ServiceController())->apiResponse(404, [], "Vous devez payer $required_paid_value FCFA.");
+                        }
+                    }
+                    $payment->amount = $required_paid_value;
+                }else{
+                    $payment->amount = $request->valeur_payee;
+                }
+
                 $payment->payment_method = $method_paiement;
                 $payment->id_transaction = $request->id_transaction;
                 $payment->statut = $request->statut_paiement;
@@ -481,7 +499,7 @@ class DashBoardTravelerController extends Controller
                     $portefeuilleTransaction->motif = "Finalisation de paiement avec le portefeuille";
 
                     $portefeuilleTransaction->reservation_id = $reservation->id;
-                    $portefeuilleTransaction->payment_method = $request->payment_method;
+                    $portefeuilleTransaction->payment_method =$method_paiement;
                     $portefeuilleTransaction->operation_type = 'debit';
                     $portefeuilleTransaction->id_transaction = "0";
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
@@ -493,6 +511,10 @@ class DashBoardTravelerController extends Controller
 
                 }else if($method_paiement == $espece){
 
+                    if(Auth::user()->id != Housing::whereId(Reservation::whereId($reservation->id)->first()->housing_id)->first()->user_id){
+                        return (new ServiceController())->apiResponse(404, [], "Seul le propriétaire de ce logement est autorisé à effectuer cette action pour le cas où la méthode de paiement est 'espece'");
+                    }
+
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->debit = false;
                     $portefeuilleTransaction->credit = false;
@@ -500,7 +522,7 @@ class DashBoardTravelerController extends Controller
                     $portefeuilleTransaction->motif = "Finalisation de paiement (reçu en espèce par l'hote)";
 
                     $portefeuilleTransaction->reservation_id = $reservation->id;
-                    $portefeuilleTransaction->payment_method = $request->payment_method;
+                    $portefeuilleTransaction->payment_method = $method_paiement;
                     $portefeuilleTransaction->id_transaction = "0";
 
                     $portefeuilleTransaction->save();
@@ -510,7 +532,7 @@ class DashBoardTravelerController extends Controller
 
                     $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
                     if ($existTransaction) {
-                        return $this->apiResponse(404, [], 'L\'id de la transaction existe déjà');
+                        return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
                     }
 
                     $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
@@ -523,27 +545,35 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], "Montant insuffisant. Vous devez payer $required_paid_value FCFA ou plus");
                     }
 
+                    if( $request->statut_paiement ==1){
+                        $portefeuilleTransaction = new Portfeuille_transaction();
+                        $portefeuilleTransaction->credit = true;
+                        $portefeuilleTransaction->debit = false;
+                        $portefeuilleTransaction->amount = $request->valeur_payee ;
+                        $portefeuilleTransaction->motif = "Finalisation de paiement par un moyen de paiement autre que portefeuille et  espece";
+                        $portefeuilleTransaction->reservation_id = $reservation->id;
+                        $portefeuilleTransaction->payment_method = $request->payment_method;
+                        $portefeuilleTransaction->id_transaction =$request->id_transaction;
 
-                    $portefeuilleTransaction = new Portfeuille_transaction();
-                    $portefeuilleTransaction->credit = true;
-                    $portefeuilleTransaction->debit = false;
-                    $portefeuilleTransaction->amount = $request->valeur_payee ;
-                    $portefeuilleTransaction->motif = "Finalisation de paiement par un moyen de paiement autre que portefeuille et  espece";
-                    $portefeuilleTransaction->reservation_id = $reservation->id;
-                    $portefeuilleTransaction->payment_method = $request->payment_method;
-                    $portefeuilleTransaction->id_transaction =$request->id_transaction;
-
-                    $portefeuilleTransaction->save();
-                    (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+                        $portefeuilleTransaction->save();
+                        (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+                    }
                 }
+                $payment->motif = $portefeuilleTransaction->motif??"Echec de paiement lors du soldage de la seconde partie" ;
+                $payment->save();
 
                 DB::commit();
                 $data = [
                     'reservation' => $reservation,
                 ];
 
-                return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
+                if($statut_paiement ==1){
+                    return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
+                }else{
+                    return (new ServiceController())->apiResponse(200, $data, "Echec de paiement");
+                }
 
+                
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);

@@ -195,8 +195,11 @@ class PreferenceController extends Controller
                 $preference = new Preference();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference');;
-                    $preference->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $preference->icone = $identity_profil_url['result'];
                     }
                 $preference->name = $request->name;
                 $preference->is_verified = true;
@@ -393,9 +396,11 @@ class PreferenceController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference');;
-
-                    $preference->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconePreference', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $preference->icone = $identity_profil_url['result'];
                     $preference->save();
 
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);

@@ -105,9 +105,11 @@ class PhotoController extends Controller
      }
 
      $identity_profil_url = '';
-     $identity_profil_url = $this->fileService->uploadFiles($request->file('photo'), 'image/photo_logement');;
-
-     $photo->path= $identity_profil_url;
+     $identity_profil_url = $this->fileService->uploadFiles($request->file('photo'), 'image/photo_logement', 'extensionImageVideo');;
+     if ($identity_profil_url['fails']) {
+        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+    }
+     $photo->path= $identity_profil_url['result'];
      $photo->save();
 
      return response()->json(['message' => ' photo updated successfully'], 200);

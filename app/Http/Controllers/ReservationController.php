@@ -40,9 +40,17 @@ use Illuminate\Validation\Rule;
 use App\Models\user_partenaire;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\MethodPayement;
+use App\Services\FileService;
 
 class ReservationController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService=null)
+    {
+        $this->fileService = $fileService;
+    }
+
 
     private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal) {
         $housing = Housing::where('id', $housing_id)
@@ -114,13 +122,13 @@ class ReservationController extends Controller
         //     }
         // }
 
-        $existing_traveler_reservation = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('date_of_starting',$new_start_date)->where('date_of_end',$new_end_date)->exists();
+        $existing_traveler_reservation = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('date_of_starting',$new_start_date)->where('date_of_end',$new_end_date)->where('statut','payee')->exists();
 
         if($existing_traveler_reservation){
             return ['is_allowed' => false, 'message' => 'Vous avez déjà ajouté une demande de réservation sur ce logement avec la même période de départ et de fin'];
         }
 
-        $existing_reservations = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('is_confirmed_hote',true)->get();
+        $existing_reservations = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('is_confirmed_hote',true)->where('statut','payee')->get();
 
         foreach ($existing_reservations as $reservation) {
             $time_before_reservation = $housing->time_before_reservation;
@@ -147,7 +155,7 @@ class ReservationController extends Controller
  *     path="/api/reservation/store",
  *     summary="Créer une réservation avec paiement",
  *     description="Crée une réservation pour un logement avec un paiement associé. Accepte un fichier image pour la photo des voyageurs voulant réserver la réservation.",
- *     tags={"Reservation"},
+ *     tags={"Dashboard traveler"},
  *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -251,12 +259,6 @@ class ReservationController extends Controller
  *                     example=500,
  *                     description="Montant total"
  *                 ),
- *                @OA\Property(
- *                     property="valeur_payee",
- *                      type="integer",
- *                     example=1,
- *                     description="valeur_payee"
- *                 ),
  *
  *                 @OA\Property(
  *                     property="valeur_reduction_hote",
@@ -347,7 +349,7 @@ public function storeReservationWithPayment(Request $request)
         'heure_arrivee_min' => 'required|date_format:H:i',
         'is_tranche_paiement' => 'required',
         'montant_total' => 'required|numeric',
-        'valeur_payee' => 'required|numeric',
+        'valeur_payee' => 'nullable|numeric',
         // 'payment_method' => 'required|string',
         // 'id_transaction' => 'required|string',
         // 'statut_paiement' => 'required',
@@ -379,11 +381,11 @@ public function storeReservationWithPayment(Request $request)
 
     }
 
-    if($request->is_tranche_paiement == 1){
-        if($request->valeur_payee != ($request->montant_a_paye/2)){
-            return (new ServiceController())->apiResponse(404,[], "Lorsqu'il s'agit d'un paiement par tranche vous êtes prié de payer la moitié du montant à payer");
-        }
-    }
+    // if($request->is_tranche_paiement == 1){
+    //     if($request->valeur_payee != ($request->montant_a_paye/2)){
+    //         return (new ServiceController())->apiResponse(404,[], "Lorsqu'il s'agit d'un paiement par tranche vous êtes prié de payer la moitié du montant à payer");
+    //     }
+    // }
 
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
 
@@ -405,7 +407,7 @@ public function storeReservationWithPayment(Request $request)
             'heure_arrivee_min' => $validatedData['heure_arrivee_min'],
             'is_tranche_paiement' => $validatedData['is_tranche_paiement'],
             'montant_total' => $validatedData['montant_total'],
-            'valeur_payee' => $validatedData['valeur_payee'],
+            'valeur_payee' =>0,
             'is_confirmed_hote' => false,
             'is_integration' => false,
             'is_rejected_traveler' => false,
@@ -420,14 +422,15 @@ public function storeReservationWithPayment(Request $request)
             'montant_housing' => $validatedData['montant_housing'] ?? 0,
             'montant_a_paye' => $validatedData['montant_a_paye'] ?? 0,
         ]);
-
+        $identity_profil_url = '';
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
-            $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-            $photoPath = $photo->move(public_path('image/photo_reservation'), $photoName);
-            $photoUrl = url('/image/photo_reservation/' . $photoName);
+            $identity_profil_url = $this->fileService->uploadFiles($request->file('photo'), 'image/photo_reservation', 'extensionImage');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
 
-            $reservation->photo = $photoUrl;
+            $reservation->photo = $identity_profil_url['result'];
             $reservation->save();
         }
 
@@ -473,7 +476,7 @@ public function storeReservationWithPayment(Request $request)
  *         ),
  *         description="ID de la réservation à payer",
  *     ),
- *     
+ *
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -486,7 +489,7 @@ public function storeReservationWithPayment(Request $request)
  *             @OA\Property(property="valeur_payee", type="number", format="float", nullable=true, example=130.00),
  *         )
  *     ),
- *     
+ *
  *     @OA\Response(
  *         response=200,
  *         description="Paiement fait avec succès",
@@ -505,7 +508,7 @@ public function storeReservationWithPayment(Request $request)
  *             ),
  *         ),
  *     ),
- *     
+ *
  *     @OA\Response(
  *         response=404,
  *         description="Réservation non trouvée",
@@ -515,7 +518,7 @@ public function storeReservationWithPayment(Request $request)
  *             @OA\Property(property="data", type="object", nullable=true),
  *         ),
  *     ),
- *     
+ *
  *     @OA\Response(
  *         response=500,
  *         description="Erreur interne du serveur",
@@ -525,7 +528,7 @@ public function storeReservationWithPayment(Request $request)
  *             @OA\Property(property="data", type="object", nullable=true),
  *         ),
  *     ),
- *     
+ *
  *     @OA\SecurityScheme(
  *         securityScheme="bearerAuth",
  *         type="http",
@@ -568,7 +571,7 @@ public function payReservation(Request $request,$reservationId){
         if ($reservation->is_tranche_paiement == 1) {
             $required_paid_value = $reservation->montant_a_paye / 2;
             if ($request->valeur_payee < $required_paid_value && $method_paiement != $portfeuille) {
-                return (new ServiceController())->apiResponse(404, [], 'Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé');
+                return (new ServiceController())->apiResponse(404, [], "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payer soit $required_paid_value FCFA");
             }
             if ($method_paiement == $portfeuille) {
                 $montant = $required_paid_value;
@@ -576,8 +579,8 @@ public function payReservation(Request $request,$reservationId){
                 $montant = $required_paid_value;
             }
         } else {
-            if ($request->valeur_payee <  $reservation->montant_a_paye && $method_paiement != $portfeuille) {
-                return (new ServiceController())->apiResponse(404, [], 'Pour le paiement complet, la valeur payée doit être égale au montant à payé');
+            if ($request->valeur_payee <  $reservation->montant_a_paye) {
+                return (new ServiceController())->apiResponse(404, [], "Pour le paiement complet, la valeur payée doit être égale au montant à payer soit {$reservation->montant_a_paye} FCFA");
             }
             if ($method_paiement == $portfeuille) {
                 $montant = $reservation->montant_a_paye;
@@ -590,20 +593,20 @@ public function payReservation(Request $request,$reservationId){
         if ($method_paiement == $portfeuille) {
             $user_id = Auth::id();
                 $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-    
+
                 if (!$portefeuille) {
                     return (new ServiceController())->apiResponse(404, [], 'Portefeuille introuvable');
                 }
-    
+
                 if ($portefeuille->solde < $montant) {
                     return (new ServiceController())->apiResponse(404, [], 'Solde insuffisant dans le portefeuille pour pouvoir réserver');
                 }
             }
 
             if ($method_paiement == $portfeuille) {
-                
+
                 }
-    
+
 
 
 
@@ -612,75 +615,87 @@ public function payReservation(Request $request,$reservationId){
             return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
         }
 
+        DB::beginTransaction();
         $payment = new Payement();
         $payment->reservation_id = $reservation->id;
         $payment->amount = $montant;
         $payment->payment_method = $method_paiement;
         $payment->id_transaction = $request->id_transaction;
+        $payment->user_id = Auth::user()->id;
         $payment->statut = $request->statut_paiement;
         $payment->is_confirmed = true;
         $payment->is_canceled = false;
 
+
+            $user_id = Auth::id();
+
+            if ($method_paiement == $portfeuille) {
+                $portefeuille = Portfeuille::where('user_id', $user_id)->first();
+                $portefeuille->solde -= $montant;
+
+                $portefeuilleTransaction = new Portfeuille_transaction();
+                $portefeuilleTransaction->debit = false;
+                $portefeuilleTransaction->credit = false;
+                $portefeuilleTransaction->amount = $montant;
+                $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
+                $portefeuilleTransaction->operation_type = 'debit';
+                $portefeuilleTransaction->reservation_id = $reservation->id;
+                $portefeuilleTransaction->payment_method = $method_paiement;
+                $portefeuilleTransaction->id_transaction = 0;
+                $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
+
+                $reservation->statut = 'payee';
+                $reservation->valeur_payee = $montant;
+
+                $reservation->save();
+                $portefeuilleTransaction->save();
+                $portefeuille->save();
+
+                $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+            }else{
+                if($request->statut_paiement ==1){
+                    $portefeuilleTransaction = new Portfeuille_transaction();
+                    $portefeuilleTransaction->credit = true;
+                    $portefeuilleTransaction->debit = false;
+                    $portefeuilleTransaction->amount =  $montant;
+                    $portefeuilleTransaction->motif = "Réservation effectuée avec autre moyen que le portefeuille";
+                    $portefeuilleTransaction->reservation_id = $reservation->id;
+                    $portefeuilleTransaction->payment_method = $method_paiement;
+                    $portefeuilleTransaction->id_transaction = $request->id_transaction;
+
+                    $reservation->statut = 'payee';
+                    $reservation->valeur_payee = $montant;
+                    $reservation->save();
+                    $portefeuilleTransaction->save();
+
+                    $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
+                }
+            }
+
+
+
+        $payment->motif = $portefeuilleTransaction->motif??"Echec de payement survenu lors du payement de la réservation";
+
         $payment->save();
-
-        DB::beginTransaction();
-
-
-
-        $user_id = Auth::id();
-
-        if ($method_paiement == $portfeuille) {
-            $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-            $portefeuille->solde -= $montant;
-
-            $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->debit = false;
-            $portefeuilleTransaction->credit = false;
-            $portefeuilleTransaction->amount = $montant;
-            $portefeuilleTransaction->motif = "Réservation effectuée avec portefeuille";
-            $portefeuilleTransaction->operation_type = 'debit';
-            $portefeuilleTransaction->reservation_id = $reservation->id;
-            $portefeuilleTransaction->payment_method = $method_paiement;
-            $portefeuilleTransaction->id_transaction = 0;
-            $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-
-            $reservation->statut = 'payee';
-
-            $reservation->save();
-            $portefeuilleTransaction->save();
-            $portefeuille->save();
-
-            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-        }else{
-
-            $portefeuilleTransaction = new Portfeuille_transaction();
-            $portefeuilleTransaction->credit = true;
-            $portefeuilleTransaction->debit = false;
-            $portefeuilleTransaction->amount =  $montant;
-            $portefeuilleTransaction->motif = "Réservation effectuée avec autre moyen que le portefeuille";
-            $portefeuilleTransaction->reservation_id = $reservation->id;
-            $portefeuilleTransaction->payment_method = $method_paiement;
-            $portefeuilleTransaction->id_transaction = $request->id_transaction;
-
-            $reservation->statut = 'payee';
-            $reservation->save();
-            $portefeuilleTransaction->save();
-
-            $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-        }
 
         DB::commit();
 
-        $mail_to_host = [
-            'title' => 'Nouvelle Réservation',
-            'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .
-                " Date de début : " . $reservation->date_of_starting . "\n" .
-                " Date de fin : " . $reservation->date_of_end . "\n"
-        ];
 
-        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
 
-        return (new ServiceController())->apiResponse(200,$payment, 'Paiement fait avec succès');
+        if($request->statut_paiement ==1 || $method_paiement == $portfeuille){
+            $mail_to_host = [
+                'title' => 'Nouvelle Réservation',
+                'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .
+                    " Date de début : " . $reservation->date_of_starting . "\n" .
+                    " Date de fin : " . $reservation->date_of_end . "\n"
+            ];
+
+            dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
+
+            return (new ServiceController())->apiResponse(200,$payment, 'Paiement fait avec succès');
+        }else{
+            return (new ServiceController())->apiResponse(200, [], "Echec de paiement");
+        }
 
 } catch(\Exception $e) {
     DB::rollBack();
@@ -995,10 +1010,7 @@ public function findSimilarPaymentMethod($inputMethod)
 
           }
 
-          if(!($reservation->is_confirmed_hote)) {
-            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas annuler une réservation qui n'est pas confirmée par l hote . ");
 
-          }
 
         if ($reservation->is_rejected_hote) {
             return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas annuler une reservation déjà rejetée par l hote. ");
@@ -1045,7 +1057,7 @@ public function findSimilarPaymentMethod($inputMethod)
         $reservation->is_rejected_traveler = 1;
         $reservation->motif_rejet_traveler = $request->motif_rejet_traveler;
         $reservation->save();
-        
+
 
 
             $soldeTotal = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
@@ -1068,16 +1080,16 @@ public function findSimilarPaymentMethod($inputMethod)
               $transaction->portfeuille_id = $portefeuilleClient->id;
               $transaction->amount = $montantClient;
               $transaction->debit = 0;
-              $transaction->credit =1;
+              $transaction->credit =0;
               $transaction->reservation_id = $reservation->id;
               $transaction->payment_method = "portfeuille";
-              $transaction->motif = "Remboursement intégral suite à l\' annulation de la réservation par le client";
+              $transaction->motif = "Remboursement intégral suite à l'annulation de la réservation par le client";
               $transaction->valeur_commission = 0;
               $transaction->montant_commission = 0;
               $transaction->montant_restant = $montantClient;
-              $transaction->solde_total = $soldeTotal  + $montantClient;
               $transaction->solde_commission = $soldeCommission  + 0;
-              $transaction->solde_restant = $soldeRestant  + $montantClient;
+              $$transaction->operation_type = 'credit';
+
               $transaction->save();
 
               $titre_partenaire="Message de Confirmation d'annulation de la reservation au partenaire";
@@ -1127,16 +1139,15 @@ public function findSimilarPaymentMethod($inputMethod)
            $transaction->portfeuille_id = $portefeuilleClient->id;
            $transaction->amount = $montantClient;
            $transaction->debit = 0;
-           $transaction->credit =1;
+           $transaction->credit =0;
            $transaction->reservation_id = $reservation->id;
            $transaction->payment_method = "portfeuille";
            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
            $transaction->valeur_commission = 0;
            $transaction->montant_commission = 0;
            $transaction->montant_restant = $montantClient;
-           $transaction->solde_total = $soldeTotal  + $montantClient;
            $transaction->solde_commission = $soldeCommission  + 0;
-           $transaction->solde_restant = $soldeRestant + $montantClient;
+           $$transaction->operation_type = 'credit';
            $transaction->save();
            $this->initialisePortefeuilleTransaction($transaction->id);
 
@@ -1484,13 +1495,13 @@ public function confirmIntegration(Request $request)
         $portefeuilleTransaction->portfeuille_id = $owner->portfeuille->id;
         $portefeuilleTransaction->id_transaction = "0";
         $portefeuilleTransaction->payment_method = "portfeuille";
-        
+
         $portefeuilleTransaction->save();
         $titre_partenaire="Virement de votre part en tant que partenaire suite à la confirmation de l'intégration d'un voyageur";
-        
-        
+
+
        $this->handlePartnerLogic($portefeuilleTransaction->id, true,$titre_partenaire);
-       
+
 
 
 
@@ -1602,7 +1613,11 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
     if (!$reservation) {
         return response()->json(['message' => 'Réservation non trouvée'], 404);
     }
-    
+
+        $soldeCredit = Portfeuille_transaction::where('credit', true)->sum('amount');
+        $soldeDebit = Portfeuille_transaction::where('debit', true)->sum('amount');
+
+
     if ($reservation->valeur_reduction_code_promo != 0) {
         $email_partenaire = $reservation->user->Partenaire->user->email;
         $user_id_partenaire = $reservation->user->Partenaire->user->id;
@@ -1635,6 +1650,8 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
         $transaction->montant_commission_admin=$montant_commission_admin;
         $transaction->new_solde_admin=$ancien_solde_commission_admin+$montant_commission_admin;
         $transaction->valeur_commission_admin=100-$commission_partenaire;
+        $transaction->solde_credit = $soldeCredit;
+        $transaction->solde_debit = $soldeDebit;
         $transaction->save();
 
         if($is_received==true){
@@ -1668,6 +1685,8 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
         $transaction->montant_commission_partenaire =0;
 
         $transaction->valeur_commission_partenaire=0;
+        $transaction->solde_credit = $soldeCredit;
+        $transaction->solde_debit = $soldeDebit;
 
          $transaction->save();
     }

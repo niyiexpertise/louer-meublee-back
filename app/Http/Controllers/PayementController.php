@@ -36,12 +36,12 @@ class PayementController extends Controller
  * @OA\Get(
  *     path="/api/paiement/reservation/user",
  *     tags={"Paiement"},
- *     summary="Liste des paiements éffectués par le voyageur lors des reservations",
- *     description="Liste des paiements éffectués par le voyageur lors des reservations.",
+ *     summary="Liste des paiements éffectués par le voyageur",
+ *     description="Liste des paiements éffectués par le voyageur.",
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
- *         description="Liste des paiements éffectués par le voyageur lors des reservations",
+ *         description="Liste des paiements éffectués par le voyageur",
  *         @OA\JsonContent(
  *         )
  *     ),
@@ -55,7 +55,7 @@ class PayementController extends Controller
     {
         $userId = Auth::id();
     
-        $reservations = Reservation::where('user_id', $userId)->get();
+        $reservations = Reservation::where('user_id', Auth::user()->id)->get();
     
         if ($reservations->isEmpty()) {
             return response()->json([
@@ -63,7 +63,7 @@ class PayementController extends Controller
             ], 404);
         }
     
-        $payments = Payement::whereIn('reservation_id', $reservations->pluck('id'))->get();
+        $payments = Payement::where('user_id', $reservations->pluck('id'))->get();
     
         if ($payments->isEmpty()) {
             return response()->json([
@@ -82,12 +82,12 @@ class PayementController extends Controller
  * @OA\Get(
  *     path="/api/paiement/reservation/all",
  *     tags={"Paiement"},
- *     summary="Liste des paiements éffectués sur le site lors des reservations",
- *     description="Liste des paiements éffectués sur le site lors des reservations.",
+ *     summary="Liste des paiements éffectués sur le site",
+ *     description="Liste des paiements éffectués sur le site.",
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
  *         response=200,
- *         description="Liste des paiements éffectués sur le site lors des reservations",
+ *         description="Liste des paiements éffectués sur le site",
  *         @OA\JsonContent(
  *         )
  *     ),

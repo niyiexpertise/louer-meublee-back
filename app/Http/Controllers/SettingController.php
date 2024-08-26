@@ -55,7 +55,11 @@ class SettingController extends Controller
      *                 @OA\Property(property="montant_minimum_recharge", type="number", format="float"),
      *                 @OA\Property(property="montant_minimum_retrait", type="number", format="float"),
      *                 @OA\Property(property="montant_maximum_retrait", type="number", format="float"),
-     *                 @OA\Property(property="montant_minimum_solde_retrait", type="number", format="float" )
+     *                 @OA\Property(property="montant_minimum_solde_retrait", type="number", format="float" ),
+     *                 @OA\Property(property="commission_partenaire_defaut", type="number", format="float" ),
+     *                 @OA\Property(property="reduction_partenaire_defaut", type="number", format="float" ),
+     *                 @OA\Property(property="number_of_reservation_partenaire_defaut", type="integer"),
+     *                 @OA\Property(property="commission_hote_defaut", type="number", format="float"),
      *             )
      *         )
      *     ),
@@ -98,6 +102,10 @@ class SettingController extends Controller
                 'logo' => '',
                 'app_mode' => '',
                 'adresse_serveur_fichier' => '',
+                'commission_partenaire' => '',
+                'reduction_partenaire_defaut' => '',
+                'number_of_reservation_partenaire_defaut' => '',
+                'commission_hote_defaut' => '',
 
             ]);
         }
@@ -109,18 +117,26 @@ class SettingController extends Controller
         }
 
         $validatedData = $validationResult['data'];
-
+ 
         $this->updateFields($settings, $validatedData);
 
         if ($request->hasFile('logo')) {
 
-            $validationResultFile = $this->fileService->uploadFiles($request->file('logo'), 'image/logos','extensionImage');
+            if($request->hasFile('logo') && is_array($request->file('logo'))){
+                if (isset($request->hasFile('logo')[0])){
+                    $validationResultFile = $this->fileService->uploadFiles($request->file('logo')[0], 'image/logos','extensionImage');
 
-            if ($validationResultFile['fails']) {
-                return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+                    if ($validationResultFile['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+                    }
+
+                    $settings->logo = $validationResultFile['result'];
+                }else{
+                    return (new ServiceController())->apiResponse(404, [], 'Aucune image trouvé dans les données.');
+                }
             }
 
-            $settings->logo = $validationResultFile['result'];
+           
         }
 
         $settings->save();
@@ -187,6 +203,10 @@ class SettingController extends Controller
             'montant_maximum_retrait' => 'nullable|numeric',
             'montant_minimum_solde_retrait' => 'nullable|numeric',
             'logo' =>'nullable|max:2048',
+            'commission_partenaire' => 'nullable|numeric',
+            'reduction_partenaire_defaut' => 'nullable|numeric',
+            'number_of_reservation_partenaire_defaut' => 'nullable|integer',
+            'commission_hote_defaut' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {

@@ -485,7 +485,8 @@
                                     "is_camera",
                                     "is_accept_arm",
                                     "is_accepted_animal",
-                                    "is_animal_exist"
+                                    "is_animal_exist",
+                                    "is_accepted"
                                 ],
                                 "properties": {
                                     "is_accept_chill": {
@@ -514,6 +515,10 @@
                                     },
                                     "is_accepted_animal": {
                                         "description": "Acceptation des animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_accepted_photo": {
+                                        "description": "Acceptation des photos",
                                         "type": "boolean"
                                     },
                                     "is_animal_exist": {
@@ -13076,7 +13081,7 @@
                 "operationId": "7e9df8c2ff7e0186de81a2e0568a73ce",
                 "responses": {
                     "200": {
-                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "description": "Liste des demandes de sponsoring non validée",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13462,6 +13467,10 @@
                                     "montant": {
                                         "type": "string",
                                         "example": 4
+                                    },
+                                    "pourcentage": {
+                                        "type": "string",
+                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -13650,21 +13659,6 @@
                     },
                     "400": {
                         "description": "Erreur dans la récupération des logements sponsorisés."
-                    }
-                }
-            }
-        },
-        "/api/housingsponsoring/disableExpiredHousings": {
-            "post": {
-                "tags": [
-                    "Home Housing Sponsoring"
-                ],
-                "summary": "Désactiver les logements dont la date_fin est dépassée",
-                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
-                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
-                "responses": {
-                    "200": {
-                        "description": "Les logements expirés ont été désactivés avec succès."
                     }
                 }
             }
@@ -19888,7 +19882,6 @@
                                     "number_of_adult",
                                     "code_pays",
                                     "telephone_traveler",
-                                    "photo",
                                     "heure_arrivee_max",
                                     "heure_arrivee_min",
                                     "is_tranche_paiement",
@@ -20412,6 +20405,32 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/reservation/getDateOfReservationsByHousingId/{housingId}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des dates de réservations par logement",
+                "description": "Liste des dates de réservations par logement",
+                "operationId": "48f94eef8eb465f71f6114f6180c6020",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "Get housing ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "date of reservation"
+                    }
+                }
             }
         },
         "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
@@ -22328,41 +22347,6 @@
                     },
                     "404": {
                         "description": "Tarif de sponsoring non trouvé."
-                    },
-                    "500": {
-                        "description": "Erreur interne du serveur."
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/sponsoring/destroy/{id}": {
-            "post": {
-                "tags": [
-                    "Tarif Sponsoring"
-                ],
-                "summary": "Supprimer un tarif de sponsoring",
-                "operationId": "96c0f56b294ef62995ba346924673389",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Tarif de sponsoring supprimé avec succès."
-                    },
-                    "404": {
-                        "description": "Tarif de sponsoring non trouvé ou déjà supprimé."
                     },
                     "500": {
                         "description": "Erreur interne du serveur."

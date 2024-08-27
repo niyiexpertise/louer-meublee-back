@@ -39,16 +39,17 @@ class Reservation extends Model implements Auditable
         'is_deleted',
         'is_blocked',
         'photo',
-          'valeur_reduction_hote',
-    'valeur_promotion_hote',
-    'valeur_reduction_code_promo',
-    'valeur_reduction_staturp',
-    'montant_charge',
-    'montant_housing',
-    'montant_a_paye',
-    'statut'
+        'valeur_reduction_hote',
+        'valeur_promotion_hote',
+        'valeur_reduction_code_promo',
+        'valeur_reduction_staturp',
+        'montant_charge',
+        'montant_housing',
+        'montant_a_paye',
+        'statut',
+        'is_accepted'
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);

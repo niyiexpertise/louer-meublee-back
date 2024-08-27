@@ -1100,6 +1100,7 @@ public function getUserDetails($userId) {
         'total_reservations' => $total_reservations,
         'solde' => $solde,
         'total_transactions' => $total_transactions,
+        'has_partenaire' => is_null($user->partenaire_id)?false:true
     ];
 
     return response()->json([
@@ -1138,7 +1139,7 @@ public function getUserDetails($userId) {
             $user = auth()->user();
             $userId = $user->id;
 
-            $reservationCount = Reservation::where('user_id', $userId)->where('valeur_reduction_code_promo', 0)->count();
+            $reservationCount = Reservation::where('user_id', $userId)->where('valeur_reduction_code_promo','!=', 0)->count();
 
             $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
             $codePromoDetails = $userPartenaire ? [
@@ -1148,8 +1149,14 @@ public function getUserDetails($userId) {
                 'number_of_reservation' => $userPartenaire->number_of_reservation,
             ] : null;
 
+            if($userPartenaire){
+                $nombre_reservation_restante = intval($userPartenaire->number_of_reservation - $reservationCount);
+            }
+
+            $nombre_reservation_restante = $nombre_reservation_restante ??null;
+
             return response()->json([
-                'count_reservation_with_promo_inscription' => $reservationCount,
+                'count_reservation_with_promo_inscription' => ($nombre_reservation_restante>0)?$nombre_reservation_restante:0,
                 'code_promo' => $codePromoDetails
             ], 200);
         } catch (\Exception $e) {

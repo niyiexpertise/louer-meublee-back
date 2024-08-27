@@ -8,16 +8,19 @@ use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
 class Document extends Model implements Auditable
-{protected $fillable = [
+{
+    use HasFactory;
+    use AuditableTrait;
+
+    protected $fillable = [
     'name',
     'is_actif',
     'icone',
     'is_deleted',
     'is_blocked'
     ];
-    use HasFactory;
-    use AuditableTrait;
     
+
     public function verificationDocuments()
     {
         return $this->hasMany(verification_document::class);

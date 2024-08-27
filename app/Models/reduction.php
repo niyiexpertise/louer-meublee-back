@@ -12,11 +12,12 @@ class reduction extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'housing_id', 
+        'housing_id',
         'night_number',
         'value',
         'is_encours',
         'is_deleted',
+        'is_actif',
         'is_blocked',
         'date_debut',
         'date_fin'
@@ -27,9 +28,9 @@ class reduction extends Model implements Auditable
         'date_fin',
     ];
 
-    
+
     public function housing()
     {
-        return $this->belongsTo(Housing::class, 'housing_id'); 
+        return $this->belongsTo(Housing::class, 'housing_id');
     }
 }

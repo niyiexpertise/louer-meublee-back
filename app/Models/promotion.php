@@ -12,19 +12,20 @@ class promotion extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'housing_id', 
+        'housing_id',
         'number_of_reservation',
         'value',
-        'is_encours', 
+        'is_encours',
         'is_blocked',
+        'is_actif',
         'is_deleted',
         'date_debut',
         'date_fin',
     ];
 
-    
+
     public function housing()
     {
-        return $this->belongsTo(Housing::class, 'housing_id'); 
+        return $this->belongsTo(Housing::class, 'housing_id');
     }
 }

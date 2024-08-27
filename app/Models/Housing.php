@@ -41,6 +41,7 @@ class Housing extends Model implements Auditable
         'cancelation_condition',
         'departure_instruction',
         'is_accept_arm',
+        'is_accept_smoking',
         'is_accept_chill',
         'is_accept_noise',
         'is_updated',
@@ -60,12 +61,12 @@ class Housing extends Model implements Auditable
         'step',
         'interior_regulation_pdf'
     ];
-    
+
 
     public function housing_equipment()
     {
         return $this->hasMany(housing_equipment::class);
-                
+
     }
     public function user()
     {
@@ -135,7 +136,7 @@ class Housing extends Model implements Auditable
     {
         return $this->hasMany(UserVisiteHousing::class);
     }
-    
+
 
 }
 

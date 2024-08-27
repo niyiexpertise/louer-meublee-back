@@ -114,6 +114,84 @@ class ReservationController extends Controller
 
         return ['is_allowed' => true, 'message' => 'Réservation autorisée'];
     }
+   public function calculateTotalPrice($housingId, $startDate, $duration)
+{
+    // Étape 1: Récupérer le logement
+    $housing = Housing::find($housingId);
+
+    if (!$housing) {
+        return [
+            'error' => true,
+            'message' => 'Logement non trouvé'
+        ];
+    }
+
+    // Étape 2: Calculer le montant du logement (prix par nuit * durée)
+    $montantHousing = $housing->price * $duration;
+
+    // Étape 3: Calculer les charges à ajouter
+    $montantCharge = Housing_charge::where('housing_id', $housingId)
+        ->where('is_mycharge', false) // Seuls les frais à la charge du voyageur
+        ->sum('valeur');
+
+    // Calculer le montant total (montant_housing + montant_charge)
+    $montantTotal = $montantHousing + $montantCharge;
+
+    // Étape 4: Appliquer les réductions en fonction du nombre de nuits
+    $reductionValue = 0;
+    $reduction = Reduction::where('housing_id', $housingId)
+        ->where('night_number', '<=', $duration)
+        ->orderBy('night_number', 'desc')
+        ->first();
+
+    if ($reduction) {
+        $reductionValue = $montantTotal * ($reduction->value / 100);
+    }
+
+    // Étape 5: Appliquer la promotion si elle est active durant la période de réservation
+    $promotionValue = 0;
+    $promotion = Promotion::where('housing_id', $housingId)
+        ->where('is_deleted', false)
+        ->where('is_blocked', false)
+        ->where('is_encours', true)
+        ->first();
+
+    if ($promotion) {
+        $promotionValue = $montantTotal * ($promotion->value / 100);
+    }
+
+    // Étape 6: Appliquer la réduction promo partenaire si applicable
+    $promotionPartenaireValue = 0;
+    $user = auth()->user();
+    $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
+
+    if ($userPartenaire) {
+        $countReservationWithPromoInscription = Reservation::where('user_id', $user->id)
+            ->where('valeur_reduction_code_promo', '>', 0)
+            ->count();
+
+        if ($countReservationWithPromoInscription < $userPartenaire->number_of_reservation) {
+            $promotionPartenaireValue = $montantTotal * ($userPartenaire->reduction_traveler / 100);
+        }
+    }
+
+    // Calculer le montant à payer après réduction, promotion et promotion partenaire
+    $montantAPaye = $montantTotal - $reductionValue - $promotionValue - $promotionPartenaireValue;
+
+    // Retourner les détails
+    return [
+        'error' => false,
+        'montant_housing' => $montantHousing,
+        'montant_charge' => $montantCharge,
+        'montant_total' => $montantTotal,
+        'reduction_value' => $reductionValue,
+        'promotion_value' => $promotionValue,
+        'promotion_partenaire_value' => $countReservationWithPromoInscription,
+        'montant_a_paye' => $montantAPaye
+    ];
+}
+
+
 
 /**
  * @OA\Post(
@@ -128,7 +206,7 @@ class ReservationController extends Controller
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 type="object",
- *                 required={"housing_id", "date_of_starting", "date_of_end", "number_of_adult", "code_pays", "telephone_traveler", "photo", "heure_arrivee_max", "heure_arrivee_min", "is_tranche_paiement", "montant_total"},
+ *                 required={"housing_id", "date_of_starting", "date_of_end", "number_of_adult", "code_pays", "telephone_traveler", "heure_arrivee_max", "heure_arrivee_min", "is_tranche_paiement", "montant_total"},
  *                 @OA\Property(
  *                     property="housing_id",
  *                     type="integer",
@@ -309,7 +387,7 @@ public function storeReservationWithPayment(Request $request)
         'message_to_hote' => 'nullable|string',
         'code_pays' => 'required|string',
         'telephone_traveler' => 'required|integer',
-        'photo' => 'required|file|mimes:jpg,jpeg,png|max:2048',
+        'photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         'heure_arrivee_max' => 'required|date_format:H:i',
         'heure_arrivee_min' => 'required|date_format:H:i',
         'is_tranche_paiement' => 'required',
@@ -346,11 +424,49 @@ public function storeReservationWithPayment(Request $request)
 
     }
 
-    // if($request->is_tranche_paiement == 1){
-    //     if($request->valeur_payee != ($request->montant_a_paye/2)){
-    //         return (new ServiceController())->apiResponse(404,[], "Lorsqu'il s'agit d'un paiement par tranche vous êtes prié de payer la moitié du montant à payer");
-    //     }
-    // }
+    if(Housing::whereId($request->housing_id)->first()->is_accepted_photo == true){
+        if(!$request->photo){
+            return (new ServiceController())->apiResponse(404, [], 'La photo est obligatoire');
+
+        }
+    }
+
+    $calculatedPriceDetails = $this->calculateTotalPrice(
+        $validatedData['housing_id'],
+        $validatedData['date_of_starting'],
+        Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end'])
+    );
+   return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails);
+
+
+    if ($calculatedPriceDetails['error']) {
+        return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails['message']);
+    }
+
+    // Validation des montants calculés
+    if ($validatedData['montant_total'] != $calculatedPriceDetails['montant_total']) {
+        return (new ServiceController())->apiResponse(404, [], "Le montant total envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_total']);
+    }
+
+    if ($validatedData['montant_housing'] != $calculatedPriceDetails['montant_housing']) {
+        return (new ServiceController())->apiResponse(404, [], "Le montant du logement envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_housing']);
+    }
+
+    if ($validatedData['montant_charge'] != $calculatedPriceDetails['montant_charge']) {
+        return (new ServiceController())->apiResponse(404, [], "Les charges envoyées sont incorrectes. Calculées: " . $calculatedPriceDetails['montant_charge']);
+    }
+
+    if ($validatedData['valeur_reduction_hote'] != $calculatedPriceDetails['reduction_value']) {
+        return (new ServiceController())->apiResponse(404, [], "La réduction hôte envoyée est incorrecte. Calculée: " . $calculatedPriceDetails['reduction_value']);
+    }
+
+    if ($validatedData['valeur_promotion_hote'] != $calculatedPriceDetails['promotion_value']) {
+        return (new ServiceController())->apiResponse(404, [], "La promotion envoyée est incorrecte. Calculée: " . $calculatedPriceDetails['promotion_value']);
+    }
+
+    if ($validatedData['montant_a_paye'] != $calculatedPriceDetails['montant_a_paye']) {
+        return (new ServiceController())->apiResponse(404, [], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
+    }
 
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
 
@@ -388,7 +504,8 @@ public function storeReservationWithPayment(Request $request)
             'montant_a_paye' => $validatedData['montant_a_paye'] ?? 0,
         ]);
         $identity_profil_url = '';
-        if ($request->hasFile('photo')) {
+
+         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $identity_profil_url = $this->fileService->uploadFiles($request->file('photo'), 'image/photo_reservation', 'extensionImage');;
             if ($identity_profil_url['fails']) {
@@ -397,7 +514,8 @@ public function storeReservationWithPayment(Request $request)
 
             $reservation->photo = $identity_profil_url['result'];
             $reservation->save();
-        }
+            }
+
 
 
         if ($request->has('country')) {
@@ -1273,9 +1391,49 @@ public function findSimilarPaymentMethod($inputMethod)
         return (new ServiceController())->apiResponse(200,$data, 'Liste des reservations recupérées avec succès');
        }
 
+/**
+     * @OA\Get(
+     *     path="/api/reservation/getDateOfReservationsByHousingId/{housingId}",
+     *     summary="Liste des dates de réservations par logement",
+     * description="Liste des dates de réservations par logement",
+     *     tags={"Reservation"},
+     *   @OA\Parameter(
+     *         name="housingId",
+     *         in="path",
+     *         required=true,
+     *         description="Get housing ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="date of reservation"
+     *
+     *     )
+     * )
+     */
+    public function getDateOfReservationsByHousingId($housingId)
+    {
+        $housing = Housing::find($housingId);
+        if (!$housing) {
+            return (new ServiceController())->apiResponse(404, [], "Logement non trouvé.");
+        }
+
+        $reservations = Reservation::where('housing_id', $housingId)->get();
+
+        $data = [
+            'reservations' => $reservations->map(function($reservation) {
+                return [
+                    'date_of_starting' => $reservation->date_of_starting,
+                    'date_of_end' => $reservation->date_of_end,
+                ];
+            })
+        ];
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des dates de reservations récupérées avec succès');
+    }
 
 
-           /**
+        /**
           * @OA\Get(
           *     path="/api/reservation/showDetailOfReservationForHote/{idReservation}",
           *     summary="Détail d'une réservation côté hote",

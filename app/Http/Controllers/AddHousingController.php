@@ -20,7 +20,7 @@ class AddHousingController extends Controller
 
     protected $fileService;
 
-    public function __construct(FileService $fileService)
+    public function __construct(FileService $fileService = null)
     {
         $this->fileService = $fileService;
     }
@@ -623,7 +623,8 @@ class AddHousingController extends Controller
  *                      "is_camera",
  *                      "is_accept_arm",
  *                      "is_accepted_animal",
- *                      "is_animal_exist"
+ *                      "is_animal_exist",
+ *                      "is_accepted"
  *                  },
  *                  @OA\Property(
  *                      property="is_accept_chill",
@@ -658,6 +659,11 @@ class AddHousingController extends Controller
  *                  @OA\Property(
  *                      property="is_accepted_animal",
  *                      description="Acceptation des animaux",
+ *                      type="boolean"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="is_accepted_photo",
+ *                      description="Acceptation des photos",
  *                      type="boolean"
  *                  ),
  *                  @OA\Property(
@@ -764,6 +770,7 @@ class AddHousingController extends Controller
                 'is_accept_alccol' => 'required|boolean',
                 'is_accept_arm' => 'required|boolean',
                 'is_animal_exist' => 'required|boolean',
+                'is_accepted_photo' => 'required|boolean'
             ]);
 
             $message = [];
@@ -783,6 +790,7 @@ class AddHousingController extends Controller
             $housing->is_accept_arm = $request->is_accept_arm;
             $housing->is_accepted_animal = $request->is_accepted_animal;
             $housing->is_animal_exist = $request->is_animal_exist;
+            $housing->is_accepted_photo = $request->is_accepted_photo;
             $housing->step = 6;
             $housing->save();
 

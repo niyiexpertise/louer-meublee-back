@@ -24,7 +24,8 @@ class HousingSponsoring extends Model implements Auditable
         'nombre',
         'duree',
         'prix',
-        'description'
+        'description',
+        'statut'
     ];
 
     public function sponsoring()

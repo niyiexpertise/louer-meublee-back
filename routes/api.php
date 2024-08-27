@@ -1661,5 +1661,8 @@ Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringControlle
 
 Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
             ->name('housingsponsoring.disableExpiredHousings');
+            
+Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
+            ->name('reservation.getDateOfReservationsByHousingId');
 
 /** end Route ne nécéssitant pas l'authentification */

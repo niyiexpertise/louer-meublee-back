@@ -341,53 +341,53 @@ class SponsoringController extends Controller
     }
 
 
-     /**
-     * @OA\Post(
-     *     path="/api/sponsoring/destroy/{id}",
-     *     summary="Supprimer un tarif de sponsoring",
-     *     tags={"Tarif Sponsoring"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Tarif de sponsoring supprimé avec succès."
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Tarif de sponsoring non trouvé ou déjà supprimé."
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur."
-     *     )
-     * )
-     */
-    public function destroy($id)
-    {
-        try {
-            $sponsoring = Sponsoring::find($id);
+    //  /**
+    //  * @OA\Post(
+    //  *     path="/api/sponsoring/destroy/{id}",
+    //  *     summary="Supprimer un tarif de sponsoring",
+    //  *     tags={"Tarif Sponsoring"},
+    //  * security={{"bearerAuth": {}}},
+    //  *     @OA\Parameter(
+    //  *         name="id",
+    //  *         in="path",
+    //  *         required=true,
+    //  *         @OA\Schema(type="integer")
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=200,
+    //  *         description="Tarif de sponsoring supprimé avec succès."
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=404,
+    //  *         description="Tarif de sponsoring non trouvé ou déjà supprimé."
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=500,
+    //  *         description="Erreur interne du serveur."
+    //  *     )
+    //  * )
+    //  */
+    // public function destroy($id)
+    // {
+    //     try {
+    //         $sponsoring = Sponsoring::find($id);
 
-            if(!$sponsoring){
-                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
-            }
+    //         if(!$sponsoring){
+    //             return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+    //         }
 
-            if($sponsoring->is_deleted == true){
-                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring déjà supprimé');
-            }
+    //         if($sponsoring->is_deleted == true){
+    //             return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring déjà supprimé');
+    //         }
 
-            $sponsoring->is_deleted = true;
-            $sponsoring->save();
+    //         $sponsoring->is_deleted = true;
+    //         $sponsoring->save();
 
-            return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring supprimé avec succès.");
-        }catch(Exception $e) {
-            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-        }
-    }
+    //         return (new ServiceController())->apiResponse(200, [], "Tarif de sponsoring supprimé avec succès.");
+    //     }catch(Exception $e) {
+    //         return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+    //     }
+    // }
 
 
    /**

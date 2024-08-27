@@ -2595,6 +2595,282 @@
                 ]
             }
         },
+        "/api/promotion/active/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Activer une promotion",
+                "description": "Cette fonction active une promotion spécifiée par son ID.",
+                "operationId": "90d7e935e8b2b5b784949cecd7b0aa0d",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion activée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas ou déjà active"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/desactive/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Désactiver une promotion",
+                "description": "Cette fonction désactive une promotion spécifiée par son ID.",
+                "operationId": "7a809e4823aebf2a810d1eafecf75054",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion désactivée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listActivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions actives",
+                "description": "Cette fonction retourne la liste des promotions actives.",
+                "operationId": "dca0bd467bb47b2a3964ee268ad8fe57",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listInactivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions inactives",
+                "description": "Cette fonction retourne la liste des promotions inactives.",
+                "operationId": "8c6fca97074c07eec573ee9957aad1ef",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/activeReductionAdmin/{id}": {
+            "put": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Activer une réduction côté admin",
+                "operationId": "c076190cac5fa83becf126803f985b09",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to active",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully active"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/inactive/{id}": {
+            "put": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Désactiver une réduction côté admin",
+                "operationId": "e3c08bc5386611e9573bcc49ed7e5cbc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to inactive",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully inactive",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Document successfully inactive"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Document not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "api/reduction/listeActiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions actives",
+                "description": "Cette fonction retourne la liste des réductions actives.",
+                "operationId": "b63ec31d5ebde869040a87f914541dcf",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                }
+            }
+        },
+        "api/reduction/listeDesactiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions inactives",
+                "description": "Cette fonction retourne la liste des réductions inactives.",
+                "operationId": "017f5a2f331a1d53e89f0eb2efecb823",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                }
+            }
+        },
         "/api/reservation/housing_with_many_reservation": {
             "get": {
                 "tags": [

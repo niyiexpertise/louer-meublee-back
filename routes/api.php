@@ -54,6 +54,7 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\AdminPromotionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
@@ -1497,12 +1498,24 @@ Route::prefix('portefeuille')->group(function () {
 
       });
 
+      //Admin promotion
+      Route::prefix('promotion')->group(function () {
+        Route::post('active/{promotionId}', [AdminPromotionController::class, 'active'])
+            ->name('partenaire.active')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.active');
 
+        Route::post('desactive/{promotionId}', [AdminPromotionController::class, 'desactive'])
+            ->name('partenaire.desactive')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.desactive');
 
+        Route::get('listActivePromotions', [AdminPromotionController::class, 'listActivePromotions'])
+            ->name('partenaire.listActivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listActivePromotions');
 
-
-
-
+        Route::get('listInactivePromotions', [AdminPromotionController::class, 'listInactivePromotions'])
+            ->name('partenaire.listInactivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listInactivePromotions');
+    });
 });
 
 /*end Route nécéssitant l'authentification/

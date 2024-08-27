@@ -3023,7 +3023,7 @@ public function HousingHoteInProgress(){
         try {
             $housing = Housing::find($housinId);
             if (!$housing) {
-                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+                return (new ServiceController())->apiResponse(404,[],'Le logement spécifié n\'existe pas');
             }
             if($housing->is_blocked == true){
                 return (new ServiceController())->apiResponse(200,[],'Logement déjà bloqué');

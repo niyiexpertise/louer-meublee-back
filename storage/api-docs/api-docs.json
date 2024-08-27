@@ -12665,26 +12665,6 @@
                                         "description": "nombre de fois que vous voulez bénéficier du tarif.",
                                         "type": "integer",
                                         "example": 1
-                                    },
-                                    "payment_method": {
-                                        "description": "nombre de fois que vous voulez bénéficier du tarif.",
-                                        "type": "string",
-                                        "example": "portfeuille"
-                                    },
-                                    "id_transaction": {
-                                        "description": "id de la transaction.",
-                                        "type": "string",
-                                        "example": "txjshg4sp"
-                                    },
-                                    "statut_paiement": {
-                                        "description": "Statut du paiement.",
-                                        "type": "string",
-                                        "example": 1
-                                    },
-                                    "montant": {
-                                        "description": "montant.",
-                                        "type": "integer",
-                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -12782,6 +12762,115 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Erreur serveur interne."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/payHousingSponsoringRequest/{housingSponsoringId}": {
+            "post": {
+                "tags": [
+                    "Hote Housing Sponsoring"
+                ],
+                "summary": "Effectuer un paiement pour une demande de sponsoring",
+                "description": "Effectuer un paiement pour une demande de sponsoring",
+                "operationId": "a65fbb3a4b167bfb658d85ce9c6b6ab3",
+                "parameters": [
+                    {
+                        "name": "housingSponsoringId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement",
+                                    "montant"
+                                ],
+                                "properties": {
+                                    "payment_method": {
+                                        "description": "Méthode de paiement",
+                                        "type": "string"
+                                    },
+                                    "id_transaction": {
+                                        "description": "ID de la transaction",
+                                        "type": "string"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement",
+                                        "type": "integer"
+                                    },
+                                    "montant": {
+                                        "description": "Montant du paiement",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Erreur de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de paiement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
                                         }
                                     },
                                     "type": "object"

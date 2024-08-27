@@ -11,6 +11,9 @@ class type_demande extends Model implements Auditable
 {
     protected $fillable = [
         'name',
+        'icone',
+        'is_deleted',
+        'is_blocked'
     ];
     use HasFactory;
     use AuditableTrait;

@@ -11,6 +11,7 @@ class document_type_demande extends Model  implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    
     public function document()
     {
         return $this->belongsTo(Document::class);

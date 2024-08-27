@@ -11,7 +11,14 @@ class user_partenaire extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
-    protected $fillable = ['code_promo','commission','number_of_reservation','reduction_traveler'];
+    protected $fillable = [
+        'user_id',
+        'code_promo',
+        'commission',
+        'number_of_reservation',
+        'reduction_traveler'
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

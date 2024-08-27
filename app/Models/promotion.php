@@ -16,6 +16,7 @@ class promotion extends Model implements Auditable
         'number_of_reservation',
         'value',
         'is_encours', 
+        'is_blocked',
         'is_deleted',
         'date_debut',
         'date_fin',

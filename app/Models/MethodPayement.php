@@ -12,7 +12,8 @@ class MethodPayement extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'name','icone'
+        'name',
+        'icone'
     ];
     
 }

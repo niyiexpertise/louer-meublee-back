@@ -11,4 +11,11 @@ class promotion_entreprise extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'user_id',
+        'valeur',
+        'is_encours',
+        'date_debut',
+        'date_fin'
+    ];
 }

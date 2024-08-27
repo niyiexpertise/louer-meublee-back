@@ -8,7 +8,13 @@ use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
 class Preference extends Model implements Auditable
-{   protected $fillable = ['name','icone','is_verified','is_deleted'];
+{   protected $fillable = [
+    'name',
+    'icone',
+    'is_verified',
+    'is_deleted',
+    'is_blocked' 
+];
 
   protected $auditEvents = [
     'updated',

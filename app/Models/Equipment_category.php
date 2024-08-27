@@ -11,7 +11,10 @@ class Equipment_category extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
-
+    protected $fillable = [
+        'category_id',
+        'equipement_id'
+    ];
 
     public function category()
     {

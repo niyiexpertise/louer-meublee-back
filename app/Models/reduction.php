@@ -16,7 +16,10 @@ class reduction extends Model implements Auditable
         'night_number',
         'value',
         'is_encours',
-        'is_deleted'
+        'is_deleted',
+        'is_blocked',
+        'date_debut',
+        'date_fin'
     ];
 
     protected $hidden = [

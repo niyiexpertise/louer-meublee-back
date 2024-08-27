@@ -643,7 +643,7 @@ public function getUsersGroupedByCountry()
                 ];
             });
 
-            return (new ServiceController())->apiResponse(200, [$housingsGroupedByCountry], 'Groupe les logements par pays');
+            return (new ServiceController())->apiResponse(200, $housingsGroupedByCountry, 'Groupe les logements par pays');
 
     }
 

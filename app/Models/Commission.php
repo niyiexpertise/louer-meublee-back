@@ -9,7 +9,10 @@ use OwenIt\Auditing\Auditable as AuditableTrait;
 
 class Commission extends Model implements Auditable
 {
-    protected $fillable = ['valeur'];
+    protected $fillable = [
+        'user_id',
+        'valeur'
+    ];
     use HasFactory;
     use AuditableTrait;
 }

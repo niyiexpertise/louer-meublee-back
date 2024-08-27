@@ -12,7 +12,11 @@ class MoyenPayement extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'user_id','method_payement_id','valeur_method_payement'
+        'user_id',
+        'method_payement_id',
+        'valeur_method_payement',
+        'is_deleted',
+        'is_blocked'
     ];
 
     public function user()

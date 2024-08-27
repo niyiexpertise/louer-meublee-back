@@ -8,7 +8,13 @@ use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
 class Document extends Model implements Auditable
-{protected $fillable = ['name','is_actif'];
+{protected $fillable = [
+    'name',
+    'is_actif',
+    'icone',
+    'is_deleted',
+    'is_blocked'
+    ];
     use HasFactory;
     use AuditableTrait;
     

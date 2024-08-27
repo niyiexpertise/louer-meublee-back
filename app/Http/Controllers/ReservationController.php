@@ -86,41 +86,6 @@ class ReservationController extends Controller
             return ['is_allowed' => false, 'message' => "La durée minimale de séjour est de {$housing->minimum_duration} jours"];
         }
 
-        // if ($valeur_paye > $montant_total) {
-
-        //     return ['is_allowed' => false, 'message' => 'La valeur payee doit pas etre superieur au montant total'];
-        // }
-        // if (Payement::where('id_transaction', $id_transaction)->exists()) {
-        //     return ['is_allowed' => false, 'message' => 'L\'ID de transaction doit être unique. Cette transaction existe déjà.'];
-
-        // }
-        // if ($payementmethode == "portfeuille") {
-
-
-
-        //     $user_id = Auth::id();
-        //     $portefeuille = Portfeuille::where('user_id', $user_id)->first();
-
-        //     if (!$portefeuille) {
-        //         return ['is_allowed' => false, 'message' => 'Portefeuille introuvable'];
-        //     }
-
-        //     if ($portefeuille->solde < $valeur_paye) {
-        //         return ['is_allowed' => false, 'message' => 'Solde insuffisant dans le portefeuille pour pouvoir réserver'];
-        //     }
-        // }
-
-        // if ($is_tranche_paiement == 1) {
-        //     $required_paid_value = $montant_total / 2;
-
-        //     if ($valeur_paye < $required_paid_value) {
-        //         return ['is_allowed' => false, 'message' => "Pour le paiement par tranche, la valeur payée doit être au moins la moitié du montant à payé"];
-        //     }
-        // } else {
-        //     if ($valeur_paye < $montant_total) {
-        //         return ['is_allowed' => false, 'message' => "Pour le paiement complet, la valeur payée doit être égale au montant à payé"];
-        //     }
-        // }
 
         $existing_traveler_reservation = Reservation::where('housing_id', $housing_id)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('date_of_starting',$new_start_date)->where('date_of_end',$new_end_date)->where('statut','payee')->exists();
 
@@ -155,7 +120,7 @@ class ReservationController extends Controller
  *     path="/api/reservation/store",
  *     summary="Créer une réservation avec paiement",
  *     description="Crée une réservation pour un logement avec un paiement associé. Accepte un fichier image pour la photo des voyageurs voulant réserver la réservation.",
- *     tags={"Dashboard traveler"},
+ *     tags={"Reservation"},
  *     security={{"bearerAuth": {}}},
  *     @OA\RequestBody(
  *         required=true,
@@ -860,6 +825,7 @@ public function findSimilarPaymentMethod($inputMethod)
             return (new ServiceController())->apiResponse(404,[], "Cette reservation avait déjà été rejetée . ");
 
           }
+          $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
           if(Reservation::whereId($idReservation)->update([
             'is_rejected_hote'=>1,
             'motif_rejet_hote'=>$request->motif_rejet_hote
@@ -876,11 +842,10 @@ public function findSimilarPaymentMethod($inputMethod)
             $transaction->debit = false;
             $transaction->credit =false;
             $transaction->reservation_id = $reservation->id;
-            $transaction->payment_method = "portfeuille";
+            $transaction->payment_method = $portfeuille;
             $transaction->motif = "Remboursement suite à un rejet de la réservation par l'hôte";
             $transaction->save();
              $this->initialisePortefeuilleTransaction($transaction->id);
-
              DB::commit();
 
           }
@@ -1161,16 +1126,16 @@ public function findSimilarPaymentMethod($inputMethod)
            $transaction->portfeuille_id = $portefeuilleHote->id;
            $transaction->amount = $montantWithoutClient;
            $transaction->debit = 0;
-           $transaction->credit =1;
+           $transaction->credit =0;
            $transaction->reservation_id = $reservation->id;
            $transaction->payment_method = "portfeuille";
            $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client";
            $transaction->valeur_commission = $reservation->housing->user->commission->valeur;
            $transaction->montant_commission = $montant_commission;
            $transaction->montant_restant = $montantHote;
-           $transaction->solde_total = $soldeTotal +  $montantWithoutClient ;
            $transaction->solde_commission = $soldeCommission + $montant_commission;
-           $transaction->solde_restant = $soldeRestant + $montantHote;
+           $$transaction->operation_type = 'credit';
+
            $transaction->save();
            $titre_partenaire="Message de Confirmation d'annulation d'une reservation au partenaire";
 
@@ -1215,16 +1180,16 @@ public function findSimilarPaymentMethod($inputMethod)
             $transaction->portfeuille_id = $portefeuilleHote->id;
             $transaction->amount = $montantWithoutClient;
             $transaction->debit = 0;
-            $transaction->credit =1;
+            $transaction->credit =0;
             $transaction->reservation_id = $reservation->id;
             $transaction->payment_method = "portfeuille";
             $transaction->motif = "Remboursement suite à l\' annulation de la réservation par le client(Le client ne reçoit rien)";
             $transaction->valeur_commission = $reservation->housing->user->commission->valeur;
             $transaction->montant_commission = $montant_commission;
             $transaction->montant_restant = $montantHote;
-            $transaction->solde_total = $soldeTotal  + $montantWithoutClient;
             $transaction->solde_commission = $soldeCommission  + $montant_commission;
-            $transaction->solde_restant = $soldeRestant + $montantHote;
+            $$transaction->operation_type = 'credit';
+
             $transaction->save();
             $titre_partenaire="Message de Confirmation d'annulation d'une reservation au partenaire";
 

@@ -11,6 +11,12 @@ class User_right extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'user_id',
+        'right_id',
+        
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

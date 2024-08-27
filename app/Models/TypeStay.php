@@ -11,7 +11,13 @@ class TypeStay extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'is_deleted',
+        'is_blocked',
+        'icone'
+    ];
+
     public function housing_price()
     {
         return $this->hasMany(housing_price::class);

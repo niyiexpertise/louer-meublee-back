@@ -1364,6 +1364,9 @@ Route::prefix('portefeuille')->group(function () {
                 Route::post('store', [HousingSponsoringController::class, 'store'])
                 ->name('housingsponsoring.store')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
+                Route::post('payHousingSponsoringRequest/{housingSponsoringId}', [HousingSponsoringController::class, 'payHousingSponsoringRequest'])
+                ->name('housingsponsoring.payHousingSponsoringRequest')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.payHousingSponsoringRequest');
                 Route::post('hoteSupprimeDemande/{housingSponsoringId}', [HousingSponsoringController::class, 'hoteSupprimeDemande'])
                 ->name('housingsponsoring.hoteSupprimeDemande')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSupprimeDemande');

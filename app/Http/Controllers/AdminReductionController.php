@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class AdminReductionController extends Controller
 {
       /**
-* @OA\Put(
+* @OA\Post(
 *     path="/api/reduction/activeReductionAdmin/{id}",
 *     summary="Activer une réduction côté admin",
 *     tags={"Reduction Admin"},
@@ -40,7 +40,7 @@ class AdminReductionController extends Controller
 *     )
 * )
 */
-    public function activeReductionAdmin($id) 
+    public function activeReductionAdmin($id)
     {
         try {
             $reduction = reduction::find($id);
@@ -55,7 +55,7 @@ class AdminReductionController extends Controller
 
 
         return (new ServiceController())->apiResponse(200,[], 'Réduction activée avec succès');
-    
+
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -63,8 +63,8 @@ class AdminReductionController extends Controller
     }
 
     /**
-* @OA\Put(
-*     path="/api/reduction/inactive/{id}",
+* @OA\Post(
+*     path="/api/reduction/desactiveReductionAdmin/{id}",
 *     summary="Désactiver une réduction côté admin",
 *     tags={"Reduction Admin"},
 *security={{"bearerAuth": {}}},
@@ -95,7 +95,7 @@ class AdminReductionController extends Controller
 * )
 */
 
-    public function desactiveReductionAdmin($id) 
+    public function desactiveReductionAdmin($id)
     {
         try {
             $reduction = reduction::find($id);
@@ -110,7 +110,7 @@ class AdminReductionController extends Controller
 
 
         return (new ServiceController())->apiResponse(200,[], 'Réduction désactivée avec succès');
-    
+
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -119,10 +119,12 @@ class AdminReductionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="api/reduction/listeActiveReductionAdmin",
+     *     path="/api/reduction/listeActiveReductionAdmin",
      *     summary="Liste des réductions actives",
      *     description="Cette fonction retourne la liste des réductions actives.",
      *     tags={"Reduction Admin"},
+     * security={{"bearerAuth": {}}},
+
      *     @OA\Response(
      *         response=200,
      *         description="Liste des réductions actives"
@@ -133,13 +135,13 @@ class AdminReductionController extends Controller
      *     )
      * )
      */
-    public function listeActiveReductionAdmin($id) 
+    public function listeActiveReductionAdmin($id)
     {
         try {
             $reduction = reduction::where('is_actif', true)->get();
-            
+
         return (new ServiceController())->apiResponse(200,$reduction, 'Liste des réductions activées');
-    
+
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -148,10 +150,11 @@ class AdminReductionController extends Controller
 
 /**
      * @OA\Get(
-     *     path="api/reduction/listeDesactiveReductionAdmin",
+     *     path="/api/reduction/listeDesactiveReductionAdmin",
      *     summary="Liste des réductions inactives",
      *     description="Cette fonction retourne la liste des réductions inactives.",
      *     tags={"Reduction Admin"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Liste des réductions inactives"
@@ -162,13 +165,13 @@ class AdminReductionController extends Controller
      *     )
      * )
      */
-    public function listeDesactiveReductionAdmin($id) 
+    public function listeDesactiveReductionAdmin($id)
     {
         try {
             $reduction = reduction::where('is_actif', false)->get();
-            
+
         return (new ServiceController())->apiResponse(200,$reduction, 'Liste des réductions désactivées');
-    
+
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

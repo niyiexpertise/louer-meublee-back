@@ -2716,12 +2716,12 @@
             }
         },
         "/api/reduction/activeReductionAdmin/{id}": {
-            "put": {
+            "post": {
                 "tags": [
                     "Reduction Admin"
                 ],
                 "summary": "Activer une réduction côté admin",
-                "operationId": "c076190cac5fa83becf126803f985b09",
+                "operationId": "67ed71e946d845bff6a2c1d1bd09d771",
                 "parameters": [
                     {
                         "name": "id",
@@ -2775,13 +2775,13 @@
                 ]
             }
         },
-        "/api/reduction/inactive/{id}": {
-            "put": {
+        "/api/reduction/desactiveReductionAdmin/{id}": {
+            "post": {
                 "tags": [
                     "Reduction Admin"
                 ],
                 "summary": "Désactiver une réduction côté admin",
-                "operationId": "e3c08bc5386611e9573bcc49ed7e5cbc",
+                "operationId": "97387224128a134bd0c73b273df97e1e",
                 "parameters": [
                     {
                         "name": "id",
@@ -2835,14 +2835,14 @@
                 ]
             }
         },
-        "api/reduction/listeActiveReductionAdmin": {
+        "/api/reduction/listeActiveReductionAdmin": {
             "get": {
                 "tags": [
                     "Reduction Admin"
                 ],
                 "summary": "Liste des réductions actives",
                 "description": "Cette fonction retourne la liste des réductions actives.",
-                "operationId": "b63ec31d5ebde869040a87f914541dcf",
+                "operationId": "28be68042acfaf92240d443f0a795b1a",
                 "responses": {
                     "200": {
                         "description": "Liste des réductions actives"
@@ -2850,17 +2850,22 @@
                     "500": {
                         "description": "Erreur serveur"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "api/reduction/listeDesactiveReductionAdmin": {
+        "/api/reduction/listeDesactiveReductionAdmin": {
             "get": {
                 "tags": [
                     "Reduction Admin"
                 ],
                 "summary": "Liste des réductions inactives",
                 "description": "Cette fonction retourne la liste des réductions inactives.",
-                "operationId": "017f5a2f331a1d53e89f0eb2efecb823",
+                "operationId": "6bd479b04a19ac33be193ac5dd2fde78",
                 "responses": {
                     "200": {
                         "description": "Liste des réductions inactives"
@@ -2868,7 +2873,12 @@
                     "500": {
                         "description": "Erreur serveur"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/reservation/housing_with_many_reservation": {

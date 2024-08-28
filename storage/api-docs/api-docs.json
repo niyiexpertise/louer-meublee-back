@@ -2743,7 +2743,7 @@
                                     "properties": {
                                         "data": {
                                             "type": "string",
-                                            "example": "Document successfully active"
+                                            "example": "Reduction successfully active"
                                         }
                                     },
                                     "type": "object"
@@ -2759,7 +2759,7 @@
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Document not found"
+                                            "example": "Reduction not found"
                                         }
                                     },
                                     "type": "object"
@@ -2803,7 +2803,7 @@
                                     "properties": {
                                         "data": {
                                             "type": "string",
-                                            "example": "Document successfully inactive"
+                                            "example": "Reduction successfully inactive"
                                         }
                                     },
                                     "type": "object"
@@ -2819,7 +2819,7 @@
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Document not found"
+                                            "example": "Reduction not found"
                                         }
                                     },
                                     "type": "object"
@@ -6560,11 +6560,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations rejetées par le voyageur",
+                "summary": "Liste des réservations annulées par le voyageur",
                 "operationId": "87fb9903d722a6047f97c0e9c5178b17",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations rejetées par le voyageur.",
+                        "description": "Liste des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6577,7 +6577,7 @@
                         }
                     },
                     "500": {
-                        "description": "Erreur lors de la récupération des réservations rejetées par le voyageur.",
+                        "description": "Erreur lors de la récupération des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6650,11 +6650,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations annulées par l'hôte",
+                "summary": "Liste des réservations rejetées par l'hôte",
                 "operationId": "43cadf527db032dbc6f8ad840d2ac81b",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations annulées par l'hôte.",
+                        "description": "Liste des réservations rejetées par l'hôte.",
                         "content": {
                             "application/json": {
                                 "schema": {

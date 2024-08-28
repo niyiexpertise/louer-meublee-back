@@ -28,14 +28,14 @@ class AdminReductionController extends Controller
 *         response=200,
 *         description="Reduction successfully active",
 *         @OA\JsonContent(
-*             @OA\Property(property="data", type="string", example="Document successfully active")
+*             @OA\Property(property="data", type="string", example="Reduction successfully active")
 *         )
 *     ),
 *     @OA\Response(
 *         response=404,
 *         description="Reduction not found",
 *         @OA\JsonContent(
-*             @OA\Property(property="error", type="string", example="Document not found")
+*             @OA\Property(property="error", type="string", example="Reduction not found")
 *         )
 *     )
 * )
@@ -82,14 +82,14 @@ class AdminReductionController extends Controller
 *         response=200,
 *         description="Reduction successfully inactive",
 *         @OA\JsonContent(
-*             @OA\Property(property="data", type="string", example="Document successfully inactive")
+*             @OA\Property(property="data", type="string", example="Reduction successfully inactive")
 *         )
 *     ),
 *     @OA\Response(
 *         response=404,
 *         description="Reduction not found",
 *         @OA\JsonContent(
-*             @OA\Property(property="error", type="string", example="Document not found")
+*             @OA\Property(property="error", type="string", example="Reduction not found")
 *         )
 *     )
 * )
@@ -135,7 +135,7 @@ class AdminReductionController extends Controller
      *     )
      * )
      */
-    public function listeActiveReductionAdmin($id)
+    public function listeActiveReductionAdmin()
     {
         try {
             $reduction = reduction::where('is_actif', true)->get();
@@ -165,7 +165,7 @@ class AdminReductionController extends Controller
      *     )
      * )
      */
-    public function listeDesactiveReductionAdmin($id)
+    public function listeDesactiveReductionAdmin()
     {
         try {
             $reduction = reduction::where('is_actif', false)->get();

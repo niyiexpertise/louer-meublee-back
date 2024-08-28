@@ -114,7 +114,7 @@ class ReservationController extends Controller
 
         return ['is_allowed' => true, 'message' => 'Réservation autorisée'];
     }
-   public function calculateTotalPrice($housingId, $startDate, $duration)
+   public function calculateTotalPrice($housingId, $startDate, $duration,$is_tranch)
 {
     // Étape 1: Récupérer le logement
     $housing = Housing::find($housingId);
@@ -146,7 +146,7 @@ class ReservationController extends Controller
         ->first();
 
     if ($reduction) {
-        $reductionValue = $montantTotal * ($reduction->value / 100);
+        $reductionValue =$montantHousing * ($reduction->value / 100);
     }
 
     // Étape 5: Appliquer la promotion si elle est active durant la période de réservation
@@ -159,7 +159,7 @@ class ReservationController extends Controller
         ->first();
 
     if ($promotion) {
-        $promotionValue = $montantTotal * ($promotion->value / 100);
+        $promotionValue = $montantHousing* ($promotion->value / 100);
     }
 
     // Étape 6: Appliquer la réduction promo partenaire si applicable
@@ -173,12 +173,17 @@ class ReservationController extends Controller
             ->count();
 
         if ($countReservationWithPromoInscription < $userPartenaire->number_of_reservation) {
-            $promotionPartenaireValue = $montantTotal * ($userPartenaire->reduction_traveler / 100);
+            $promotionPartenaireValue = $montantHousing* ($userPartenaire->reduction_traveler / 100);
         }
     }
 
     // Calculer le montant à payer après réduction, promotion et promotion partenaire
     $montantAPaye = $montantTotal - $reductionValue - $promotionValue - $promotionPartenaireValue;
+    $required_paid_value =  $montantAPaye ;
+    if ($is_tranch== 1) {
+        $required_paid_value =  $montantAPaye / 2;
+     
+    } 
 
     // Retourner les détails
     return [
@@ -189,7 +194,9 @@ class ReservationController extends Controller
         'reduction_value' => $reductionValue,
         'promotion_value' => $promotionValue,
         'promotion_partenaire_value' => $countReservationWithPromoInscription,
-        'montant_a_paye' => $montantAPaye
+        'montant_a_paye' => $montantAPaye,
+        'valeur_paye' =>   $required_paid_value 
+
     ];
 }
 
@@ -212,45 +219,38 @@ class ReservationController extends Controller
  *                 @OA\Property(
  *                     property="housing_id",
  *                     type="integer",
- *                     example=1,
  *                     description="ID du logement"
  *                 ),
  *                 @OA\Property(
  *                     property="date_of_starting",
  *                     type="string",
  *                     format="date",
- *                     example="2024-05-01",
  *                     description="Date de début de la réservation"
  *                 ),
  *                 @OA\Property(
  *                     property="date_of_end",
  *                     type="string",
  *                     format="date",
- *                     example="2024-05-07",
  *                     description="Date de fin de la réservation"
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_adult",
  *                     type="integer",
- *                     example=2,
  *                     description="Nombre d'adultes"
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_child",
  *                     type="integer",
- *                     example=1,
  *                     description="Nombre d'enfants"
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_domestical_animal",
  *                     type="integer",
- *                     example=0,
  *                     description="Nombre d'animaux domestiques"
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_baby",
  *                     type="integer",
- *                     example=2,
  *                     description="Nombre de bébés"
  *                 ),
  *                 @OA\Property(
@@ -262,13 +262,11 @@ class ReservationController extends Controller
  *                 @OA\Property(
  *                     property="code_pays",
  *                     type="string",
- *                     example="FRA",
  *                     description="Code du pays"
  *                 ),
  *                 @OA\Property(
  *                     property="telephone_traveler",
  *                     type="integer",
- *                     example=123456789,
  *                     description="Numéro de téléphone du voyageur"
  *                 ),
  *                 @OA\Property(
@@ -281,71 +279,65 @@ class ReservationController extends Controller
  *                     property="heure_arrivee_max",
  *                     type="string",
  *                     format="date-time",
- *                     example="18:00",
  *                     description="Heure d'arrivée maximale"
  *                 ),
  *                 @OA\Property(
  *                     property="heure_arrivee_min",
  *                     type="string",
  *                     format="date-time",
- *                     example="14:00",
  *                     description="Heure d'arrivée minimale"
  *                 ),
  *                 @OA\Property(
  *                     property="is_tranche_paiement",
  *                      type="integer",
- *                     example=1,
  *                     description="Paiement en plusieurs tranches"
  *                 ),
  *                 @OA\Property(
  *                     property="montant_total",
  *                     type="number",
  *                     format="float",
- *                     example=500,
  *                     description="Montant total"
  *                 ),
  *
  *                 @OA\Property(
  *                     property="valeur_reduction_hote",
  *                      type="integer",
- *                     example=1,
  *                     description="valeur_reduction_hote"
  *                 ),
  *                 @OA\Property(
  *                     property="valeur_promotion_hote",
  *                      type="integer",
- *                     example=1,
  *                     description="valeur_promotion_hote"
  *                 ),
  *                @OA\Property(
  *                     property="valeur_reduction_code_promo",
  *                      type="integer",
- *                     example=1,
  *                     description="valeur_reduction_code_promo"
  *                 ),
  *               @OA\Property(
  *                     property="valeur_reduction_staturp",
  *                      type="integer",
- *                     example=1,
  *                     description="valeur_reduction_staturp"
  *                 ),
  *               @OA\Property(
  *                     property="montant_charge",
  *                      type="integer",
- *                     example=1,
  *                     description="montant_charge"
  *                 ),
  *               @OA\Property(
  *                     property="montant_housing",
  *                      type="integer",
- *                     example=1,
  *                     description="montant_housing"
  *                 ),
  *              @OA\Property(
  *                     property="montant_a_paye",
  *                      type="integer",
- *                     example=1,
  *                     description="montant_a_paye"
+ *                 ),
+  *              @OA\Property(
+ *                     property="valeur_payee",
+ *                      type="integer",
+ *                     description="'valeur_payee'"
  *                 ),
  *
  *             )
@@ -378,6 +370,8 @@ class ReservationController extends Controller
 public function storeReservationWithPayment(Request $request)
 {
 
+//return $request;
+
     $validatedData = Validator::make($request->all(), [
         'housing_id' => 'required',
         'date_of_starting' => 'required|date',
@@ -389,12 +383,12 @@ public function storeReservationWithPayment(Request $request)
         'message_to_hote' => 'nullable|string',
         'code_pays' => 'required|string',
         'telephone_traveler' => 'required|integer',
-        'photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-        'heure_arrivee_max' => 'required|date_format:H:i',
-        'heure_arrivee_min' => 'required|date_format:H:i',
+        'photo' => 'nullable|file|mimes:jpg,jpeg,png',
+        'heure_arrivee_max' => 'required',
+        'heure_arrivee_min' => 'required',
         'is_tranche_paiement' => 'required',
         'montant_total' => 'required|numeric',
-        'valeur_payee' => 'nullable|numeric',
+        'valeur_payee' => 'required|numeric',
         // 'payment_method' => 'required|string',
         // 'id_transaction' => 'required|string',
         // 'statut_paiement' => 'required',
@@ -402,12 +396,12 @@ public function storeReservationWithPayment(Request $request)
         'valeur_promotion_hote' => 'nullable|numeric',
         'valeur_reduction_code_promo' => 'nullable|numeric',
         'valeur_reduction_staturp' => 'nullable|numeric',
-        'montant_charge' => 'nullable|numeric',
-        'montant_housing' => 'nullable|numeric',
-        'montant_a_paye' => 'nullable|numeric',
+        'montant_charge' => 'required|numeric',
+        'montant_housing' => 'required|numeric',
+        'montant_a_paye' => 'required|numeric',
     ]);
 
-    $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+       // $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
 
     $message = [];
 
@@ -436,7 +430,7 @@ public function storeReservationWithPayment(Request $request)
     $calculatedPriceDetails = $this->calculateTotalPrice(
         $validatedData['housing_id'],
         $validatedData['date_of_starting'],
-        Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end'])
+        Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end']),$validatedData['is_tranche_paiement']
     );
    return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails);
 
@@ -469,6 +463,11 @@ public function storeReservationWithPayment(Request $request)
     if ($validatedData['montant_a_paye'] != $calculatedPriceDetails['montant_a_paye']) {
         return (new ServiceController())->apiResponse(404, [], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
     }
+
+    if ($validatedData['valeur_payee'] != $calculatedPriceDetails['valeur_paye']) {
+        return (new ServiceController())->apiResponse(404, [], "Lea valeur  à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['valeur_paye']);
+    }
+
 
     (new PromotionController())->actionRepetitif($validatedData['housing_id']);
 
@@ -533,7 +532,7 @@ public function storeReservationWithPayment(Request $request)
 
 
         $data = ["reservation" => $reservation,
-            // "payment" =>$payment
+             "valeur_payee" =>$montant
              ];
 
             return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
@@ -1415,7 +1414,8 @@ public function findSimilarPaymentMethod($inputMethod)
      */
     public function getDateOfReservationsByHousingId($housingId)
     {
-        $housing = Housing::find($housingId);
+        $housing = Housing::where('id', $housingId)->first();
+
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], "Logement non trouvé.");
         }
@@ -1423,15 +1423,19 @@ public function findSimilarPaymentMethod($inputMethod)
         $reservations = Reservation::where('housing_id', $housingId)->get();
 
         $data = [
-            'reservations' => $reservations->map(function($reservation) {
+            'reservations' => $reservations->map(function($reservation) use ($housing) {
+                $existing_end = Carbon::parse($reservation->date_of_end);
+
+                $minimum_start_date = $existing_end->copy()->addDays($housing->time_before_reservation);
+
                 return [
                     'date_of_starting' => $reservation->date_of_starting,
-                    'date_of_end' => $reservation->date_of_end,
+                   'date_of_end' => $minimum_start_date->toDateString(),
                 ];
             })
         ];
 
-        return (new ServiceController())->apiResponse(200, $data, 'Liste des dates de reservations récupérées avec succès');
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des dates de réservations récupérées avec succès.');
     }
 
 

@@ -142,7 +142,7 @@ class ReservationController extends Controller
     $reduction = Reduction::where('housing_id', $housingId)
         ->where('night_number', '<=', $duration)
         ->orderBy('night_number', 'desc')
-        ->where('is_actif',true)
+        ->where('is_encours',true)
         ->first();
 
     if ($reduction) {

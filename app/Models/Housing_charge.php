@@ -11,6 +11,12 @@ class Housing_charge extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'housing_id',
+        'charge_id',
+        'is_mycharge',
+        'valeur'
+    ];
     public function housing()
     {
         return $this->belongsTo(Housing::class);

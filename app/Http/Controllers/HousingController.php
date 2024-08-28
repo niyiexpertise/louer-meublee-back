@@ -1103,8 +1103,8 @@ public function ListeDesLogementsAcceuil(Request $request)
      }
 
      $userStatistique=$this->getHousingStatisticAcceuil($id);
-     $promotion=$this->getCurrentPromotion($id);
-     $reduction=$this->getCurrentReductions($id);
+     $promotion=$this->getCurrentPromotion($id)??[];
+     $reduction=$this->getCurrentReductions($id)??[];
      $controllerreviewreservation = App::make('App\Http\Controllers\ReviewReservationController');
      $controllervitehousing = App::make('App\Http\Controllers\UserVisiteHousingController');
      $checkAuth=App::make('App\Http\Controllers\LoginController');
@@ -1138,6 +1138,7 @@ public function ListeDesLogementsAcceuil(Request $request)
          'is_animal_exist' => $listing->is_animal_exist,
          'is_disponible' => $listing->is_disponible,
          'interior_regulation' => $listing->interior_regulation,
+         'interior_regulation_pdf' => $listing->interior_regulation_pdf,
         //  'telephone' => $listing->telephone,
          'code_pays' => $listing->code_pays,
          'surface' => $listing->surface,
@@ -1203,9 +1204,9 @@ public function ListeDesLogementsAcceuil(Request $request)
             ];
           }),
 
-         'reductions' =>$reduction->original['data'],
+         'reductions' =>$reduction->original['data']??[],
 
-         'promotions' => $promotion->original['data'],
+         'promotions' => [$promotion->original['data']]??[],
 
          'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
             return [
@@ -3022,7 +3023,7 @@ public function HousingHoteInProgress(){
         try {
             $housing = Housing::find($housinId);
             if (!$housing) {
-                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+                return (new ServiceController())->apiResponse(404,[],'Le logement spécifié n\'existe pas');
             }
             if($housing->is_blocked == true){
                 return (new ServiceController())->apiResponse(200,[],'Logement déjà bloqué');

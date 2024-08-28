@@ -13,6 +13,9 @@ class Language extends Model implements Auditable
     use AuditableTrait;
     protected $fillable = [
         'name',
+        'icone',
+        'is_deleted',
+        'is_blocked'
     ];
 
     public function user_language()

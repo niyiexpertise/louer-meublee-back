@@ -11,7 +11,12 @@ class Notification extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
-    protected $fillable = ['name','user_id','object'];
+    protected $fillable = [
+        'name',
+        'user_id',
+        'object',
+        'is_read'
+    ];
 
     public function user()
     {

@@ -11,4 +11,9 @@ class ValeurRemboursement extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'valeur_integral_remboursement',
+        'valeur_partiel_remboursement',
+        'valeur_partiel_remboursement_hote'
+    ];
 }

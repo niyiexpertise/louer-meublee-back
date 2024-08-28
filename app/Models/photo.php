@@ -10,7 +10,14 @@ use OwenIt\Auditing\Auditable as AuditableTrait;
 class photo extends Model implements Auditable
 {
     protected $fillable = [
-        'is_couverture'
+        'housing_id',
+        'path',
+        'extension',
+        'is_couverture',
+        'is_deleted',
+        'is_blocked',
+        'is_verified'
+
     ];
     use HasFactory;
     use AuditableTrait;

@@ -12,7 +12,11 @@ class Category extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'is_verified','name'
+        'is_verified',
+        'name',
+        'icone',
+        'is_deleted',
+        'is_blocked'
     ];
 
     public function equipment_category()

@@ -13,6 +13,10 @@ class Housing_category_file extends Model implements Auditable
     use AuditableTrait;
 
    protected $fillable = [
+        'housing_id',
+        'category_id',
+        'file_id',
+        'number',
         'is_verified',
     ];
     public function housing()

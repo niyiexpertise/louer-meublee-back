@@ -54,6 +54,8 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\AdminPromotionController;
+use App\Http\Controllers\AdminReductionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
@@ -1364,6 +1366,9 @@ Route::prefix('portefeuille')->group(function () {
                 Route::post('store', [HousingSponsoringController::class, 'store'])
                 ->name('housingsponsoring.store')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
+                Route::post('payHousingSponsoringRequest/{housingSponsoringId}', [HousingSponsoringController::class, 'payHousingSponsoringRequest'])
+                ->name('housingsponsoring.payHousingSponsoringRequest')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.payHousingSponsoringRequest');
                 Route::post('hoteSupprimeDemande/{housingSponsoringId}', [HousingSponsoringController::class, 'hoteSupprimeDemande'])
                 ->name('housingsponsoring.hoteSupprimeDemande')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSupprimeDemande');
@@ -1494,12 +1499,43 @@ Route::prefix('portefeuille')->group(function () {
 
       });
 
+      //Admin promotion
+      Route::prefix('promotion')->group(function () {
+        Route::post('active/{promotionId}', [AdminPromotionController::class, 'active'])
+            ->name('promotion.active')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.active');
 
+        Route::post('desactive/{promotionId}', [AdminPromotionController::class, 'desactive'])
+            ->name('promotion.desactive')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.desactive');
 
+        Route::get('listActivePromotions', [AdminPromotionController::class, 'listActivePromotions'])
+            ->name('promotion.listActivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listActivePromotions');
 
+        Route::get('listInactivePromotions', [AdminPromotionController::class, 'listInactivePromotions'])
+            ->name('promotion.listInactivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listInactivePromotions');
+    });
 
+    //Reduction Admin
+    Route::prefix('reduction')->group(function () {
+        Route::post('activeReductionAdmin/{id}', [AdminReductionController::class, 'activeReductionAdmin'])
+            ->name('reduction.active')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.activeReductionAdmin');
 
+        Route::post('desactiveReductionAdmin/{id}', [AdminReductionController::class, 'desactiveReductionAdmin'])
+            ->name('reduction.desactive')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.desactiveReductionAdmin');
 
+        Route::get('listeActiveReductionAdmin', [AdminReductionController::class, 'listeActiveReductionAdmin'])
+            ->name('reduction.listeActiveReductionAdmin')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.listeActiveReductionAdmin');
+
+        Route::get('listeDesactiveReductionAdmin', [AdminReductionController::class, 'listeDesactiveReductionAdmin'])
+            ->name('reduction.listeDesactiveReductionAdmin')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.listeDesactiveReductionAdmin');
+    });
 });
 
 /*end Route nécéssitant l'authentification/
@@ -1658,5 +1694,8 @@ Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringControlle
 
 Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
             ->name('housingsponsoring.disableExpiredHousings');
+
+Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
+            ->name('reservation.getDateOfReservationsByHousingId');
 
 /** end Route ne nécéssitant pas l'authentification */

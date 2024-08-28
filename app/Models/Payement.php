@@ -22,6 +22,7 @@ class Payement extends Model implements Auditable
         'is_confirmed',
         'is_canceled',
         'user_id',
-        'motif'
+        'motif',
+        'housing_sponsoring_id'
     ];
 }

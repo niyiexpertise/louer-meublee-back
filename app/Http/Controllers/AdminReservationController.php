@@ -793,7 +793,7 @@ public function getUsersGroupedByCountry()
         ->get()
         ->map(function ($userGroup) {
                 return [
-                    'user' => Housing::find($userGroup->housing_id),
+                    'housing' => Housing::find($userGroup->housing_id),
                     'number_of_reservation' => $userGroup->number_of_housings,
                 ];
             });

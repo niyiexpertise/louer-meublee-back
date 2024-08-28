@@ -34,6 +34,12 @@ class User extends Authenticatable implements Auditable
         'sexe',
         'postal_code',
         'file_profil',
+        'piece_of_identity',
+        'icone',
+        'is_deleted',
+        'is_blocked',
+        'code',
+        'is_double_authentification',
         'partenaire_id'
     ];
 
@@ -59,12 +65,12 @@ class User extends Authenticatable implements Auditable
     ];
 
 
-    
+
 
     public function user_language()
     {
         return $this->hasMany(User_language::class);
-                   
+
     }
     public function reservation()
     {
@@ -77,7 +83,7 @@ class User extends Authenticatable implements Auditable
     public function user_preference()
     {
         return $this->hasMany(User_preference::class);
-                   
+
     }
     public function housing()
     {

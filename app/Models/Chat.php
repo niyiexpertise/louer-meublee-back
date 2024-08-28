@@ -13,7 +13,13 @@ class Chat extends Model implements Auditable
     use AuditableTrait;
 
     protected $fillable = [
-        'is_read'
+        'sent_to',
+        'is_read',
+        'sent_by',
+        'last_message',
+        'model_type_concerned',
+        'model_id',
+        'is_deleted'
     ];
 
     public function chat_message(){

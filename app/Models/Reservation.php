@@ -22,6 +22,9 @@ class Reservation extends Model implements Auditable
         'number_of_domestical_animal',
         'number_of_baby',
         'message_to_hote',
+        'icone',
+        'motif_rejet_hote',
+        'motif_rejet_traveler',
         'code_pays',
         'telephone_traveler',
         'heure_arrivee_max',
@@ -33,17 +36,20 @@ class Reservation extends Model implements Auditable
         'is_integration',
         'is_rejected_traveler',
         'is_rejected_hote',
+        'is_deleted',
+        'is_blocked',
         'photo',
-          'valeur_reduction_hote',
-    'valeur_promotion_hote',
-    'valeur_reduction_code_promo',
-    'valeur_reduction_staturp',
-    'montant_charge',
-    'montant_housing',
-    'montant_a_paye',
-    'statut'
+        'valeur_reduction_hote',
+        'valeur_promotion_hote',
+        'valeur_reduction_code_promo',
+        'valeur_reduction_staturp',
+        'montant_charge',
+        'montant_housing',
+        'montant_a_paye',
+        'statut',
+        'is_accepted'
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);

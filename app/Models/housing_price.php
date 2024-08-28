@@ -11,6 +11,14 @@ class housing_price extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'price_with_cleaning_fees',
+        'price_without_cleaning_fees',
+        'housing_id',
+        'type_stay_id',
+        'is_deleted',
+        'is_blocked'
+    ];
     public function typeStay()
     {
         return $this->belongsTo(TypeStay::class);

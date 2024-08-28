@@ -66,12 +66,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getRejectedReservationsByTraveler",
-         *     summary="Liste des réservations rejetées par le voyageur",
+         *     summary="Liste des réservations annulées par le voyageur",
          *     tags={"Dashboard traveler"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations rejetées par le voyageur.",
+         *         description="Liste des réservations annulées par le voyageur.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -79,7 +79,7 @@ class DashBoardTravelerController extends Controller
          *     ),
          *     @OA\Response(
          *         response=500,
-         *         description="Erreur lors de la récupération des réservations rejetées par le voyageur.",
+         *         description="Erreur lors de la récupération des réservations annulées par le voyageur.",
          *         @OA\JsonContent(
          *             @OA\Property(property="message", type="string", example="Erreur de serveur.")
          *         )
@@ -149,12 +149,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getRejectedReservationsByHost",
-         *     summary="Liste des réservations annulées par l'hôte",
+         *     summary="Liste des réservations rejetées par l'hôte",
          *     tags={"Dashboard traveler"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations annulées par l'hôte.",
+         *         description="Liste des réservations rejetées par l'hôte.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -573,7 +573,7 @@ class DashBoardTravelerController extends Controller
                     return (new ServiceController())->apiResponse(200, $data, "Echec de paiement");
                 }
 
-                
+
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['error' => 'Une erreur s\'est produite : ' . $e->getMessage()], 500);

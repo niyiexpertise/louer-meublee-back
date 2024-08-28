@@ -12,6 +12,9 @@ class Housing_equipment extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
+        'equipment_id',
+        'category_id',
+        'housing_id',
         'is_verified',
     ];
 

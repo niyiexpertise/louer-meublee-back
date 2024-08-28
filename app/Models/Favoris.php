@@ -11,6 +11,10 @@ class Favoris extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'housing_id',
+        'user_id'
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);

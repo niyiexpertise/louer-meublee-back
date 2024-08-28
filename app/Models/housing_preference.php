@@ -12,6 +12,10 @@ class housing_preference extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
+        'housing_id',
+        'preference_id',
+        'is_deleted',
+        'is_blocked',
         'is_verified',
     ];
     public function preference()

@@ -485,7 +485,8 @@
                                     "is_camera",
                                     "is_accept_arm",
                                     "is_accepted_animal",
-                                    "is_animal_exist"
+                                    "is_animal_exist",
+                                    "is_accepted"
                                 ],
                                 "properties": {
                                     "is_accept_chill": {
@@ -514,6 +515,10 @@
                                     },
                                     "is_accepted_animal": {
                                         "description": "Acceptation des animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_accepted_photo": {
+                                        "description": "Acceptation des photos",
                                         "type": "boolean"
                                     },
                                     "is_animal_exist": {
@@ -2581,6 +2586,292 @@
                     },
                     "404": {
                         "description": "Liste des logements non rempli complètement par les hôtes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/active/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Activer une promotion",
+                "description": "Cette fonction active une promotion spécifiée par son ID.",
+                "operationId": "90d7e935e8b2b5b784949cecd7b0aa0d",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion activée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas ou déjà active"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/desactive/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Désactiver une promotion",
+                "description": "Cette fonction désactive une promotion spécifiée par son ID.",
+                "operationId": "7a809e4823aebf2a810d1eafecf75054",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion désactivée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listActivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions actives",
+                "description": "Cette fonction retourne la liste des promotions actives.",
+                "operationId": "dca0bd467bb47b2a3964ee268ad8fe57",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listInactivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions inactives",
+                "description": "Cette fonction retourne la liste des promotions inactives.",
+                "operationId": "8c6fca97074c07eec573ee9957aad1ef",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/activeReductionAdmin/{id}": {
+            "post": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Activer une réduction côté admin",
+                "operationId": "67ed71e946d845bff6a2c1d1bd09d771",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to active",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Reduction successfully active"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Reduction not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/desactiveReductionAdmin/{id}": {
+            "post": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Désactiver une réduction côté admin",
+                "operationId": "97387224128a134bd0c73b273df97e1e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to inactive",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully inactive",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Reduction successfully inactive"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Reduction not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/listeActiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions actives",
+                "description": "Cette fonction retourne la liste des réductions actives.",
+                "operationId": "28be68042acfaf92240d443f0a795b1a",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/listeDesactiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions inactives",
+                "description": "Cette fonction retourne la liste des réductions inactives.",
+                "operationId": "6bd479b04a19ac33be193ac5dd2fde78",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
                     }
                 },
                 "security": [
@@ -6269,11 +6560,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations rejetées par le voyageur",
+                "summary": "Liste des réservations annulées par le voyageur",
                 "operationId": "87fb9903d722a6047f97c0e9c5178b17",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations rejetées par le voyageur.",
+                        "description": "Liste des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6286,7 +6577,7 @@
                         }
                     },
                     "500": {
-                        "description": "Erreur lors de la récupération des réservations rejetées par le voyageur.",
+                        "description": "Erreur lors de la récupération des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6359,11 +6650,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations annulées par l'hôte",
+                "summary": "Liste des réservations rejetées par l'hôte",
                 "operationId": "43cadf527db032dbc6f8ad840d2ac81b",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations annulées par l'hôte.",
+                        "description": "Liste des réservations rejetées par l'hôte.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -12665,26 +12956,6 @@
                                         "description": "nombre de fois que vous voulez bénéficier du tarif.",
                                         "type": "integer",
                                         "example": 1
-                                    },
-                                    "payment_method": {
-                                        "description": "nombre de fois que vous voulez bénéficier du tarif.",
-                                        "type": "string",
-                                        "example": "portfeuille"
-                                    },
-                                    "id_transaction": {
-                                        "description": "id de la transaction.",
-                                        "type": "string",
-                                        "example": "txjshg4sp"
-                                    },
-                                    "statut_paiement": {
-                                        "description": "Statut du paiement.",
-                                        "type": "string",
-                                        "example": 1
-                                    },
-                                    "montant": {
-                                        "description": "montant.",
-                                        "type": "integer",
-                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -12782,6 +13053,115 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Erreur serveur interne."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/payHousingSponsoringRequest/{housingSponsoringId}": {
+            "post": {
+                "tags": [
+                    "Hote Housing Sponsoring"
+                ],
+                "summary": "Effectuer un paiement pour une demande de sponsoring",
+                "description": "Effectuer un paiement pour une demande de sponsoring",
+                "operationId": "a65fbb3a4b167bfb658d85ce9c6b6ab3",
+                "parameters": [
+                    {
+                        "name": "housingSponsoringId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement",
+                                    "montant"
+                                ],
+                                "properties": {
+                                    "payment_method": {
+                                        "description": "Méthode de paiement",
+                                        "type": "string"
+                                    },
+                                    "id_transaction": {
+                                        "description": "ID de la transaction",
+                                        "type": "string"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement",
+                                        "type": "integer"
+                                    },
+                                    "montant": {
+                                        "description": "Montant du paiement",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Erreur de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de paiement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
                                         }
                                     },
                                     "type": "object"
@@ -12987,7 +13367,7 @@
                 "operationId": "7e9df8c2ff7e0186de81a2e0568a73ce",
                 "responses": {
                     "200": {
-                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "description": "Liste des demandes de sponsoring non validée",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13373,6 +13753,10 @@
                                     "montant": {
                                         "type": "string",
                                         "example": 4
+                                    },
+                                    "pourcentage": {
+                                        "type": "string",
+                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -13561,21 +13945,6 @@
                     },
                     "400": {
                         "description": "Erreur dans la récupération des logements sponsorisés."
-                    }
-                }
-            }
-        },
-        "/api/housingsponsoring/disableExpiredHousings": {
-            "post": {
-                "tags": [
-                    "Home Housing Sponsoring"
-                ],
-                "summary": "Désactiver les logements dont la date_fin est dépassée",
-                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
-                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
-                "responses": {
-                    "200": {
-                        "description": "Les logements expirés ont été désactivés avec succès."
                     }
                 }
             }
@@ -19799,7 +20168,6 @@
                                     "number_of_adult",
                                     "code_pays",
                                     "telephone_traveler",
-                                    "photo",
                                     "heure_arrivee_max",
                                     "heure_arrivee_min",
                                     "is_tranche_paiement",
@@ -20323,6 +20691,32 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/reservation/getDateOfReservationsByHousingId/{housingId}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des dates de réservations par logement",
+                "description": "Liste des dates de réservations par logement",
+                "operationId": "48f94eef8eb465f71f6114f6180c6020",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "Get housing ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "date of reservation"
+                    }
+                }
             }
         },
         "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
@@ -22239,41 +22633,6 @@
                     },
                     "404": {
                         "description": "Tarif de sponsoring non trouvé."
-                    },
-                    "500": {
-                        "description": "Erreur interne du serveur."
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/sponsoring/destroy/{id}": {
-            "post": {
-                "tags": [
-                    "Tarif Sponsoring"
-                ],
-                "summary": "Supprimer un tarif de sponsoring",
-                "operationId": "96c0f56b294ef62995ba346924673389",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Tarif de sponsoring supprimé avec succès."
-                    },
-                    "404": {
-                        "description": "Tarif de sponsoring non trouvé ou déjà supprimé."
                     },
                     "500": {
                         "description": "Erreur interne du serveur."

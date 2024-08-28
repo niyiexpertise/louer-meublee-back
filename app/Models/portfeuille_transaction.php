@@ -12,8 +12,8 @@ class Portfeuille_transaction extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'portfeuille_id', 
-        'amount',    
+        'portfeuille_id',
+        'amount',
         'reservation_id',
         'payment_method',
         'debit',
@@ -25,6 +25,7 @@ class Portfeuille_transaction extends Model implements Auditable
         'montant_restant',
         'solde_commission',
         'solde_restant',
+        'solde_total',
         'valeur_commission_partenaire',
         'montant_commission_partenaire',
         'solde_commission_partenaire',
@@ -32,14 +33,14 @@ class Portfeuille_transaction extends Model implements Auditable
         'valeur_commission_admin',
         'montant_commission_admin',
         'new_solde_admin',
-        'created_at',
-        'updated_at',
+        'sponsoring_id',
+        'retrait_id',
         'solde_credit',
         'solde_debit',
         'housing_sponsoring_id',
         'operation_type',
     ];
-    
+
     protected $hidden = [
         'solde_restant',
         'solde_total',

@@ -186,3 +186,6 @@ return [
 
     'console' => false,
 ];
+
+
+Bonsoir Mr, lors du calcul du montant à payer pour une réservation nous sommes  confronté à un problème. En voulant faire le calcul au niveau d'une personne qui s'est inscrit avec un code promo, il est dit que la personne bénéficiera d'un pourcentage de réduction sur le montant de la réservation s'il n'a pas encore expiré le nombre de réservation que lui offre le code promo avec lequel il s'est inscrit. Normalement lors de l'intégration du voyageur, on devait retourner à l'hôte après qu'on ait enlevé notre commission  le montant de la réservation restante et lui ajouter le montant de la réduction qu'a bénéficier le voyageur car il s'est inscrit avec un code promo. Toujours lors du partage des fonds, le partenaire en question a son argent à récupérer sur notre commission et si on doit retourner à l'hôte ce que le voyageur n'a pas payé car il bénéficait des privilèges d'un code promo nous sommes en perte. 

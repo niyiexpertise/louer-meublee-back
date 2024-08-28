@@ -20176,40 +20176,33 @@
                                 "properties": {
                                     "housing_id": {
                                         "description": "ID du logement",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "date_of_starting": {
                                         "description": "Date de début de la réservation",
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-05-01"
+                                        "format": "date"
                                     },
                                     "date_of_end": {
                                         "description": "Date de fin de la réservation",
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-05-07"
+                                        "format": "date"
                                     },
                                     "number_of_adult": {
                                         "description": "Nombre d'adultes",
-                                        "type": "integer",
-                                        "example": 2
+                                        "type": "integer"
                                     },
                                     "number_of_child": {
                                         "description": "Nombre d'enfants",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "number_of_domestical_animal": {
                                         "description": "Nombre d'animaux domestiques",
-                                        "type": "integer",
-                                        "example": 0
+                                        "type": "integer"
                                     },
                                     "number_of_baby": {
                                         "description": "Nombre de bébés",
-                                        "type": "integer",
-                                        "example": 2
+                                        "type": "integer"
                                     },
                                     "message_to_hote": {
                                         "description": "Message à l'hôte",
@@ -20218,13 +20211,11 @@
                                     },
                                     "code_pays": {
                                         "description": "Code du pays",
-                                        "type": "string",
-                                        "example": "FRA"
+                                        "type": "string"
                                     },
                                     "telephone_traveler": {
                                         "description": "Numéro de téléphone du voyageur",
-                                        "type": "integer",
-                                        "example": 123456789
+                                        "type": "integer"
                                     },
                                     "photo": {
                                         "description": "Photo de la réservation",
@@ -20234,60 +20225,53 @@
                                     "heure_arrivee_max": {
                                         "description": "Heure d'arrivée maximale",
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "18:00"
+                                        "format": "date-time"
                                     },
                                     "heure_arrivee_min": {
                                         "description": "Heure d'arrivée minimale",
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "14:00"
+                                        "format": "date-time"
                                     },
                                     "is_tranche_paiement": {
                                         "description": "Paiement en plusieurs tranches",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_total": {
                                         "description": "Montant total",
                                         "type": "number",
-                                        "format": "float",
-                                        "example": 500
+                                        "format": "float"
                                     },
                                     "valeur_reduction_hote": {
                                         "description": "valeur_reduction_hote",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_promotion_hote": {
                                         "description": "valeur_promotion_hote",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_reduction_code_promo": {
                                         "description": "valeur_reduction_code_promo",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_reduction_staturp": {
                                         "description": "valeur_reduction_staturp",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_charge": {
                                         "description": "montant_charge",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_housing": {
                                         "description": "montant_housing",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_a_paye": {
                                         "description": "montant_a_paye",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
+                                    },
+                                    "valeur_payee": {
+                                        "description": "'valeur_payee'",
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"

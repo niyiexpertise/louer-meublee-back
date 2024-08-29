@@ -54,6 +54,8 @@ use App\Http\Controllers\UserPartenaireController;
 use App\Http\Controllers\DashboardPartenaireController;
 use App\Http\Controllers\AddHousingController;
 use App\Http\Controllers\AddHousingZController;
+use App\Http\Controllers\AdminPromotionController;
+use App\Http\Controllers\AdminReductionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
@@ -1118,9 +1120,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.getReservationsCountByYear')
             ->middleware('role_or_permission:superAdmin|Managereservation.getReservationsCountByYear');
 
-        Route::get('/getAllReservation', [AdminReservationController::class, 'getAllReservation'])
-            ->name('reservation.getAllReservation')
-            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservation');
+        Route::get('/getAllReservationUnpaid', [AdminReservationController::class, 'getAllReservationUnpaid'])
+            ->name('reservation.getAllReservationUnpaid')
+            ->middleware('role_or_permission:superAdmin|Managereservation.getAllReservationUnpaid');
 
         Route::get('/getUserReservations/{user}', [AdminReservationController::class, 'getUserReservationsForAdmin'])
             ->name('reservation.getUserReservations')
@@ -1364,6 +1366,9 @@ Route::prefix('portefeuille')->group(function () {
                 Route::post('store', [HousingSponsoringController::class, 'store'])
                 ->name('housingsponsoring.store')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.store');
+                Route::post('payHousingSponsoringRequest/{housingSponsoringId}', [HousingSponsoringController::class, 'payHousingSponsoringRequest'])
+                ->name('housingsponsoring.payHousingSponsoringRequest')
+                ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.payHousingSponsoringRequest');
                 Route::post('hoteSupprimeDemande/{housingSponsoringId}', [HousingSponsoringController::class, 'hoteSupprimeDemande'])
                 ->name('housingsponsoring.hoteSupprimeDemande')
                 ->middleware('role_or_permission:admin|superAdmin|hote|Managesponsoring.hoteSupprimeDemande');
@@ -1374,12 +1379,6 @@ Route::prefix('portefeuille')->group(function () {
 
         //Gestion des housingsponsoring (demande de sponsoring) côté administrateur
         Route::prefix('housingsponsoring')->group(function() {
-            Route::get('hoteActiveSponsoringRequest', [HousingSponsoringController::class, 'hoteActiveSponsoringRequest'])
-                ->name('sponsoring.hoteActiveSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteActiveSponsoringRequest');
-            Route::get('hoteRejectSponsoringRequest', [HousingSponsoringController::class, 'hoteRejectSponsoringRequest'])
-                ->name('sponsoring.hoteRejectSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hoteRejectSponsoringRequest');
-            Route::get('hotePendingSponsoringRequest', [HousingSponsoringController::class, 'hotePendingSponsoringRequest'])
-                ->name('sponsoring.hotePendingSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.hotePendingSponsoringRequest');
             Route::get('demandeSponsoringNonvalidee', [HousingSponsoringController::class, 'demandeSponsoringNonvalidee'])
                 ->name('sponsoring.demandeSponsoringNonvalidee') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.demandeSponsoringNonvalidee');
             Route::get('demandeSponsoringvalidee', [HousingSponsoringController::class, 'demandeSponsoringvalidee'])
@@ -1500,12 +1499,43 @@ Route::prefix('portefeuille')->group(function () {
 
       });
 
+      //Admin promotion
+      Route::prefix('promotion')->group(function () {
+        Route::post('active/{promotionId}', [AdminPromotionController::class, 'active'])
+            ->name('promotion.active')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.active');
 
+        Route::post('desactive/{promotionId}', [AdminPromotionController::class, 'desactive'])
+            ->name('promotion.desactive')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.desactive');
 
+        Route::get('listActivePromotions', [AdminPromotionController::class, 'listActivePromotions'])
+            ->name('promotion.listActivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listActivePromotions');
 
+        Route::get('listInactivePromotions', [AdminPromotionController::class, 'listInactivePromotions'])
+            ->name('promotion.listInactivePromotions')
+            ->middleware('role_or_permission:superAdmin|Managespromotion.listInactivePromotions');
+    });
 
+    //Reduction Admin
+    Route::prefix('reduction')->group(function () {
+        Route::post('activeReductionAdmin/{id}', [AdminReductionController::class, 'activeReductionAdmin'])
+            ->name('reduction.active')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.activeReductionAdmin');
 
+        Route::post('desactiveReductionAdmin/{id}', [AdminReductionController::class, 'desactiveReductionAdmin'])
+            ->name('reduction.desactive')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.desactiveReductionAdmin');
 
+        Route::get('listeActiveReductionAdmin', [AdminReductionController::class, 'listeActiveReductionAdmin'])
+            ->name('reduction.listeActiveReductionAdmin')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.listeActiveReductionAdmin');
+
+        Route::get('listeDesactiveReductionAdmin', [AdminReductionController::class, 'listeDesactiveReductionAdmin'])
+            ->name('reduction.listeDesactiveReductionAdmin')
+            ->middleware('role_or_permission:superAdmin|Managesreduction.listeDesactiveReductionAdmin');
+    });
 });
 
 /*end Route nécéssitant l'authentification/
@@ -1578,9 +1608,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->name('reservation.showDetailReservation')
             ->middleware('role_or_permission:superAdmin|traveler|Managereservation.showDetailReservation');
 
-            Route::get('getReservationsForTraveler', [DashBoardTravelerController::class, 'getReservationsForTraveler'])
-            ->name('reservation.getReservationsForTraveler')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getReservationsForTraveler');
+            Route::get('getUnpaidReservationsForTraveler', [DashBoardTravelerController::class, 'getUnpaidReservationsForTraveler'])
+            ->name('reservation.getUnpaidReservationsForTraveler')
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.getUnpaidReservationsForTraveler');
 
             Route::get('getRejectedReservationsByTraveler', [DashBoardTravelerController::class, 'getRejectedReservationsByTraveler'])
             ->name('reservation.getRejectedReservationsByTraveler')
@@ -1604,7 +1634,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             Route::post('soldeReservation', [DashBoardTravelerController::class, 'soldeReservation'])
             ->name('reservation.soldeReservation')
-            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.soldeReservation');
+            ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.soldeReservation');
+            Route::get('getReservationWIthoutaction', [DashBoardTravelerController::class, 'getReservationWIthoutaction'])
+            ->name('reservation.getReservationWIthoutaction')
+            ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.getReservationWIthoutaction');
+
 
 
         });
@@ -1644,7 +1678,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('settings')->group(function () {
 
-        
+
 
         Route::post('/update', [SettingController::class, 'update'])
             ->name('settings.update')
@@ -1656,7 +1690,7 @@ Route::get('settings/index', [SettingController::class, 'show'])
             ->name('settings.index');
 Route::get('equipment/all', [EquipementController::class, 'allEquipments'])->name('allEquipments');
 
-          
+
 
 Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringController::class, 'getSponsoredHousings'])
             ->name('housingsponsoring.getSponsoredHousings');
@@ -1664,5 +1698,8 @@ Route::get('housingsponsoring/getSponsoredHousings', [HousingSponsoringControlle
 
 Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringController::class, 'disableExpiredHousings'])
             ->name('housingsponsoring.disableExpiredHousings');
+
+Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
+            ->name('reservation.getDateOfReservationsByHousingId');
 
 /** end Route ne nécéssitant pas l'authentification */

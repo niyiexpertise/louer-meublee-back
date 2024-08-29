@@ -11,6 +11,18 @@ class ChatMessage extends Model implements Auditable
 {
     use HasFactory;
     use AuditableTrait;
+    protected $fillable = [
+        'content',
+        'receiver_id',
+        'sender_id',
+        'done_by_id',
+        'chat_id',
+        'is_read',
+        'filecode',
+        'is_valid',
+        'is_deleted_by_receiver',
+        'is_deleted_by_sender'
+    ];
     public function file()
     {
         return $this->hasMany(ChatFile::class,'referencecode','filecode');

@@ -20,6 +20,8 @@ class Retrait extends Model implements Auditable
         'montant_valid',
         'statut',
         'identifiant_payement_method',
+        'is_reject',
+        'motif'
     ];
 
     public function user()

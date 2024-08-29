@@ -94,8 +94,13 @@ class ChargeController extends Controller
             $charge = new Charge();
             $identity_profil_url = '';
             if ($request->hasFile('icone')) {
-                $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge');;
-                $charge->icone = $identity_profil_url;
+                $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge', 'extensionImage');;
+                
+                if ($identity_profil_url['fails']) {
+
+                    return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                }
+                $charge->icone = $identity_profil_url['result'];
             }
             $charge->name = $request->name;
             $charge->save();
@@ -240,9 +245,11 @@ class ChargeController extends Controller
             }
             $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge');;
-
-                    $charge->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCharge', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $charge->icone = $identity_profil_url['result'];
                     $charge->save();
                     return response()->json(['data' => 'icône de la charge mis à jour avec succès.'], 200);
                 } else {

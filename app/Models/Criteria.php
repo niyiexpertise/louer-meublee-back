@@ -12,7 +12,10 @@ class Criteria extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'name','icone'
+        'name',
+        'icone',
+        'is_deleted',
+        'is_blocked'
     ];
 
     public function note()

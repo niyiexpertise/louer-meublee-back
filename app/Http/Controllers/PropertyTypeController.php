@@ -122,8 +122,11 @@ class PropertyTypeController extends Controller
                 $propertyType = new PropertyType();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete');;
-                    $propertyType->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $propertyType->icone = $identity_profil_url['result'];
                     }
                 $propertyType->name = $request->name;
                 $propertyType->save();
@@ -316,9 +319,11 @@ class PropertyTypeController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete');;
-
-                    $propertyType->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeTypePropriete', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $propertyType->icone = $identity_profil_url['result'];
                     $propertyType->save();
 
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);

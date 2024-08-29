@@ -299,8 +299,13 @@ class CategorieController extends Controller
                      $category = new Category();
                      $identity_profil_url = '';
                      if ($request->hasFile('icone')) {
-                        $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory');;
-                         $category->icone = $identity_profil_url;
+                        $validationResultFile  = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory', 'extensionImage');
+                       // $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory', 'extensionImage');
+                        if ($validationResultFile['fails']) {
+                            return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+                        }
+                        $category->icone = $validationResultFile['result'];
+                         //$category->icone = $identity_profil_url;
                          }
                      $category->name = $request->name;
                      $category->is_verified = true;
@@ -528,10 +533,11 @@ class CategorieController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory');;
-
-                   // Category::whereId($id)->update(['icone' => $identity_profil_url]);
-                   $category->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeCategory', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                   $category->icone = $identity_profil_url['result'];
                    $category->save();
 
                     return response()->json(['data' => 'icône de la catégorie mis à jour avec succès.'], 200);
@@ -682,7 +688,7 @@ class CategorieController extends Controller
 {
     try{
         $category = Category::find($id);
-           
+
             if (!$category) {
                 return response()->json(['error' => 'Catégorie non trouvé.'], 404);
             }

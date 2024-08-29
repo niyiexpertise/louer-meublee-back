@@ -96,8 +96,11 @@ class MethodPayementController extends Controller
                 $methodPayement = new MethodPayement();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement');;
-                    $methodPayement->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $methodPayement->icone = $identity_profil_url['result'];
                     }
                     $methodPayement->name = $request->name;
                     $methodPayement->save();
@@ -289,9 +292,11 @@ class MethodPayementController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement');;
-
-                    $methodPayement->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $methodPayement->icone = $identity_profil_url['result'];
                     $methodPayement->save();
                     return response()->json(['data' => 'icône du méthode de payement mis à jour avec succès.'], 200);
                 } else {

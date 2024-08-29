@@ -327,14 +327,20 @@ public function __construct(FileService $fileService = null)
             // Vérifiez que le premier élément du tableau est un fichier
             if (isset($pdfArray[0])) {
                 $pdfFile = $pdfArray[0];
-                $extension = $pdfFile->getClientOriginalExtension();
+                // $extension = $pdfFile->getClientOriginalExtension();
         
-                if (strtolower($extension) !== 'pdf') {
-                    return (new ServiceController())->apiResponse(404, [], 'Le fichier doit être au format PDF.');
-                }
+                // if (strtolower($extension) !== 'pdf') {
+                //     return (new ServiceController())->apiResponse(404, [], 'Le fichier doit être au format PDF.');
+                // }
         
                 // Téléchargez le fichier PDF
-                $housing->interior_regulation_pdf = $this->fileService->uploadFiles($pdfFile, 'reglement_interieur');
+                $validationResultFile= $this->fileService->uploadFiles($pdfFile, 'reglement_interieur','extensionDocument');
+
+                if ($validationResultFile['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+                }
+
+                 $housing->interior_regulation_pdf =  $validationResultFile['result'];
             } else {
                 return (new ServiceController())->apiResponse(404, [], 'Le fichier PDF n\'a pas été correctement envoyé.');
             }
@@ -640,8 +646,10 @@ public function __construct(FileService $fileService = null)
             $identity_profil_url = '';
             foreach ($photoFiles as $fileId) {
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
-
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
               //  $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
               /*  $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 if(env('MODE') == 'PRODUCTION'){
@@ -652,7 +660,7 @@ public function __construct(FileService $fileService = null)
                     $photoUrl = $ip.'/image/photo_logement/' . $photoName;
                 }*/
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
 
                 $photoModel->save();
 
@@ -689,7 +697,10 @@ public function __construct(FileService $fileService = null)
         $category->save();
 
         foreach ($categoryPhotos as $photoFile) {
-            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category');
+            $uploadedPath = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');
+            if ($uploadedPath['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+            }
 
           /*  $photoPath = $photoFile->move(public_path('image/photo_category'), $photoName);
             if(env('MODE') == 'PRODUCTION')
@@ -702,7 +713,7 @@ public function __construct(FileService $fileService = null)
             }
                     */
             $photo = new File();
-            $photo->path = $uploadedPath;
+            $photo->path = $uploadedPath['result'];
             $photo->save();
 
 
@@ -1666,7 +1677,7 @@ public function addHousing_step_8(Request $request, $housingId){
          
 
         $errorcheckOwner = $this->checkOwner($housingId);
-        
+
         if ($errorcheckOwner) {
             return $errorcheckOwner;
         }
@@ -1712,12 +1723,12 @@ public function addHousing_step_8(Request $request, $housingId){
                 if (!is_int($equipmentId)) {
                     return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
                 }
-                               
+
                 $equipment = Equipment::find($equipmentId);
                 if (!$equipment) {
                     return (new ServiceController())->apiResponse(404, [], 'Équipement non trouvé pour le logement '.Category::find($categorie['id'])->name);
                 }
- 
+
                 $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
                     ->where('category_id', $categorie['id'])->exists();
 
@@ -1863,14 +1874,16 @@ public function addHousing_step_8(Request $request, $housingId){
             foreach ($categorie['photos'] as $fileId) {
                 
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
-
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
                /* $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension()  ;
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
                 */
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
                 $photoModel->save();
                 $housingCategoryFile = new Housing_category_file();
                 $housingCategoryFile->housing_id = $housing->id;
@@ -1917,14 +1930,17 @@ public function addHousing_step_8(Request $request, $housingId){
             // Enregistrement des photos
             foreach ($piece['photos'] as $fileId) {
                 $photoModel = new File();
-                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category');
+                $uploadedPath = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo', 'extensionImageVideo');
+                if ($uploadedPath['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
 /*
                 $photoName = uniqid() . '.' . $fileId->getClientOriginalExtension();
                 $photoPath = $fileId->move(public_path('image/photo_category'), $photoName);
                 $photoUrl = (env('MODE') == 'PRODUCTION') ? url('/image/photo_logement/' . $photoName) : env('LOCAL_ADDRESS') . '/image/photo_logement/' . $photoName;
 */
 
-                $photoModel->path = $uploadedPath;
+                $photoModel->path = $uploadedPath['result'];
                 $photoModel->save();
 
                 $housingCategoryFile = new Housing_category_file();

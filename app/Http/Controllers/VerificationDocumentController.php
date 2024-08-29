@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Setting;
 use App\Services\FileService;
 use Illuminate\Support\Facades\DB;
 
@@ -260,19 +261,22 @@ public function index()
                  }
 
                  $imagePiece = $imagePieces[$key];
-                 $path_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/document_verification');;
-
+                 $identity_profil_url = '';
+                 $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/document_verification', 'extensionImage');;
+                 if ($identity_profil_url['fails']) {
+                    return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                }
                  $verificationDocument = new verification_document();
                  $verificationDocument->user_id = $user_id;
                  $verificationDocument->document_id = $idDocument;
-                 $verificationDocument->path = $path_url;
+                 $verificationDocument->path = $identity_profil_url;
                  $verificationDocument->save();
 
                  $verificationStatut = new verification_statut();
                  $verificationStatut->verification_document_id = $verificationDocument->id;
                  $verificationStatut->save();
 
-                 $filePaths[] = $path_url;
+                 $filePaths[] = $identity_profil_url;
                  $verificationDocuments[] = $verificationDocument;
              }
 
@@ -478,7 +482,7 @@ public function validateDocuments(Request $request)
         $notification->save();
         $commission=new Commission();
         $commission->user_id=$user->id;
-        $commission->valeur=5;
+        $commission->valeur = Setting::first()->commission_hote_defaut??5;
         $commission->save();
         $mail = [
             'title' => 'Demande d\'être hôte',
@@ -490,7 +494,7 @@ public function validateDocuments(Request $request)
 
         return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la validation des documents.'], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 

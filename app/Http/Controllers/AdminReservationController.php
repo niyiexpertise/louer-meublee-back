@@ -175,21 +175,20 @@ class AdminReservationController extends Controller
 
 
 
-                         /**
-     * @OA\Get(
-     *     path="/api/reservation/getAllReservation",
-     *     summary="Liste de toutes les réservations de la plateforme",
-     * description="Liste de toutes les réservations de la plateforme",
-     *     tags={"Reservation"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of reservation"
-     *
-     *     )
-     * )
-     */
-public function getAllReservation(){
+    /**
+ * @OA\Get(
+ *     path="/api/reservation/getAllReservationUnpaid",
+ *     summary="Liste des réservations impayées côté admin",
+ *     description="Liste de toutes les réservations impayées concernant l'administrateur .",
+ *     tags={"Reservation"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des réservations impayées concernant l'administrateur",
+ *     ),
+ * )
+ */
+public function getAllReservationUnpaid(){
 
     $reservations = Reservation::where('is_deleted', false)
                     ->with(['user','housing'])
@@ -385,7 +384,7 @@ public function getAllReservationConfirmedForAdmin(){
     }
 
 
-                         /**
+    /**
      * @OA\Get(
      *     path="/api/reservation/getAllReservationCanceledByTravelerForAdmin(admin)",
      *     summary="Liste de toutes les réservations annuler par les voyageurs de la plateforme(admin)",
@@ -592,7 +591,7 @@ public function getUsersGroupedByCountry()
                 ];
             });
 
-            return (new ServiceController())->apiResponse(200, [$usersGroupedByCountry], 'Groupe les utilisateurs par pays');
+            return (new ServiceController())->apiResponse(200, $usersGroupedByCountry, 'Groupe les utilisateurs par pays');
 
     }
 
@@ -644,7 +643,7 @@ public function getUsersGroupedByCountry()
                 ];
             });
 
-            return (new ServiceController())->apiResponse(200, [$housingsGroupedByCountry], 'Groupe les logements par pays');
+            return (new ServiceController())->apiResponse(200, $housingsGroupedByCountry, 'Groupe les logements par pays');
 
     }
 
@@ -794,7 +793,7 @@ public function getUsersGroupedByCountry()
         ->get()
         ->map(function ($userGroup) {
                 return [
-                    'user' => Housing::find($userGroup->housing_id),
+                    'housing' => Housing::find($userGroup->housing_id),
                     'number_of_reservation' => $userGroup->number_of_housings,
                 ];
             });

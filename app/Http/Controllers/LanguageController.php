@@ -92,8 +92,11 @@ class LanguageController extends Controller
                 $language = new Language();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage');;
-                    $language->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $language->icone = $identity_profil_url['result'];
                     }
                 $language->name = $request->name;
                 $language->save();
@@ -289,9 +292,11 @@ class LanguageController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage');;
-
-                    $language->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeLanguage', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $language->icone = $identity_profil_url['result'];
                     $language->save();
                     return response()->json(['data' => 'icône de la langue mis à jour avec succès.'], 200);
                 } else {

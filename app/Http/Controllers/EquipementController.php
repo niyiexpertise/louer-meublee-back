@@ -300,8 +300,11 @@ class EquipementController extends Controller
                 $equipment  = new Equipment();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment');;
-                    $equipment->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
                     }
 
                 $equipment->name = $request->name;
@@ -567,9 +570,11 @@ class EquipementController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment');;
-
-                    $equipment->icone = $identity_profil_url;
+                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeEquipment', 'extensionImage');;
+                    if ($identity_profil_url['fails']) {
+                        return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+                    }
+                    $equipment->icone = $identity_profil_url['result'];
                     $equipment->save();
                     return response()->json(['data' => 'icône de l\'équipement mis à jour avec succès.'], 200);
                 } else {
@@ -825,7 +830,7 @@ public function allEquipments()
                 'id' => $equipment->id,
                 'name' => $equipment->name,
                 'icone' => $equipment->icone ?? null,  // Valeur par défaut si icône est null
-                
+
             ];
         })->values();  // Utilisation de values() pour réindexer le tableau (au cas où)
 

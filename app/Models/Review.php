@@ -14,6 +14,8 @@ class Review extends Model implements Auditable
 
     protected $fillable = [
       'content',
+      'icone',
+      'is_blocked',
       'is_deleted',
       'user_id'
   ];

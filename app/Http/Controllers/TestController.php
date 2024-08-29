@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
@@ -23,7 +24,7 @@ class TestController extends Controller
 
             $data = json_decode($response->getBody(), true);
 
-            if ($data['data']['result'] === 'deliverable') {
+            if ($data['data']['result'] === 'deliverable' && Setting::first()->app_mode == 'PRODUCTION') {
                 // return response()->json(['message' => 'Email is deliverable'], 200);
                 return 'deliverable';
             } else {

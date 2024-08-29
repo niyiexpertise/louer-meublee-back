@@ -31,6 +31,8 @@ use App\Models\user_partenaire;
 use App\Models\PortfeuilleTransactionHistory ;
 use Illuminate\Support\Facades\DB ;
 use App\Jobs\SendRegistrationEmail;
+use Exception;
+
 class PortfeuilleTransactionController extends Controller
 {
     /**
@@ -171,7 +173,9 @@ class PortfeuilleTransactionController extends Controller
 
     $data = [];
     foreach ($transactions as $transaction) {
-        $user = $transaction->portfeuille->user;
+        if(!is_null($transaction->portfeuille_id)){
+            $user = $transaction->portfeuille->user;
+        }
 
         $data[] = [
             'transaction' => $transaction,

@@ -485,7 +485,8 @@
                                     "is_camera",
                                     "is_accept_arm",
                                     "is_accepted_animal",
-                                    "is_animal_exist"
+                                    "is_animal_exist",
+                                    "is_accepted"
                                 ],
                                 "properties": {
                                     "is_accept_chill": {
@@ -514,6 +515,10 @@
                                     },
                                     "is_accepted_animal": {
                                         "description": "Acceptation des animaux",
+                                        "type": "boolean"
+                                    },
+                                    "is_accepted_photo": {
+                                        "description": "Acceptation des photos",
                                         "type": "boolean"
                                     },
                                     "is_animal_exist": {
@@ -2590,6 +2595,292 @@
                 ]
             }
         },
+        "/api/promotion/active/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Activer une promotion",
+                "description": "Cette fonction active une promotion spécifiée par son ID.",
+                "operationId": "90d7e935e8b2b5b784949cecd7b0aa0d",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion activée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas ou déjà active"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/desactive/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Désactiver une promotion",
+                "description": "Cette fonction désactive une promotion spécifiée par son ID.",
+                "operationId": "7a809e4823aebf2a810d1eafecf75054",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion désactivée avec succès"
+                    },
+                    "404": {
+                        "description": "Promotion spécifiée n'existe pas"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listActivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions actives",
+                "description": "Cette fonction retourne la liste des promotions actives.",
+                "operationId": "dca0bd467bb47b2a3964ee268ad8fe57",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotion/listInactivePromotions": {
+            "get": {
+                "tags": [
+                    "Promotion Admin"
+                ],
+                "summary": "Liste des promotions inactives",
+                "description": "Cette fonction retourne la liste des promotions inactives.",
+                "operationId": "8c6fca97074c07eec573ee9957aad1ef",
+                "responses": {
+                    "200": {
+                        "description": "Liste des promotions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/activeReductionAdmin/{id}": {
+            "post": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Activer une réduction côté admin",
+                "operationId": "67ed71e946d845bff6a2c1d1bd09d771",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to active",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Reduction successfully active"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Reduction not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/desactiveReductionAdmin/{id}": {
+            "post": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Désactiver une réduction côté admin",
+                "operationId": "97387224128a134bd0c73b273df97e1e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the reduction to inactive",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reduction successfully inactive",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Reduction successfully inactive"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Reduction not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Reduction not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/listeActiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions actives",
+                "description": "Cette fonction retourne la liste des réductions actives.",
+                "operationId": "28be68042acfaf92240d443f0a795b1a",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions actives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reduction/listeDesactiveReductionAdmin": {
+            "get": {
+                "tags": [
+                    "Reduction Admin"
+                ],
+                "summary": "Liste des réductions inactives",
+                "description": "Cette fonction retourne la liste des réductions inactives.",
+                "operationId": "6bd479b04a19ac33be193ac5dd2fde78",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réductions inactives"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/reservation/housing_with_many_reservation": {
             "get": {
                 "tags": [
@@ -2670,17 +2961,17 @@
                 ]
             }
         },
-        "/api/reservation/getAllReservation": {
+        "/api/reservation/getAllReservationUnpaid": {
             "get": {
                 "tags": [
                     "Reservation"
                 ],
-                "summary": "Liste de toutes les réservations de la plateforme",
-                "description": "Liste de toutes les réservations de la plateforme",
-                "operationId": "de59530e8b44d094c54ef598cb4d289f",
+                "summary": "Liste des réservations impayées côté admin",
+                "description": "Liste de toutes les réservations impayées concernant l'administrateur .",
+                "operationId": "c35334d803fa303e08d5c2385bee1430",
                 "responses": {
                     "200": {
-                        "description": "List of reservation"
+                        "description": "Liste des réservations impayées concernant l'administrateur"
                     }
                 },
                 "security": [
@@ -6219,16 +6510,16 @@
                 ]
             }
         },
-        "/api/reservation/getReservationsForTraveler": {
+        "/api/reservation/getUnpaidReservationsForTraveler": {
             "get": {
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations pour le voyageur connecté",
-                "operationId": "927864a2f8fe0e335e961d7e6b8f1732",
+                "summary": "Liste des réservations non payées pour le voyageur connecté",
+                "operationId": "18c0e80541eeec3a137791c9406deba0",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations pour le voyageur connecté.",
+                        "description": "Liste des réservations non payées pour le voyageur connecté.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6269,11 +6560,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations rejetées par le voyageur",
+                "summary": "Liste des réservations annulées par le voyageur",
                 "operationId": "87fb9903d722a6047f97c0e9c5178b17",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations rejetées par le voyageur.",
+                        "description": "Liste des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6286,7 +6577,7 @@
                         }
                     },
                     "500": {
-                        "description": "Erreur lors de la récupération des réservations rejetées par le voyageur.",
+                        "description": "Erreur lors de la récupération des réservations annulées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6314,11 +6605,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations confirmées",
+                "summary": "Liste des réservations confirmées par le voyageur",
                 "operationId": "383a3c23d0b125b9d6cb972accdecc60",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations confirmées.",
+                        "description": "Liste des réservations confirmées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6359,11 +6650,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations annulées par l'hôte",
+                "summary": "Liste des réservations rejetées par l'hôte",
                 "operationId": "43cadf527db032dbc6f8ad840d2ac81b",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations annulées par l'hôte.",
+                        "description": "Liste des réservations rejetées par l'hôte.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6449,11 +6740,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations en attente de confirmation",
+                "summary": "Liste des réservations en attente de confirmation d'intégration",
                 "operationId": "6765a8b375f6b7fbe005b75aeb06b5ba",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations en attente de confirmation.",
+                        "description": "Liste des réservations en attente de confirmation d'intégration.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6525,6 +6816,11 @@
                                         "description": "Statut du paiement (facultatif)",
                                         "type": "string",
                                         "example": "completed"
+                                    },
+                                    "valeur_payee": {
+                                        "description": "Statut du paiement (facultatif)",
+                                        "type": "integer",
+                                        "example": 1000
                                     }
                                 },
                                 "type": "object"
@@ -6556,7 +6852,7 @@
                                             },
                                             "type": "object"
                                         },
-                                        "montant_a_payer": {
+                                        "valeur_payee": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 50
@@ -6690,6 +6986,51 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getReservationWIthoutaction": {
+            "get": {
+                "tags": [
+                    "Dashboard traveler"
+                ],
+                "summary": "Liste des réservations payées sans action du voyageur pour le moment.",
+                "operationId": "4bf9af96dbb796de97e9809cfd6b637c",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations sans action du voyageur pour le moment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": " erreur lors de la récupération de la Liste des réservations sans action du voyageur pour le moment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de serveur."
                                         }
                                     },
                                     "type": "object"
@@ -12660,26 +13001,6 @@
                                         "description": "nombre de fois que vous voulez bénéficier du tarif.",
                                         "type": "integer",
                                         "example": 1
-                                    },
-                                    "payment_method": {
-                                        "description": "nombre de fois que vous voulez bénéficier du tarif.",
-                                        "type": "string",
-                                        "example": "portfeuille"
-                                    },
-                                    "id_transaction": {
-                                        "description": "id de la transaction.",
-                                        "type": "string",
-                                        "example": "txjshg4sp"
-                                    },
-                                    "statut_paiement": {
-                                        "description": "Statut du paiement.",
-                                        "type": "string",
-                                        "example": 1
-                                    },
-                                    "montant": {
-                                        "description": "montant.",
-                                        "type": "integer",
-                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -12777,6 +13098,115 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Erreur serveur interne."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/housingsponsoring/payHousingSponsoringRequest/{housingSponsoringId}": {
+            "post": {
+                "tags": [
+                    "Hote Housing Sponsoring"
+                ],
+                "summary": "Effectuer un paiement pour une demande de sponsoring",
+                "description": "Effectuer un paiement pour une demande de sponsoring",
+                "operationId": "a65fbb3a4b167bfb658d85ce9c6b6ab3",
+                "parameters": [
+                    {
+                        "name": "housingSponsoringId",
+                        "in": "path",
+                        "description": "ID de la demande de sponsoring",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payment_method",
+                                    "id_transaction",
+                                    "statut_paiement",
+                                    "montant"
+                                ],
+                                "properties": {
+                                    "payment_method": {
+                                        "description": "Méthode de paiement",
+                                        "type": "string"
+                                    },
+                                    "id_transaction": {
+                                        "description": "ID de la transaction",
+                                        "type": "string"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "Statut du paiement",
+                                        "type": "integer"
+                                    },
+                                    "montant": {
+                                        "description": "Montant du paiement",
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paiement effectué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande de sponsoring supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Erreur de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de paiement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
                                         }
                                     },
                                     "type": "object"
@@ -12982,7 +13412,7 @@
                 "operationId": "7e9df8c2ff7e0186de81a2e0568a73ce",
                 "responses": {
                     "200": {
-                        "description": "Liste des demandes de sponsoring de l'hôte connecté",
+                        "description": "Liste des demandes de sponsoring non validée",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13185,7 +13615,7 @@
                     "Admin Housing Sponsoring"
                 ],
                 "summary": "Liste des demandes de sponsoring supprimées",
-                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées.",
+                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées par les hôtes.",
                 "operationId": "demandeSponsoringsupprimee",
                 "responses": {
                     "200": {
@@ -13368,6 +13798,10 @@
                                     "montant": {
                                         "type": "string",
                                         "example": 4
+                                    },
+                                    "pourcentage": {
+                                        "type": "string",
+                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -13556,21 +13990,6 @@
                     },
                     "400": {
                         "description": "Erreur dans la récupération des logements sponsorisés."
-                    }
-                }
-            }
-        },
-        "/api/housingsponsoring/disableExpiredHousings": {
-            "post": {
-                "tags": [
-                    "Home Housing Sponsoring"
-                ],
-                "summary": "Désactiver les logements dont la date_fin est dépassée",
-                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
-                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
-                "responses": {
-                    "200": {
-                        "description": "Les logements expirés ont été désactivés avec succès."
                     }
                 }
             }
@@ -16101,13 +16520,13 @@
                 ]
             }
         },
-        "/api/notifications/users": {
+        "/api/users/notifications": {
             "get": {
                 "tags": [
                     "Notification"
                 ],
                 "summary": "Récupérer la liste de notifications pour un utilisateur connecté",
-                "operationId": "3837af30e379118ab3830607350739c6",
+                "operationId": "70ed0f4638e037e5a5f00911fc4b1c71",
                 "responses": {
                     "200": {
                         "description": "Liste des notifications avec succès pour l'utilisateur",
@@ -16119,7 +16538,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/notifyUserHaveRoles/{mode}": {
@@ -16341,12 +16765,12 @@
                 "tags": [
                     "Paiement"
                 ],
-                "summary": "Liste des paiements éffectués par le voyageur lors des reservations",
-                "description": "Liste des paiements éffectués par le voyageur lors des reservations.",
+                "summary": "Liste des paiements éffectués par le voyageur",
+                "description": "Liste des paiements éffectués par le voyageur.",
                 "operationId": "662319232b772e2d94de8e51010b8296",
                 "responses": {
                     "200": {
-                        "description": "Liste des paiements éffectués par le voyageur lors des reservations",
+                        "description": "Liste des paiements éffectués par le voyageur",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -16369,12 +16793,12 @@
                 "tags": [
                     "Paiement"
                 ],
-                "summary": "Liste des paiements éffectués sur le site lors des reservations",
-                "description": "Liste des paiements éffectués sur le site lors des reservations.",
+                "summary": "Liste des paiements éffectués sur le site",
+                "description": "Liste des paiements éffectués sur le site.",
                 "operationId": "4359353960f64ea0b8a5a99bf8cced4d",
                 "responses": {
                     "200": {
-                        "description": "Liste des paiements éffectués sur le site lors des reservations",
+                        "description": "Liste des paiements éffectués sur le site",
                         "content": {
                             "application/json": {
                                 "schema": {}
@@ -16799,6 +17223,11 @@
                                         "description": "ID de transaction unique",
                                         "type": "string",
                                         "example": "12345-abcde"
+                                    },
+                                    "statut_paiement": {
+                                        "description": "statut du paiement",
+                                        "type": "boolean",
+                                        "example": "0"
                                     }
                                 },
                                 "type": "object"
@@ -19784,53 +20213,41 @@
                                     "number_of_adult",
                                     "code_pays",
                                     "telephone_traveler",
-                                    "photo",
                                     "heure_arrivee_max",
                                     "heure_arrivee_min",
                                     "is_tranche_paiement",
-                                    "montant_total",
-                                    "valeur_payee",
-                                    "payment_method",
-                                    "id_transaction",
-                                    "statut_paiement"
+                                    "montant_total"
                                 ],
                                 "properties": {
                                     "housing_id": {
                                         "description": "ID du logement",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "date_of_starting": {
                                         "description": "Date de début de la réservation",
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-05-01"
+                                        "format": "date"
                                     },
                                     "date_of_end": {
                                         "description": "Date de fin de la réservation",
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-05-07"
+                                        "format": "date"
                                     },
                                     "number_of_adult": {
                                         "description": "Nombre d'adultes",
-                                        "type": "integer",
-                                        "example": 2
+                                        "type": "integer"
                                     },
                                     "number_of_child": {
                                         "description": "Nombre d'enfants",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "number_of_domestical_animal": {
                                         "description": "Nombre d'animaux domestiques",
-                                        "type": "integer",
-                                        "example": 0
+                                        "type": "integer"
                                     },
                                     "number_of_baby": {
                                         "description": "Nombre de bébés",
-                                        "type": "integer",
-                                        "example": 2
+                                        "type": "integer"
                                     },
                                     "message_to_hote": {
                                         "description": "Message à l'hôte",
@@ -19839,13 +20256,11 @@
                                     },
                                     "code_pays": {
                                         "description": "Code du pays",
-                                        "type": "string",
-                                        "example": "FRA"
+                                        "type": "string"
                                     },
                                     "telephone_traveler": {
                                         "description": "Numéro de téléphone du voyageur",
-                                        "type": "integer",
-                                        "example": 123456789
+                                        "type": "integer"
                                     },
                                     "photo": {
                                         "description": "Photo de la réservation",
@@ -19855,81 +20270,53 @@
                                     "heure_arrivee_max": {
                                         "description": "Heure d'arrivée maximale",
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "18:00"
+                                        "format": "date-time"
                                     },
                                     "heure_arrivee_min": {
                                         "description": "Heure d'arrivée minimale",
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "14:00"
+                                        "format": "date-time"
                                     },
                                     "is_tranche_paiement": {
                                         "description": "Paiement en plusieurs tranches",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_total": {
                                         "description": "Montant total",
                                         "type": "number",
-                                        "format": "float",
-                                        "example": 500
-                                    },
-                                    "valeur_payee": {
-                                        "description": "Montant déjà payé",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 250
-                                    },
-                                    "payment_method": {
-                                        "description": "Méthode de paiement",
-                                        "type": "string",
-                                        "example": "Credit Card"
-                                    },
-                                    "id_transaction": {
-                                        "description": "Identifiant de la transaction",
-                                        "type": "string",
-                                        "example": "TX123456789"
-                                    },
-                                    "statut_paiement": {
-                                        "description": "Statut du paiement",
-                                        "type": "integer",
-                                        "example": 1
+                                        "format": "float"
                                     },
                                     "valeur_reduction_hote": {
                                         "description": "valeur_reduction_hote",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_promotion_hote": {
                                         "description": "valeur_promotion_hote",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_reduction_code_promo": {
                                         "description": "valeur_reduction_code_promo",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "valeur_reduction_staturp": {
                                         "description": "valeur_reduction_staturp",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_charge": {
                                         "description": "montant_charge",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_housing": {
                                         "description": "montant_housing",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
                                     },
                                     "montant_a_paye": {
                                         "description": "montant_a_paye",
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "integer"
+                                    },
+                                    "valeur_payee": {
+                                        "description": "'valeur_payee'",
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -20025,11 +20412,6 @@
                                     "statut_paiement"
                                 ],
                                 "properties": {
-                                    "valeur_payee": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 150
-                                    },
                                     "payment_method": {
                                         "type": "string",
                                         "example": "portefeuille"
@@ -20042,43 +20424,7 @@
                                         "type": "string",
                                         "example": "payé"
                                     },
-                                    "valeur_reduction_hote": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10,
-                                        "nullable": true
-                                    },
-                                    "valeur_promotion_hote": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "valeur_reduction_code_promo": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 15,
-                                        "nullable": true
-                                    },
-                                    "valeur_reduction_staturp": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 20,
-                                        "nullable": true
-                                    },
-                                    "montant_charge": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 3,
-                                        "nullable": true
-                                    },
-                                    "montant_housing": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 100,
-                                        "nullable": true
-                                    },
-                                    "montant_a_paye": {
+                                    "valeur_payee": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 130,
@@ -20197,7 +20543,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/reservation/hote_confirm_reservation/{idReservation}": {
@@ -20290,7 +20641,7 @@
         "/api/reservation/traveler_reject_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard traveler"
                 ],
                 "summary": "Annulation d une reservation par un voyageur avec le motif à l'appui",
                 "description": "Annulation d une reservation par un voyageur avec le motif à l'appui",
@@ -20371,6 +20722,32 @@
                 ]
             }
         },
+        "/api/reservation/getDateOfReservationsByHousingId/{housingId}": {
+            "get": {
+                "tags": [
+                    "Reservation"
+                ],
+                "summary": "Liste des dates de réservations par logement",
+                "description": "Liste des dates de réservations par logement",
+                "operationId": "48f94eef8eb465f71f6114f6180c6020",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "Get housing ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "date of reservation"
+                    }
+                }
+            }
+        },
         "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
             "get": {
                 "tags": [
@@ -20405,7 +20782,7 @@
         "/api/reservation/confirmIntegration": {
             "post": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard traveler"
                 ],
                 "summary": "Confirmer l'intégration après une réservation(c'est le voyageur qui confirme)",
                 "description": "Confirme l'intégration d'une réservation après vérification des conditions nécessaires.",
@@ -21886,6 +22263,21 @@
                                     "montant_minimum_solde_retrait": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "commission_partenaire_defaut": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "reduction_partenaire_defaut": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "number_of_reservation_partenaire_defaut": {
+                                        "type": "integer"
+                                    },
+                                    "commission_hote_defaut": {
+                                        "type": "number",
+                                        "format": "float"
                                     }
                                 },
                                 "type": "object"
@@ -22270,41 +22662,6 @@
                     },
                     "404": {
                         "description": "Tarif de sponsoring non trouvé."
-                    },
-                    "500": {
-                        "description": "Erreur interne du serveur."
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/sponsoring/destroy/{id}": {
-            "post": {
-                "tags": [
-                    "Tarif Sponsoring"
-                ],
-                "summary": "Supprimer un tarif de sponsoring",
-                "operationId": "96c0f56b294ef62995ba346924673389",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Tarif de sponsoring supprimé avec succès."
-                    },
-                    "404": {
-                        "description": "Tarif de sponsoring non trouvé ou déjà supprimé."
                     },
                     "500": {
                         "description": "Erreur interne du serveur."

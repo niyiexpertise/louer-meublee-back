@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use App\Models\verification_document;
 use App\Models\document_type_demande;
 use App\Services\FileService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 class DocumentController extends Controller
 {

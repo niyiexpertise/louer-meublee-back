@@ -14,6 +14,9 @@ class User_preference extends Model implements Auditable
     protected $fillable = [
         'user_id',
         'preference_id',
+        'icone',
+        'is_deleted',
+        'is_blocked'
     ];
     public function preference()
     {

@@ -40,17 +40,33 @@ class Housing extends Model implements Auditable
         'time_before_reservation',
         'cancelation_condition',
         'departure_instruction',
+        'is_accept_arm',
+        'is_accept_smoking',
+        'is_accept_chill',
+        'is_accept_noise',
+        'is_updated',
         'is_deleted',
         'is_blocked',
+        'is_finished',
+        'price',
+        'surface',
         'is_destroy',
-        'is_actif'
+        'is_actif',
+        'is_accept_alccol',
+        'delai_partiel_remboursement',
+        'delai_integral_remboursement',
+        'valeur_integral_remboursement',
+        'valeur_partiel_remboursement',
+        'is_accept_annulation',
+        'step',
+        'interior_regulation_pdf'
     ];
-    
+
 
     public function housing_equipment()
     {
         return $this->hasMany(housing_equipment::class);
-                
+
     }
     public function user()
     {
@@ -120,7 +136,7 @@ class Housing extends Model implements Auditable
     {
         return $this->hasMany(UserVisiteHousing::class);
     }
-    
+
 
 }
 

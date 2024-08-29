@@ -170,8 +170,11 @@ class HousingCategoryFileController extends Controller
      $identity_profil_url = '';
      foreach ($request->file('photos') as $photo) {
          $photoModel = new File();
-         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category');;
-         $photoModel->path = $identity_profil_url;
+         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+         if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+         $photoModel->path = $identity_profil_url['result'];
          $photoModel->save();
 
          $housingCategoryFile = new Housing_category_file();
@@ -282,8 +285,11 @@ class HousingCategoryFileController extends Controller
     $identity_profil_url = '';
     foreach ($request->file('photos') as $photo) {
         $photoModel = new File();
-        $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category');;
-        $photoModel->path = $identity_profil_url;
+        $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+        if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+        $photoModel->path = $identity_profil_url['result'];
         $photoModel->save();
 
         $housingCategoryFile = new Housing_category_file();
@@ -887,8 +893,11 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
         $identity_profil_url = '';
      foreach ($request->file('photos') as $photo) {
          $photoModel = new File();
-         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category');;
-         $photoModel->path = $identity_profil_url;
+         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+         if ($identity_profil_url['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+        }
+         $photoModel->path = $identity_profil_url['result'];
          $photoModel->save();
 
          $housingCategoryFile = new Housing_category_file();

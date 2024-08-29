@@ -132,7 +132,13 @@ protected $fileService;
 
     if ($request->hasFile('identity_profil')) {
 
-        $identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil');;
+
+        $validationResultFile  = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');
+        //$identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');;
+        if ($validationResultFile['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
+        }
+        $identity_profil_url = $validationResultFile['result'];
     }
 
     $testEmail = new TestController();
@@ -172,7 +178,7 @@ protected $fileService;
                 $user->partenaire_id = $user_partenaire->id;
             }
         }
-         
+
         $user->save();
         $right = Right::where('name', 'traveler')->first();
         $user->assignRole('traveler');
@@ -212,8 +218,7 @@ protected $fileService;
             ], 404);
         }
 
-
-            dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+         dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
 
         if ($request->has('code_promo') and !empty( $request->code_promo)) {
             $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();

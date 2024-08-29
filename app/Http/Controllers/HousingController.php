@@ -468,12 +468,15 @@ class HousingController extends Controller
      if ($request->hasFile('photos')) {
         $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge');;
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/iconeCharge', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $ip='http://192.168.100.158:8000';
             // $photoUrl = $ip.'/image/photo_logement/' . $photoName;
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $identity_profil_url;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              if ($index == $request->input('profile_photo_id')) {
                  $photoModel->is_couverture = true;
@@ -583,11 +586,13 @@ class HousingController extends Controller
         $identity_profil_url = '';
         foreach ($photoFiles as $fileId) {
             $photoModel = new File();
-            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($fileId, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
                  //$photoUrl =$ip.'/image/photo_category/' . $photoName;
-            $photoModel->path = $identity_profil_url;
+            $photoModel->path = $identity_profil_url['result'];
             $photoModel->save();
             $housingCategoryFile = new Housing_category_file();
             $housingCategoryFile->housing_id = $housingCategoryId;
@@ -615,12 +620,14 @@ class HousingController extends Controller
 
         $identity_profil_url = '';
         foreach ($categoryPhotos as $photoFile) {
-            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($photoFile, 'image/photo_category', 'extensionImageVideo');;
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
                         $ip='http://192.168.100.158:8000';
                         //$photoUrl =$ip.'/image/photo_category/' . $photoName;
             $photo = new File();
-            $photo->path = $identity_profil_url;
+            $photo->path = $identity_profil_url['result'];
             $photo->save();
 
             $housingCategoryFile = new Housing_category_file();
@@ -1096,8 +1103,8 @@ public function ListeDesLogementsAcceuil(Request $request)
      }
 
      $userStatistique=$this->getHousingStatisticAcceuil($id);
-     $promotion=$this->getCurrentPromotion($id);
-     $reduction=$this->getCurrentReductions($id);
+     $promotion=$this->getCurrentPromotion($id)??[];
+     $reduction=$this->getCurrentReductions($id)??[];
      $controllerreviewreservation = App::make('App\Http\Controllers\ReviewReservationController');
      $controllervitehousing = App::make('App\Http\Controllers\UserVisiteHousingController');
      $checkAuth=App::make('App\Http\Controllers\LoginController');
@@ -1131,6 +1138,7 @@ public function ListeDesLogementsAcceuil(Request $request)
          'is_animal_exist' => $listing->is_animal_exist,
          'is_disponible' => $listing->is_disponible,
          'interior_regulation' => $listing->interior_regulation,
+         'interior_regulation_pdf' => $listing->interior_regulation_pdf,
         //  'telephone' => $listing->telephone,
          'code_pays' => $listing->code_pays,
          'surface' => $listing->surface,
@@ -1196,9 +1204,9 @@ public function ListeDesLogementsAcceuil(Request $request)
             ];
           }),
 
-         'reductions' =>$reduction->original['data'],
+         'reductions' =>$reduction->original['data']??[],
 
-         'promotions' => $promotion->original['data'],
+         'promotions' => [$promotion->original['data']]??[],
 
          'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
             return [
@@ -1292,7 +1300,7 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         return response()->json(['data' => $data],200);
     }
-    
+
 
  /**
  * @OA\Get(
@@ -2126,7 +2134,7 @@ public function formatListingsData($listings,$userId=0)
                 'address' => $listing->user->address ?? 'non renseigné',
                 'sexe' => $listing->user->sexe ?? 'non renseigné',
                 'postal_code' => $listing->user->postal_code ?? 'non renseigné',
-                
+
                 'created_at' => $listing->user->created_at ?? 'non renseigné',
             ],
             'categories' => $listing->housingCategoryFiles->where('is_verified', 1)->groupBy('category.name')->map(function ($categoryFiles, $categoryName) {
@@ -2421,7 +2429,7 @@ public function enableHousing($housingId)
             'total_housing_published' => $totalHousingPublished,
             'total_avis_for_housing' => $totalCommentsForHousing,
             'global_average_for_user' => $globalAverageForOwner,
-            
+
         ]);
     }
 
@@ -2590,11 +2598,13 @@ public function enableHousing($housingId)
 
          $identity_profil_url = '';
          foreach ($request->file('photos') as $index => $photo) {
-            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement');;
-
+            $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_logement', 'extensionImageVideo');
+            if ($identity_profil_url['fails']) {
+                return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
+            }
              $type = $photo->getClientOriginalExtension();
              $photoModel = new photo();
-             $photoModel->path = $identity_profil_url;
+             $photoModel->path = $identity_profil_url['result'];
              $photoModel->extension = $type;
              $photoModel->is_verified = false;
              $photoModel->housing_id = $housing->id;
@@ -2629,6 +2639,7 @@ public function getCurrentPromotion($housingId)
                               ->where('is_encours', true)
                               ->where('is_deleted', false)
                               ->where('is_blocked', false)
+                              ->where('is_actif',true)
                               ->where('date_debut', '<=', $currentDate)
                               ->where('date_fin', '>=', $currentDate)
                               ->first();
@@ -2650,7 +2661,8 @@ public function getCurrentReductions($housingId)
         ->where('is_encours', 1)
         ->where('is_deleted', false)
         ->where('is_blocked', false)
-        ->get();
+        ->where('is_actif',true)
+               ->get();
 
     return response()->json([
         'data' => $ongoingReductions,
@@ -3013,7 +3025,7 @@ public function HousingHoteInProgress(){
         try {
             $housing = Housing::find($housinId);
             if (!$housing) {
-                return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+                return (new ServiceController())->apiResponse(404,[],'Le logement spécifié n\'existe pas');
             }
             if($housing->is_blocked == true){
                 return (new ServiceController())->apiResponse(200,[],'Logement déjà bloqué');

@@ -12,7 +12,13 @@ class HousingType extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     
-    protected $fillable = ['name', 'description'];
+    protected $fillable = [
+        'name', 
+        'description',
+        'icone',
+        'is_deleted',
+        'is_blocked'
+    ];
     public function housings()
     {
         return $this->hasMany(Housing::class);

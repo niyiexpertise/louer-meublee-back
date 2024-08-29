@@ -17,7 +17,7 @@ class SettingController extends Controller
         $this->fileService = $fileService;
     }
 
-      
+
     /**
 
      * @OA\Post(
@@ -42,14 +42,14 @@ class SettingController extends Controller
      *                 @OA\Property(property="instagram_url", type="string", format="url"),
      *                 @OA\Property(property="linkedin_url", type="string", format="url"),
      *                 @OA\Property(
-     *                     property="logo", 
-     *                     type="string", 
+     *                     property="logo",
+     *                     type="string",
      *                     format="binary",
      *                     description="The logo image file to upload"
      *                 ),
      *                 @OA\Property(
-     *                     property="app_mode", 
-     *                     type="string", 
+     *                     property="app_mode",
+     *                     type="string",
      *                     enum={"PRODUCTION", "DEVELOPPEMENT"}
      *                 ),
      *                 @OA\Property(property="adresse_serveur_fichier", type="string"),
@@ -123,7 +123,7 @@ class SettingController extends Controller
 
         return (new ServiceController())->apiResponse(200, $data, 'Modification effectuée avec succès');
     }
-
+     
     /**
      * @OA\Get(
      *     path="/api/settings/index",

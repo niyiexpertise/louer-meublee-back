@@ -59,7 +59,9 @@ class HoteReservationController extends Controller
             ->where('is_blocked',0)
             ->where('is_confirmed_hote',1)
             ->where('is_rejected_traveler',0)
-            ->where('is_rejected_hote',0);
+            ->where('is_rejected_hote',0)
+            ->where('statut', 'payee');
+
         })->with(['housing','user'])->get();
     
         return response()->json(['data' => $reservations]);
@@ -87,6 +89,8 @@ class HoteReservationController extends Controller
                 ->where('is_blocked',0)
                 ->where('is_confirmed_hote',0)
                 ->where('is_rejected_traveler',0)
+                ->where('statut', 'payee')
+
                 ->where('is_rejected_hote',1);
             })->with(['housing','user'])->get();
             return response()->json(['data' => $reservations]);
@@ -115,7 +119,9 @@ class HoteReservationController extends Controller
                 ->where('is_blocked',0)
                 ->where('is_confirmed_hote',0)
                 ->where('is_rejected_traveler',1)
-                ->where('is_rejected_hote',0);
+                ->where('is_rejected_hote',0)
+                ->where('statut', 'payee');
+
             })->with(['housing','user'])->get();
             return response()->json(['data' => $reservations]);
         }
@@ -142,12 +148,12 @@ class HoteReservationController extends Controller
             ->where('is_blocked',0)
             ->where('is_confirmed_hote',0)
             ->where('is_rejected_traveler',0)
-            ->where('is_rejected_hote',0);
+            ->where('is_rejected_hote',0)
+            ->where('statut', 'payee');
+
         })->with(['housing','user'])->get();
 
-        if($reservations->count() == 0) {
-            return response()->json('Aucune réservation en attente de confirmation disponible',404);
-        }
+        
     
         return response()->json(['data' => $reservations]);
     }

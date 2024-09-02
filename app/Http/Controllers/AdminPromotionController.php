@@ -44,7 +44,7 @@ class AdminPromotionController extends Controller
                 return response()->json(['message' => 'La promotion spécifié n\'existe pas'], 404);
             }
             if($promotion->is_actif == true){
-                return (new ServiceController())->apiResponse(404,[],'Promotion déjà actif');
+                return (new ServiceController())->apiResponse(404,[],'Promotion déjà active');
             }
             $promotion->is_actif = true;
             $promotion->save();
@@ -89,12 +89,12 @@ class AdminPromotionController extends Controller
             if (!$promotion) {
                 return (new ServiceController())->apiResponse(404,[],'Le promotion spécifié n\'existe pas');
             }
-            if($promotion->us_actif == false){
-                return (new ServiceController())->apiResponse(200,[],'Promotion déjà désactivé');
+            if($promotion->is_actif == false){
+                return (new ServiceController())->apiResponse(200,[],'Promotion déjà désactivée');
             }
-            $promotion->us_actif = false;
+            $promotion->is_actif = false;
             $promotion->save();
-            return (new ServiceController())->apiResponse(200,[],'Promotion désactivé avec succès');
+            return (new ServiceController())->apiResponse(200,[],'Promotion désactivée avec succès');
 
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());

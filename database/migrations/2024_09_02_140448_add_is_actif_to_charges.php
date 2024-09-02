@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
-            //
+        Schema::table('charges', function (Blueprint $table) {
+            $table->boolean('is_actif')->default(false);
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
+        Schema::table('charges', function (Blueprint $table) {
             //
         });
     }

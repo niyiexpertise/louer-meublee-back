@@ -60,6 +60,11 @@ class SettingController extends Controller
      *                 @OA\Property(property="reduction_partenaire_defaut", type="number", format="float" ),
      *                 @OA\Property(property="number_of_reservation_partenaire_defaut", type="integer"),
      *                 @OA\Property(property="commission_hote_defaut", type="number", format="float"),
+     *                @OA\Property(property="max_night_number", type="number", format="integer"),
+     *                @OA\Property(property="max_value_reduction", type="number", format="float"),
+     *                @OA\Property(property="max_number_of_reservation", type="number", format="integer"),
+     *                @OA\Property(property="max_value_promotion", type="number", format="float"),
+     *                @OA\Property(property="commission_seuil_hote_partenaire", type="number", format="float"),
      *             )
      *         )
      *     ),
@@ -106,7 +111,11 @@ class SettingController extends Controller
                 'reduction_partenaire_defaut' => '',
                 'number_of_reservation_partenaire_defaut' => '',
                 'commission_hote_defaut' => '',
-
+                'max_night_number'  => '',
+                'max_value_reduction' => '',
+                'max_number_of_reservation' => '',
+                'max_value_promotion' => '',
+                'commission_seuil_hote_partenaire' => ''
             ]);
         }
 
@@ -135,8 +144,22 @@ class SettingController extends Controller
                     return (new ServiceController())->apiResponse(404, [], 'Aucune image trouvé dans les données.');
                 }
             }
+        }
 
+        if($request->has('reduction_partenaire_defaut')){
+            if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+                if($request->input('reduction_partenaire_defaut') >= Setting::first()->commission_seuil_hote_partenaire){
+                    return (new ServiceController())->apiResponse(404,[], "La valeur de réduction partenaire par défaut ne doit pas dépasser ".Setting::first()->commission_seuil_hote_partenaire);
+                }
+            }
+        }
 
+        if($request->has('commission_hote_defaut')){
+            if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+                if($request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
+                    return (new ServiceController())->apiResponse(404,[], "La valeur de commission hôte par défaut ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+                }
+            }
         }
 
         $settings->save();
@@ -207,6 +230,11 @@ class SettingController extends Controller
             'reduction_partenaire_defaut' => 'nullable|numeric',
             'number_of_reservation_partenaire_defaut' => 'nullable|integer',
             'commission_hote_defaut' => 'nullable|numeric',
+            'max_night_number'  => 'nullable|integer',
+            'max_value_reduction' => 'nullable|numeric',
+            'max_number_of_reservation' => 'nullable|integer',
+            'max_value_promotion' => 'nullable|numeric',
+             'commission_seuil_hote_partenaire' => 'nullable|numeric'
         ]);
 
         if ($validator->fails()) {

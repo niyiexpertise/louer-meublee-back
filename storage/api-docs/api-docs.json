@@ -5390,6 +5390,288 @@
                 ]
             }
         },
+        "/api/charge/active/{chargeId}": {
+            "post": {
+                "tags": [
+                    "Charge"
+                ],
+                "summary": "Activation d'une charge",
+                "description": "Active une charge spécifique en modifiant son statut à 'actif'.",
+                "operationId": "activateCharge",
+                "parameters": [
+                    {
+                        "name": "chargeId",
+                        "in": "path",
+                        "description": "ID de la charge à activer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charge activée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Charge activée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "La charge spécifiée n'existe pas ou est déjà active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La charge spécifiée n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/charge/desactive/{chargeId}": {
+            "post": {
+                "tags": [
+                    "Charge"
+                ],
+                "summary": "Désactivation d'une charge",
+                "description": "Désactive une charge spécifique en modifiant son statut à 'inactif'.",
+                "operationId": "deactivateCharge",
+                "parameters": [
+                    {
+                        "name": "chargeId",
+                        "in": "path",
+                        "description": "ID de la charge à désactiver",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charge désactivée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Charge désactivée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "La charge spécifiée n'existe pas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La charge spécifiée n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/charge/indexChargeActive": {
+            "get": {
+                "tags": [
+                    "Charge"
+                ],
+                "summary": "Liste des charges actives",
+                "description": "Récupère la liste de toutes les charges actives (is_actif = true) et non supprimées (is_deleted = false).",
+                "operationId": "getActiveCharges",
+                "responses": {
+                    "200": {
+                        "description": "Liste des charges actives récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "is_actif": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "is_deleted": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/charge/indexChargeInactive": {
+            "get": {
+                "tags": [
+                    "Charge"
+                ],
+                "summary": "Liste des charges inactives",
+                "description": "Récupère la liste de toutes les charges inactives (is_actif = false) et non supprimées (is_deleted = false).",
+                "operationId": "getInactiveCharges",
+                "responses": {
+                    "200": {
+                        "description": "Liste des charges inactives récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "is_actif": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "is_deleted": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/chats/getChatsByModelType/{modelType}": {
             "get": {
                 "tags": [
@@ -11201,6 +11483,26 @@
                 "summary": "Liste des logements d'un hote connecté",
                 "description": "Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
                 "operationId": "4cbe5e5e522f356573750af179f37161",
+                "responses": {
+                    "200": {
+                        "description": "List of housing what be retrieve by hote"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/getHousingDisabledByHote": {
+            "get": {
+                "tags": [
+                    "Dashboard hote"
+                ],
+                "summary": "Liste des logements désactivé d'un hote connecté",
+                "description": "Liste des désactivé logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
+                "operationId": "ea7fa5f7c2a41fd0649160dd9014c43c",
                 "responses": {
                     "200": {
                         "description": "List of housing what be retrieve by hote"
@@ -18604,6 +18906,102 @@
                 ]
             }
         },
+        "/api/promotion/update/{promotionId}": {
+            "post": {
+                "tags": [
+                    "Promotion hote"
+                ],
+                "summary": "Mise à jour d'une promotion",
+                "description": "Met à jour les informations d'une promotion existante pour un logement.",
+                "operationId": "updatePromotion",
+                "parameters": [
+                    {
+                        "name": "promotionId",
+                        "in": "path",
+                        "description": "ID de la promotion à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "value": {
+                                        "description": "Valeur en pourcentage de la promotion",
+                                        "type": "number"
+                                    },
+                                    "number_of_reservation": {
+                                        "description": "Nombre de réservations pour la promotion",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Promotion mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Promotion mise à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "La promotion spécifiée n'existe pas ou d'autres erreurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La promotion spécifiée n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/promotion/delete/{id}": {
             "delete": {
                 "tags": [
@@ -19719,6 +20117,102 @@
                 ]
             }
         },
+        "/api/reduction/update/{reductionId}": {
+            "post": {
+                "tags": [
+                    "Reduction hote"
+                ],
+                "summary": "Mise à jour d'une réduction",
+                "description": "Met à jour les informations d'une réduction existante pour un logement.",
+                "operationId": "updateReduction",
+                "parameters": [
+                    {
+                        "name": "reductionId",
+                        "in": "path",
+                        "description": "ID de la réduction à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "value": {
+                                        "description": "Valeur en pourcentage de la réduction",
+                                        "type": "number"
+                                    },
+                                    "night_number": {
+                                        "description": "Nombre de nuits pour la réduction",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Réduction mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réduction mise à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "La réduction spécifiée n'existe pas ou d'autres erreurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La réduction spécifiée n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/reduction/delete/{id}": {
             "delete": {
                 "tags": [
@@ -19983,128 +20477,6 @@
                                             "description": "Error message",
                                             "type": "string",
                                             "example": "Server error message"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/reduction/update/{reductionId}": {
-            "post": {
-                "tags": [
-                    "Reduction hote"
-                ],
-                "summary": "Update a reduction for a housing",
-                "operationId": "914b20edbd5e0a0f70d5f52cff9e84b2",
-                "parameters": [
-                    {
-                        "name": "reductionId",
-                        "in": "path",
-                        "description": "ID of the reduction to update",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "value"
-                                ],
-                                "properties": {
-                                    "value": {
-                                        "description": "New value for the reduction",
-                                        "type": "number",
-                                        "format": "float"
-                                    },
-                                    "night_number": {
-                                        "description": "Number of nights for the reduction",
-                                        "type": "integer"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Reduction updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "reductions": {
-                                            "description": "Details of the updated reduction",
-                                            "properties": {
-                                                "id": {
-                                                    "description": "ID of the reduction",
-                                                    "type": "integer"
-                                                },
-                                                "value": {
-                                                    "description": "Value of the reduction",
-                                                    "type": "number",
-                                                    "format": "float"
-                                                },
-                                                "night_number": {
-                                                    "description": "Number of nights for the reduction",
-                                                    "type": "integer"
-                                                },
-                                                "housing_id": {
-                                                    "description": "ID of the housing associated with the reduction",
-                                                    "type": "integer"
-                                                },
-                                                "is_encours": {
-                                                    "description": "Status of the reduction",
-                                                    "type": "boolean"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Reduction or housing not found or invalid input",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "description": "Error message",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "description": "Error message",
-                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -22203,6 +22575,26 @@
                                         "type": "integer"
                                     },
                                     "commission_hote_defaut": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "max_night_number": {
+                                        "type": "number",
+                                        "format": "integer"
+                                    },
+                                    "max_value_reduction": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "max_number_of_reservation": {
+                                        "type": "number",
+                                        "format": "integer"
+                                    },
+                                    "max_value_promotion": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "commission_seuil_hote_partenaire": {
                                         "type": "number",
                                         "format": "float"
                                     }

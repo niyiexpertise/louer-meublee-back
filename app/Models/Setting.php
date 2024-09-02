@@ -31,5 +31,10 @@ class Setting extends Model
         'reduction_partenaire_defaut',
         'number_of_reservation_partenaire_defaut',
         'commission_hote_defaut',
+        'max_night_number',
+        'max_value_reduction',
+        'max_number_of_reservation',
+        'max_value_promotion',
+        'commission_seuil_hote_partenaire',
     ];
 }

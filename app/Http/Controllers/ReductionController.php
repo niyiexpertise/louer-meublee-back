@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\reduction;
 use App\Models\Housing;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -304,6 +305,107 @@ class ReductionController extends Controller
         return (new ServiceController())->apiResponse(500,[],$e->getMessage());
        }
    }
+
+   /**
+ * @OA\Post(
+ *     path="/api/reduction/update/{reductionId}",
+ *     summary="Mise à jour d'une réduction",
+ *     description="Met à jour les informations d'une réduction existante pour un logement.",
+ *     operationId="updateReduction",
+ *     tags={"Reduction hote"},
+ *     @OA\Parameter(
+ *         name="reductionId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la réduction à mettre à jour",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="value", type="number", description="Valeur en pourcentage de la réduction"),
+ *             @OA\Property(property="night_number", type="integer", description="Nombre de nuits pour la réduction"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Réduction mise à jour avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Réduction mise à jour avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La réduction spécifiée n'existe pas ou d'autres erreurs",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="La réduction spécifiée n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+   public function update(Request $request,$reductionId){
+    try {
+
+        $reduction = Reduction::find($reductionId);
+        if (!$reduction) {
+            return (new ServiceController())->apiResponse(404,[],'La réduction spécifiée n\'existe pas.');
+        }
+
+        if(Housing::whereId($reduction->housing_id)->first()->user_id != Auth::user()->id){
+            return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez modifier la réduction d\'un logement qui ne vous appartient pas.');
+        }
+
+        if($request->has('value')){
+            if(floatval($request->value) <= 0){
+                return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission de cette réduction soit positive et non nulle");
+            }
+        }
+
+       
+
+        if($request->has('night_number')){
+            if(intval($request->night_number)<=0){
+                return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit soit positive et non nulle");
+            }
+        }
+
+        if(!is_null(Setting::first()->max_night_number)){
+            if($request->night_number > Setting::first()->max_night_number){
+                return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number);
+            }
+        }
+
+        if(!is_null(Setting::first()->max_value_reduction)){
+            if($request->value > Setting::first()->max_value_reduction){
+                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la réduction doit être inférieur ou égal à '.Setting::first()->max_value_reduction);
+            }
+        }
+
+        $reduction->value= $request->value??$reduction->value;
+        $reduction->night_number= $request->night_number??$reduction->night_number;
+        $reduction->is_actif= 0;
+        $reduction->save();
+
+        return (new ServiceController())->apiResponse(200,[],'Réduction mise à jour avec succès');
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+  }
 
    /**
  * @OA\Delete(
@@ -686,153 +788,153 @@ public function desactiveReduction($reductionId,$housingId){
     }
 
 
-    /**
- * @OA\Post(
- *      path="/api/reduction/update/{reductionId}",
- *      summary="Update a reduction for a housing",
- *      tags={"Reduction hote"},
- *      @OA\Parameter(
- *          name="reductionId",
- *          in="path",
- *          required=true,
- *          description="ID of the reduction to update",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\RequestBody(
- *          required=true,
- *          @OA\MediaType(
- *              mediaType="application/json",
- *              @OA\Schema(
- *                  type="object",
- *                  required={"value"},
- *                  @OA\Property(
- *                      property="value",
- *                      description="New value for the reduction",
- *                      type="number",
- *                      format="float"
- *                  ),
- *                  @OA\Property(
- *                      property="night_number",
- *                      description="Number of nights for the reduction",
- *                      type="integer"
- *                  )
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Reduction updated successfully",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="reductions",
- *                  description="Details of the updated reduction",
- *                  type="object",
- *                  @OA\Property(
- *                      property="id",
- *                      description="ID of the reduction",
- *                      type="integer"
- *                  ),
- *                  @OA\Property(
- *                      property="value",
- *                      description="Value of the reduction",
- *                      type="number",
- *                      format="float"
- *                  ),
- *                  @OA\Property(
- *                      property="night_number",
- *                      description="Number of nights for the reduction",
- *                      type="integer"
- *                  ),
- *                  @OA\Property(
- *                      property="housing_id",
- *                      description="ID of the housing associated with the reduction",
- *                      type="integer"
- *                  ),
- *                  @OA\Property(
- *                      property="is_encours",
- *                      description="Status of the reduction",
- *                      type="boolean"
- *                  )
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Reduction or housing not found or invalid input",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="message",
- *                  description="Error message",
- *                  type="string"
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=500,
- *          description="Server error",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="error",
- *                  description="Error message",
- *                  type="string"
- *              )
- *          )
- *      ),
- *      security={
- *          {"bearerAuth": {}}
- *      }
- * )
- */
+//     /**
+//  * @OA\Post(
+//  *      path="/api/reduction/update/{reductionId}",
+//  *      summary="Update a reduction for a housing",
+//  *      tags={"Reduction hote"},
+//  *      @OA\Parameter(
+//  *          name="reductionId",
+//  *          in="path",
+//  *          required=true,
+//  *          description="ID of the reduction to update",
+//  *          @OA\Schema(
+//  *              type="integer"
+//  *          )
+//  *      ),
+//  *      @OA\RequestBody(
+//  *          required=true,
+//  *          @OA\MediaType(
+//  *              mediaType="application/json",
+//  *              @OA\Schema(
+//  *                  type="object",
+//  *                  required={"value"},
+//  *                  @OA\Property(
+//  *                      property="value",
+//  *                      description="New value for the reduction",
+//  *                      type="number",
+//  *                      format="float"
+//  *                  ),
+//  *                  @OA\Property(
+//  *                      property="night_number",
+//  *                      description="Number of nights for the reduction",
+//  *                      type="integer"
+//  *                  )
+//  *              )
+//  *          )
+//  *      ),
+//  *      @OA\Response(
+//  *          response=200,
+//  *          description="Reduction updated successfully",
+//  *          @OA\JsonContent(
+//  *              type="object",
+//  *              @OA\Property(
+//  *                  property="reductions",
+//  *                  description="Details of the updated reduction",
+//  *                  type="object",
+//  *                  @OA\Property(
+//  *                      property="id",
+//  *                      description="ID of the reduction",
+//  *                      type="integer"
+//  *                  ),
+//  *                  @OA\Property(
+//  *                      property="value",
+//  *                      description="Value of the reduction",
+//  *                      type="number",
+//  *                      format="float"
+//  *                  ),
+//  *                  @OA\Property(
+//  *                      property="night_number",
+//  *                      description="Number of nights for the reduction",
+//  *                      type="integer"
+//  *                  ),
+//  *                  @OA\Property(
+//  *                      property="housing_id",
+//  *                      description="ID of the housing associated with the reduction",
+//  *                      type="integer"
+//  *                  ),
+//  *                  @OA\Property(
+//  *                      property="is_encours",
+//  *                      description="Status of the reduction",
+//  *                      type="boolean"
+//  *                  )
+//  *              )
+//  *          )
+//  *      ),
+//  *      @OA\Response(
+//  *          response=404,
+//  *          description="Reduction or housing not found or invalid input",
+//  *          @OA\JsonContent(
+//  *              type="object",
+//  *              @OA\Property(
+//  *                  property="message",
+//  *                  description="Error message",
+//  *                  type="string"
+//  *              )
+//  *          )
+//  *      ),
+//  *      @OA\Response(
+//  *          response=500,
+//  *          description="Server error",
+//  *          @OA\JsonContent(
+//  *              type="object",
+//  *              @OA\Property(
+//  *                  property="error",
+//  *                  description="Error message",
+//  *                  type="string"
+//  *              )
+//  *          )
+//  *      ),
+//  *      security={
+//  *          {"bearerAuth": {}}
+//  *      }
+//  * )
+//  */
 
-    public function updateReduction(Request $request,$reductionId){
-        try {
+//     public function updateReduction(Request $request,$reductionId){
+//         try {
 
-            $reduction = reduction::find($reductionId);
+//             $reduction = reduction::find($reductionId);
 
-            if (!$reduction) {
-                return (new ServiceController())->apiResponse(404,[], 'Réduction non trouvée');
-            }
+//             if (!$reduction) {
+//                 return (new ServiceController())->apiResponse(404,[], 'Réduction non trouvée');
+//             }
 
-            $housing = Housing::find($reduction->housing_id);
+//             $housing = Housing::find($reduction->housing_id);
 
-            if (!$housing) {
-             return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
-            }
+//             if (!$housing) {
+//              return (new ServiceController())->apiResponse(404,[], 'Logement non trouvé');
+//             }
 
-            $errorcheckOwner= (new AddHousingController)->checkOwner($housing->id);
-            if($errorcheckOwner){
-                return $errorcheckOwner;
-            }
+//             $errorcheckOwner= (new AddHousingController)->checkOwner($housing->id);
+//             if($errorcheckOwner){
+//                 return $errorcheckOwner;
+//             }
 
-            if(!$request->has('value')){
-                return (new ServiceController())->apiResponse(404,[], 'commission non renseigné');
-            }
+//             if(!$request->has('value')){
+//                 return (new ServiceController())->apiResponse(404,[], 'commission non renseigné');
+//             }
 
-            if(floatval($request->value) <= 0){
-                return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission de cette réduction soit positive et non nulle");
-            }
+//             if(floatval($request->value) <= 0){
+//                 return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission de cette réduction soit positive et non nulle");
+//             }
 
-            if($request->has('night_number')){
-                if(intval($request->night_number)<=0){
-                    return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit soit positive et non nulle");
-                }
-                $reduction->night_number = $request->night_number;
-            }
+//             if($request->has('night_number')){
+//                 if(intval($request->night_number)<=0){
+//                     return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit soit positive et non nulle");
+//                 }
+//                 $reduction->night_number = $request->night_number;
+//             }
 
-            $reduction->night_number = $reduction->night_number;
-            $reduction->value = $request->value;
-            $reduction->save();
+//             $reduction->night_number = $reduction->night_number;
+//             $reduction->value = $request->value;
+//             $reduction->save();
 
-            return (new ServiceController())->apiResponse(200,[], 'Réduction modifié avec succès');
+//             return (new ServiceController())->apiResponse(200,[], 'Réduction modifié avec succès');
 
-        } catch (Exception $e) {
-         return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-        }
-    }
+//         } catch (Exception $e) {
+//          return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+//         }
+//     }
 }
 

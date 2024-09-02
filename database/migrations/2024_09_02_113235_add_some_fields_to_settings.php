@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
-            //
+        Schema::table('settings', function (Blueprint $table) {
+            $table->integer('max_night_number');
+            $table->float('max_value_reduction');
+            $table->integer('max_number_of_reservation');
+            $table->float('max_value_promotion');
         });
     }
 
@@ -21,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reservations', function (Blueprint $table) {
+        Schema::table('settings', function (Blueprint $table) {
             //
         });
     }

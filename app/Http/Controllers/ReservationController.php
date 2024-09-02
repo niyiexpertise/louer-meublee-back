@@ -130,9 +130,30 @@ class ReservationController extends Controller
     $montantHousing = $housing->price * $duration;
 
     // Étape 3: Calculer les charges à ajouter
-    $montantCharge = Housing_charge::where('housing_id', $housingId)
+    // $montantCharge = Housing_charge::where('housing_id', $housingId)
+    //     ->where('is_mycharge', false) // Seuls les frais à la charge du voyageur
+    //     ->sum('valeur');
+
+        $charges = Housing_charge::with('charge') // Utilisation de la relation
+        ->where('housing_id', $housingId)
         ->where('is_mycharge', false) // Seuls les frais à la charge du voyageur
-        ->sum('valeur');
+        ->get();
+
+    $montantCharge = 0;
+    $montantChargeActif = 0;
+    $montantChargeInactif = 0;
+
+    foreach ($charges as $housingCharge) {
+        $charge = $housingCharge->charge; // Accéder à l'objet Charge via la relation
+        if ($charge) {
+            $montantCharge += $housingCharge->valeur;
+            if ($charge->is_actif) {
+                $montantChargeActif += $housingCharge->valeur;
+            } else {
+                $montantChargeInactif += $housingCharge->valeur;
+            }
+        }
+    }
 
     // Calculer le montant total (montant_housing + montant_charge)
     $montantTotal = $montantHousing + $montantCharge;
@@ -196,8 +217,9 @@ class ReservationController extends Controller
         'promotion_value' => $promotionValue,
         'promotion_partenaire_value' => $promotionPartenaireValue,
         'montant_a_paye' => $montantAPaye,
-        'valeur_paye' =>   $required_paid_value
-
+        'valeur_paye' =>   $required_paid_value,
+        'montant_charge_actif' => $montantChargeActif,
+        'montant_charge_inactif' => $montantChargeInactif,
     ];
 }
 
@@ -434,6 +456,8 @@ public function storeReservationWithPayment(Request $request)
         Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end']),$validatedData['is_tranche_paiement']
     );
 
+    // return $calculatedPriceDetails;
+
 
     if ($calculatedPriceDetails['error']) {
         return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails['message']);
@@ -503,6 +527,8 @@ public function storeReservationWithPayment(Request $request)
             'montant_charge' => $validatedData['montant_charge'] ?? 0,
             'montant_housing' => $validatedData['montant_housing'] ?? 0,
             'montant_a_paye' => $validatedData['montant_a_paye'] ?? 0,
+            'montant_charge_actif' =>  $calculatedPriceDetails['montant_charge_actif'],
+            'montant_charge_inactif' =>  $calculatedPriceDetails['montant_charge_inactif']
         ]);
         $identity_profil_url = '';
 
@@ -518,12 +544,9 @@ public function storeReservationWithPayment(Request $request)
             }
 
 
-
         if ($request->has('country')) {
             $paymentData['country'] = $request->input('country');
         }
-
-
 
 
         $data = ["reservation" => $reservation,
@@ -1592,9 +1615,9 @@ public function confirmIntegration(Request $request)
         $message=  $message??"Virement sur le compte de l'hôte du montant après confirmation de l'intégration du voyageur.";
 
         $commission_percentage = $commission->valeur;
-        $total_amount = $reservation->valeur_payee;
+        $total_amount = $reservation->valeur_payee - $reservation->montant_charge_inactif;
 
-        $commission_amount = $total_amount * ($commission_percentage / 100);
+        $commission_amount = ($total_amount * ($commission_percentage / 100))  - $reservation->valeur_reduction_code_promo;
         $remaining_amount = $rest - $commission_amount;
 
         $reservation->is_integration = true;
@@ -1604,7 +1627,6 @@ public function confirmIntegration(Request $request)
         $solde_total = Portfeuille_transaction::where('credit', true)->sum('amount')-Portfeuille_transaction::where('debit', true)->sum('amount');
         $solde_commission = $previous_transactions->sum('montant_commission');
         $solde_restant = $previous_transactions->sum('montant_restant');
-        $solde_commission_admin = $previous_transactions->sum('montant_commission_admin');
 
         $new_solde_total = $solde_total + $total_amount;
         $new_solde_commission = $solde_commission + $commission_amount;

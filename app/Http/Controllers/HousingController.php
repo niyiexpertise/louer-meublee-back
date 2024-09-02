@@ -1918,25 +1918,30 @@ public function getListingsByNightPriceMin(Request $request,$price)
          'price' => 'required',
      ]);
 
+     if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier '], 403);
+    }
+
      $housing->update($validatedData);
      $housing->is_updated = true;
      $housing->save();
 
      $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
 
-     $adminUsers = User::where('is_admin', 1)->get();
 
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
 
-         $mail = [
-             'title' => 'Mise à jour de logement',
-             'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
-         ];
 
+     $mail = [
+         "title" => "Mise à jour de logement",
+         "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
+     ];
 
-         dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-     }
-
+     dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
+    }
+ 
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
  }
 
@@ -2031,6 +2036,7 @@ public function updateInsensibleHousing(Request $request, $id)
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+
     (new PromotionController())->actionRepetitif($id);
 
     $validatedData = $request->validate([
@@ -2045,6 +2051,10 @@ public function updateInsensibleHousing(Request $request, $id)
         'maximum_duration' => 'required|integer',
         'minimum_duration' => 'required|integer',
     ]);
+
+    if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier'], 403);
+    }
 
     $housing->update($validatedData);
     $housing->is_updated = false;
@@ -2210,11 +2220,8 @@ public function formatListingsData($listings,$userId=0)
             return response()->json(['error' => 'Logement non trouvé'], 404);
         }
 
-        if ($housing->is_disponible != 1) {
-            return response()->json(['error' => 'Le logement est en cours de réservation et ne peut pas être désactivé'], 200);
-        }
-        if ($housing->is_active == 0) {
-            return response()->json(['error' => 'Le logement était déjà desactivé'], 200);
+        if ($housing->is_actif == 0) {
+            return response()->json(['error' => 'Le logement est déjà desactivé'], 200);
         }
 
         $user = auth()->user();
@@ -2275,7 +2282,7 @@ public function enableHousing($housingId)
         return response()->json(['error' => 'Logement non trouvé'], 404);
     }
 
-    if ($housing->is_active) {
+    if ($housing->is_actif) {
         return response()->json(['error' => 'Le logement est déjà activé'], 200);
     }
 
@@ -2284,7 +2291,7 @@ public function enableHousing($housingId)
         return response()->json(['error' => 'Seul le propriétaire du logement peut l\'activer'], 403);
     }
 
-    $housing->is_active = 1;
+    $housing->is_actif = 1;
     $housing->save();
 
     return response()->json(['message' => 'Le logement a été activé avec succès'], 200);
@@ -2350,12 +2357,41 @@ public function enableHousing($housingId)
          * )
          */
     public function getHousingForHote(){
-
-
         try{
             $housings = Housing::where('is_destroy',0)
             ->where('is_deleted',0)
             ->where('is_blocked',0)
+            ->where('is_actif',1)
+            ->where('user_id',Auth::user()->id)
+            ->with('user')
+            ->get();
+            return response()->json(['data' => $housings], 200);
+        } catch(Exception $e) {
+            return response()->json($e->getMessage());
+        }
+    }
+
+     /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingDisabledByHote",
+         *     summary="Liste des logements désactivé d'un hote connecté",
+         *     description="Liste des désactivé logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
+         *     tags={"Dashboard hote"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+    public function getHousingDisabledByHote(){
+        try{
+            $housings = Housing::where('is_destroy',0)
+            ->where('is_deleted',0)
+            ->where('is_blocked',0)
+            ->where('is_actif',0)
+            ->where('is_finished',1)
             ->where('user_id',Auth::user()->id)
             ->with('user')
             ->get();

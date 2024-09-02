@@ -313,4 +313,228 @@ class ChargeController extends Controller
         }
 
     }
+
+    /**
+ * @OA\Post(
+ *     path="/api/charge/active/{chargeId}",
+ *     summary="Activation d'une charge",
+ *     description="Active une charge spécifique en modifiant son statut à 'actif'.",
+ *     operationId="activateCharge",
+ *     tags={"Charge"},
+ *     @OA\Parameter(
+ *         name="chargeId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la charge à activer",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Charge activée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Charge activée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La charge spécifiée n'existe pas ou est déjà active",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="La charge spécifiée n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+
+    public function active($chargeId){
+        try {
+            $charge = Charge::find($chargeId);
+            if (!$charge) {
+                return response()->json(['message' => 'La charge spécifiée n\'existe pas'], 404);
+            }
+            if($charge->is_actif == true){
+                return (new ServiceController())->apiResponse(404,[],'Charge déjà active');
+            }
+            $charge->is_actif = true;
+            $charge->save();
+            return (new ServiceController())->apiResponse(200,[],'Charge activée avec succès');
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+
+    /**
+ * @OA\Post(
+ *     path="/api/charge/desactive/{chargeId}",
+ *     summary="Désactivation d'une charge",
+ *     description="Désactive une charge spécifique en modifiant son statut à 'inactif'.",
+ *     operationId="deactivateCharge",
+ *     tags={"Charge"},
+ *     @OA\Parameter(
+ *         name="chargeId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la charge à désactiver",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Charge désactivée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Charge désactivée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La charge spécifiée n'existe pas",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="La charge spécifiée n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+
+    public function desactive($chargeId){
+        try {
+            $charge = Charge::find($chargeId);
+            if (!$charge) {
+                return (new ServiceController())->apiResponse(404,[],'Le charge spécifiée n\'existe pas');
+            }
+            if($charge->is_actif == false){
+                return (new ServiceController())->apiResponse(200,[],'Charge déjà désactivée');
+            }
+            $charge->is_actif = false;
+            $charge->save();
+            return (new ServiceController())->apiResponse(200,[],'Charge désactivée avec succès');
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+    /**
+ * @OA\Get(
+ *     path="/api/charge/indexChargeActive",
+ *     summary="Liste des charges actives",
+ *     description="Récupère la liste de toutes les charges actives (is_actif = true) et non supprimées (is_deleted = false).",
+ *     operationId="getActiveCharges",
+ *     tags={"Charge"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des charges actives récupérée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="is_actif", type="boolean", example=true),
+ *                     @OA\Property(property="is_deleted", type="boolean", example=false),
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+
+    public function indexChargeActive()
+    {
+        try{
+                $charges = Charge::where('is_deleted', false)
+                ->where('is_actif', true)
+                ->orderBy('id', 'desc')->get();
+                return response()->json(['data' => $charges], 200);
+        } catch(Exception $e) {
+            return response()->json($e->getMessage());
+        }
+    }
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/charge/indexChargeInactive",
+ *     summary="Liste des charges inactives",
+ *     description="Récupère la liste de toutes les charges inactives (is_actif = false) et non supprimées (is_deleted = false).",
+ *     operationId="getInactiveCharges",
+ *     tags={"Charge"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des charges inactives récupérée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="is_actif", type="boolean", example=false),
+ *                     @OA\Property(property="is_deleted", type="boolean", example=false),
+
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+
+    public function indexChargeInactive()
+    {
+        try{
+                $charges = Charge::where('is_deleted', false)
+                ->where('is_actif', false)
+                ->orderBy('id', 'desc')->get();
+                return response()->json(['data' => $charges], 200);
+        } catch(Exception $e) {
+            return response()->json($e->getMessage());
+        }
+    }
+
 }

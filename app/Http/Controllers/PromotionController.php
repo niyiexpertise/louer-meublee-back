@@ -30,6 +30,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Setting;
 use DateTime;
 use Exception;
 use Illuminate\Http\Response;
@@ -116,7 +117,7 @@ class PromotionController extends Controller
     }
 
     if(floatval($request->value)<= 0){
-        return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission du  soit positive et non nulle");
+        return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du pourcentage de reduction de la promotion soit positive et non nulle");
     }
 
     if (!strtotime($request->date_debut)) {
@@ -361,6 +362,114 @@ class PromotionController extends Controller
     }
   }
 
+
+  /**
+ * @OA\Post(
+ *     path="/api/promotion/update/{promotionId}",
+ *     summary="Mise à jour d'une promotion",
+ *     description="Met à jour les informations d'une promotion existante pour un logement.",
+ *     operationId="updatePromotion",
+ *    tags={"Promotion hote"},
+ *     @OA\Parameter(
+ *         name="promotionId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la promotion à mettre à jour",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="value", type="number", description="Valeur en pourcentage de la promotion"),
+ *             @OA\Property(property="number_of_reservation", type="integer", description="Nombre de réservations pour la promotion"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Promotion mise à jour avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Promotion mise à jour avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La promotion spécifiée n'existe pas ou d'autres erreurs",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="La promotion spécifiée n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth":{}}}
+ * )
+ */
+
+
+  public function update(Request $request,$promotionId){
+    try {
+
+        $promotion = Promotion::find($promotionId);
+        if (!$promotion) {
+            return (new ServiceController())->apiResponse(404,[],'La promotion spécifiée n\'existe pas.');
+        }
+
+        if(Housing::whereId($promotion->housing_id)->first()->user_id != Auth::user()->id){
+            return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez modifier la promotion d\'un logement qui ne vous appartient pas.');
+        }
+
+        $dateToday = new DateTime();
+        $dateFin = new DateTime($promotion->date_fin);
+
+        if ($dateFin->format('Y-m-d') < $dateToday->format('Y-m-d')) {
+            return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez modifier une promotion dont la date de fin est déjà passée.');
+        }
+
+        if($request->has('value')){
+            if(floatval($request->value) <= 0){
+                return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur de la commission de cette promotion soit positive et non nulle");
+            }
+        }
+
+
+        if($request->has('number_of_reservation')){
+            if(intval($request->number_of_reservation)<=0){
+                return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de réservation soit positive et non nulle");
+            }
+        }
+
+        if(!is_null(Setting::first()->max_number_of_reservation)){
+            if($request->number_of_reservation > Setting::first()->max_number_of_reservation){
+                return (new ServiceController())->apiResponse(404,[],'Le nombre de réservation doit être inférieur ou égal à '.Setting::first()->max_number_of_reservation);
+            }
+        }
+
+        if(!is_null(Setting::first()->max_value_promotion)){
+            if($request->value > Setting::first()->max_value_promotion){
+                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+            }
+        }
+
+        $promotion->value= $request->value??$promotion->value;
+        $promotion->number_of_reservation= $request->number_of_reservation??$promotion->number_of_reservation;
+        $promotion->is_actif= 0;
+        $promotion->save();
+
+        return (new ServiceController())->apiResponse(200,[],'Promotion mise à jour avec succès');
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+  }
+
 /**
  * @OA\Delete(
  *     path="/api/promotion/delete/{id}",
@@ -422,64 +531,7 @@ public function DeletePromotion($id)
 
 //Fonction pour déclencher l'activation d'une promotion dont la date debut est atteint
 
-/**
- * @OA\Post(
- *      path="/api/promotion/activatePromotionsForHousing/{housingId}",
- *      summary="Activer les promotions pour un logement",
- *      tags={"Promotion hote"},
- *      @OA\Parameter(
- *          name="housingId",
- *          in="path",
- *          required=true,
- *          description="ID du logement pour lequel activer les promotions",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Promotions activées avec succès",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="activated_promotions",
- *                  type="array",
- *                  @OA\Items(
- *                      type="object",
- *                      @OA\Property(property="id", type="integer"),
- *                      @OA\Property(property="housing_id", type="integer"),
- *                      @OA\Property(property="number_of_reservation", type="integer"),
- *                      @OA\Property(property="date_debut", type="string", format="date"),
- *                      @OA\Property(property="date_fin", type="string", format="date"),
- *                      @OA\Property(property="is_encours", type="boolean"),
- *                      @OA\Property(property="is_deleted", type="boolean"),
- *                      @OA\Property(property="is_blocked", type="boolean")
- *                  )
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  type="string",
- *                  example="Promotions activées avec succès."
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Logement non trouvé ou aucune promotion activée",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="message",
- *                  type="string",
- *                  example="Logement non trouvé." 
- *              )
- *          )
- *      ),
- *      security={
- *          {"bearerAuth": {}}
- *      }
- * )
- */
+
 
 public function activatePromotionsForHousing($housingId)
 {

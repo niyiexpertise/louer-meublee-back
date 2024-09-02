@@ -1100,7 +1100,7 @@ public function getUserDetails($userId) {
         'total_reservations' => $total_reservations,
         'solde' => $solde,
         'total_transactions' => $total_transactions,
-        'has_partenaire' => is_null($user->partenaire_id)?false:true
+        'has_partenaire' => is_null($user->partenaire_id)?false:true,
     ];
 
     return response()->json([

@@ -968,6 +968,7 @@ public function RevokePermsToRole(Request $request, $r){
             $uniquePermissions = $permissions;
             // $permissionNames = $users->getPermissionNames();
             $permissionsDirectes = $users->getDirectPermissions();
+            $permissionsDirect = [];
 
             foreach($permissionsDirectes as $permissionsDirecte){
                 $permissionsDirect[] = $permissionsDirecte->name;

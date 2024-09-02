@@ -6605,11 +6605,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations confirmées",
+                "summary": "Liste des réservations confirmées par le voyageur",
                 "operationId": "383a3c23d0b125b9d6cb972accdecc60",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations confirmées.",
+                        "description": "Liste des réservations confirmées par le voyageur.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6740,11 +6740,11 @@
                 "tags": [
                     "Dashboard traveler"
                 ],
-                "summary": "Liste des réservations en attente de confirmation",
+                "summary": "Liste des réservations en attente de confirmation d'intégration",
                 "operationId": "6765a8b375f6b7fbe005b75aeb06b5ba",
                 "responses": {
                     "200": {
-                        "description": "Liste des réservations en attente de confirmation.",
+                        "description": "Liste des réservations en attente de confirmation d'intégration.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6986,6 +6986,51 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Reservation non trouvée ou Vous ne pouvez pas consulter les détails d'une réservation qui ne vous concerne pas."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservation/getReservationWIthoutaction": {
+            "get": {
+                "tags": [
+                    "Dashboard traveler"
+                ],
+                "summary": "Liste des réservations payées sans action du voyageur pour le moment.",
+                "operationId": "4bf9af96dbb796de97e9809cfd6b637c",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réservations sans action du voyageur pour le moment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": " erreur lors de la récupération de la Liste des réservations sans action du voyageur pour le moment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de serveur."
                                         }
                                     },
                                     "type": "object"
@@ -8764,7 +8809,7 @@
         "/api/reservation/reservationsConfirmedByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations confirmées par l'hote connecté",
                 "description": "Liste des réservations confirmées par l'hote connecté",
@@ -8784,7 +8829,7 @@
         "/api/reservation/reservationsRejectedByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations rejetées par l'hote connecté",
                 "description": "Liste des réservations rejetées par l'hote connecté",
@@ -8804,7 +8849,7 @@
         "/api/reservation/reservationsCanceledByTravelerForHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
                 "description": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
@@ -8824,7 +8869,7 @@
         "/api/reservation/reservationsNotConfirmedYetByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations en attente de confirmation pour l'hote connecté",
                 "description": "Liste des réservations en attente de confirmation pour l'hote connecté",
@@ -10768,7 +10813,7 @@
         "/api/logement/update/sensible/{id}": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Modifier les informations sensibles d'un logement",
                 "description": "Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
@@ -10864,7 +10909,7 @@
         "/api/logement/update/insensible/{id}": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Modifier les informations insensibles d'un logement",
                 "description": "Permet de modifier les informations insensibles d'un logement existant à partir de son ID",
@@ -10966,7 +11011,7 @@
         "/api/logement/{housingId}/hote/disable": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "route par laquelle l'hôte désactive son logement donné",
                 "description": "Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
@@ -11042,7 +11087,7 @@
         "/api/logement/{housingId}/hote/enable": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "la route qui permet à l'hôte d'activer un logement",
                 "description": "Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
@@ -11118,7 +11163,7 @@
         "/api/logement/destroyHousingHote/{id}": {
             "delete": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Suppression d un logement par l' hote",
                 "operationId": "eeaad0fda9213e9a8afa4b2d4244922a",
@@ -11151,7 +11196,7 @@
         "/api/logement/getHousingForHote": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des logements d'un hote connecté",
                 "description": "Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
@@ -11690,7 +11735,7 @@
         "/api/logement/liste/notFinished": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des logements non rempli complètement par l'hôte connecté",
                 "description": "Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
@@ -18614,99 +18659,6 @@
                 ]
             }
         },
-        "/api/promotion/activatePromotionsForHousing/{housingId}": {
-            "post": {
-                "tags": [
-                    "Promotion hote"
-                ],
-                "summary": "Activer les promotions pour un logement",
-                "operationId": "506ec9a44fa8158ad12e3e59d1001405",
-                "parameters": [
-                    {
-                        "name": "housingId",
-                        "in": "path",
-                        "description": "ID du logement pour lequel activer les promotions",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Promotions activées avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "activated_promotions": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "housing_id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "number_of_reservation": {
-                                                        "type": "integer"
-                                                    },
-                                                    "date_debut": {
-                                                        "type": "string",
-                                                        "format": "date"
-                                                    },
-                                                    "date_fin": {
-                                                        "type": "string",
-                                                        "format": "date"
-                                                    },
-                                                    "is_encours": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "is_deleted": {
-                                                        "type": "boolean"
-                                                    },
-                                                    "is_blocked": {
-                                                        "type": "boolean"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Promotions activées avec succès."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Logement non trouvé ou aucune promotion activée",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Logement non trouvé."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/promotion/active/{promotionId}/{housingId}": {
             "post": {
                 "tags": [
@@ -20509,7 +20461,7 @@
         "/api/reservation/hote_confirm_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Confirmer la reservation d un voyageur sur un de ses biens",
                 "description": "Confirmer la reservation d un voyageur sur un de ses biens",
@@ -20543,7 +20495,7 @@
         "/api/reservation/hote_reject_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
                 "description": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
@@ -20596,7 +20548,7 @@
         "/api/reservation/traveler_reject_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard traveler"
                 ],
                 "summary": "Annulation d une reservation par un voyageur avec le motif à l'appui",
                 "description": "Annulation d une reservation par un voyageur avec le motif à l'appui",
@@ -20706,7 +20658,7 @@
         "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Détail d'une réservation côté hote",
                 "description": "Détail d'une réservation côté hote",
@@ -20737,7 +20689,7 @@
         "/api/reservation/confirmIntegration": {
             "post": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard traveler"
                 ],
                 "summary": "Confirmer l'intégration après une réservation(c'est le voyageur qui confirme)",
                 "description": "Confirme l'intégration d'une réservation après vérification des conditions nécessaires.",

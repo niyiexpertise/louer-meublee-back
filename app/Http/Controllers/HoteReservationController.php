@@ -42,7 +42,7 @@ class HoteReservationController extends Controller
      *     path="/api/reservation/reservationsConfirmedByHost",
      *     summary="Liste des réservations confirmées par l'hote connecté",
      * description="Liste des réservations confirmées par l'hote connecté",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -59,7 +59,9 @@ class HoteReservationController extends Controller
             ->where('is_blocked',0)
             ->where('is_confirmed_hote',1)
             ->where('is_rejected_traveler',0)
-            ->where('is_rejected_hote',0);
+            ->where('is_rejected_hote',0)
+            ->where('statut', 'payee');
+
         })->with(['housing','user'])->get();
     
         return response()->json(['data' => $reservations]);
@@ -70,7 +72,7 @@ class HoteReservationController extends Controller
          *     path="/api/reservation/reservationsRejectedByHost",
          *     summary="Liste des réservations rejetées par l'hote connecté",
          * description="Liste des réservations rejetées par l'hote connecté",
-         *     tags={"Reservation"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -87,6 +89,8 @@ class HoteReservationController extends Controller
                 ->where('is_blocked',0)
                 ->where('is_confirmed_hote',0)
                 ->where('is_rejected_traveler',0)
+                ->where('statut', 'payee')
+
                 ->where('is_rejected_hote',1);
             })->with(['housing','user'])->get();
             return response()->json(['data' => $reservations]);
@@ -98,7 +102,7 @@ class HoteReservationController extends Controller
          *     path="/api/reservation/reservationsCanceledByTravelerForHost",
          *     summary="Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
          * description="Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
-         *     tags={"Reservation"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -115,7 +119,9 @@ class HoteReservationController extends Controller
                 ->where('is_blocked',0)
                 ->where('is_confirmed_hote',0)
                 ->where('is_rejected_traveler',1)
-                ->where('is_rejected_hote',0);
+                ->where('is_rejected_hote',0)
+                ->where('statut', 'payee');
+
             })->with(['housing','user'])->get();
             return response()->json(['data' => $reservations]);
         }
@@ -125,7 +131,7 @@ class HoteReservationController extends Controller
      *     path="/api/reservation/reservationsNotConfirmedYetByHost",
      *     summary="Liste des réservations en attente de confirmation pour l'hote connecté",
      * description="Liste des réservations en attente de confirmation pour l'hote connecté",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -142,13 +148,11 @@ class HoteReservationController extends Controller
             ->where('is_blocked',0)
             ->where('is_confirmed_hote',0)
             ->where('is_rejected_traveler',0)
-            ->where('is_rejected_hote',0);
+            ->where('is_rejected_hote',0)
+            ->where('statut', 'payee');
+
         })->with(['housing','user'])->get();
 
-        if($reservations->count() == 0) {
-            return response()->json('Aucune réservation en attente de confirmation disponible',404);
-        }
-    
         return response()->json(['data' => $reservations]);
     }
 

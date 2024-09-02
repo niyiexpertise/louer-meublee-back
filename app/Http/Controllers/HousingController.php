@@ -1087,7 +1087,7 @@ public function ListeDesLogementsAcceuil(Request $request)
                  'charge_name' => $charge->name,
                  'charge_icone' => $charge->icone,
                  'is_mycharge' => $housingCharge->is_mycharge,
-                    'valeur_charge' => $housingCharge->valeur
+                  'valeur_charge' => $housingCharge->valeur
              ];
          }else{
              $travelerCharge_id[] = [
@@ -1824,7 +1824,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
 /**
  * @OA\Put(
  *     path="/api/logement/update/sensible/{id}",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *     summary="Modifier les informations sensibles d'un logement",
  *     description="Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
  *     security={{"bearerAuth":{}}},
@@ -1918,25 +1918,30 @@ public function getListingsByNightPriceMin(Request $request,$price)
          'price' => 'required',
      ]);
 
+     if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier '], 403);
+    }
+
      $housing->update($validatedData);
      $housing->is_updated = true;
      $housing->save();
 
      $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
 
-     $adminUsers = User::where('is_admin', 1)->get();
 
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
 
-         $mail = [
-             'title' => 'Mise à jour de logement',
-             'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
-         ];
 
+     $mail = [
+         "title" => "Mise à jour de logement",
+         "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
+     ];
 
-         dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-     }
-
+     dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
+    }
+ 
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
  }
 
@@ -1945,7 +1950,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
 /**
  * @OA\Put(
  *     path="/api/logement/update/insensible/{id}",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *     summary="Modifier les informations insensibles d'un logement",
  *     description="Permet de modifier les informations insensibles d'un logement existant à partir de son ID",
  *     security={{"bearerAuth":{}}},
@@ -2031,6 +2036,7 @@ public function updateInsensibleHousing(Request $request, $id)
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+
     (new PromotionController())->actionRepetitif($id);
 
     $validatedData = $request->validate([
@@ -2045,6 +2051,10 @@ public function updateInsensibleHousing(Request $request, $id)
         'maximum_duration' => 'required|integer',
         'minimum_duration' => 'required|integer',
     ]);
+
+    if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier'], 403);
+    }
 
     $housing->update($validatedData);
     $housing->is_updated = false;
@@ -2165,7 +2175,7 @@ public function formatListingsData($listings,$userId=0)
     /**
  * @OA\Put(
  *      path="/api/logement/{housingId}/hote/disable",
- *      tags={"Housing"},
+ *      tags={"Dashboard hote"},
  *      security={{"bearerAuth": {}}},
  *      summary="route par laquelle l'hôte désactive son logement donné",
  *      description="Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
@@ -2232,7 +2242,7 @@ public function formatListingsData($listings,$userId=0)
     /**
  * @OA\Put(
  *      path="/api/logement/{housingId}/hote/enable",
- *      tags={"Housing"},
+ *      tags={"Dashboard hote"},
  *      security={{"bearerAuth": {}}},
  *      summary="la route qui permet à l'hôte d'activer un logement",
  *      description="Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
@@ -2293,7 +2303,7 @@ public function enableHousing($housingId)
      * @OA\Delete(
      *     path="/api/logement/destroyHousingHote/{id}",
      *     summary="Suppression d un logement par l' hote",
-     *     tags={"Housing"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -2340,7 +2350,7 @@ public function enableHousing($housingId)
          *     path="/api/logement/getHousingForHote",
          *     summary="Liste des logements d'un hote connecté",
          *     description="Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
-         *     tags={"Housing"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -2639,6 +2649,7 @@ public function getCurrentPromotion($housingId)
                               ->where('is_encours', true)
                               ->where('is_deleted', false)
                               ->where('is_blocked', false)
+                              ->where('is_actif',true)
                               ->where('date_debut', '<=', $currentDate)
                               ->where('date_fin', '>=', $currentDate)
                               ->first();
@@ -2660,7 +2671,8 @@ public function getCurrentReductions($housingId)
         ->where('is_encours', 1)
         ->where('is_deleted', false)
         ->where('is_blocked', false)
-        ->get();
+        ->where('is_actif',true)
+               ->get();
 
     return response()->json([
         'data' => $ongoingReductions,
@@ -2935,7 +2947,7 @@ public function getOrDefault($input, $default = 'XX') {
     /**
  * @OA\Get(
  *     path="/api/logement/liste/notFinished",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *  security={{"bearerAuth": {}}},
  *     summary="Liste des logements non rempli complètement par l'hôte connecté",
  *     description="Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
@@ -2958,18 +2970,6 @@ public function HousingHoteInProgress(){
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
 }
-
-
-    public function paginateH($items, $perPage = null, $page = null){
-        $perPage = $perPage ?: Setting::first()->pagination_logement_acceuil;
-        $baseUrl = url('/');
-        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
-        $total = count($items);
-        $currentpage = $page;
-        $offset = ($currentpage * $perPage) - $perPage;
-        $itemstoshow = array_slice($items, $offset, $perPage);
-        return new LengthAwarePaginator($itemstoshow,$total,$perPage,$page,['path' => "{$baseUrl}/api/logement/index/ListeDesLogementsAcceuil?id" ]);
-    }
 
 
     /**

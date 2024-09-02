@@ -107,12 +107,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getConfirmedReservations",
-         *     summary="Liste des réservations confirmées",
+         *     summary="Liste des réservations confirmées par le voyageur",
          *     tags={"Dashboard traveler"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations confirmées.",
+         *         description="Liste des réservations confirmées par le voyageur.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -139,7 +139,7 @@ class DashBoardTravelerController extends Controller
                                 ->get();
                 $data["nombre"] = count($data["data"]) ;
 
-                return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations confirmées.');
+                return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations confirmées par le voyageur.');
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
@@ -233,12 +233,12 @@ class DashBoardTravelerController extends Controller
         /**
          * @OA\Get(
          *     path="/api/reservation/getPendingConfirmations",
-         *     summary="Liste des réservations en attente de confirmation",
+         *     summary="Liste des réservations en attente de confirmation d'intégration",
          *     tags={"Dashboard traveler"},
          *  security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
-         *         description="Liste des réservations en attente de confirmation.",
+         *         description="Liste des réservations en attente de confirmation d'intégration.",
          *         @OA\JsonContent(
          *             type="array",
          *             @OA\Items(ref="")
@@ -262,10 +262,14 @@ class DashBoardTravelerController extends Controller
                 $data["data"] = Reservation::where('user_id', $userId)
                                     ->where('is_confirmed_hote', true)
                                     ->where('statut', 'payee')
+                                    ->where('is_integration', false)
+                                                                        ->where('is_rejected_traveler', false)
+
+
                                     ->get();
                 $data["nombre"] = count($data["data"]);
 
-                return (new ServiceController())->apiResponse(200, $data, 'Liste des logements en attente de confirmation.');
+                return (new ServiceController())->apiResponse(200, $data, 'Liste des reservations en attente de confirmation d\'intégration.');
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
@@ -659,5 +663,55 @@ class DashBoardTravelerController extends Controller
        return (new ServiceController())->apiResponse(200,$data, 'Detail de reservation recupéré avec succès');
     }
 
+
+
+/**
+         * @OA\Get(
+         *     path="/api/reservation/getReservationWIthoutaction",
+         *     summary="Liste des réservations payées sans action du voyageur pour le moment.",
+         *     tags={"Dashboard traveler"},
+         *  security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="Liste des réservations sans action du voyageur pour le moment.",
+         *         @OA\JsonContent(
+         *             type="array",
+         *             @OA\Items(ref="")
+         *         )
+         *     ),
+         *     @OA\Response(
+         *         response=500,
+         *         description=" erreur lors de la récupération de la Liste des réservations sans action du voyageur pour le moment.",
+         *         @OA\JsonContent(
+         *             @OA\Property(property="message", type="string", example="Erreur de serveur.")
+         *         )
+         *     )
+         * )
+         */
+
+         public function getReservationWIthoutaction()
+         {
+             try {
+                 $userId = Auth::id();
+ 
+                 $data["data"] = Reservation::where('user_id', $userId)
+                                     ->where('is_confirmed_hote', false)
+                                     ->where('statut', 'payee')
+                                     ->where('is_integration', false)
+                                     ->where('is_rejected_hote', false)
+                                     ->where('is_rejected_traveler', false)
+
+
+
+ 
+ 
+                                     ->get();
+                 $data["nombre"] = count($data["data"]);
+ 
+                 return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations déjà payée sans action   pour le moment.');
+             } catch (Exception $e) {
+                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+             }
+         }
 
 }

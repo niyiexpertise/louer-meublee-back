@@ -361,6 +361,24 @@ class PromotionController extends Controller
     }
   }
 
+  public function update($promotionId){
+    try {
+        $promotion = Promotion::find($promotionId);
+        if (!$promotion) {
+            return response()->json(['message' => 'La promotion spécifiée n\'existe pas'], 404);
+        }
+
+        if(Housing::whereId($promotion->housing_id)->first())
+
+      
+        
+        return (new ServiceController())->apiResponse(200,[],'Promotion mise à jour avec succès');
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+  }
+
 /**
  * @OA\Delete(
  *     path="/api/promotion/delete/{id}",
@@ -422,64 +440,7 @@ public function DeletePromotion($id)
 
 //Fonction pour déclencher l'activation d'une promotion dont la date debut est atteint
 
-/**
- * @OA\Post(
- *      path="/api/promotion/activatePromotionsForHousing/{housingId}",
- *      summary="Activer les promotions pour un logement",
- *      tags={"Promotion hote"},
- *      @OA\Parameter(
- *          name="housingId",
- *          in="path",
- *          required=true,
- *          description="ID du logement pour lequel activer les promotions",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Promotions activées avec succès",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="activated_promotions",
- *                  type="array",
- *                  @OA\Items(
- *                      type="object",
- *                      @OA\Property(property="id", type="integer"),
- *                      @OA\Property(property="housing_id", type="integer"),
- *                      @OA\Property(property="number_of_reservation", type="integer"),
- *                      @OA\Property(property="date_debut", type="string", format="date"),
- *                      @OA\Property(property="date_fin", type="string", format="date"),
- *                      @OA\Property(property="is_encours", type="boolean"),
- *                      @OA\Property(property="is_deleted", type="boolean"),
- *                      @OA\Property(property="is_blocked", type="boolean")
- *                  )
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  type="string",
- *                  example="Promotions activées avec succès."
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Logement non trouvé ou aucune promotion activée",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="message",
- *                  type="string",
- *                  example="Logement non trouvé." 
- *              )
- *          )
- *      ),
- *      security={
- *          {"bearerAuth": {}}
- *      }
- * )
- */
+
 
 public function activatePromotionsForHousing($housingId)
 {

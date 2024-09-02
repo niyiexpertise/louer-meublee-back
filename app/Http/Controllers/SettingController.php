@@ -40,14 +40,14 @@ class SettingController extends Controller
      *                 @OA\Property(property="instagram_url", type="string", format="url"),
      *                 @OA\Property(property="linkedin_url", type="string", format="url"),
      *                 @OA\Property(
-     *                     property="logo", 
-     *                     type="string", 
+     *                     property="logo",
+     *                     type="string",
      *                     format="binary",
      *                     description="The logo image file to upload"
      *                 ),
      *                 @OA\Property(
-     *                     property="app_mode", 
-     *                     type="string", 
+     *                     property="app_mode",
+     *                     type="string",
      *                     enum={"PRODUCTION", "DEVELOPPEMENT"}
      *                 ),
      *                 @OA\Property(property="adresse_serveur_fichier", type="string"),
@@ -117,7 +117,7 @@ class SettingController extends Controller
         }
 
         $validatedData = $validationResult['data'];
- 
+
         $this->updateFields($settings, $validatedData);
 
         if ($request->hasFile('logo')) {
@@ -136,7 +136,7 @@ class SettingController extends Controller
                 }
             }
 
-           
+
         }
 
         $settings->save();

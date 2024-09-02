@@ -993,7 +993,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
        Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
        Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
-       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
+       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.delete');
        Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        //Gestion des photos de logement
        Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
@@ -1635,6 +1635,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::post('soldeReservation', [DashBoardTravelerController::class, 'soldeReservation'])
             ->name('reservation.soldeReservation')
             ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.soldeReservation');
+            Route::get('getReservationWIthoutaction', [DashBoardTravelerController::class, 'getReservationWIthoutaction'])
+            ->name('reservation.getReservationWIthoutaction')
+            ->middleware('role_or_permission:superAdmin|traveler');
 
 
         });

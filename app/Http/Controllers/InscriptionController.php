@@ -131,7 +131,9 @@ protected $fileService;
     $identity_profil_url = '';
 
     if ($request->hasFile('identity_profil')) {
-        $validationResultFile  = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');;
+
+
+        $validationResultFile  = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');
         //$identity_profil_url = $this->fileService->uploadFiles($request->file('identity_profil'), 'image/photo_profil', 'extensionImage');;
         if ($validationResultFile['fails']) {
             return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);

@@ -143,6 +143,7 @@ class ReservationController extends Controller
         ->where('night_number', '<=', $duration)
         ->orderBy('night_number', 'desc')
         ->where('is_encours',true)
+        ->where('is_actif',true)
         ->first();
 
     if ($reduction) {
@@ -182,8 +183,8 @@ class ReservationController extends Controller
     $required_paid_value =  $montantAPaye ;
     if ($is_tranch== 1) {
         $required_paid_value =  $montantAPaye / 2;
-     
-    } 
+
+    }
 
     // Retourner les détails
     return [
@@ -193,9 +194,9 @@ class ReservationController extends Controller
         'montant_total' => $montantTotal,
         'reduction_value' => $reductionValue,
         'promotion_value' => $promotionValue,
-        'promotion_partenaire_value' => $countReservationWithPromoInscription,
+        'promotion_partenaire_value' => $promotionPartenaireValue,
         'montant_a_paye' => $montantAPaye,
-        'valeur_paye' =>   $required_paid_value 
+        'valeur_paye' =>   $required_paid_value
 
     ];
 }
@@ -432,7 +433,6 @@ public function storeReservationWithPayment(Request $request)
         $validatedData['date_of_starting'],
         Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end']),$validatedData['is_tranche_paiement']
     );
-   return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails);
 
 
     if ($calculatedPriceDetails['error']) {
@@ -523,16 +523,11 @@ public function storeReservationWithPayment(Request $request)
             $paymentData['country'] = $request->input('country');
         }
 
-        $mail_to_traveler = [
-            'title' => 'Confirmation de Réservation',
-            'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
-        ];
 
-        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
 
 
         $data = ["reservation" => $reservation,
-             "valeur_payee" =>$montant
+             "valeur_payee" =>$calculatedPriceDetails['valeur_paye']
              ];
 
             return (new ServiceController())->apiResponse(200,$data, 'Réservation éffectuée avec succès');
@@ -773,6 +768,12 @@ public function payReservation(Request $request,$reservationId){
                     " Date de début : " . $reservation->date_of_starting . "\n" .
                     " Date de fin : " . $reservation->date_of_end . "\n"
             ];
+            $mail_to_traveler = [
+                'title' => 'Confirmation de Réservation',
+                'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
+            ];
+
+            dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
 
             dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
 
@@ -826,7 +827,7 @@ public function findSimilarPaymentMethod($inputMethod)
      *     path="/api/reservation/hote_confirm_reservation/{idReservation}",
      *     summary="Confirmer la reservation d un voyageur sur un de ses biens",
      * description="Confirmer la reservation d un voyageur sur un de ses biens",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="idReservation",
@@ -887,7 +888,7 @@ public function findSimilarPaymentMethod($inputMethod)
      *     path="/api/reservation/hote_reject_reservation/{idReservation}",
      *     summary="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
      * description="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="idReservation",
@@ -1039,7 +1040,7 @@ public function findSimilarPaymentMethod($inputMethod)
      *     path="/api/reservation/traveler_reject_reservation/{idReservation}",
      *     summary="Annulation d une reservation par un voyageur avec le motif à l'appui",
      * description="Annulation d une reservation par un voyageur avec le motif à l'appui",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard traveler"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="idReservation",
@@ -1420,7 +1421,7 @@ public function findSimilarPaymentMethod($inputMethod)
             return (new ServiceController())->apiResponse(404, [], "Logement non trouvé.");
         }
 
-        $reservations = Reservation::where('housing_id', $housingId)->get();
+        $reservations = Reservation::where('housing_id', $housingId)->where('is_rejected_traveler', false)->where('is_rejected_hote', false)->where('is_confirmed_hote',true)->where('statut','payee')->get();
 
         $data = [
             'reservations' => $reservations->map(function($reservation) use ($housing) {
@@ -1444,7 +1445,7 @@ public function findSimilarPaymentMethod($inputMethod)
           *     path="/api/reservation/showDetailOfReservationForHote/{idReservation}",
           *     summary="Détail d'une réservation côté hote",
           * description="Détail d'une réservation côté hote",
-          *     tags={"Reservation"},
+          *     tags={"Dashboard hote"},
           * security={{"bearerAuth": {}}},
           *   @OA\Parameter(
           *         name="idReservation",
@@ -1487,7 +1488,7 @@ public function findSimilarPaymentMethod($inputMethod)
  *     summary="Confirmer l'intégration après une réservation(c'est le voyageur qui confirme)",
  *   security={{"bearerAuth": {}}},
  *     description="Confirme l'intégration d'une réservation après vérification des conditions nécessaires.",
- *     tags={"Reservation"},
+ *     tags={"Dashboard traveler"},
  *     @OA\RequestBody(
  *         description="Informations pour confirmer l'intégration",
  *         required=true,

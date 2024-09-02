@@ -1918,25 +1918,30 @@ public function getListingsByNightPriceMin(Request $request,$price)
          'price' => 'required',
      ]);
 
+     if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier '], 403);
+    }
+
      $housing->update($validatedData);
      $housing->is_updated = true;
      $housing->save();
 
      $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
 
-     $adminUsers = User::where('is_admin', 1)->get();
 
+     $right = Right::where('name','admin')->first();
+     $adminUsers = User_right::where('right_id', $right->id)->get();
      foreach ($adminUsers as $adminUser) {
 
-         $mail = [
-             'title' => 'Mise à jour de logement',
-             'body' => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.",
-         ];
 
+     $mail = [
+         "title" => "Mise à jour de logement",
+         "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
+     ];
 
-         dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-     }
-
+     dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
+    }
+ 
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
  }
 
@@ -2031,6 +2036,7 @@ public function updateInsensibleHousing(Request $request, $id)
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+
     (new PromotionController())->actionRepetitif($id);
 
     $validatedData = $request->validate([
@@ -2045,6 +2051,10 @@ public function updateInsensibleHousing(Request $request, $id)
         'maximum_duration' => 'required|integer',
         'minimum_duration' => 'required|integer',
     ]);
+
+    if ($housing->user_id != $userId ) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier'], 403);
+    }
 
     $housing->update($validatedData);
     $housing->is_updated = false;

@@ -153,8 +153,6 @@ class HoteReservationController extends Controller
 
         })->with(['housing','user'])->get();
 
-        
-    
         return response()->json(['data' => $reservations]);
     }
 

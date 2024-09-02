@@ -39,12 +39,15 @@ class SettingController extends Controller
      *                 @OA\Property(property="twitter_url", type="string", format="url"),
      *                 @OA\Property(property="instagram_url", type="string", format="url"),
      *                 @OA\Property(property="linkedin_url", type="string", format="url"),
-     *                 @OA\Property(
-     *                     property="logo",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="The logo image file to upload"
-     *                 ),
+*                 @OA\Property(
+ *                     property="logo",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="string",
+ *                         format="binary",
+ *                         description="The logo image files to upload"
+ *                     )
+ *                 ),
      *                 @OA\Property(
      *                     property="app_mode",
      *                     type="string",
@@ -121,15 +124,15 @@ class SettingController extends Controller
         $this->updateFields($settings, $validatedData);
 
         if ($request->hasFile('logo')) {
-
-            if($request->hasFile('logo') && is_array($request->file('logo'))){
-                if (isset($request->hasFile('logo')[0])){
+            if(is_array($request->file('logo'))){
+                if (isset($request->file('logo')[0])){
                     $validationResultFile = $this->fileService->uploadFiles($request->file('logo')[0], 'image/logos','extensionImage');
 
                     if ($validationResultFile['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
                     }
-
+                    
+                    
                     $settings->logo = $validationResultFile['result'];
                 }else{
                     return (new ServiceController())->apiResponse(404, [], 'Aucune image trouvé dans les données.');
@@ -202,7 +205,7 @@ class SettingController extends Controller
             'montant_minimum_retrait' => 'nullable|numeric',
             'montant_maximum_retrait' => 'nullable|numeric',
             'montant_minimum_solde_retrait' => 'nullable|numeric',
-            'logo' =>'nullable|max:2048',
+            
             'commission_partenaire' => 'nullable|numeric',
             'reduction_partenaire_defaut' => 'nullable|numeric',
             'number_of_reservation_partenaire_defaut' => 'nullable|integer',

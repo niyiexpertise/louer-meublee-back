@@ -409,9 +409,9 @@ class PortfeuilleTransactionController extends Controller
 
      private function recalculerSoldes($transactionId)
      {
-         $transactions = Portfeuille_transaction::where('id', '>', $transactionId)->orderBy('id', 'asc')->get();
+         $transactions = Portfeuille_transaction::where('id', '>=', $transactionId)->orderBy('id', 'asc')->get();
 
-         $currentTransaction = Portfeuille_transaction::find($transactionId);
+         $currentTransaction = Portfeuille_transaction::where('id', '<', $transactionId)->orderBy('id', 'desc')->first();
 
          if (!$currentTransaction) {
              return;

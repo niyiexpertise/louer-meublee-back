@@ -22250,9 +22250,12 @@
                                         "format": "url"
                                     },
                                     "logo": {
-                                        "description": "The logo image file to upload",
-                                        "type": "string",
-                                        "format": "binary"
+                                        "type": "array",
+                                        "items": {
+                                            "description": "The logo image files to upload",
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
                                     },
                                     "app_mode": {
                                         "type": "string",

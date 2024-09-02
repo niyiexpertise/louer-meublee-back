@@ -1637,8 +1637,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.soldeReservation');
             Route::get('getReservationWIthoutaction', [DashBoardTravelerController::class, 'getReservationWIthoutaction'])
             ->name('reservation.getReservationWIthoutaction')
-            ->middleware('role_or_permission:superAdmin|traveler|hote|Managereservation.getReservationWIthoutaction');
-
+            ->middleware('role_or_permission:superAdmin|traveler');
 
 
         });

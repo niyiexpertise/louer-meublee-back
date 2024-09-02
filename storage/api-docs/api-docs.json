@@ -8809,7 +8809,7 @@
         "/api/reservation/reservationsConfirmedByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations confirmées par l'hote connecté",
                 "description": "Liste des réservations confirmées par l'hote connecté",
@@ -8829,7 +8829,7 @@
         "/api/reservation/reservationsRejectedByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations rejetées par l'hote connecté",
                 "description": "Liste des réservations rejetées par l'hote connecté",
@@ -8849,7 +8849,7 @@
         "/api/reservation/reservationsCanceledByTravelerForHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
                 "description": "Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
@@ -8869,7 +8869,7 @@
         "/api/reservation/reservationsNotConfirmedYetByHost": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des réservations en attente de confirmation pour l'hote connecté",
                 "description": "Liste des réservations en attente de confirmation pour l'hote connecté",
@@ -10813,7 +10813,7 @@
         "/api/logement/update/sensible/{id}": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Modifier les informations sensibles d'un logement",
                 "description": "Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
@@ -10909,7 +10909,7 @@
         "/api/logement/update/insensible/{id}": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Modifier les informations insensibles d'un logement",
                 "description": "Permet de modifier les informations insensibles d'un logement existant à partir de son ID",
@@ -11011,7 +11011,7 @@
         "/api/logement/{housingId}/hote/disable": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "route par laquelle l'hôte désactive son logement donné",
                 "description": "Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
@@ -11087,7 +11087,7 @@
         "/api/logement/{housingId}/hote/enable": {
             "put": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "la route qui permet à l'hôte d'activer un logement",
                 "description": "Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
@@ -11163,7 +11163,7 @@
         "/api/logement/destroyHousingHote/{id}": {
             "delete": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Suppression d un logement par l' hote",
                 "operationId": "eeaad0fda9213e9a8afa4b2d4244922a",
@@ -11196,7 +11196,7 @@
         "/api/logement/getHousingForHote": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des logements d'un hote connecté",
                 "description": "Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
@@ -11735,7 +11735,7 @@
         "/api/logement/liste/notFinished": {
             "get": {
                 "tags": [
-                    "Housing"
+                    "Dashboard hote"
                 ],
                 "summary": "Liste des logements non rempli complètement par l'hôte connecté",
                 "description": "Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
@@ -20554,7 +20554,7 @@
         "/api/reservation/hote_confirm_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Confirmer la reservation d un voyageur sur un de ses biens",
                 "description": "Confirmer la reservation d un voyageur sur un de ses biens",
@@ -20588,7 +20588,7 @@
         "/api/reservation/hote_reject_reservation/{idReservation}": {
             "put": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
                 "description": "Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
@@ -20751,7 +20751,7 @@
         "/api/reservation/showDetailOfReservationForHote/{idReservation}": {
             "get": {
                 "tags": [
-                    "Reservation"
+                    "Dashboard hote"
                 ],
                 "summary": "Détail d'une réservation côté hote",
                 "description": "Détail d'une réservation côté hote",

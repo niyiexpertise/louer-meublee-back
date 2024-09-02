@@ -523,7 +523,7 @@ public function storeReservationWithPayment(Request $request)
             $paymentData['country'] = $request->input('country');
         }
 
-       
+
 
 
         $data = ["reservation" => $reservation,
@@ -772,7 +772,7 @@ public function payReservation(Request $request,$reservationId){
                 'title' => 'Confirmation de Réservation',
                 'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
             ];
-    
+
             dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
 
             dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
@@ -827,7 +827,7 @@ public function findSimilarPaymentMethod($inputMethod)
      *     path="/api/reservation/hote_confirm_reservation/{idReservation}",
      *     summary="Confirmer la reservation d un voyageur sur un de ses biens",
      * description="Confirmer la reservation d un voyageur sur un de ses biens",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="idReservation",
@@ -888,7 +888,7 @@ public function findSimilarPaymentMethod($inputMethod)
      *     path="/api/reservation/hote_reject_reservation/{idReservation}",
      *     summary="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
      * description="Rejeter la reservation d un voyageur sur un de ses biens avec un motif à l'appui",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="idReservation",
@@ -1445,7 +1445,7 @@ public function findSimilarPaymentMethod($inputMethod)
           *     path="/api/reservation/showDetailOfReservationForHote/{idReservation}",
           *     summary="Détail d'une réservation côté hote",
           * description="Détail d'une réservation côté hote",
-          *     tags={"Reservation"},
+          *     tags={"Dashboard hote"},
           * security={{"bearerAuth": {}}},
           *   @OA\Parameter(
           *         name="idReservation",

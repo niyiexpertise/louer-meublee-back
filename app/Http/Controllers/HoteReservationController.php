@@ -42,7 +42,7 @@ class HoteReservationController extends Controller
      *     path="/api/reservation/reservationsConfirmedByHost",
      *     summary="Liste des réservations confirmées par l'hote connecté",
      * description="Liste des réservations confirmées par l'hote connecté",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
@@ -72,7 +72,7 @@ class HoteReservationController extends Controller
          *     path="/api/reservation/reservationsRejectedByHost",
          *     summary="Liste des réservations rejetées par l'hote connecté",
          * description="Liste des réservations rejetées par l'hote connecté",
-         *     tags={"Reservation"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -102,7 +102,7 @@ class HoteReservationController extends Controller
          *     path="/api/reservation/reservationsCanceledByTravelerForHost",
          *     summary="Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
          * description="Liste des réservations appartenant à l'hôte connecté annulées par le voyageur",
-         *     tags={"Reservation"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -131,7 +131,7 @@ class HoteReservationController extends Controller
      *     path="/api/reservation/reservationsNotConfirmedYetByHost",
      *     summary="Liste des réservations en attente de confirmation pour l'hote connecté",
      * description="Liste des réservations en attente de confirmation pour l'hote connecté",
-     *     tags={"Reservation"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,

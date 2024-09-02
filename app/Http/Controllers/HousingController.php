@@ -1087,7 +1087,7 @@ public function ListeDesLogementsAcceuil(Request $request)
                  'charge_name' => $charge->name,
                  'charge_icone' => $charge->icone,
                  'is_mycharge' => $housingCharge->is_mycharge,
-                    'valeur_charge' => $housingCharge->valeur
+                  'valeur_charge' => $housingCharge->valeur
              ];
          }else{
              $travelerCharge_id[] = [
@@ -1824,7 +1824,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
 /**
  * @OA\Put(
  *     path="/api/logement/update/sensible/{id}",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *     summary="Modifier les informations sensibles d'un logement",
  *     description="Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
  *     security={{"bearerAuth":{}}},
@@ -1945,7 +1945,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
 /**
  * @OA\Put(
  *     path="/api/logement/update/insensible/{id}",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *     summary="Modifier les informations insensibles d'un logement",
  *     description="Permet de modifier les informations insensibles d'un logement existant à partir de son ID",
  *     security={{"bearerAuth":{}}},
@@ -2165,7 +2165,7 @@ public function formatListingsData($listings,$userId=0)
     /**
  * @OA\Put(
  *      path="/api/logement/{housingId}/hote/disable",
- *      tags={"Housing"},
+ *      tags={"Dashboard hote"},
  *      security={{"bearerAuth": {}}},
  *      summary="route par laquelle l'hôte désactive son logement donné",
  *      description="Désactive un logement en fonction de son ID. Seul le propriétaire du logement peut le désactiver.",
@@ -2232,7 +2232,7 @@ public function formatListingsData($listings,$userId=0)
     /**
  * @OA\Put(
  *      path="/api/logement/{housingId}/hote/enable",
- *      tags={"Housing"},
+ *      tags={"Dashboard hote"},
  *      security={{"bearerAuth": {}}},
  *      summary="la route qui permet à l'hôte d'activer un logement",
  *      description="Active un logement en fonction de son ID. Seul le propriétaire du logement peut l'activer.",
@@ -2293,7 +2293,7 @@ public function enableHousing($housingId)
      * @OA\Delete(
      *     path="/api/logement/destroyHousingHote/{id}",
      *     summary="Suppression d un logement par l' hote",
-     *     tags={"Housing"},
+     *     tags={"Dashboard hote"},
      * security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -2340,7 +2340,7 @@ public function enableHousing($housingId)
          *     path="/api/logement/getHousingForHote",
          *     summary="Liste des logements d'un hote connecté",
          *     description="Liste des logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
-         *     tags={"Housing"},
+         *     tags={"Dashboard hote"},
          * security={{"bearerAuth": {}}},
          *     @OA\Response(
          *         response=200,
@@ -2937,7 +2937,7 @@ public function getOrDefault($input, $default = 'XX') {
     /**
  * @OA\Get(
  *     path="/api/logement/liste/notFinished",
- *     tags={"Housing"},
+ *     tags={"Dashboard hote"},
  *  security={{"bearerAuth": {}}},
  *     summary="Liste des logements non rempli complètement par l'hôte connecté",
  *     description="Récupère la liste des logements des logements non rempli complètement par l'hôte connecté.",
@@ -2960,18 +2960,6 @@ public function HousingHoteInProgress(){
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
 }
-
-
-    public function paginateH($items, $perPage = null, $page = null){
-        $perPage = $perPage ?: Setting::first()->pagination_logement_acceuil;
-        $baseUrl = url('/');
-        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
-        $total = count($items);
-        $currentpage = $page;
-        $offset = ($currentpage * $perPage) - $perPage;
-        $itemstoshow = array_slice($items, $offset, $perPage);
-        return new LengthAwarePaginator($itemstoshow,$total,$perPage,$page,['path' => "{$baseUrl}/api/logement/index/ListeDesLogementsAcceuil?id" ]);
-    }
 
 
     /**

@@ -12036,6 +12036,26 @@
                 ]
             }
         },
+        "/api/logement/getHousingForHotesimple": {
+            "get": {
+                "tags": [
+                    "Dashboard hote"
+                ],
+                "summary": "Liste des logements d'un hote connecté(Information basique)",
+                "description": "Liste des logements d'un hote.Route sui donne des informations basiques ",
+                "operationId": "e75044da21a0914d2ebfe399f609a186",
+                "responses": {
+                    "200": {
+                        "description": "List of housing what be retrieve by hote"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [

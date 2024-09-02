@@ -3161,4 +3161,49 @@ public function HousingHoteInProgress(){
         }
     }
 
+
+
+      /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingForHotesimple",
+         *     summary="Liste des logements d'un hote connecté(Information basique)",
+         *     description="Liste des logements d'un hote.Route sui donne des informations basiques ",
+         *     tags={"Dashboard hote"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+        public function getHousingForHotesimple()
+        {
+            try {
+                $housings = Housing::where('is_destroy', 0)
+                    ->where('is_deleted', 0)
+                    ->where('is_blocked', 0)
+                     ->where('is_finished', 1)
+                    ->where('user_id', Auth::user()->id)
+                    ->with(['photos' => function ($query) {
+                        $query->where('is_couverture', 1)->select('housing_id', 'path');
+                    }])
+                    ->get(['id', 'name']); 
+        
+                $result = $housings->map(function ($housing) {
+                    return [
+                        'housing_id' => $housing->id,
+                        'name' => $housing->name,
+                            'path' => $housing->photos->isNotEmpty() ? $housing->photos[0]->path : null,
+                    ];
+                });
+          return (new ServiceController())->apiResponse(200,$result,'ok');
+
+            } catch (Exception $e) {
+                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+
+            }
+        }
+        
+
 }

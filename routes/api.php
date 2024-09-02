@@ -862,6 +862,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHote']], function () {
                 Route::get('/getHousingForHote', [HousingController::class, 'getHousingForHote'])->name('logement.getHousingForHote');
             });
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHotesimple']], function () {
+                Route::get('/getHousingForHotesimple', [HousingController::class, 'getHousingForHotesimple'])->name('logement.getHousingForHotesimple');
+            });
+            
 
             // Gestion des photos logement
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updatePhoto']], function () {

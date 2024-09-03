@@ -101,6 +101,18 @@ public function login(Request $request){
 
         $user = User::where('email', $request->email)->first();
         if($user !=null){
+            if($user->is_blocked){
+                return response()->json([
+                    'error' => 'Vous avez été bloqué. Veuillez contacter l\'administrateur pour plus de détails.'
+                ], 200);
+                
+            } 
+            if($user->is_deleted){
+                return response()->json([
+                    'error' => 'Veuillez contacter l\'administrateur pour plus de détails car vous avez été supprimé.'
+                ], 200);
+                
+            } 
             if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('auth_token')->plainTextToken;
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -114,7 +126,7 @@ public function login(Request $request){
                 ];
 
                 $userRights = User_right::where('user_id', $user->id)->get();
-
+                              
                 $rightsDetails = [];
 
                 foreach ($userRights as $userRight) {

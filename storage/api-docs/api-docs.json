@@ -13616,121 +13616,12 @@
                 ]
             }
         },
-        "/api/housingsponsoring/hoteSupprimeDemande/{sponsorinRequestId}": {
-            "post": {
-                "tags": [
-                    "Hote Housing Sponsoring"
-                ],
-                "summary": "Supprimer une demande de sponsoring par un hôte",
-                "description": "Permet à un hôte de supprimer une demande de sponsoring qui n'est pas encore active.",
-                "operationId": "hoteSupprimeDemande",
-                "parameters": [
-                    {
-                        "name": "sponsorinRequestId",
-                        "in": "path",
-                        "description": "ID de la demande de sponsoring",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Demande de sponsoring supprimée avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "example": []
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Demande de sponsoring supprimée avec succès"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Demande de sponsoring introuvable ou déjà active",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 404
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "example": []
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Demande de sponsoring introuvable"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 500
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "example": []
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Erreur serveur"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/housingsponsoring/demandeSponsoringNonvalidee": {
             "get": {
                 "tags": [
                     "Admin Housing Sponsoring"
                 ],
-                "summary": "Obtenir les demandes de sponsoring actif d'un hôte connecté",
+                "summary": "Obtenir les demandes de sponsoring en attente de validation ",
                 "operationId": "7e9df8c2ff7e0186de81a2e0568a73ce",
                 "responses": {
                     "200": {
@@ -13886,73 +13777,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Liste des demandes de sponsoring rejetées récupérée avec succès"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": ""
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 500
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Erreur serveur"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {}
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/housingsponsoring/demandeSponsoringsupprimee": {
-            "get": {
-                "tags": [
-                    "Admin Housing Sponsoring"
-                ],
-                "summary": "Liste des demandes de sponsoring supprimées",
-                "description": "Retourne la liste des demandes de sponsoring qui ont été supprimées par les hôtes.",
-                "operationId": "demandeSponsoringsupprimee",
-                "responses": {
-                    "200": {
-                        "description": "Liste des demandes de sponsoring supprimées récupérée avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Liste des demandes de sponsoring supprimées récupérée avec succès"
                                         },
                                         "data": {
                                             "type": "array",
@@ -14312,6 +14136,21 @@
                     },
                     "400": {
                         "description": "Erreur dans la récupération des logements sponsorisés."
+                    }
+                }
+            }
+        },
+        "/api/housingsponsoring/disableExpiredHousings": {
+            "post": {
+                "tags": [
+                    "Home Housing Sponsoring"
+                ],
+                "summary": "Désactiver les logements dont la date_fin est dépassée",
+                "description": "Désactive les logements sponsorisés où la date_fin est déjà passée.",
+                "operationId": "c28f142acd9deaca9fc5629e370ed6ef",
+                "responses": {
+                    "200": {
+                        "description": "Les logements expirés ont été désactivés avec succès."
                     }
                 }
             }

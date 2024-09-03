@@ -707,49 +707,6 @@ class HousingSponsoringController extends Controller
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/housingsponsoring/demandeSponsoringsupprimee",
-     *     tags={"Admin Housing Sponsoring"},
-     *     summary="Liste des demandes de sponsoring supprimées",
-     *     description="Retourne la liste des demandes de sponsoring qui ont été supprimées par les hôtes.",
-     *     operationId="demandeSponsoringsupprimee",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des demandes de sponsoring supprimées récupérée avec succès",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="integer", example=200),
-     *             @OA\Property(property="message", type="string", example="Liste des demandes de sponsoring supprimées récupérée avec succès"),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref=""))
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur serveur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="integer", example=500),
-     *             @OA\Property(property="message", type="string", example="Erreur serveur"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
-     *     ),
-     *     security={{"bearerAuth": {}}}
-     * )
-     */
-
-
-    public function demandeSponsoringsupprimee(){
-        try {
-            $sponsoringrequests = HousingSponsoring::where('is_deleted',true)
-            ->get();
-            foreach($sponsoringrequests as  $sponsoringrequest){
-                $sponsoringrequest->user_id = Housing::whereId($sponsoringrequest->housing_id)->first()->user->id;
-            }
-            return (new ServiceController())->apiResponse(200, $sponsoringrequests, 'Liste des demandes de sponsoring supprimé d\'un hôte connecté');
-        } catch (Exception $e) {
-            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-        }
-    }
-
 
     /**
  * @OA\Post(
@@ -1199,26 +1156,26 @@ public function getSponsoredHousings()
 }
 
 
-// /**
-//  * @OA\Post(
-//  *     path="/api/housingsponsoring/disableExpiredHousings",
-//  *     tags={"Home Housing Sponsoring"},
-//  *     summary="Désactiver les logements dont la date_fin est dépassée",
-//  *     description="Désactive les logements sponsorisés où la date_fin est déjà passée.",
-//  *     @OA\Response(
-//  *         response=200,
-//  *         description="Les logements expirés ont été désactivés avec succès.",
-//  *     )
-//  * )
-//  */
-// public function disableExpiredHousings()
-// {
-//     $currentDate = date('Y-m-d');
+/**
+ * @OA\Post(
+ *     path="/api/housingsponsoring/disableExpiredHousings",
+ *     tags={"Home Housing Sponsoring"},
+ *     summary="Désactiver les logements dont la date_fin est dépassée",
+ *     description="Désactive les logements sponsorisés où la date_fin est déjà passée.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Les logements expirés ont été désactivés avec succès.",
+ *     )
+ * )
+ */
+public function disableExpiredHousings()
+{
+    $currentDate = date('Y-m-d');
 
-//     HousingSponsoring::where('date_fin', '<', $currentDate)
-//         ->where('is_actif', true)
-//         ->update(['is_actif' => false]);
-// }
+    HousingSponsoring::where('date_fin', '<', $currentDate)
+        ->where('is_actif', true)
+        ->update(['is_actif' => false]);
+}
 
 
 

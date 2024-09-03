@@ -970,6 +970,8 @@ class HousingSponsoringController extends Controller
                 if (!$sponsoring) {
                     return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
                 }
+                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
+
                 if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
                     return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
                 }
@@ -985,10 +987,6 @@ class HousingSponsoringController extends Controller
 
                 $housing = Housing::whereId($housingSponsoring->housing_id)->first();
                 $pieces = $housing->housingCategoryFiles;
-
-                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
-
-
 
                 $previous_transactions = Portfeuille_transaction::all();
                 $solde_commission = $previous_transactions->sum('montant_commission');

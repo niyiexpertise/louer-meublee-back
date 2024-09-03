@@ -176,7 +176,7 @@ class HousingSponsoringController extends Controller
             $housingSponsoring->is_actif = false;
             $housingSponsoring->save();
 
-            
+
             return (new ServiceController())->apiResponse(200, ["sponsoring_id"=>$housingSponsoring->id], 'Demande de sponsoring créée avec succès');
         } catch (Exception $e) {
             DB::rollBack();
@@ -330,7 +330,7 @@ class HousingSponsoringController extends Controller
                 if(!is_numeric($request->montant)){
                     return (new ServiceController())->apiResponse(404, [], 'Le montant doit être un entier');
                 }
-    
+
                 if($request->montant<=0){
                     return (new ServiceController())->apiResponse(404, [], 'Le montant doit être supérieur à 0 ');
                 }
@@ -345,7 +345,7 @@ class HousingSponsoringController extends Controller
                 }
             }
 
-            
+
 
             DB::beginTransaction();
 
@@ -357,6 +357,7 @@ class HousingSponsoringController extends Controller
             $payement->housing_sponsoring_id = $housingSponsoring->id;
             $payement->is_confirmed = false;
             $payement->is_canceled = false;
+
 
 
             if($payment_method == $portfeuille){
@@ -632,7 +633,6 @@ class HousingSponsoringController extends Controller
 
 
 
-
     /**
  * @OA\Post(
  *     path="/api/housingsponsoring/rejectSponsoringRequest/{sponsorinRequestId}",
@@ -725,7 +725,7 @@ class HousingSponsoringController extends Controller
 
                 $hotemail = [
                     'title' => "Rejet de votre demande de sponsoring",
-                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde". Portfeuille::where('user_id',$hote->id)->first()->solde
+                    "body" => "Motif:{$request->motif} Votre portefeuille a été crédité. Nouveau solde: ". Portfeuille::where('user_id',$hote->id)->first()->solde." FCFA"
                 ];
 
             dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
@@ -852,7 +852,7 @@ class HousingSponsoringController extends Controller
 
                 $montant = -1 *  $request->montant;
 
-               
+
 
                 $portfeuille =Portfeuille::where('user_id',$hote->id)->first();
                 $portfeuille->update(['solde'=> $portfeuille->solde + $request->montant]);
@@ -887,7 +887,7 @@ class HousingSponsoringController extends Controller
 
                 $hotemail = [
                     'title' => "Rejet de votre demande de sponsoring",
-                    "body" => "$request->motif. Votre portefeuille a été crédité. Nouveau solde". Portfeuille::where('user_id',$hote->id)->first()->solde
+                    "body" => "Motif: {$request->motif} Votre portefeuille a été crédité. Nouveau solde:". Portfeuille::where('user_id',$hote->id)->first()->solde
                 ];
 
             dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
@@ -966,6 +966,10 @@ class HousingSponsoringController extends Controller
                 if (!$sponsoring) {
                     return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
                 }
+                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
+                if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
+                }
 
                 $hote = Housing::whereId($housingSponsoring->housing_id)->first()->user;
 
@@ -978,12 +982,6 @@ class HousingSponsoringController extends Controller
 
                 $housing = Housing::whereId($housingSponsoring->housing_id)->first();
                 $pieces = $housing->housingCategoryFiles;
-
-                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
-
-                if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
-                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
-                }
 
                 $previous_transactions = Portfeuille_transaction::all();
                 $solde_commission = $previous_transactions->sum('montant_commission');
@@ -1062,6 +1060,7 @@ public function getSponsoredHousings()
         ->where('is_deleted', false)
         ->where('date_debut', '<=', $today)
         ->where('date_fin', '>=', $today)
+        ->orderBy(DB::raw('prix * nombre'), 'asc')
         ->get();
     $data = [];
 
@@ -1078,33 +1077,35 @@ public function getSponsoredHousings()
 
             $fileService = new FileService();
 
-            $data= (new HousingController($fileService))->formatListingsData($listings);
+            $data[]= (new HousingController($fileService))->formatListingsData($listings);
         }
 
     return (new ServiceController())->apiResponse(200, $data,"Liste des logements sponsorisés retournée avec succès.");
 }
 
 
- /**
-  * @OA\Post(
-  *     path="/api/housingsponsoring/disableExpiredHousings",
-  *     tags={"Home Housing Sponsoring"},
-  *     summary="Désactiver les logements dont la date_fin est dépassée",
-  *     description="Désactive les logements sponsorisés où la date_fin est déjà passée.",
-  *     @OA\Response(
-  *         response=200,
-  *         description="Les logements expirés ont été désactivés avec succès.",
-  *     )
-  * )
-  */
- public function disableExpiredHousings()
- {
-     $currentDate = date('Y-m-d');
 
-     HousingSponsoring::where('date_fin', '<', $currentDate)
-         ->where('is_actif', true)
-         ->update(['is_actif' => false]);
- }
+/**
+ * @OA\Post(
+ *     path="/api/housingsponsoring/disableExpiredHousings",
+ *     tags={"Home Housing Sponsoring"},
+ *     summary="Désactiver les logements dont la date_fin est dépassée",
+ *     description="Désactive les logements sponsorisés où la date_fin est déjà passée.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Les logements expirés ont été désactivés avec succès.",
+ *     )
+ * )
+ */
+public function disableExpiredHousings()
+{
+    $currentDate = date('Y-m-d');
+
+    HousingSponsoring::where('date_fin', '<', $currentDate)
+        ->where('is_actif', true)
+        ->update(['is_actif' => false]);
+}
+
 
 
 

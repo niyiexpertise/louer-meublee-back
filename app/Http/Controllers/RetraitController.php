@@ -515,7 +515,7 @@ class RetraitController extends Controller
     
             if(!is_null(Setting::first()->montant_minimum_retrait)){
                 if($request->input('montant_reel')< Setting::first()->montant_minimum_retrait){
-                    return (new ServiceController())->apiResponse(404, [], "Le montant minimum à retirer doit être supérieur à  ".Setting::first()->montant_minimum_recharge. " FCFA");
+                    return (new ServiceController())->apiResponse(404, [], "Le montant minimum à retirer doit être supérieur à  ".Setting::first()->montant_minimum_retrait. " FCFA");
                 }
             }
 
@@ -525,7 +525,7 @@ class RetraitController extends Controller
     
            if(!is_null(Setting::first()->montant_maximum_retrait)){
                 if($request->input('montant_reel')> Setting::first()->montant_maximum_retrait){
-                    return (new ServiceController())->apiResponse(404, [], "Le montant maximum à retirer doit être inférieur à  ".Setting::first()->montant_maximum_recharge. " FCFA");
+                    return (new ServiceController())->apiResponse(404, [], "Le montant maximum à retirer doit être inférieur à  ".Setting::first()->montant_maximum_retrait. " FCFA");
                 }
            }
     

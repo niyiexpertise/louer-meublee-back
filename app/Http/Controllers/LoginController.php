@@ -496,7 +496,7 @@ public function password_recovery_start_step(Request $request){
 
             dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
 
-            return (new ServiceController())->apiResponse(200,["email"=>$request->email], "Email envoyé avec succès");
+            return (new ServiceController())->apiResponse(200,[], "Email envoyé avec succès");
 
         }else{
             return (new ServiceController())->apiResponse(404,[], "Email non trouvé");

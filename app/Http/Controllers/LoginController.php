@@ -479,7 +479,6 @@ public function password_recovery_start_step(Request $request){
         ]);
         $email = $request->email;
         if(User::where('email',$email)->exists()){
-            $user = User::where('email',$email)->first();
             $mail = [
                 'title' => 'Reinitialisation de mot de passe',
                 'body' => 'Clique sur ce lien : https://quotidishop.com/page/account/change-password pour reinitialiser votre mot de passe'

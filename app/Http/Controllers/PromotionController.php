@@ -120,6 +120,19 @@ class PromotionController extends Controller
         return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du pourcentage de reduction de la promotion soit positive et non nulle");
     }
 
+    if(!is_null(Setting::first()->max_number_of_reservation)){
+        if($request->number_of_reservation > Setting::first()->max_number_of_reservation){
+            return (new ServiceController())->apiResponse(404,[],'Le nombre de réservation doit être inférieur ou égal à '.Setting::first()->max_number_of_reservation);
+        }
+    }
+
+    if(!is_null(Setting::first()->max_value_promotion)){
+        if($request->value > Setting::first()->max_value_promotion){
+            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+        }
+    }
+
+
     if (!strtotime($request->date_debut)) {
         return (new ServiceController())->apiResponse(404, [], 'La date de début de la promotion doit être une date valide.');
     }

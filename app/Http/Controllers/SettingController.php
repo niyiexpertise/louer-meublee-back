@@ -107,7 +107,7 @@ class SettingController extends Controller
                 'logo' => '',
                 'app_mode' => '',
                 'adresse_serveur_fichier' => '',
-                'commission_partenaire' => '',
+                'commission_partenaire_defaut' => '',
                 'reduction_partenaire_defaut' => '',
                 'number_of_reservation_partenaire_defaut' => '',
                 'commission_hote_defaut' => '',
@@ -148,17 +148,23 @@ class SettingController extends Controller
 
         if($request->has('reduction_partenaire_defaut')){
             if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
-                if($request->input('reduction_partenaire_defaut') >= Setting::first()->commission_seuil_hote_partenaire){
-                    return (new ServiceController())->apiResponse(404,[], "La valeur de réduction partenaire par défaut ne doit pas dépasser ".Setting::first()->commission_seuil_hote_partenaire);
+                if(!is_null(Setting::first()->reduction_partenaire_defaut)){
+                    if($request->input('reduction_partenaire_defaut') >= Setting::first()->commission_seuil_hote_partenaire){
+                        return (new ServiceController())->apiResponse(404,[], "La valeur de réduction partenaire par défaut ne doit pas dépasser ".Setting::first()->commission_seuil_hote_partenaire);
+                    }
                 }
+               
             }
         }
 
         if($request->has('commission_hote_defaut')){
             if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
-                if($request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
-                    return (new ServiceController())->apiResponse(404,[], "La valeur de commission hôte par défaut ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+                if(!is_null(Setting::first()->commission_hote_defaut)){
+                    if($request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
+                        return (new ServiceController())->apiResponse(404,[], "La valeur de commission hôte par défaut ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+                    }
                 }
+               
             }
         }
 
@@ -226,7 +232,7 @@ class SettingController extends Controller
             'montant_maximum_retrait' => 'nullable|numeric',
             'montant_minimum_solde_retrait' => 'nullable|numeric',
             'logo' =>'nullable|max:2048',
-            'commission_partenaire' => 'nullable|numeric',
+            'commission_partenaire_defaut' => 'nullable|integer',
             'reduction_partenaire_defaut' => 'nullable|numeric',
             'number_of_reservation_partenaire_defaut' => 'nullable|integer',
             'commission_hote_defaut' => 'nullable|numeric',

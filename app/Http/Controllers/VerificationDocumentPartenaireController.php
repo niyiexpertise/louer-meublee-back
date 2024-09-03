@@ -460,7 +460,7 @@ public function validateDocuments(Request $request)
         $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
         $commission=new user_partenaire();
         $commission->user_id=$user->id;
-        $commission->commission = Setting::first()->commission_partenaire ?? 5;
+        $commission->commission = Setting::first()->commission_partenaire_defaut ?? 5;
         $commission->reduction_traveler = Setting::first()->reduction_partenaire_defaut ?? 3;
         $commission->number_of_reservation = Setting::first()->number_of_reservation_partenaire_defaut ?? 3;
         $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
@@ -562,11 +562,12 @@ public function validateDocument(Request $request)
             $user_hote = $grant->assignRoleToUser($request,$user_id,$role->id);
 
             $commission=new user_partenaire();
-                $commission->user_id=$user->id;
-                $commission->commission=5;
-                $commission->reduction_traveler=3;
-                $commission->number_of_reservation=3;
-                $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
+            $commission->user_id=$user->id;
+            
+            $commission->commission = Setting::first()->commission_partenaire_defaut ?? 5;
+            $commission->reduction_traveler = Setting::first()->reduction_partenaire_defaut ?? 3;
+                $commission->number_of_reservation = Setting::first()->number_of_reservation_partenaire_defaut ?? 3;
+            $commission->code_promo=$verificationStatut->verificationDocumentpartenaire->code_promo;
             $commission->save();
             // dd('salut');
             $mail = [

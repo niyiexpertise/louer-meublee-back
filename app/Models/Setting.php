@@ -27,7 +27,7 @@ class Setting extends Model
         'montant_minimum_retrait',
         'montant_maximum_retrait',
         'montant_minimum_solde_retrait',
-        'commission_partenaire',
+        'commission_partenaire_defaut',
         'reduction_partenaire_defaut',
         'number_of_reservation_partenaire_defaut',
         'commission_hote_defaut',

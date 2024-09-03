@@ -583,7 +583,8 @@ public function validateDocument(Request $request)
 
             $commission=new Commission();
             $commission->user_id=$user->id;
-            $commission->valeur=5;
+            $commission->valeur = Setting::first()->commission_hote_defaut??5;
+
             $commission->save();
             // dd('salut');
             $mail = [

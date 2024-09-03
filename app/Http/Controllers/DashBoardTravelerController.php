@@ -263,7 +263,7 @@ class DashBoardTravelerController extends Controller
                                     ->where('is_confirmed_hote', true)
                                     ->where('statut', 'payee')
                                     ->where('is_integration', false)
-                                                                        ->where('is_rejected_traveler', false)
+                                    ->where('is_rejected_traveler', false)
 
 
                                     ->get();

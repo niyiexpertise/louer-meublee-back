@@ -101,6 +101,18 @@ public function login(Request $request){
 
         $user = User::where('email', $request->email)->first();
         if($user !=null){
+            if($user->is_blocked){
+                return response()->json([
+                    'error' => 'Vous avez été bloqué. Veuillez contacter l\'administrateur pour plus de détails.'
+                ], 200);
+                
+            } 
+            if($user->is_deleted){
+                return response()->json([
+                    'error' => 'Veuillez contacter l\'administrateur pour plus de détails car vous avez été supprimé.'
+                ], 200);
+                
+            } 
             if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('auth_token')->plainTextToken;
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -114,7 +126,7 @@ public function login(Request $request){
                 ];
 
                 $userRights = User_right::where('user_id', $user->id)->get();
-
+                              
                 $rightsDetails = [];
 
                 foreach ($userRights as $userRight) {
@@ -468,24 +480,26 @@ public function password_recovery_start_step(Request $request){
         $email = $request->email;
         if(User::where('email',$email)->exists()){
             $user = User::where('email',$email)->first();
+
+            if($user->is_blocked == true){
+                return (new ServiceController())->apiResponse(404,[], "Désolé mais vous êtes bloqué.");
+            }
+
+            if($user->is_deleted == true){
+                return (new ServiceController())->apiResponse(404,[], "Désolé mais vous êtes supprimé.");
+            }
+
             $mail = [
                 'title' => 'Reinitialisation de mot de passe',
                 'body' => 'Clique sur ce lien : https://quotidishop.com/page/account/change-password pour reinitialiser votre mot de passe'
             ];
 
-
-
             dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
 
-            return response()->json([
-                'status_code' => 200,
-                'message' => "Email sent successfully"
-             ]);
+            return (new ServiceController())->apiResponse(200,["email"=>$request->email], "Email envoyé avec succès");
+
         }else{
-            return response()->json([
-                'status_code' => 404,
-                'message' => "Email not found"
-             ]);
+            return (new ServiceController())->apiResponse(404,[], "Email non trouvé");
         }
 
     } catch(\Exception $e) {

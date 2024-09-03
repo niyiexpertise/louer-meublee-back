@@ -205,6 +205,7 @@ class SponsoringController extends Controller
 
                     $existMaxDuree = Sponsoring::where('is_actif', true)
                     ->where('duree', '>', intval($request->duree))
+                    ->orderBy('duree', 'desc')
                     ->first();
 
                 if ($existMaxDuree && $existMaxDuree->prix < floatval($request->prix)) {
@@ -212,7 +213,7 @@ class SponsoringController extends Controller
                 }
 
 
-                $existMinDuree = Sponsoring::where('is_actif', true)
+            $existMinDuree = Sponsoring::where('is_actif', true)
                 ->where('duree', '<', intval($request->duree))
                 ->orderBy('duree', 'desc')
                 ->first();

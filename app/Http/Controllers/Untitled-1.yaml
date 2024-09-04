@@ -188,4 +188,67 @@ return [
 ];
 
 
-Bonsoir Mr, lors du calcul du montant à payer pour une réservation nous sommes  confronté à un problème. En voulant faire le calcul au niveau d'une personne qui s'est inscrit avec un code promo, il est dit que la personne bénéficiera d'un pourcentage de réduction sur le montant de la réservation s'il n'a pas encore expiré le nombre de réservation que lui offre le code promo avec lequel il s'est inscrit. Normalement lors de l'intégration du voyageur, on devait retourner à l'hôte après qu'on ait enlevé notre commission  le montant de la réservation restante et lui ajouter le montant de la réduction qu'a bénéficier le voyageur car il s'est inscrit avec un code promo. Toujours lors du partage des fonds, le partenaire en question a son argent à récupérer sur notre commission et si on doit retourner à l'hôte ce que le voyageur n'a pas payé car il bénéficait des privilèges d'un code promo nous sommes en perte. 
+public function sendResetLink(Request $request)
+{
+    $request->validate(['email' => 'required|email']);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'Email not found.'], 404);
+    }
+
+    $token = Str::random(60);
+
+    DB::table('password_resets')->insert([
+        'email' => $request->email,
+        'token' => $token,
+        'created_at' => now(),
+    ]);
+
+    $resetLink = url('/reset-password?token=' . $token . '&email=' . urlencode($request->email));
+
+    // Envoie l'email avec le lien de réinitialisation
+    Mail::send('emails.reset', ['resetLink' => $resetLink], function ($message) use ($request) {
+        $message->to($request->email);
+        $message->subject('Reset Password Notification');
+    });
+
+    return response()->json(['message' => 'Reset password link sent to your email.']);
+}
+
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string|confirmed|min:8',
+        'token' => 'required|string',
+    ]);
+
+    $passwordReset = DB::table('password_resets')->where('email', $request->email)->where('token', $request->token)->first();
+
+    if (!$passwordReset) {
+        return response()->json(['message' => 'Invalid token or email.'], 404);
+    }
+
+    // Vérifie si le token a expiré (durée d'expiration définie dans config/auth.php)
+    $expirationTime = config('auth.passwords.users.expire');
+    if (Carbon\Carbon::parse($passwordReset->created_at)->addMinutes($expirationTime)->isPast()) {
+        return response()->json(['message' => 'The password reset link has expired.'], 403);
+    }
+
+    // Met à jour le mot de passe de l'utilisateur
+    $user = User::where('email', $request->email)->first();
+    if (!$user) {
+        return response()->json(['message' => 'User not found.'], 404);
+    }
+
+    $user->password = bcrypt($request->password);
+    $user->save();
+
+    // Supprime l'entrée du token de réinitialisation de mot de passe
+    DB::table('password_resets')->where('email', $request->email)->delete();
+
+    return response()->json(['message' => 'Password has been successfully reset.']);
+}

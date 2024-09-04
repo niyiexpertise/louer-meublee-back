@@ -171,6 +171,7 @@ class HousingSponsoringController extends Controller
             $housingSponsoring->date_fin = $dateFin;
             $housingSponsoring->nombre = $nombre;
             $housingSponsoring->duree = $sponsoring->duree;
+            $housingSponsoring->titre = $sponsoring->titre;
             $housingSponsoring->prix = $sponsoring->prix;
             $housingSponsoring->description = $sponsoring->description;
             $housingSponsoring->is_actif = false;
@@ -462,6 +463,7 @@ class HousingSponsoringController extends Controller
         try {
 
             $housingSponsorings = HousingSponsoring::where('is_deleted',false)
+            ->where('statut','payee')
             ->get();
             $data = [];
 
@@ -472,12 +474,14 @@ class HousingSponsoringController extends Controller
                         'duree' => $housingSponsoring->duree,
                         'prix_unitaire' => $housingSponsoring->prix,
                         'prix_total' => $housingSponsoring->nombre * $housingSponsoring->prix,
+                        'titre_tarif' => $housingSponsoring->titre,
                         'description' => $housingSponsoring->description,
                         'nombre_de_fois' =>  $housingSponsoring->nombre,
                         'Jour_de_la_demande' => $housingSponsoring->created_at,
                         'date_de_commencement_du_sponsoring'=>  $housingSponsoring->date_debut,
                         'date_de_fin_du_sponsoring' =>  $housingSponsoring->date_fin,
-                        'statut' =>  $housingSponsoring->statut,
+                        'statut' =>  $housingSponsoring->is_actif == false?"sponsorisee":"non_sponsorisee",
+                        'motif' => is_null($housingSponsoring->motif)?"aucun_motif":$housingSponsoring->motif
                     ];
                 }
             }

@@ -15611,7 +15611,12 @@
                                         "type": "string",
                                         "example": "user@example.com"
                                     },
-                                    "new_password": {
+                                    "token": {
+                                        "description": "token généré pour la modification du mot de passe",
+                                        "type": "string",
+                                        "example": "osdf156s4d4ez6z27c2We6zg2"
+                                    },
+                                    "password": {
                                         "description": "New password for the user",
                                         "type": "string",
                                         "example": "new_password123"
@@ -22792,6 +22797,10 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "titre": {
+                                        "type": "string",
+                                        "example": "Titre du tarif"
+                                    },
                                     "duree": {
                                         "type": "integer",
                                         "example": 12
@@ -22852,6 +22861,10 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "titre": {
+                                        "type": "string",
+                                        "example": "titre du plan de tarif"
+                                    },
                                     "duree": {
                                         "type": "integer",
                                         "example": 12

@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Models\Setting;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 class FileService
 {
     protected $serverUrl;
@@ -22,7 +24,7 @@ class FileService
         return $this->uploadSingleFile($files, $directory,$type);
     }
 
- 
+
     private function uploadMultipleFiles(array $files, string $directory,$type): array
     {
         $paths = [];
@@ -83,19 +85,48 @@ class FileService
             ];
         }
 
+        $request = new Request();
 
-        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->move(public_path($directory), $filename);
+        if($type == 'extensionImage'){
+            if (in_array($extension, $extensionImage)) {
+                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+                // dd($file);
+
+                $path = $file->move(public_path($directory), $filename);
+                // $filePath = $file->store($directory);
+                $optimizerChain = OptimizerChainFactory::create();
+                // $optimizerChain->optimize('C:\Users\ayena\louer-meublee-back\public\image\testImage\66d84d2d702a3.jpg');
+                $chemin='/'.$directory.'/'.$filename;
+                
+                $result = "no";
+
+                if($optimizerChain->optimize('C:\Users\ayena\louer-meublee-back\public\image\testImage\66d86a5756d43.jpg')){
+                    $result = "yes";
+                    return $result;
+                }
+
+            }
+        }
+
+
+        // $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+        // $path = $file->move(public_path($directory), $filename);
         
-        $chemin='/'.$directory.'/'.$filename;
+        // $chemin='/'.$directory.'/'.$filename;
 
         return [
             'fails' => false,
-            'result' => $chemin
+            'result' => [
+                "path" => $path->getPathname(),
+                "chemin" => $chemin,
+                "result" => $result
+            ],
+            // 'result' => $chemin
         ];
     }
 
-       
+
 
 }
 

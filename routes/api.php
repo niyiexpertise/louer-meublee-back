@@ -59,7 +59,7 @@ use App\Http\Controllers\AdminReductionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
-
+use App\Http\Controllers\FileTestController;
 use App\Http\Controllers\SettingController;
 
 use App\Http\Controllers\SponsoringController;
@@ -1725,5 +1725,8 @@ Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringContro
 
 Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
             ->name('reservation.getDateOfReservationsByHousingId');
+
+Route::post('/ajoutFile', [FileTestController::class, 'ajoutFile'])
+            ->name('ajoutFile');
 
 /** end Route ne nécéssitant pas l'authentification */

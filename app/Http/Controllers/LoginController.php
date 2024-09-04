@@ -201,7 +201,8 @@ public function checkAuth(Request $request){
         return response()->json([
             'data' => Auth::user(),
             'role_actif'=>Auth::user()->getRoleNames(),
-            'user_roles'=>$rightsDetails
+            'user_roles'=>$rightsDetails,
+            'permissions' => (new AuthController)->getUserPerms(Auth::user()->id)->original['data']
         ]);
 
     } catch (\Exception $e) {

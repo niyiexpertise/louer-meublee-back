@@ -35,6 +35,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Setting;
 use App\Models\UserVisiteHousing;
 use App\Services\FileService;
 use DateTime;
@@ -1241,12 +1242,22 @@ public function addHousing_step_16(Request $request, $housingId) {
             if (intval($nightNumber) <= 0) {
                 return (new ServiceController())->apiResponse(404, [], 'Les nombres de nuits doivent être des entiers supérieurs à zéro.');
             }
+            if(!is_null(Setting::first()->max_night_number)){
+                if($nightNumber > Setting::first()->max_night_number){
+                    return (new ServiceController())->apiResponse(404,[],'Les nombres de nuit doivent être inférieur ou égal à '.Setting::first()->max_night_number);
+                }
+            }
         }
 
         // Validation des valeurs des réductions
         foreach ($values as $value) {
             if (floatval($value) <= 0) {
                 return (new ServiceController())->apiResponse(404, [], 'Les valeurs des réductions doivent être des nombres non négatifs ou non nuls.');
+            }
+            if(!is_null(Setting::first()->max_value_reduction)){
+                if($value > Setting::first()->max_value_reduction){
+                    return (new ServiceController())->apiResponse(404,[],'Les valeurs de réductions doivent être inférieur ou égal à '.Setting::first()->max_value_reduction);
+                }
             }
         }
 
@@ -1433,6 +1444,18 @@ public function addHousing_step_16(Request $request, $housingId) {
              if (floatval($promotionValue) <= 0) {
                  return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
              }
+
+             if(!is_null(Setting::first()->max_number_of_reservation)){
+                if($promotionNumberOfReservation > Setting::first()->max_number_of_reservation){
+                    return (new ServiceController())->apiResponse(404,[],'Le nombre de réservation doit être inférieur ou égal à '.Setting::first()->max_number_of_reservation);
+                }
+            }
+    
+            if(!is_null(Setting::first()->max_value_promotion)){
+                if($promotionValue > Setting::first()->max_value_promotion){
+                    return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+                }
+            }
 
              $dateToday = new DateTime();
 

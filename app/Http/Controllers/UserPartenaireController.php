@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Commission;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Exception;
@@ -88,27 +89,24 @@ public function updateCommissionValueByAnother(Request $request)
             'valeur_commission' => 'required|integer',
         ]);
 
+        $message = [];
+
         if ($validator->fails()) {
-            return response()->json([
-                'error' => 'Invalid input data',
-            ], 422);
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
         }
+
         $commission = user_partenaire::where('commission', $request->commission)->get();
 
         if (!$commission) {
-            return response()->json([
-                'error' => 'Commission not found',
-            ], 404);
+            return (new ServiceController())->apiResponse(404,[], "Commission non trouvé");
         }
-        
-
         foreach($commission as $com){
-            
             $com->update(['commission' => $request->valeur_commission]);
         }
 
 
-        return response()->json(['message' => 'Commissions updated successfully']);
+        return (new ServiceController())->apiResponse(200,[], "Commissions updated successfully");
     } catch (Exception $e) {
         return response()->json([
             'status_code' => 500,
@@ -157,8 +155,9 @@ public function updateCommissionForSpecifiqueUser(Request $request)
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['error' => 'Invalid input data'], 400);
+            return (new ServiceController())->apiResponse(404,[], "Commission non trouvé");
         }
+
 
         $commissionPercentage = $request->input('commission_percentage');
         $userIds = $request->input('user_ids');
@@ -166,7 +165,7 @@ public function updateCommissionForSpecifiqueUser(Request $request)
         user_partenaire::whereIn('user_id', $userIds)
             ->update(['commission' => $commissionPercentage]);
 
-        return response()->json(['message' => 'Commissions updated successfully']);
+            return (new ServiceController())->apiResponse(200,[], "Commissions updated successfully");
     } catch (Exception $e) {
         return response()->json(['error' => 'Internal server error'], 500);
     }
@@ -219,27 +218,28 @@ public function updatereductionValueByAnother(Request $request)
             'valeur_reduction' => 'required|integer',
         ]);
 
+        $message = [];
+
         if ($validator->fails()) {
-            return response()->json([
-                'error' => 'Invalid input data',
-            ], 422);
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
         }
+
         $reduction = user_partenaire::where('reduction_traveler', $request->reduction)->get();
 
-        if (!$reduction) {
-            return response()->json([
-                'error' => 'Reduction not found',
-            ], 404);
+        if(!$reduction) {
+            return (new ServiceController())->apiResponse(404,[], "Reduction non trouvé");
         }
-        
+
+        if(floatval($request->reduction_traveler)<= 0){
+            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la nouvelle valeur de la commission soit positive et non nulle");
+        }
 
         foreach($reduction as $red){
-            
             $red->update(['reduction_traveler' => $request->valeur_reduction]);
         }
 
-
-        return response()->json(['message' => 'Reductions updated successfully']);
+        return (new ServiceController())->apiResponse(200,[], "Réduction modifiée avec succès");
     } catch (Exception $e) {
         return response()->json([
             'status_code' => 500,
@@ -287,8 +287,15 @@ public function updatereductionForSpecifiqueUser(Request $request)
             'user_ids.*' => 'integer',
         ]);
 
+        $message = [];
+
         if ($validator->fails()) {
-            return response()->json(['error' =>$validator->errors()], 400);
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
+        }
+
+        if(floatval($request->reduction_percentage)<= 0){
+            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la nouvelle valeur de la réduction soit positive et non nulle");
         }
 
         $reductionPercentage = $request->input('reduction_percentage');
@@ -297,7 +304,7 @@ public function updatereductionForSpecifiqueUser(Request $request)
         user_partenaire::whereIn('user_id', $userIds)
             ->update(['reduction_traveler' => $reductionPercentage]);
 
-        return response()->json(['message' => 'Reductions updated successfully']);
+        return (new ServiceController())->apiResponse(200,[], "Réduction modifiée avec succès");
     } catch (Exception $e) {
         return response()->json(['error' => 'Internal server error'], 500);
     }

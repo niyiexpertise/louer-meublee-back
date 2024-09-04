@@ -2220,11 +2220,8 @@ public function formatListingsData($listings,$userId=0)
             return response()->json(['error' => 'Logement non trouvé'], 404);
         }
 
-        if ($housing->is_disponible != 1) {
-            return response()->json(['error' => 'Le logement est en cours de réservation et ne peut pas être désactivé'], 200);
-        }
-        if ($housing->is_active == 0) {
-            return response()->json(['error' => 'Le logement était déjà desactivé'], 200);
+        if ($housing->is_actif == 0) {
+            return response()->json(['error' => 'Le logement est déjà desactivé'], 200);
         }
 
         $user = auth()->user();
@@ -2285,7 +2282,7 @@ public function enableHousing($housingId)
         return response()->json(['error' => 'Logement non trouvé'], 404);
     }
 
-    if ($housing->is_active) {
+    if ($housing->is_actif) {
         return response()->json(['error' => 'Le logement est déjà activé'], 200);
     }
 
@@ -2294,7 +2291,7 @@ public function enableHousing($housingId)
         return response()->json(['error' => 'Seul le propriétaire du logement peut l\'activer'], 403);
     }
 
-    $housing->is_active = 1;
+    $housing->is_actif = 1;
     $housing->save();
 
     return response()->json(['message' => 'Le logement a été activé avec succès'], 200);
@@ -2360,12 +2357,41 @@ public function enableHousing($housingId)
          * )
          */
     public function getHousingForHote(){
-
-
         try{
             $housings = Housing::where('is_destroy',0)
             ->where('is_deleted',0)
             ->where('is_blocked',0)
+            ->where('is_actif',1)
+            ->where('user_id',Auth::user()->id)
+            ->with('user')
+            ->get();
+            return response()->json(['data' => $housings], 200);
+        } catch(Exception $e) {
+            return response()->json($e->getMessage());
+        }
+    }
+
+     /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingDisabledByHote",
+         *     summary="Liste des logements désactivé d'un hote connecté",
+         *     description="Liste des désactivé logements d'un hote.C'est avec cette route qu'on affichera les logement pour un hote qui est connecté dans son dashboard",
+         *     tags={"Dashboard hote"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+    public function getHousingDisabledByHote(){
+        try{
+            $housings = Housing::where('is_destroy',0)
+            ->where('is_deleted',0)
+            ->where('is_blocked',0)
+            ->where('is_actif',0)
+            ->where('is_finished',1)
             ->where('user_id',Auth::user()->id)
             ->with('user')
             ->get();
@@ -3170,5 +3196,50 @@ public function HousingHoteInProgress(){
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }
+
+
+
+      /**
+         * @OA\Get(
+         *     path="/api/logement/getHousingForHotesimple",
+         *     summary="Liste des logements d'un hote connecté(Information basique)",
+         *     description="Liste des logements d'un hote.Route sui donne des informations basiques ",
+         *     tags={"Dashboard hote"},
+         * security={{"bearerAuth": {}}},
+         *     @OA\Response(
+         *         response=200,
+         *         description="List of housing what be retrieve by hote"
+         *
+         *     )
+         * )
+         */
+        public function getHousingForHotesimple()
+        {
+            try {
+                $housings = Housing::where('is_destroy', 0)
+                    ->where('is_deleted', 0)
+                    ->where('is_blocked', 0)
+                     ->where('is_finished', 1)
+                    ->where('user_id', Auth::user()->id)
+                    ->with(['photos' => function ($query) {
+                        $query->where('is_couverture', 1)->select('housing_id', 'path');
+                    }])
+                    ->get(['id', 'name']); 
+        
+                $result = $housings->map(function ($housing) {
+                    return [
+                        'housing_id' => $housing->id,
+                        'name' => $housing->name,
+                            'path' => $housing->photos->isNotEmpty() ? $housing->photos[0]->path : null,
+                    ];
+                });
+          return (new ServiceController())->apiResponse(200,$result,'ok');
+
+            } catch (Exception $e) {
+                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+
+            }
+        }
+        
 
 }

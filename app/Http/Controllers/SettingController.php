@@ -39,12 +39,15 @@ class SettingController extends Controller
      *                 @OA\Property(property="twitter_url", type="string", format="url"),
      *                 @OA\Property(property="instagram_url", type="string", format="url"),
      *                 @OA\Property(property="linkedin_url", type="string", format="url"),
-     *                 @OA\Property(
-     *                     property="logo",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="The logo image file to upload"
-     *                 ),
+*                 @OA\Property(
+ *                     property="logo",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="string",
+ *                         format="binary",
+ *                         description="The logo image files to upload"
+ *                     )
+ *                 ),
      *                 @OA\Property(
      *                     property="app_mode",
      *                     type="string",
@@ -60,6 +63,11 @@ class SettingController extends Controller
      *                 @OA\Property(property="reduction_partenaire_defaut", type="number", format="float" ),
      *                 @OA\Property(property="number_of_reservation_partenaire_defaut", type="integer"),
      *                 @OA\Property(property="commission_hote_defaut", type="number", format="float"),
+     *                @OA\Property(property="max_night_number", type="number", format="integer"),
+     *                @OA\Property(property="max_value_reduction", type="number", format="float"),
+     *                @OA\Property(property="max_number_of_reservation", type="number", format="integer"),
+     *                @OA\Property(property="max_value_promotion", type="number", format="float"),
+     *                @OA\Property(property="commission_seuil_hote_partenaire", type="number", format="float"),
      *             )
      *         )
      *     ),
@@ -102,11 +110,15 @@ class SettingController extends Controller
                 'logo' => '',
                 'app_mode' => '',
                 'adresse_serveur_fichier' => '',
-                'commission_partenaire' => '',
+                'commission_partenaire_defaut' => '',
                 'reduction_partenaire_defaut' => '',
                 'number_of_reservation_partenaire_defaut' => '',
                 'commission_hote_defaut' => '',
-
+                'max_night_number'  => '',
+                'max_value_reduction' => '',
+                'max_number_of_reservation' => '',
+                'max_value_promotion' => '',
+                'commission_seuil_hote_partenaire' => ''
             ]);
         }
 
@@ -121,22 +133,42 @@ class SettingController extends Controller
         $this->updateFields($settings, $validatedData);
 
         if ($request->hasFile('logo')) {
-
-            if($request->hasFile('logo') && is_array($request->file('logo'))){
-                if (isset($request->hasFile('logo')[0])){
+            if(is_array($request->file('logo'))){
+                if (isset($request->file('logo')[0])){
                     $validationResultFile = $this->fileService->uploadFiles($request->file('logo')[0], 'image/logos','extensionImage');
 
                     if ($validationResultFile['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
                     }
-
+                    
+                    
                     $settings->logo = $validationResultFile['result'];
                 }else{
                     return (new ServiceController())->apiResponse(404, [], 'Aucune image trouvé dans les données.');
                 }
             }
+        }
 
+        if($request->has('reduction_partenaire_defaut')){
+            if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+                if(!is_null(Setting::first()->reduction_partenaire_defaut)){
+                    if($request->input('reduction_partenaire_defaut') >= Setting::first()->commission_seuil_hote_partenaire){
+                        return (new ServiceController())->apiResponse(404,[], "La valeur de réduction partenaire par défaut ne doit pas dépasser ".Setting::first()->commission_seuil_hote_partenaire);
+                    }
+                }
+               
+            }
+        }
 
+        if($request->has('commission_hote_defaut')){
+            if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+                if(!is_null(Setting::first()->commission_hote_defaut)){
+                    if($request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
+                        return (new ServiceController())->apiResponse(404,[], "La valeur de commission hôte par défaut ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+                    }
+                }
+               
+            }
         }
 
         $settings->save();
@@ -203,10 +235,15 @@ class SettingController extends Controller
             'montant_maximum_retrait' => 'nullable|numeric',
             'montant_minimum_solde_retrait' => 'nullable|numeric',
             'logo' =>'nullable|max:2048',
-            'commission_partenaire' => 'nullable|numeric',
+            'commission_partenaire_defaut' => 'nullable|integer',
             'reduction_partenaire_defaut' => 'nullable|numeric',
             'number_of_reservation_partenaire_defaut' => 'nullable|integer',
             'commission_hote_defaut' => 'nullable|numeric',
+            'max_night_number'  => 'nullable|integer',
+            'max_value_reduction' => 'nullable|numeric',
+            'max_number_of_reservation' => 'nullable|integer',
+            'max_value_promotion' => 'nullable|numeric',
+             'commission_seuil_hote_partenaire' => 'nullable|numeric'
         ]);
 
         if ($validator->fails()) {

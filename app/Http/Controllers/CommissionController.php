@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\Commission;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Exception;
@@ -56,25 +57,30 @@ public function updateCommissionValueByAnother(Request $request)
             'valeur_commission' => 'required|integer',
         ]);
 
+        $message = [];
+
         if ($validator->fails()) {
-            return response()->json([
-                'error' => 'Invalid input data',
-            ], 422);
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
         }
+
         $commission = Commission::where('valeur', $request->commission)->get();
 
         if (!$commission) {
-            return response()->json([
-                'error' => 'Commission not found',
-            ], 404);
+            return (new ServiceController())->apiResponse(404,[], "Commission non trouvé");
         }
+
+        if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+            if($request->input('valeur_commission') <= Setting::first()->commission_seuil_hote_partenaire){
+                return (new ServiceController())->apiResponse(404,[], "La valeur de lacommission ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+            }
+        }
+
         foreach($commission as $com){
             $com->update(['valeur' => $request->valeur_commission]);
         }
 
-        
-
-        return response()->json(['message' => 'Commissions updated successfully']);
+        return (new ServiceController())->apiResponse(200,[], "Commissions updated successfully");
     } catch (Exception $e) {
         return response()->json([
             'status_code' => 500,
@@ -122,8 +128,21 @@ public function updateCommissionForSpecifiqueUser(Request $request)
             'user_ids.*' => 'integer',
         ]);
 
+        $message = [];
+
         if ($validator->fails()) {
-            return response()->json(['error' => 'Invalid input data'], 400);
+            $message[] = $validator->errors();
+            return (new ServiceController())->apiResponse(505,[],$message);
+        }
+
+        if(floatval($request->commission_percentage)<= 0){
+            return (new ServiceController())->apiResponse(404,[], "Assurez vous que la nouvelle valeur de la commission soit positive et non nulle");
+        }
+
+        if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
+            if($request->input('commission_percentage') <= Setting::first()->commission_seuil_hote_partenaire){
+                return (new ServiceController())->apiResponse(404,[], "La valeur de la  commission ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
+            }
         }
 
         // Récupération des données d'entrée
@@ -134,7 +153,7 @@ public function updateCommissionForSpecifiqueUser(Request $request)
         Commission::whereIn('user_id', $userIds)
             ->update(['valeur' => $commissionPercentage]);
 
-        return response()->json(['message' => 'Commissions updated successfully']);
+        return (new ServiceController())->apiResponse(200,[], "Commissions updated successfully");
     } catch (Exception $e) {
         return response()->json(['error' => 'Internal server error'], 500);
     }
@@ -188,5 +207,4 @@ public function usersWithCommission($commission)
     ]);
 }
 
-    
 }

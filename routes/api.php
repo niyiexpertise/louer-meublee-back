@@ -862,6 +862,13 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHote']], function () {
                 Route::get('/getHousingForHote', [HousingController::class, 'getHousingForHote'])->name('logement.getHousingForHote');
             });
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHotesimple']], function () {
+                Route::get('/getHousingForHotesimple', [HousingController::class, 'getHousingForHotesimple'])->name('logement.getHousingForHotesimple');
+            });
+            
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingDisabledByHote']], function () {
+                Route::get('/getHousingDisabledByHote', [HousingController::class, 'getHousingDisabledByHote'])->name('logement.getHousingDisabledByHote');
+            });
 
             // Gestion des photos logement
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updatePhoto']], function () {
@@ -1317,6 +1324,10 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('charge')->group(function() {
                     Route::get('index', [ChargeController::class, 'index'])
                         ->name('charge.index') ->middleware('role_or_permission:admin|superAdmin|Managecharge.index');
+                    Route::get('indexChargeActive', [ChargeController::class, 'indexChargeActive'])
+                        ->name('charge.indexChargeActive') ->middleware('role_or_permission:admin|superAdmin|Managecharge.indexChargeActive');
+                    Route::get('indexChargeInactive', [ChargeController::class, 'indexChargeInactive'])
+                        ->name('charge.indexChargeInactive') ->middleware('role_or_permission:admin|superAdmin|Managecharge.indexChargeInactive');
                     Route::post('store', [ChargeController::class, 'store'])
                         ->name('charge.store')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.store');
@@ -1329,6 +1340,12 @@ Route::prefix('portefeuille')->group(function () {
                     Route::delete('destroy/{id}', [ChargeController::class, 'destroy'])
                         ->name('charge.destroy')
                         ->middleware('role_or_permission:admin|superAdmin|Managecharge.destroy');
+                    Route::post('active/{id}', [ChargeController::class, 'active'])
+                        ->name('charge.active')
+                        ->middleware('role_or_permission:admin|superAdmin|Managecharge.active');
+                    Route::post('desactive/{id}', [ChargeController::class, 'desactive'])
+                        ->name('charge.desactive')
+                        ->middleware('role_or_permission:admin|superAdmin|Managecharge.desactive');
                 });
 
                  //Gestion de Sponsoring (tarif de sponsoring)
@@ -1402,6 +1419,9 @@ Route::prefix('portefeuille')->group(function () {
                    Route::post('/add', [PromotionController::class, 'addPromotion'])
                        ->name('promotion.add')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.add');
+                    Route::post('/update/{promotionId}', [PromotionController::class, 'update'])
+                       ->name('promotion.update')
+                       ->middleware('role_or_permission:superAdmin|hote|Managepromotion.update');
                    Route::get('/user', [PromotionController::class, 'getUserPromotions'])
                        ->name('promotion.user')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.user');
@@ -1435,6 +1455,9 @@ Route::prefix('portefeuille')->group(function () {
                     Route::post('/add', [ReductionController::class, 'addReduction'])
                         ->name('reduction.add')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.add');
+                    Route::post('/update/{reductionId}', [ReductionController::class, 'update'])
+                        ->name('reduction.update')
+                        ->middleware('role_or_permission:superAdmin|hote|Managereduction.update');
                     Route::get('/user', [ReductionController::class, 'getUserReductions'])
                         ->name('reduction.user')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.user');
@@ -1453,9 +1476,7 @@ Route::prefix('portefeuille')->group(function () {
                         Route::post('/desactive/{reductionId}/{housingId}', [ReductionController::class, 'desactiveReduction'])
                         ->name('reduction.desactiveReduction')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.desactiveReduction');
-                        Route::post('/update/{reductionId}', [ReductionController::class, 'updateReduction'])
-                        ->name('reduction.updateReduction')
-                        ->middleware('role_or_permission:superAdmin|hote|Managereduction.updateReduction');
+                        
                 });
 
                 //Crud de type de demande

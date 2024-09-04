@@ -1135,6 +1135,12 @@ public function findSimilarPaymentMethod($inputMethod)
             return (new ServiceController())->apiResponse(404,[], "Ce logement n'accepte pas d'annulation après sa réservation. ");
 
         }
+        if ($reservation->is_integration) {
+            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas annuler une reservation dont vous avez déjà confirmer l'intégration. ");
+
+
+        }
+
 
         $dateIntegration = $reservation->date_of_starting;
 

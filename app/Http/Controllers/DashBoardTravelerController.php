@@ -133,7 +133,7 @@ class DashBoardTravelerController extends Controller
                 $userId = Auth::id();
 
                 $data["data"] = Reservation::where('user_id', $userId)
-                                ->where('is_confirmed_hote', true)
+                            ->where('is_confirmed_hote', true)
                                 ->where('is_integration', true)
                                 ->where('statut', 'payee')
                                 ->get();

@@ -85,44 +85,15 @@ class FileService
             ];
         }
 
-        $request = new Request();
 
-        if($type == 'extensionImage'){
-            if (in_array($extension, $extensionImage)) {
-                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-
-                // dd($file);
-
-                $path = $file->move(public_path($directory), $filename);
-                // $filePath = $file->store($directory);
-                $optimizerChain = OptimizerChainFactory::create();
-                // $optimizerChain->optimize('C:\Users\ayena\louer-meublee-back\public\image\testImage\66d84d2d702a3.jpg');
-                $chemin='/'.$directory.'/'.$filename;
-                
-                $result = "no";
-
-                if($optimizerChain->optimize('C:\Users\ayena\louer-meublee-back\public\image\testImage\66d86a5756d43.jpg')){
-                    $result = "yes";
-                    return $result;
-                }
-
-            }
-        }
-
-
-        // $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-        // $path = $file->move(public_path($directory), $filename);
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+        $path = $file->move(public_path($directory), $filename);
         
-        // $chemin='/'.$directory.'/'.$filename;
+        $chemin='/'.$directory.'/'.$filename;
 
         return [
             'fails' => false,
-            'result' => [
-                "path" => $path->getPathname(),
-                "chemin" => $chemin,
-                "result" => $result
-            ],
-            // 'result' => $chemin
+            'result' => $chemin
         ];
     }
 

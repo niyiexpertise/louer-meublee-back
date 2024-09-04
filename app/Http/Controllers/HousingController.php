@@ -2365,7 +2365,8 @@ public function enableHousing($housingId)
             ->where('user_id',Auth::user()->id)
             ->with('user')
             ->get();
-            return response()->json(['data' => $housings], 200);
+            $data = $this->formatListingsData($housings);
+            return response()->json(['data' => $data], 200);
         } catch(Exception $e) {
             return response()->json($e->getMessage());
         }

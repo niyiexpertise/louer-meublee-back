@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Models\Setting;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 class FileService
 {
     protected $serverUrl;
@@ -22,7 +24,7 @@ class FileService
         return $this->uploadSingleFile($files, $directory,$type);
     }
 
- 
+
     private function uploadMultipleFiles(array $files, string $directory,$type): array
     {
         $paths = [];
@@ -95,7 +97,7 @@ class FileService
         ];
     }
 
-       
+
 
 }
 

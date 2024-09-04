@@ -1087,7 +1087,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsConfirmedByHost', [HoteReservationController::class, 'reservationsConfirmedByHost'])
             ->name('reservation.reservationsConfirmedByHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsConfirmedByHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsConfirmedByHost');
+
+        Route::get('/hoteStatistique', [HoteReservationController::class, 'hoteStatistique'])
+            ->name('reservation.hoteStatistique')
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.hoteStatistique');
 
         Route::get('/reservationsRejectedByHost', [HoteReservationController::class, 'reservationsRejectedByHost'])
             ->name('reservation.reservationsRejectedByHost')
@@ -1095,7 +1099,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsCanceledByTravelerForHost', [HoteReservationController::class, 'reservationsCanceledByTravelerForHost'])
             ->name('reservation.reservationsCanceledByTravelerForHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsCanceledByTravelerForHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsCanceledByTravelerForHost');
 
         Route::get('/reservationsNotConfirmedYetByHost', [HoteReservationController::class, 'reservationsNotConfirmedYetByHost'])
             ->name('reservation.reservationsNotConfirmedYetByHost')

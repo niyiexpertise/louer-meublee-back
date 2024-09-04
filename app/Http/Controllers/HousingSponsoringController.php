@@ -967,6 +967,8 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], ' tarif de sponsoring non trouvé');
                 }
                 $dateDebut = Carbon::parse($housingSponsoring->date_debut);
+                $dateDebut = Carbon::parse($housingSponsoring->date_debut);
+
                 if ($dateDebut->lessThanOrEqualTo(Carbon::now())) {
                     return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez activé une demande dont la date d\'aujourd\'hui est supérieur à la date de commencement du sponsoring');
                 }

@@ -9168,6 +9168,102 @@
                 ]
             }
         },
+        "/api/reservation/hoteStatistique": {
+            "get": {
+                "tags": [
+                    "Dashboard hote"
+                ],
+                "summary": "Récupère les statistiques pour l'hôte",
+                "description": "Cette route permet de récupérer diverses statistiques liées aux réservations et aux logements de l'hôte connecté.",
+                "operationId": "86026c89a63160ee60eb6259480f01d7",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques de l'hôte récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "nombre_reservation_confirme_par_hote": {
+                                                "type": "integer",
+                                                "example": 5
+                                            },
+                                            "nombre_reservation_rejete_par_hote": {
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "nombre_reservation_de_hote_annule_par_traveler": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "nombre_reservation_en_attente_de_confirmation_pour_hote": {
+                                                "type": "integer",
+                                                "example": 3
+                                            },
+                                            "nombre_logement_de_hote": {
+                                                "type": "integer",
+                                                "example": 10
+                                            },
+                                            "nombre_logement_de_hote_desactive": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "nombre_logement_inacheve_de_hote": {
+                                                "type": "integer",
+                                                "example": 0
+                                            },
+                                            "nombre_clients": {
+                                                "type": "integer",
+                                                "example": 7
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non autorisé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/category/photo/{photoid}": {
             "delete": {
                 "tags": [

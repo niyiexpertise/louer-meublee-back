@@ -267,3 +267,5 @@ $table->text('url')->nullable();
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
+
+        |between:0,100

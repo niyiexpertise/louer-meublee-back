@@ -332,17 +332,24 @@ public function getAllReservationConfirmedForAdmin(){
     ->where('is_rejected_traveler',0)
     ->where('is_rejected_hote',0)
     ->get();
-    $formattedReservations = $reservations->map(function ($reservation) {
-        return [
-            'reservation' => $reservation->toArray(),
-            'voyageur' => $reservation->user->toArray(),
-            'housing' =>$reservation->housing->toArray(),
-            'hote' => $reservation->housing->user->toArray(),
-        ];
-    });
+
+    foreach( $reservations as  $reservation){
+        $reservation->voyageur = $reservation->user;
+        $reservation->housing = $reservation->housing;
+        $reservation->hote = $reservation->housing->user;
+    }
+
+    // $formattedReservations = $reservations->map(function ($reservation) {
+    //     return [
+    //         'reservation' => $reservation->toArray(),
+    //         'voyageur' => $reservation->user->toArray(),
+    //         'housing' =>$reservation->housing->toArray(),
+    //         'hote' => $reservation->housing->user->toArray(),
+    //     ];
+    // });
 
     return response()->json([
-        'message' => $formattedReservations
+        'message' => $reservations
     ]);
 }
 
@@ -369,17 +376,14 @@ public function getAllReservationConfirmedForAdmin(){
         ->where('is_rejected_traveler',0)
         ->where('is_rejected_hote',1)
         ->get();
-        $formattedReservations = $reservations->map(function ($reservation) {
-            return [
-                'reservation' => $reservation->toArray(),
-                'voyageur' => $reservation->user->toArray(),
-                'housing' =>$reservation->housing->toArray(),
-                'hote' => $reservation->housing->user->toArray(),
-            ];
-        });
+        foreach( $reservations as  $reservation){
+            $reservation->voyageur = $reservation->user;
+            $reservation->housing = $reservation->housing;
+            $reservation->hote = $reservation->housing->user;
+        }
 
         return response()->json([
-            'message' => $formattedReservations
+            'message' => $reservations
         ]);
     }
 

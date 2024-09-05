@@ -468,6 +468,10 @@ public function DeleteReduction($id)
             return (new ServiceController())->apiResponse(404,[], 'Réduction déjà supprimée');
         }
 
+        if(Auth::user()->id !=Housing::whereId($reduction->housing_id)->first()->user_id){
+            return (new ServiceController())->apiResponse(404,[], 'Cette réduction appartient à un logement qui ne vous appartient pas');
+        }
+
         $reduction->is_deleted = true;
         $reduction->save();
         return (new ServiceController())->apiResponse(200,[], 'Réduction supprimée avec succès.');

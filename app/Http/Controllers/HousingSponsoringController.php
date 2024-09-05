@@ -518,6 +518,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_actif',false)
             ->where('is_deleted',false)
             ->where('is_rejected',false)
+            ->where('statut','payee')
             ->get();
 
             foreach($sponsoringrequests as  $sponsoringrequest){
@@ -565,6 +566,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_actif',true)
             ->where('is_deleted',false)
             ->where('is_rejected',false)
+            ->where('statut','payee')
             ->get();
             foreach($sponsoringrequests as  $sponsoringrequest){
                 $sponsoringrequest->user =User::find(Housing::whereId($sponsoringrequest->housing_id)->first()->user->id);
@@ -610,6 +612,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_rejected',true)
             ->where('is_actif',false)
             ->where('is_deleted',false)
+            ->where('statut','payee')
             ->get();
             foreach($sponsoringrequests as  $sponsoringrequest){
                 $sponsoringrequest->user =User::find(Housing::whereId($sponsoringrequest->housing_id)->first()->user->id);
@@ -673,6 +676,10 @@ class HousingSponsoringController extends Controller
                 $housingSponsoring = HousingSponsoring::find($sponsorinRequestId);
                 if (!$housingSponsoring) {
                     return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring introuvable');
+                }
+
+                if ($housingSponsoring->statut != 'payee') {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas valider une demande qui n\'est pas encore payé');
                 }
 
                 if($housingSponsoring->is_actif == true){
@@ -806,6 +813,10 @@ class HousingSponsoringController extends Controller
                 $montat_percentage=($prix_total* $request->pourcentage)/100;
                 if($montat_percentage !=$request->montant){
                     return (new ServiceController())->apiResponse(404, [], "Le pourcentage et le montant que vous avez renseigné n'est pas conforme.{$request->pourcentage}% de {$prix_total} ne donne pas {$request->montant} mais plutôt {$montat_percentage}  ");
+                }
+
+                if ($housingSponsoring->statut != 'payee') {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas valider une demande qui n\'est pas encore payé');
                 }
 
                 if($housingSponsoring->is_rejected == true){

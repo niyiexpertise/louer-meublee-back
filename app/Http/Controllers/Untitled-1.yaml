@@ -252,3 +252,18 @@ public function resetPassword(Request $request)
 
     return response()->json(['message' => 'Password has been successfully reset.']);
 }
+$table->text('type')->nullable();
+$table->text('access_key_id')->nullable();
+$table->text('secret_access_key')->nullable();
+$table->text('default_region')->nullable();
+$table->text('bucket')->nullable();
+$table->text('url')->nullable();
+
+       try {
+
+           
+
+            return (new ServiceController())->apiResponse(200, $data, 'Liste des demandes de sponsoring d\'un hôte connecté');
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }

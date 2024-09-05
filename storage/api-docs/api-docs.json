@@ -9088,6 +9088,393 @@
                 ]
             }
         },
+        "/api/fileStockage/store": {
+            "post": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Ajouter un systeme de stockage",
+                "description": "Stocke un nouveau systeme de fichier.",
+                "operationId": "752aae1687872223eb07d2e3f4badb49",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "access_key_id",
+                                    "secret_access_key",
+                                    "default_region",
+                                    "bucket",
+                                    "url"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "access_key_id": {
+                                        "type": "string"
+                                    },
+                                    "secret_access_key": {
+                                        "type": "string"
+                                    },
+                                    "default_region": {
+                                        "type": "string"
+                                    },
+                                    "bucket": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Systeme de stockage stocké avec succès."
+                    },
+                    "404": {
+                        "description": "Type de systeme de stockage existant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/update/{id}": {
+            "post": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Modifier un systeme de stockage",
+                "description": "Modifie un systeme de stockage existant.",
+                "operationId": "d1c1d304b4add0bd2fa8787128a980c9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "access_key_id": {
+                                        "type": "string"
+                                    },
+                                    "secret_access_key": {
+                                        "type": "string"
+                                    },
+                                    "default_region": {
+                                        "type": "string"
+                                    },
+                                    "bucket": {
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Systeme de stockage de fichier modifié avec succès."
+                    },
+                    "404": {
+                        "description": "Systeme de stockage inexistant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/show/{id}": {
+            "get": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Afficher un systeme de stockage",
+                "description": "Affiche le détail d'un systeme de stockage existant.",
+                "operationId": "662fa1e6bfab14ab68a38cfde96c682d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du systeme de stockage."
+                    },
+                    "404": {
+                        "description": "Systeme de stockage inexistant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/showActif": {
+            "get": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Obtenir le détail du systeme de stockage actif",
+                "description": "Retourne le détail du systeme de stockage actif si disponible",
+                "operationId": "showActifFileStockage",
+                "responses": {
+                    "200": {
+                        "description": "Détail du systeme de stockage actif",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "filestockage": {
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "access_key_id": {
+                                                    "type": "string"
+                                                },
+                                                "secret_access_key": {
+                                                    "type": "string"
+                                                },
+                                                "default_region": {
+                                                    "type": "string"
+                                                },
+                                                "bucket": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "is_actif": {
+                                                    "type": "boolean"
+                                                },
+                                                "is_deleted": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun Systeme de stockage actif",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucun Systeme de stockage actif"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/indexInactif": {
+            "get": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Liste des systemes de stockage inactifs",
+                "description": "Récupère la liste des systemes de stockage inactifs.",
+                "operationId": "4069e0d609701b2b7e3610ab3f61a5d7",
+                "responses": {
+                    "200": {
+                        "description": "Liste des systemes de stockage inactifs."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/active/{id}": {
+            "post": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Activer un systeme de stockage",
+                "description": "Active un systeme de stockage et désactive les autres.",
+                "operationId": "dbc0877f4bd04249ac6d5d8aa2a5b80c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Systeme de fichier activé avec succès."
+                    },
+                    "404": {
+                        "description": "Systeme de stockage inexistant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/desactive/{id}": {
+            "post": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Désactiver un systeme de stockage",
+                "description": "Désactive un systeme de stockage.",
+                "operationId": "c490d03b914dc578577960feb3336b38",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Systeme de stockage désactivé avec succès."
+                    },
+                    "404": {
+                        "description": "Systeme de stockage inexistant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/fileStockage/delete/{id}": {
+            "post": {
+                "tags": [
+                    "Systeme stockage"
+                ],
+                "summary": "Supprimer un systeme de stockage",
+                "description": "Supprime un systeme de stockage en le marquant comme supprimé.",
+                "operationId": "660d3cfd2a949f7832f9ae5b43df9a28",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Systeme de stockage supprimé avec succès."
+                    },
+                    "404": {
+                        "description": "Systeme de stockage inexistant."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/reservation/reservationsConfirmedByHost": {
             "get": {
                 "tags": [

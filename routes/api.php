@@ -64,6 +64,7 @@ use App\Http\Controllers\SettingController;
 
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
+use App\Http\Controllers\FileStockageController;
 
 
 /*
@@ -633,6 +634,35 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::middleware(['role_or_permission:admin|superAdmin|ManagepropertyType.unblock'])->group(function () {
             Route::put('/unblock/{id}', [PropertyTypeController::class, 'unblock'])->name('propertyType.unblock');
         });
+    });
+
+     //Gestion des systèmes de stockage.
+     Route::prefix('fileStockage')->group(function () {
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.store'])->group(function () {
+            Route::post('/store', [FileStockageController::class, 'store'])->name('fileStockage.store');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.update'])->group(function () {
+            Route::post('/update/{id}', [FileStockageController::class, 'update'])->name('fileStockage.update');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.show'])->group(function () {
+            Route::get('/show/{id}', [FileStockageController::class, 'show'])->name('fileStockage.show');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.showActif'])->group(function () {
+            Route::get('/showActif', [FileStockageController::class, 'showActif'])->name('fileStockage.showActif');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.indexInactif'])->group(function () {
+            Route::get('/indexInactif', [FileStockageController::class, 'indexInactif'])->name('fileStockage.indexInactif');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.active'])->group(function () {
+            Route::post('/active/{id}', [FileStockageController::class, 'active'])->name('fileStockage.active');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.desactive'])->group(function () {
+            Route::post('/desactive/{id}', [FileStockageController::class, 'desactive'])->name('fileStockage.desactive');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.delete'])->group(function () {
+            Route::post('/delete/{id}', [FileStockageController::class, 'delete'])->name('fileStockage.delete');
+        });
+
     });
 
 

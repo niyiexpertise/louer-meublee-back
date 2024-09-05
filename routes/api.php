@@ -1723,6 +1723,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics|admin');
     });
 
+    Route::middleware(['role_or_permission:superAdmin|admin|Managepartenaire.getUsersPartenaire'])->group(function () {
+        Route::get('/partenaire/getPartenaires', [VerificationDocumentPartenaireController::class, 'getPartenaires'])->name('partenaire.getPartenaires');
+    });
+
 
 
 });
@@ -1756,7 +1760,7 @@ Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringContro
 Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
             ->name('reservation.getDateOfReservationsByHousingId');
 
-Route::post('/ajoutFile', [FileTestController::class, 'ajoutFile'])
-            ->name('ajoutFile');
+
+
 
 /** end Route ne nécéssitant pas l'authentification */

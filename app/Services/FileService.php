@@ -15,7 +15,7 @@ class FileService
     {
         $setting = Setting::first();
         $this->serverUrl = $setting->adresse_serveur_fichier ?? url('/');
-        $this->disk = $setting->disk ?? 's3'; // Valeur par défaut à 'local'
+        $this->disk = $setting->disk ?? 's3'; 
     }
 
     public function uploadFiles($files, string $directory, $type)

@@ -72,8 +72,11 @@ class ReductionController extends Controller
         $validator = Validator::make($request->all(), [
             'housing_id' => 'required|exists:housings,id',
             'night_number' => 'required|integer',
-            'value' => 'required|numeric',
+            'value' => 'required|numeric|between:0,100',
         ]);
+        if(Housing::whereId($request->housing_id)->first()->user_id != Auth::user()->id){
+            return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez pas ajouter la réduction à un logement qui ne vous appartient pas.');
+        }
 
         if(intval($request->night_number) <=0){
             return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit  soit positive et non nulle");
@@ -178,7 +181,7 @@ class ReductionController extends Controller
             $reductions = [];
 
             foreach ($housings as $housing) {
-                $housingReductions = reduction::where('housing_id', $housing->id)->get();
+                $housingReductions = reduction::with('housing')->where('housing_id', $housing->id)->get();
 
                 $reductions = array_merge($reductions, $housingReductions->toArray());
             }
@@ -394,18 +397,23 @@ class ReductionController extends Controller
                 return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de nuit soit positive et non nulle");
             }
         }
-
+         if($request->value > 100){
+            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la réduction doit être inférieur à 100');
+        }
         if(!is_null(Setting::first()->max_night_number)){
             if($request->night_number > Setting::first()->max_night_number){
                 return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number);
             }
         }
+       
+           
 
         if(!is_null(Setting::first()->max_value_reduction)){
             if($request->value > Setting::first()->max_value_reduction){
                 return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la réduction doit être inférieur ou égal à '.Setting::first()->max_value_reduction);
             }
         }
+        
 
         $reduction->value= $request->value??$reduction->value;
         $reduction->night_number= $request->night_number??$reduction->night_number;
@@ -535,228 +543,7 @@ public function activateReductionsForHousing($housingId)
     ], 200);
 }
 
-/**
- * @OA\Post(
- *      path="/api/reduction/active/{reductionId}/{housingId}",
- *      summary="Activate a reduction for a housing",
- *      tags={"Reduction hote"},
- *      @OA\Parameter(
- *          name="reductionId",
- *          in="path",
- *          required=true,
- *          description="ID of the reduction",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Parameter(
- *          name="housingId",
- *          in="path",
- *          required=true,
- *          description="ID of the housing",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Reduction activated successfully",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=200
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Success message",
- *                  type="string",
- *                  example="Reduction activated successfully"
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Reduction already activated or not found",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=404
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Error message",
- *                  type="string",
- *                  example="Reduction already activated"
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=500,
- *          description="Server error",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=500
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Error message",
- *                  type="string",
- *                  example="Server error message"
- *              )
- *          )
- *      ),
- *      security={
- *          {"bearerAuth": {}}
- *      }
- * )
- */
 
-
-public function activeReduction($reductionId,$housingId){
-    try {
-
-        $reduction = reduction::whereId($reductionId)->first();
-
-        $checkReduction = $this->checkReduction($reductionId,$housingId);
-        if($checkReduction){
-            return $checkReduction;
-        }
-
-        if($reduction->is_encours == true){
-            return (new ServiceController())->apiResponse(404,[], 'Réduction déjà activée');
-        }
-
-        $reduction->is_encours = true;
-        $reduction->save();
-
-
-        return (new ServiceController())->apiResponse(200,[], 'Réduction activée avec succès');
-
-        } catch(\Exception $e) {
-            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-        }
-}
-
-/**
- * @OA\Post(
- *      path="/api/reduction/desactive/{reductionId}/{housingId}",
- *      summary="Deactivate a reduction for a housing",
- *      tags={"Reduction hote"},
- *      @OA\Parameter(
- *          name="reductionId",
- *          in="path",
- *          required=true,
- *          description="ID of the reduction",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Parameter(
- *          name="housingId",
- *          in="path",
- *          required=true,
- *          description="ID of the housing",
- *          @OA\Schema(
- *              type="integer"
- *          )
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Reduction deactivated successfully",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=200
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Success message",
- *                  type="string",
- *                  example="Reduction deactivated successfully"
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Reduction already deactivated or not found",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=404
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Error message",
- *                  type="string",
- *                  example="Reduction already deactivated"
- *              )
- *          )
- *      ),
- *      @OA\Response(
- *          response=500,
- *          description="Server error",
- *          @OA\JsonContent(
- *              type="object",
- *              @OA\Property(
- *                  property="status",
- *                  description="Status of the response",
- *                  type="integer",
- *                  example=500
- *              ),
- *              @OA\Property(
- *                  property="message",
- *                  description="Error message",
- *                  type="string",
- *                  example="Server error message"
- *              )
- *          )
- *      ),
- *      security={
- *          {"bearerAuth": {}}
- *      }
- * )
- */
-
-public function desactiveReduction($reductionId,$housingId){
-    try {
-
-        $reduction = reduction::whereId($reductionId)->first();
-
-        $checkReduction = $this->checkReduction($reductionId,$housingId);
-        if($checkReduction){
-            return $checkReduction;
-        }
-
-        if($reduction->is_encours == false){
-            return (new ServiceController())->apiResponse(404,[], 'Réduction déjà désactivée');
-        }
-
-        $reduction->is_encours = false;
-        $reduction->save();
-
-
-        return (new ServiceController())->apiResponse(200,[], 'Réduction désactivée avec succès');
-
-        } catch(\Exception $e) {
-            return (new ServiceController())->apiResponse(500,[],$e->getMessage());
-        }
-}
 
     public function checkReduction($reductionId, $housingId){
         $housing = Housing::whereId($housingId)->first();

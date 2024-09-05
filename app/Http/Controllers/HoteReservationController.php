@@ -156,6 +156,89 @@ class HoteReservationController extends Controller
         return response()->json(['data' => $reservations]);
     }
 
-    
+    private function nombre_client_de_hote(){
+        $hostId = Auth::user()->id;
+        $reservations = Reservation::whereHas('housing', function ($query) use ($hostId) {
+            $query->where('user_id', $hostId)
+            ->where('is_deleted',0)
+            ->where('is_blocked',0)
+            ->where('is_integration', true)
+            ->where('is_confirmed_hote',true)
+            ->where('is_rejected_traveler',0)
+            ->where('is_rejected_hote',0)
+            ->where('statut', 'payee');
+        })->with(['user'])->get();
+
+        $clients = [];
+
+        foreach($reservations as $reservation){
+            if(!in_array($reservation->user, $clients)){
+                $clients[] = $reservation->user;
+            }
+        }
+
+        return $clients;
+    }
+
+    /**
+ * @OA\Get(
+ *     path="/api/reservation/hoteStatistique",
+ *  security={{"bearerAuth": {}}},
+ *     tags={"Dashboard hote"},
+ *     summary="Récupère les statistiques pour l'hôte",
+ *     description="Cette route permet de récupérer diverses statistiques liées aux réservations et aux logements de l'hôte connecté.",
+ *     @OA\Response(
+ *         response=200,
+ *         description="Statistiques de l'hôte récupérées avec succès",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 @OA\Property(property="nombre_reservation_confirme_par_hote", type="integer", example=5),
+ *                 @OA\Property(property="nombre_reservation_rejete_par_hote", type="integer", example=2),
+ *                 @OA\Property(property="nombre_reservation_de_hote_annule_par_traveler", type="integer", example=1),
+ *                 @OA\Property(property="nombre_reservation_en_attente_de_confirmation_pour_hote", type="integer", example=3),
+ *                 @OA\Property(property="nombre_logement_de_hote", type="integer", example=10),
+ *                 @OA\Property(property="nombre_logement_de_hote_desactive", type="integer", example=1),
+ *                 @OA\Property(property="nombre_logement_inacheve_de_hote", type="integer", example=0),
+ *                 @OA\Property(property="nombre_clients", type="integer", example=7)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Non autorisé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Non autorisé")
+ *         )
+ *     )
+ * )
+ */
+
+
+    public function hoteStatistique(){
+        try {
+            $data[] = [
+                "nombre_reservation_confirme_par_hote" => count($this->reservationsConfirmedByHost()->original['data']),
+                "nombre_reservation_rejete_par_hote" => count($this->reservationsRejectedByHost()->original['data']),
+                "nombre_reservation_de_hote_annule_par_traveler" => count($this->reservationsCanceledByTravelerForHost()->original['data']),
+                "nombre_reservation_en_attente_de_confirmation_pour_hote" => count($this->reservationsNotConfirmedYetByHost()->original['data']),
+                "nombre_logement_de_hote" => count((new HousingController())->getHousingForHote()->original['data']),
+                "nombre_logement_de_hote_desactive" => count((new HousingController())->getHousingDisabledByHote()->original['data']),
+                "nombre_logement_inacheve_de_hote" => count((new HousingController())->HousingHoteInProgress()->original['data']),
+                "nombre_clients" =>count($this->nombre_client_de_hote())
+            ];
+
+            return (new ServiceController())->apiResponse(200,$data, "Statistique de l'hôte.");
+                } catch(Exception $e) {
+                     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+                }
+    }
 
 }

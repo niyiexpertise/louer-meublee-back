@@ -59,11 +59,12 @@ use App\Http\Controllers\AdminReductionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashBoardTravelerController;
 use App\Http\Controllers\AuditController;
-
+use App\Http\Controllers\FileTestController;
 use App\Http\Controllers\SettingController;
 
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
+use App\Http\Controllers\FileStockageController;
 
 
 /*
@@ -635,6 +636,35 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
     });
 
+     //Gestion des systèmes de stockage.
+     Route::prefix('fileStockage')->group(function () {
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.store'])->group(function () {
+            Route::post('/store', [FileStockageController::class, 'store'])->name('fileStockage.store');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.update'])->group(function () {
+            Route::post('/update/{id}', [FileStockageController::class, 'update'])->name('fileStockage.update');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.show'])->group(function () {
+            Route::get('/show/{id}', [FileStockageController::class, 'show'])->name('fileStockage.show');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.showActif'])->group(function () {
+            Route::get('/showActif', [FileStockageController::class, 'showActif'])->name('fileStockage.showActif');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.indexInactif'])->group(function () {
+            Route::get('/indexInactif', [FileStockageController::class, 'indexInactif'])->name('fileStockage.indexInactif');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.active'])->group(function () {
+            Route::post('/active/{id}', [FileStockageController::class, 'active'])->name('fileStockage.active');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.desactive'])->group(function () {
+            Route::post('/desactive/{id}', [FileStockageController::class, 'desactive'])->name('fileStockage.desactive');
+        });
+        Route::middleware(['role_or_permission:admin|superAdmin|ManagefileStockage.delete'])->group(function () {
+            Route::post('/delete/{id}', [FileStockageController::class, 'delete'])->name('fileStockage.delete');
+        });
+
+    });
+
 
 
     //Gestion de la liste des documents
@@ -1087,7 +1117,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsConfirmedByHost', [HoteReservationController::class, 'reservationsConfirmedByHost'])
             ->name('reservation.reservationsConfirmedByHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsConfirmedByHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsConfirmedByHost');
+
+        Route::get('/hoteStatistique', [HoteReservationController::class, 'hoteStatistique'])
+            ->name('reservation.hoteStatistique')
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.hoteStatistique');
 
         Route::get('/reservationsRejectedByHost', [HoteReservationController::class, 'reservationsRejectedByHost'])
             ->name('reservation.reservationsRejectedByHost')
@@ -1095,7 +1129,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsCanceledByTravelerForHost', [HoteReservationController::class, 'reservationsCanceledByTravelerForHost'])
             ->name('reservation.reservationsCanceledByTravelerForHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsCanceledByTravelerForHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsCanceledByTravelerForHost');
 
         Route::get('/reservationsNotConfirmedYetByHost', [HoteReservationController::class, 'reservationsNotConfirmedYetByHost'])
             ->name('reservation.reservationsNotConfirmedYetByHost')
@@ -1721,5 +1755,8 @@ Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringContro
 
 Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
             ->name('reservation.getDateOfReservationsByHousingId');
+
+Route::post('/ajoutFile', [FileTestController::class, 'ajoutFile'])
+            ->name('ajoutFile');
 
 /** end Route ne nécéssitant pas l'authentification */

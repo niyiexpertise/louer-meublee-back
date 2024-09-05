@@ -13,6 +13,7 @@ use App\Models\promotion;
 use App\Models\photo;
 use App\Models\housing_price;
 use App\Models\File;
+use Illuminate\Support\Str;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
@@ -35,6 +36,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
+use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
+
 class LoginController extends Controller
 {
 
@@ -477,26 +481,51 @@ public function password_recovery_start_step(Request $request){
         $request->validate([
             'email' => 'required',
         ]);
-        $email = $request->email;
-        if(User::where('email',$email)->exists()){
+        $user = User::where('email', $request->email)->first();
+        if($user){
+
+            if($user->is_blocked == true){
+                return (new ServiceController())->apiResponse(404,[], "Désolé mais vous êtes bloqué.");
+            }
+
+            if($user->is_deleted == true){
+                return (new ServiceController())->apiResponse(404,[], "Désolé mais vous êtes supprimé.");
+            }
+
+            $exists = DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->exists();
+
+            if($exists){
+                DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            }
+
+            $token = Str::random(60);
+
+            DB::table('password_reset_tokens')->insert([
+                'email' => $request->email,
+                'token' => $token,
+                'created_at' => now(),
+            ]);
+
+            // URL du frontend pour le formulaire de réinitialisation de mot de passe
+            $frontendUrl = 'https://mon-frontend.com/reset-password';
+
+            // Génère le lien avec le token et l'email
+            $resetLink = $frontendUrl . '?token=' . $token . '&email=' . urlencode($request->email);
+
+
             $mail = [
-                'title' => 'Reinitialisation de mot de passe',
-                'body' => 'Clique sur ce lien : https://quotidishop.com/page/account/change-password pour reinitialiser votre mot de passe'
+                'title' => 'Réinitialisation de mot de passe',
+                'body' => "Cliquez sur ce lien : {$resetLink} et suivez les étapes pour réinitialiser votre mot de passe."
             ];
-
-
 
             dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
 
-            return response()->json([
-                'status_code' => 200,
-                'message' => "Email sent successfully"
-             ]);
+            return (new ServiceController())->apiResponse(200,[], "Email envoyé avec succès");
+
         }else{
-            return response()->json([
-                'status_code' => 404,
-                'message' => "Email not found"
-             ]);
+            return (new ServiceController())->apiResponse(404,[], "Email non trouvé");
         }
 
     } catch(\Exception $e) {
@@ -520,8 +549,14 @@ public function password_recovery_start_step(Request $request){
  *                     description="User's email address",
  *                     example="user@example.com"
  *                 ),
+ *               @OA\Property(
+ *                     property="token",
+ *                     type="string",
+ *                     description="token généré pour la modification du mot de passe",
+ *                     example="osdf156s4d4ez6z27c2We6zg2"
+ *                 ),
  *                 @OA\Property(
- *                     property="new_password",
+ *                     property="password",
  *                     type="string",
  *                     description="New password for the user",
  *                     example="new_password123"
@@ -559,28 +594,47 @@ public function password_recovery_end_step(Request $request){
     try {
 
         $request->validate([
-            'email' => 'required',
-            'new_password' => 'required'
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+            'token' => 'required|string',
         ]);
 
-        $email = $request->email;
-        $user = User::where('email', $email)->first();
-        if($user){
-            $user->update(['password' => Hash::make($request->new_password)]);
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Password changed successfully'
-            ]);
-        }else {
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Email not found'
-                ]);
+        $passwordReset = DB::table('password_reset_tokens')->where('email', $request->email)->where('token', $request->token)->first();
+
+        if (!$passwordReset) {
+            return (new ServiceController())->apiResponse(404, [],"Email ou Token invalide");
         }
+
+        $expirationTime = config('auth.passwords.users.expire');
+        if (Carbon::parse($passwordReset->created_at)->addMinutes($expirationTime)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return (new ServiceController())->apiResponse(404, [],"Ce lien de réinitialisation du mot de passe est expiré.");
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return (new ServiceController())->apiResponse(404, [],"Utilisateur non trouvé.");
+        }
+
+        $user->is_double_authentification = 0;
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        $user = User::whereId($user->id)->first();
+
+        $deconnectes = PersonalAccessToken::where('tokenable_id', $user->id)
+            ->where('tokenable_type', 'App\Models\User')->get();
+                    foreach($deconnectes as $deconnecte){
+                        $deconnecte->delete();
+            }
+
+        return (new ServiceController())->apiResponse(404, [],"Mot de passe modifié avec succès.");
 
           } catch(\Exception $e) {
             return response()->json($e->getMessage());
-            }
+        }
 }
 
     public function returnAuthCommission(){

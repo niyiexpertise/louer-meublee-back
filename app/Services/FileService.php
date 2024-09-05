@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
+use App\Models\FileStockage;
+
 
 class FileService
 {
@@ -14,8 +16,10 @@ class FileService
     public function __construct()
     {
         $setting = Setting::first();
+        $s3Config = FileStockage::where('type', 's3')->where('is_actif', 1)->first();
+
         $this->serverUrl = $setting->adresse_serveur_fichier ?? url('/');
-        $this->disk = $setting->disk ?? 's3'; 
+        $this->disk = $s3Config ->type ?? 'local'; 
     }
 
     public function uploadFiles($files, string $directory, $type)

@@ -39,7 +39,6 @@ class User extends Authenticatable implements Auditable
         'is_deleted',
         'is_blocked',
         'code',
-        'is_double_authentification',
         'partenaire_id'
     ];
 
@@ -52,7 +51,8 @@ class User extends Authenticatable implements Auditable
     protected $hidden = [
         'password',
         'remember_token',
-        'code'
+        'code',
+        'is_double_authentification',
     ];
 
     /**

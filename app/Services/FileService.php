@@ -1,18 +1,21 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Setting;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
 
 class FileService
 {
     protected $serverUrl;
+    protected $disk;
 
     public function __construct()
     {
-        $this->serverUrl = Setting::first()->adresse_serveur_fichier ?? url('/');
+        $setting = Setting::first();
+        $this->serverUrl = $setting->adresse_serveur_fichier ?? url('/');
+        $this->disk = $setting->disk ?? 's3'; // Valeur par défaut à 'local'
     }
 
     public function uploadFiles($files, string $directory, $type)
@@ -45,12 +48,27 @@ class FileService
         }
 
         $filename = uniqid() . '.' . $extension;
-        $destinationPath = public_path($directory);
+        $filePath = $directory . '/' . $filename;
 
-        if (in_array($extension, $this->getAllowedExtensions('extensionImage'))) {
-            $this->compressAndSaveImage($file, $destinationPath, $filename);
+        if ($this->disk === 's3') {
+            // Code spécifique pour S3
+            if (in_array($extension, $this->getAllowedExtensions('extensionImage'))) {
+                // Compression et sauvegarde de l'image pour S3
+                $compressedImage = $this->compressImage($file);
+                Storage::disk($this->disk)->put($filePath, $compressedImage);
+            } else {
+                // Stockage des autres fichiers sur S3
+                Storage::disk($this->disk)->putFileAs($directory, $file, $filename);
+            }
         } else {
-            $file->move($destinationPath, $filename);
+            // Code de stockage local
+            $destinationPath = public_path($directory);
+
+            if (in_array($extension, $this->getAllowedExtensions('extensionImage'))) {
+                $this->compressAndSaveImage($file, $destinationPath, $filename);
+            } else {
+                $file->move($destinationPath, $filename);
+            }
         }
 
         $chemin = '/' . $directory . '/' . $filename;
@@ -86,6 +104,13 @@ class FileService
         $image = Image::make($file->getRealPath());
         $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024); 
         $image->save($destinationPath . '/' . $filename, $compressionQuality);
+    }
+
+    private function compressImage($file)
+    {
+        $image = Image::make($file->getRealPath());
+        $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024); 
+        return $image->encode('jpg', $compressionQuality)->__toString();
     }
 
     private function calculateCompressionQuality($image, $targetSizeBytes)

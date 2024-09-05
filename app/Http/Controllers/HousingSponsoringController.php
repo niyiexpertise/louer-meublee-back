@@ -96,17 +96,6 @@ class HousingSponsoringController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            // $request->validate([
-            //     'housing_id' => 'required',
-            //     'sponsoring_id' => 'required',
-            //     'date_debut' => 'required',
-            //     'nombre',
-            //     'payment_method' => 'required|string',
-            //     'id_transaction' => 'required|string',
-            //     'statut_paiement' => 'required',
-            //     'montant' => 'nullable|numeric'
-            // ]);
-
 
             $housing = Housing::find($request->housing_id);
             $sponsoring = Sponsoring::find($request->sponsoring_id);
@@ -127,15 +116,11 @@ class HousingSponsoringController extends Controller
             }
 
 
-            $nombre = $request->nombre??1;
+            $nombre = intval($request->nombre)??1;
 
             if($request->nombre){
 
-                if(!is_int($request->nombre)){
-                    return (new ServiceController())->apiResponse(404, [], ' Le nombre de fois dont vous souhaité bénéficié du tarif doit être un entier');
-                }
-
-                if($request->nombre<=0){
+                if(intval($request->nombre)<=0){
                     return (new ServiceController())->apiResponse(404, [], ' Le nombre de fois dont vous souhaité bénéficié du tarif doit être supérieur à 0');
                 }
             }

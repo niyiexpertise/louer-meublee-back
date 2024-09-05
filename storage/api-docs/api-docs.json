@@ -9127,6 +9127,9 @@
                                     },
                                     "url": {
                                         "type": "string"
+                                    },
+                                    "is_actif": {
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -9388,42 +9391,6 @@
                 "responses": {
                     "200": {
                         "description": "Systeme de fichier activé avec succès."
-                    },
-                    "404": {
-                        "description": "Systeme de stockage inexistant."
-                    },
-                    "500": {
-                        "description": "Erreur serveur."
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/fileStockage/desactive/{id}": {
-            "post": {
-                "tags": [
-                    "Systeme stockage"
-                ],
-                "summary": "Désactiver un systeme de stockage",
-                "description": "Désactive un systeme de stockage.",
-                "operationId": "c490d03b914dc578577960feb3336b38",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Systeme de stockage désactivé avec succès."
                     },
                     "404": {
                         "description": "Systeme de stockage inexistant."

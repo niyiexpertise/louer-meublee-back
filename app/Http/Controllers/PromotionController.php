@@ -130,7 +130,7 @@ class PromotionController extends Controller
 
     if(!is_null(Setting::first()->max_value_promotion)){
         if($request->value > Setting::first()->max_value_promotion){
-            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion.'%');
         }
     }
 
@@ -471,7 +471,7 @@ class PromotionController extends Controller
         }
         if(!is_null(Setting::first()->max_value_promotion)){
             if($request->value > Setting::first()->max_value_promotion){
-                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion.'%');
             }
         }
         
@@ -530,19 +530,24 @@ public function DeletePromotion($id)
         $promotion = promotion::find($id);
 
         if (!$promotion) {
-            return response()->json(['error' => 'Promotion non trouvée.'], Response::HTTP_NOT_FOUND);
+            return (new ServiceController())->apiResponse(404,[], 'Promotion non trouvée');
         }
 
         if ($promotion->is_deleted) {
-            return response()->json(['error' => 'Promotion déjà supprimée.'], Response::HTTP_CONFLICT);
+            return (new ServiceController())->apiResponse(404,[], 'Promotion déjà supprimée');
         }
 
-        $promotion->update(['is_deleted' => true]);
+        if(Auth::user()->id !=Housing::whereId($promotion->housing_id)->first()->user_id){
+            return (new ServiceController())->apiResponse(404,[], 'Cette promotion appartient à un logement qui ne vous appartient pas');
+        }
 
-        return response()->json(['message' => 'Promotion supprimée avec succès.'], Response::HTTP_OK);
+        $promotion->is_deleted = true;
+        $promotion->save();
+
+        return (new ServiceController())->apiResponse(200,[], 'Promotion supprimée avec succès.');
 
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
     }
 }
 

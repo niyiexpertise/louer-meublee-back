@@ -94,7 +94,7 @@ class ReductionController extends Controller
 
         if(!is_null(Setting::first()->max_value_reduction)){
             if($request->value > Setting::first()->max_value_reduction){
-                return (new ServiceController())->apiResponse(404,[],'La valeur de la commission du nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_value_reduction);
+                return (new ServiceController())->apiResponse(404,[],'La valeur de la commission du nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_value_reduction.'%');
             }
         }
 
@@ -181,7 +181,7 @@ class ReductionController extends Controller
             $reductions = [];
 
             foreach ($housings as $housing) {
-                $housingReductions = reduction::with('housing')->where('housing_id', $housing->id)->get();
+                $housingReductions = reduction::with('housing')->where('is_deleted',false)->where('housing_id', $housing->id)->get();
 
                 $reductions = array_merge($reductions, $housingReductions->toArray());
             }
@@ -402,7 +402,7 @@ class ReductionController extends Controller
         }
         if(!is_null(Setting::first()->max_night_number)){
             if($request->night_number > Setting::first()->max_night_number){
-                return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number);
+                return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number.'%');
             }
         }
        
@@ -474,6 +474,10 @@ public function DeleteReduction($id)
 
         if ($reduction->is_deleted) {
             return (new ServiceController())->apiResponse(404,[], 'Réduction déjà supprimée');
+        }
+
+        if(Auth::user()->id !=Housing::whereId($reduction->housing_id)->first()->user_id){
+            return (new ServiceController())->apiResponse(404,[], 'Cette réduction appartient à un logement qui ne vous appartient pas');
         }
 
         $reduction->is_deleted = true;

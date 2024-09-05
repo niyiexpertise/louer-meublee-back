@@ -367,7 +367,7 @@ class FileStockageController extends Controller
             $fileStockage->is_actif = true;
             $fileStockage->save();
 
-            return (new ServiceController())->apiResponse(200, [], "Activation du systeme de fichier fait avec succès. Nous vous rappelons que l'activation d'un systeme de stockage entraîne la désactivation de celle qui était acti e");
+            return (new ServiceController())->apiResponse(200, [], "Activation du systeme de fichier fait avec succès. Nous vous rappelons que l'activation d'un systeme de stockage entraîne la désactivation de celle qui était active");
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }

@@ -100,7 +100,7 @@ class PromotionController extends Controller
     $validator = Validator::make($request->all(), [
         'housing_id' => 'required|exists:housings,id',
         'number_of_reservation' => 'required|integer',
-        'value' => 'required|numeric',
+        'value' => 'required|numeric|between:0,100',
         'date_debut' => 'required|date',
         'date_fin' => 'required|date',
     ]);
@@ -111,7 +111,9 @@ class PromotionController extends Controller
         $message[] = $validator->errors();
         return (new ServiceController())->apiResponse(505,[],$message);
     }
-
+    if(Housing::whereId($request->housing_id)->first()->user_id != Auth::user()->id){
+        return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez pas ajouter la promotion à un logement qui ne vous appartient pas.');
+    }
     if(intval($request->number_of_reservation) <=0){
         return (new ServiceController())->apiResponse(404,[], "Assurez vous que la valeur du nombre de réservation  soit positive et non nulle");
     }
@@ -436,7 +438,7 @@ class PromotionController extends Controller
         }
 
         if(Housing::whereId($promotion->housing_id)->first()->user_id != Auth::user()->id){
-            return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez modifier la promotion d\'un logement qui ne vous appartient pas.');
+            return (new ServiceController())->apiResponse(404,[],'Vous ne pouvez pas modifier la promotion d\'un logement qui ne vous appartient pas.');
         }
 
         $dateToday = new DateTime();
@@ -464,12 +466,15 @@ class PromotionController extends Controller
                 return (new ServiceController())->apiResponse(404,[],'Le nombre de réservation doit être inférieur ou égal à '.Setting::first()->max_number_of_reservation);
             }
         }
-
+        if($request->value > 100){
+            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur à 100');
+        }
         if(!is_null(Setting::first()->max_value_promotion)){
             if($request->value > Setting::first()->max_value_promotion){
                 return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
             }
         }
+        
 
         $promotion->value= $request->value??$promotion->value;
         $promotion->number_of_reservation= $request->number_of_reservation??$promotion->number_of_reservation;
@@ -584,7 +589,7 @@ public function activatePromotionsForHousing($housingId)
         return (new ServiceController())->apiResponse(404, [], "Aucune promotion n'a été activée pour ce logement  en raison du fait que leur période d'activité est passé.");
     }
 
-    return (new ServiceController())->apiResponse(200, [        'activated_promotions' => $activatedPromotions], "Promotions activées avec succès.");
+    return (new ServiceController())->apiResponse(200, ['activated_promotions' => $activatedPromotions], "Promotions activées avec succès.");
 }
 
 

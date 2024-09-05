@@ -1565,7 +1565,11 @@ public function confirmIntegration(Request $request)
         if (!$reservation) {
             return (new ServiceController())->apiResponse(404, [], "Réservation non trouvée.");
         }
-
+        $currentUser = auth()->user();
+        // return in_array($currentUser->getRoleNames()[0], ['admin', 'superAdmin']);
+        if ($reservation->user_id != $currentUser->id && !in_array($currentUser->getRoleNames()[0], ['admin', 'superAdmin'])) {
+            return (new ServiceController())->apiResponse(403, [], "Vous n'êtes pas autorisé à confirmer l'intégration pour cette réservation.");
+        }
         if (!$reservation->is_confirmed_hote) {
             return (new ServiceController())->apiResponse(404, [], "La réservation doit être confirmée par l'hôte.");
         }

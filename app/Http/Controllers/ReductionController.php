@@ -178,7 +178,7 @@ class ReductionController extends Controller
             $reductions = [];
 
             foreach ($housings as $housing) {
-                $housingReductions = reduction::with('housing')->where('housing_id', $housing->id)->get();
+                $housingReductions = reduction::with('housing')->where('is_deleted',false)->where('housing_id', $housing->id)->get();
 
                 $reductions = array_merge($reductions, $housingReductions->toArray());
             }

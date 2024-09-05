@@ -26,6 +26,7 @@ class FileStockageController extends Controller
      *             @OA\Property(property="default_region", type="string"),
      *             @OA\Property(property="bucket", type="string"),
      *             @OA\Property(property="url", type="string"),
+     *             @OA\Property(property="is_actif", type="integer"),
      *         ),
      *     ),
      *     @OA\Response(
@@ -53,6 +54,7 @@ class FileStockageController extends Controller
                 'default_region' => 'required',
                 'bucket' =>'required',
                 'url' => 'required',
+                'is_actif' => "required|boolean"
             ]);
 
             $message = [];
@@ -61,32 +63,54 @@ class FileStockageController extends Controller
                 $message[] = $validator->errors();
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
+            if($request->is_actif !=1 && $request->is_actif !=0){
+                return (new ServiceController())->apiResponse(404, [], "is_actif doit être un booleen");
+            }
 
             $existType = FileStockage::whereType($request->type)->exists();
             if($existType){
-                return (new ServiceController())->apiResponse(404, [], 'Type de systeme de stockage existant');
+                return (new ServiceController())->apiResponse(404, [], 'Le Type de systeme de stockage existe déjà');
             }
 
-            // $normalizedMethod = strtolower($request->type);
+           
 
-            // // Calcule la similarité entre l'entrée et la méthode courante
-            // $closestMatch = null;
-            // $highestSimilarity = 0;
-            // similar_text($request->type, "s3", $similarity);
-            // if ($similarity > $highestSimilarity) {
-            //     $highestSimilarity = $similarity;
-            //     $closestMatch = "s3";
-            // }
-            // return $highestSimilarity > 80 ? $closestMatch : $inputMethod;
+            $inputType = strtolower($request->type);
+
+            $similarityThreshold = 80;
+        
+            $referenceType = "s3";
+        
+            $similarity = 0;
+            similar_text($inputType, $referenceType, $similarity);
+        
+            if ($similarity > $similarityThreshold) {
+                $normalizedType = $referenceType;
+            } else {
+                $normalizedType = $request->type;
+            }
 
             $fileStockage = new FileStockage();
 
-            $fileStockage->type = $request->input('type');
+            $fileStockage->type = $normalizedType;
             $fileStockage->access_key_id = $request->input('access_key_id');
             $fileStockage->secret_access_key = $request->input('secret_access_key');
             $fileStockage->default_region = $request->input('default_region');
             $fileStockage->bucket = $request->input('bucket');
             $fileStockage->url = $request->input('url');
+            if($request->is_actif ==1){
+
+                $existType = FileStockage::where('is_deleted',false)->where('is_actif',true)->first();
+                if($existType){
+                    $existType->is_actif = false;
+                    $existType->save();
+                }
+
+                $fileStockage->is_actif = true;
+                $fileStockage->url = true;
+                $fileStockage->save();
+
+                return (new ServiceController())->apiResponse(200, [], "Systeme de stockage stocké et activé avec succès. Nous vous rappelons que l'activation d'un systeme de stockage entraîne la désactivation de celle qui était active");
+            }
             $fileStockage->save();
 
             return (new ServiceController())->apiResponse(200, [], 'Systeme de stockage stocké avec succès.');
@@ -349,56 +373,6 @@ class FileStockageController extends Controller
         }
     }
 
-    /**
- * @OA\Post(
- *     path="/api/fileStockage/desactive/{id}",
- *     tags={"Systeme stockage"},
- *     summary="Désactiver un systeme de stockage",
- *     description="Désactive un systeme de stockage.",
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Systeme de stockage désactivé avec succès."
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Systeme de stockage inexistant."
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Erreur serveur."
- *     ),
- *     security={{"bearerAuth": {}}},
- * )
- */
-
-    public function desactive($id){
-        try {
-
-            $fileStockage =  FileStockage::whereId($id)->first();
-
-            if(!$fileStockage){
-                return (new ServiceController())->apiResponse(404, [], 'Systeme de stockage inexistant');
-            }
-
-            if( $fileStockage->is_actif == false){
-                return (new ServiceController())->apiResponse(404, [], 'Systeme de stockage déjà désactivé');
-            }
-
-            $fileStockage->is_actif = false;
-            $fileStockage->save();
-
-            return (new ServiceController())->apiResponse(200, [], "Désactivation du systeme fait avec succès.");
-        } catch (Exception $e) {
-            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-        }
-    }
-
  /**
  * @OA\Post(
  *     path="/api/fileStockage/delete/{id}",
@@ -436,7 +410,10 @@ class FileStockageController extends Controller
                 return (new ServiceController())->apiResponse(404, [], 'Systeme de stockage inexistant');
             }
 
-            $fileStockage->is_actif = false;
+            if( $fileStockage->is_actif == true){
+                return (new ServiceController())->apiResponse(404, [], 'Impossible de supprimer le Systeme de stockage actif');
+            }
+
             $fileStockage->is_deleted= true;
             $fileStockage->save();
 

@@ -665,6 +665,10 @@ public function payReservation(Request $request,$reservationId){
 
         $portfeuille = $this->findSimilarPaymentMethod("portfeuille");
 
+        if(!MethodPayement::whereName($method_paiement)->where('is_deleted', false)->where('is_actif', true)->exists()){
+            return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+        }
+
 
         if($request->statut_paiement !=1 || $request->statut_paiement !="1"){
             return (new ServiceController())->apiResponse(404, [], 'Statut paiement doit être un booléen');

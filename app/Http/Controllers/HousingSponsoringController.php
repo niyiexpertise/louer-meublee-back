@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\Housing;
 use App\Models\HousingSponsoring;
+use App\Models\MethodPayement;
 use App\Models\Payement;
 use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
@@ -291,6 +292,10 @@ class HousingSponsoringController extends Controller
 
             $payment_method = (new ReservationController())->findSimilarPaymentMethod($request->payment_method);
             $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
+
+            if(!MethodPayement::whereName($payment_method)->where('is_deleted', false)->where('is_actif', true)->exists()){
+                return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+            }
 
             $nombre =  $housingSponsoring->nombre;
             $prix_tarif = $nombre * $housingSponsoring->prix;

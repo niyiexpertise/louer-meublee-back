@@ -14,7 +14,7 @@ class Right extends Model implements Auditable
     protected $fillable = [
         'name'
     ];
-    
+
     public function user_right()
     {
         return $this->hasMany(user_right::class);

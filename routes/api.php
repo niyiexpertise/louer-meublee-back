@@ -1224,6 +1224,12 @@ Route::prefix('portefeuille')->group(function () {
             Route::get('/index', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
                 ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin');
+            Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
+                ->name('methodPayement.indexInactive')
+                ->middleware('role_or_permission:ManagemethodPayement.indexInactive|superAdmin|admin');
+            Route::get('/indexActive', [MethodPayementController::class, 'indexActive'])
+                ->name('methodPayement.indexActive')
+                ->middleware('role_or_permission:ManagemethodPayement.indexActive|superAdmin|admin');
 
             Route::get('/show/{id}', [MethodPayementController::class, 'show'])
                 ->name('methodPayement.show')
@@ -1240,6 +1246,12 @@ Route::prefix('portefeuille')->group(function () {
             Route::delete('/destroy/{id}', [MethodPayementController::class, 'destroy'])
                 ->name('methodPayement.destroy')
                 ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+            Route::post('/active/{id}', [MethodPayementController::class, 'active'])
+                ->name('methodPayement.active')
+                ->middleware('role_or_permission:ManagemethodPayement.active|superAdmin|admin');
+            Route::post('/desactive/{id}', [MethodPayementController::class, 'desactive'])
+                ->name('methodPayement.desactive')
+                ->middleware('role_or_permission:ManagemethodPayement.desactive|superAdmin|admin');
 
             Route::put('/block/{id}', [MethodPayementController::class, 'block'])
                 ->name('methodPayement.block')

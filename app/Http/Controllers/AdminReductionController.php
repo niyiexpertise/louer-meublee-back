@@ -138,7 +138,7 @@ class AdminReductionController extends Controller
     public function listeActiveReductionAdmin()
     {
         try {
-            $reduction = reduction::where('is_actif', true)->get();
+            $reduction = reduction::where('is_deleted', false)->where('is_actif', true)->get();
 
         return (new ServiceController())->apiResponse(200,$reduction, 'Liste des réductions activées');
 
@@ -168,7 +168,7 @@ class AdminReductionController extends Controller
     public function listeDesactiveReductionAdmin()
     {
         try {
-            $reduction = reduction::where('is_actif', false)->get();
+            $reduction = reduction::where('is_actif',false)->where('is_deleted',false)->get();
 
         return (new ServiceController())->apiResponse(200,$reduction, 'Liste des réductions désactivées');
 

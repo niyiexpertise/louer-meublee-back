@@ -17,15 +17,5 @@ class ChatFile extends Model implements Auditable
         'is_deleted'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::retrieved(function ($chatFile) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
-
-            $chatFile->location = $adresseFichier . '' . $chatFile->location;
-        });
-    }
 }

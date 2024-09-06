@@ -16,17 +16,7 @@ class Preference extends Model implements Auditable
     'is_blocked' 
 ];
 
-protected static function boot()
-{
-    parent::boot();
 
-    static::retrieved(function ($preference) {
-        $setting = Setting::first();
-        $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-        $preference->icone = $adresseFichier . '' . $preference->icone;
-    });
-}
   
     use HasFactory;
     use AuditableTrait;

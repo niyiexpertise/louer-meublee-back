@@ -19,17 +19,7 @@ class verification_document extends Model implements Auditable
         'is_blocked',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($verificationdocument) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $verificationdocument->path = $adresseFichier . '' . $verificationdocument->path;
-        });
-    }
+    
 
     public function user()
     {

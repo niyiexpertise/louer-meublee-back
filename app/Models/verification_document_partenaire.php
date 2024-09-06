@@ -20,18 +20,7 @@ class verification_document_partenaire extends Model implements Auditable
         'is_blocked',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($verificationDocumentPartenaire) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $verificationDocumentPartenaire->path = $adresseFichier . '' . $verificationDocumentPartenaire->path;
-        });
-    }
-
+    
     public function user()
     {
         return $this->belongsTo(User::class);

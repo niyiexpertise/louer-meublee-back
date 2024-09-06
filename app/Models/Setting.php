@@ -38,15 +38,5 @@ class Setting extends Model
         'commission_seuil_hote_partenaire',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($setting) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $setting->logo = $adresseFichier . '' . $setting->logo;
-        });
-    }
+    
 }

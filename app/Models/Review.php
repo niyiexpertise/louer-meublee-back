@@ -20,17 +20,6 @@ class Review extends Model implements Auditable
       'user_id'
   ];
 
-  protected static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($review) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $review->icone = $adresseFichier . '' . $review->icone;
-        });
-    }
 
   protected  static  $auditInclude = [
     'content',

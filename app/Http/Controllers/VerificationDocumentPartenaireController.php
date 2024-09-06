@@ -742,6 +742,61 @@ public function changeDocument(Request $request)
     }
 }
 
+/**
+ * @OA\Get(
+ *     path="/api/partenaire/getPartenaires",
+ * security={{"bearerAuth": {}}},
+ *     summary="Obtenir la liste des partenaires ",
+ *     description="Retourne les partenaires ",
+ *     operationId="getPartenaires",
+ *     tags={"Demande_partenaire"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des partenaires récupérée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+ *             @OA\Property(property="message", type="string", example="Détail du système de stockage")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur lors de la récupération des partenaires",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     )
+ * )
+ */
+
+
+
+public function getPartenaires(){
+    try {
+
+        $userPartenaires = user_partenaire::all();
+        $data = [];
+
+        foreach($userPartenaires as $userPartenaire){
+            $userPartenaire->user->code_promo = $userPartenaire->code_promo;
+            $userPartenaire->user->commission = $userPartenaire->commission;
+            $userPartenaire->user->reduction_traveler = $userPartenaire->reduction_traveler;
+            $userPartenaire->user->number_of_reservation = $userPartenaire->number_of_reservation;
+
+
+            $data[] = $userPartenaire->user;
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, "Liste des partenaires");
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
 
 }
 

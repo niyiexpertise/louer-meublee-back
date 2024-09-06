@@ -66,17 +66,18 @@ class FileStockageController extends Controller
             if($request->is_actif !=1 && $request->is_actif !=0){
                 return (new ServiceController())->apiResponse(404, [], "is_actif doit être un booleen");
             }
+            $inputType = strtolower($request->type); 
 
-            $existType = FileStockage::whereType($request->type)->exists();
+            $normalizedType = ($inputType === 's3') ? 's3' : $request->type;
+
+            $existType = FileStockage::whereType($normalizedType)->exists();
             if($existType){
                 return (new ServiceController())->apiResponse(404, [], 'Le Type de systeme de stockage existe déjà');
             }
 
            
 
-            $inputType = strtolower($request->type); 
 
-            $normalizedType = ($inputType === 's3') ? 's3' : $request->type;
 
             $fileStockage = new FileStockage();
 
@@ -204,7 +205,7 @@ class FileStockageController extends Controller
     public function show($id){
         try {
 
-            $fileStockage =  FileStockage::whereId($id)->where('is_deleted',false)->first();
+            $fileStockage =  FileStockage::whereId($id)->first();
 
             if(!$fileStockage){
                 return (new ServiceController())->apiResponse(404, [], 'Systeme de stockage inexistant');
@@ -401,6 +402,9 @@ class FileStockageController extends Controller
 
             if( $fileStockage->is_actif == true){
                 return (new ServiceController())->apiResponse(404, [], 'Impossible de supprimer le Systeme de stockage actif');
+            }
+            if( $fileStockage->is_deleted == true){
+                return (new ServiceController())->apiResponse(404, [], 'Impossible de supprimer le Systeme de stockage car ce dernier était déjà supprimé .');
             }
 
             $fileStockage->is_deleted= true;

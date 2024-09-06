@@ -26696,6 +26696,75 @@
                     }
                 ]
             }
+        },
+        "/api/partenaire/getPartenaires": {
+            "get": {
+                "tags": [
+                    "Demande_partenaire"
+                ],
+                "summary": "Obtenir la liste des partenaires de l'utilisateur",
+                "description": "Retourne les partenaires associés à l'utilisateur",
+                "operationId": "getPartenaires",
+                "responses": {
+                    "200": {
+                        "description": "Liste des partenaires récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détail du système de stockage"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des partenaires",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {

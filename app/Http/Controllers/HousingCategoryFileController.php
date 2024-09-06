@@ -153,7 +153,7 @@ class HousingCategoryFileController extends Controller
          'category_id' => 'required|exists:categories,id',
          'number' => 'required|integer',
          'photos' => 'required',
-         'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+         'photos.*' => 'image|mimes:jpeg,png,jpg,gif',
      ]);
 
      if ($validator->fails()) {

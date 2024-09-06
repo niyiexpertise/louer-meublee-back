@@ -19,6 +19,18 @@ class Equipment extends Model implements Auditable
         'is_verified'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($equipment) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $equipment->icone = $adresseFichier . '' . $equipment->icone;
+        });
+    }
+
     public function equipment_category()
     {
         return $this->hasMany(equipment_category::class);

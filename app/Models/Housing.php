@@ -62,6 +62,18 @@ class Housing extends Model implements Auditable
         'interior_regulation_pdf'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($housing) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $housing->interior_regulation_pdf = $adresseFichier . '' . $housing->interior_regulation_pdf;
+        });
+    }
+
 
     public function housing_equipment()
     {

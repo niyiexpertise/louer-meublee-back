@@ -12,10 +12,20 @@ class ChatFile extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'filename',
-        'type',
         'location',
         'referencecode',
         'is_deleted'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($chatFile) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $chatFile->location = $adresseFichier . '' . $chatFile->location;
+        });
+    }
 }

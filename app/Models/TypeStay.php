@@ -18,6 +18,18 @@ class TypeStay extends Model implements Auditable
         'icone'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($typeStay) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $typeStay->icone = $adresseFichier . '' . $typeStay->icone;
+        });
+    }
+
     public function housing_price()
     {
         return $this->hasMany(housing_price::class);

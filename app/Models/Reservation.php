@@ -50,6 +50,18 @@ class Reservation extends Model implements Auditable
         'is_accepted'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($reservation) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $reservation->photo = $adresseFichier . '' . $reservation->photo;
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

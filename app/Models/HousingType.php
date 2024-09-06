@@ -19,6 +19,18 @@ class HousingType extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($housingType) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $housingType->icone = $adresseFichier . '' . $housingType->icone;
+        });
+    }
     public function housings()
     {
         return $this->hasMany(Housing::class);

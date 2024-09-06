@@ -19,6 +19,19 @@ class PropertyType extends Model implements Auditable
         
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($propertyType) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $propertyType->icone = $adresseFichier . '' . $propertyType->icone;
+        });
+    }
+
+
     public function housings()
     {
         return $this->hasMany(Housing::class);

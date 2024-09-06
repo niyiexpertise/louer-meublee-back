@@ -18,6 +18,18 @@ class Language extends Model implements Auditable
         'is_blocked'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($langage) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $langage->icone = $adresseFichier . '' . $langage->icone;
+        });
+    }
+
     public function user_language()
     {
         return $this->hasMany(user_language::class);

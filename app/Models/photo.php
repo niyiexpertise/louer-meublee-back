@@ -19,6 +19,18 @@ class photo extends Model implements Auditable
         'is_verified'
 
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($photo) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $photo->path = $adresseFichier . '' . $photo->path;
+        });
+    }
     use HasFactory;
     use AuditableTrait;
     public function housing()

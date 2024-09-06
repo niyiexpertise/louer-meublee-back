@@ -20,6 +20,17 @@ class Document extends Model implements Auditable
     'is_blocked'
     ];
     
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($document) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $document->icone = $adresseFichier . '' . $document->icone;
+        });
+    }
 
     public function verificationDocuments()
     {

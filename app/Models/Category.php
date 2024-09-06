@@ -19,17 +19,7 @@ class Category extends Model implements Auditable
         'is_blocked'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::retrieved(function ($category) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
-
-            $category->icone = $adresseFichier . '' . $category->icone;
-        });
-    }
 
     public function equipment_category()
     {

@@ -19,17 +19,7 @@ class User_preference extends Model implements Auditable
         'is_blocked'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($userPreference) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $userPreference->icone = $adresseFichier . '' . $userPreference->icone;
-        });
-    }
+    
     public function preference()
     {
         return $this->belongsTo(Preference::class);

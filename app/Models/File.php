@@ -17,17 +17,7 @@ class File extends Model implements Auditable
         'is_blocked'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::retrieved(function ($file) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
-
-            $file->path = $adresseFichier . '' . $file->path;
-        });
-    }
     public function housing_category_file()
     {
         return $this->hasMany(housing_category_file::class);

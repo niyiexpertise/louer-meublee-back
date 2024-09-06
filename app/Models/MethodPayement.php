@@ -16,15 +16,5 @@ class MethodPayement extends Model implements Auditable
         'icone'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::retrieved(function ($methodPayement) {
-            $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
-
-            $methodPayement->icone = $adresseFichier . '' . $methodPayement->icone;
-        });
-    }
 }

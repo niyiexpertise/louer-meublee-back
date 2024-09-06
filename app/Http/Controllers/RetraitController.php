@@ -519,7 +519,7 @@ class RetraitController extends Controller
                 }
             }
 
-            if(!MethodPayement::whereName($request->payment_method)->exists()){
+            if(!MethodPayement::whereName($request->payment_method)->where('is_deleted', false)->where('is_actif', true)->exists()){
                 return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
             }
     

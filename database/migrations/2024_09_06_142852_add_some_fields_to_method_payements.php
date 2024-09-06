@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('method_payements', function (Blueprint $table) {
-            $table->boolean('is_actif')->default(false);
+            $table->boolean('is_actif')->default(true);
             $table->boolean('is_deleted')->default(false);
         });
     }

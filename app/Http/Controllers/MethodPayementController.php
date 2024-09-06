@@ -37,7 +37,7 @@ class MethodPayementController extends Controller
   public function index()
   {
     try{
-            $methodPayements = MethodPayement::all();
+            $methodPayements =MethodPayement::where('is_deleted', false)->where('is_actif', true)->get();
             return response()->json(['data' => $methodPayements], 200);
       } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
@@ -346,6 +346,10 @@ class MethodPayementController extends Controller
 
         if (!$methodPayement) {
             return response()->json(['error' => 'Méthode de payement non trouvé.'], 404);
+        }
+
+        if($methodPayement->is_deleted == true){
+            return response()->json(['error' => 'Méthode de payement déjà supprimé.'], 404);
         }
 
         $methodPayement->is_deleted = true;

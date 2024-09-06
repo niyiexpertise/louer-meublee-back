@@ -656,9 +656,6 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.active'])->group(function () {
             Route::post('/active/{id}', [FileStockageController::class, 'active'])->name('fileStockage.active');
         });
-        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.desactive'])->group(function () {
-            Route::post('/desactive/{id}', [FileStockageController::class, 'desactive'])->name('fileStockage.desactive');
-        });
         Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.delete'])->group(function () {
             Route::post('/delete/{id}', [FileStockageController::class, 'delete'])->name('fileStockage.delete');
         });

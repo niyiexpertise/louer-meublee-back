@@ -17,6 +17,17 @@ class Criteria extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($critere) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $critere->icone = $adresseFichier . '' . $critere->icone;
+        });
+    }
 
     public function note()
     {

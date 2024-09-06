@@ -163,7 +163,7 @@ class SettingController extends Controller
         if($request->has('commission_hote_defaut')){
             if(!is_null(Setting::first()->commission_seuil_hote_partenaire)){
                 if(!is_null(Setting::first()->commission_hote_defaut)){
-                    if($request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
+                    if(!is_null($request->input('commission_hote_defaut')) and $request->input('commission_hote_defaut') <= Setting::first()->commission_seuil_hote_partenaire){
                         return (new ServiceController())->apiResponse(404,[], "La valeur de commission hôte par défaut ne doit pas être en dessous de ".Setting::first()->commission_seuil_hote_partenaire);
                     }
                 }

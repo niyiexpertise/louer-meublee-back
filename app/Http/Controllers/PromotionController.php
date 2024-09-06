@@ -130,7 +130,7 @@ class PromotionController extends Controller
 
     if(!is_null(Setting::first()->max_value_promotion)){
         if($request->value > Setting::first()->max_value_promotion){
-            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+            return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion.'%');
         }
     }
 
@@ -471,7 +471,7 @@ class PromotionController extends Controller
         }
         if(!is_null(Setting::first()->max_value_promotion)){
             if($request->value > Setting::first()->max_value_promotion){
-                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion);
+                return (new ServiceController())->apiResponse(404,[],'La valeur en pourcentage de la promotion doit être inférieur ou égal à '.Setting::first()->max_value_promotion.'%');
             }
         }
         

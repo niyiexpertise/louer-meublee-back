@@ -94,7 +94,7 @@ class ReductionController extends Controller
 
         if(!is_null(Setting::first()->max_value_reduction)){
             if($request->value > Setting::first()->max_value_reduction){
-                return (new ServiceController())->apiResponse(404,[],'La valeur de la commission du nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_value_reduction);
+                return (new ServiceController())->apiResponse(404,[],'La valeur de la commission du nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_value_reduction.'%');
             }
         }
 
@@ -402,7 +402,7 @@ class ReductionController extends Controller
         }
         if(!is_null(Setting::first()->max_night_number)){
             if($request->night_number > Setting::first()->max_night_number){
-                return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number);
+                return (new ServiceController())->apiResponse(404,[],'Le nombre de nuit doit être inférieur ou égal à '.Setting::first()->max_night_number.'%');
             }
         }
        

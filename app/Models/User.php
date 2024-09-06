@@ -65,7 +65,17 @@ class User extends Authenticatable implements Auditable
     ];
 
 
+    protected static function boot()
+    {
+        parent::boot();
 
+        static::retrieved(function ($user) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $user->file_profil = $adresseFichier . '' . $user->file_profil;
+        });
+    }
 
     public function user_language()
     {

@@ -298,7 +298,7 @@ public function __construct(FileService $fileService = null)
         if (!$housing) {
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
-       $errorcheckOwner= $this->checkOwner($housingId);
+        $errorcheckOwner= $this->checkOwner($housingId);
         if($errorcheckOwner){
             return $errorcheckOwner;
         }
@@ -310,6 +310,7 @@ public function __construct(FileService $fileService = null)
             'interior_regulation' => 'nullable|string',
             'interior_regulation_pdf' => 'nullable'
         ]);
+        
 
         $message = [];
         if ($validator->fails()) {
@@ -317,14 +318,16 @@ public function __construct(FileService $fileService = null)
             return (new ServiceController())->apiResponse(505, [], $message);
         }
 
+
         if (empty($request->interior_regulation) && !$request->hasFile('interior_regulation_pdf')) {
             return (new ServiceController())->apiResponse(404, [], 'Au moins un des champs doit être renseigné.');
         }
 
+    //    return $request->file('interior_regulation_pdf')[0];
 
         if ($request->hasFile('interior_regulation_pdf') && is_array($request->file('interior_regulation_pdf'))) {
             $pdfArray = $request->file('interior_regulation_pdf');
-            
+
             // Vérifiez que le premier élément du tableau est un fichier
             if (isset($pdfArray[0])) {
                 $pdfFile = $pdfArray[0];

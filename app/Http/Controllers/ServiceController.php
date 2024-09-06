@@ -27,7 +27,7 @@ class ServiceController extends Controller
 
     public function validatePayement($amount,$paiement_methode,$transaction_id){
 
-        if(!MethodPayement::whereName($paiement_methode)->exists()){
+        if(!MethodPayement::whereName($paiement_methode)->where('is_deleted', false)->where('is_actif', true)->exists()){
             return $this->apiResponse(404, [], 'Méthode de paiement non trouvé.');
         }
 

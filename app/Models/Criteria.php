@@ -23,7 +23,7 @@ class Criteria extends Model implements Auditable
 
         static::retrieved(function ($critere) {
             $setting = Setting::first();
-            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
 
             $critere->icone = $adresseFichier . '' . $critere->icone;
         });

@@ -15,6 +15,20 @@ class type_demande extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($typedemande) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/');
+
+            $typedemande->icone = $adresseFichier . '' . $typedemande->icone;
+        });
+    }
+
+
     use HasFactory;
     use AuditableTrait;
     public function document_type_demande()

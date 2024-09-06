@@ -17,6 +17,18 @@ class Charge extends Model implements Auditable
         'is_blocked',
         'is_deleted'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($charge) {
+            $setting = Setting::first();
+            $adresseFichier = $setting->adresse_serveur_fichier ?? url('/'); 
+
+            $charge->icone = $adresseFichier . '' . $charge->icone;
+        });
+    }
     public function housing_charge(){
         return $this->hasMany(Housing_charge::class);
     }

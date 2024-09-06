@@ -16358,6 +16358,144 @@
                 ]
             }
         },
+        "/api/methodPayement/active/{methodPayementId}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Activer une méthode de paiement",
+                "description": "Cette route permet d'activer une méthode de paiement.",
+                "operationId": "63065a98b1881a3f8235e98c3ce9e81c",
+                "parameters": [
+                    {
+                        "name": "methodPayementId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement activée avec succès"
+                    },
+                    "404": {
+                        "description": "La méthode de paiement spécifiée n'existe pas ou est déjà active"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/desactive/{methodPayementId}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Désactiver une méthode de paiement",
+                "description": "Cette route permet de désactiver une méthode de paiement.",
+                "operationId": "c467a88e6c764156f8f1ac9e5a98fc2c",
+                "parameters": [
+                    {
+                        "name": "methodPayementId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement désactivée avec succès"
+                    },
+                    "404": {
+                        "description": "La méthode de paiement spécifiée n'existe pas ou est déjà inactive"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/indexActive": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Liste des méthodes de paiement actives",
+                "description": "Cette route permet de récupérer la liste des méthodes de paiement actives.",
+                "operationId": "79aea3a47655c7f75c3a0225434744b4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement actives",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/indexInactive": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Liste des méthodes de paiement inactives",
+                "description": "Cette route permet de récupérer la liste des méthodes de paiement inactives.",
+                "operationId": "08ea47df3bf02f77931ad88d3d20f107",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement inactives",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": ""
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/moyenPayement/ListeMoyenPayement": {
             "get": {
                 "tags": [
@@ -26702,8 +26840,8 @@
                 "tags": [
                     "Demande_partenaire"
                 ],
-                "summary": "Obtenir la liste des partenaires de l'utilisateur",
-                "description": "Retourne les partenaires associés à l'utilisateur",
+                "summary": "Obtenir la liste des partenaires ",
+                "description": "Retourne les partenaires ",
                 "operationId": "getPartenaires",
                 "responses": {
                     "200": {

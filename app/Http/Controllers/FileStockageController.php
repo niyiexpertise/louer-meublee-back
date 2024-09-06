@@ -96,7 +96,7 @@ class FileStockageController extends Controller
                 }
 
                 $fileStockage->is_actif = true;
-                $fileStockage->url = true;
+                $fileStockage->url = $request->url;
                 $fileStockage->save();
 
                 return (new ServiceController())->apiResponse(200, [], "Systeme de stockage stocké et activé avec succès. Nous vous rappelons que l'activation d'un systeme de stockage entraîne la désactivation de celle qui était active");

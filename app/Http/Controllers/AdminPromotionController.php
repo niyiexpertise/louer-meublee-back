@@ -120,7 +120,7 @@ class AdminPromotionController extends Controller
      */
 public function listActivePromotions() {
     try {
-        $promotions = Promotion::where('is_actif', true)->get();
+        $promotions = Promotion::where('is_deleted', false)->where('is_actif', true)->get();
         return (new ServiceController())->apiResponse(200, $promotions, 'Liste des promotions actives');
     } catch (Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -146,7 +146,7 @@ public function listActivePromotions() {
      */
 public function listInactivePromotions() {
     try {
-        $promotions = Promotion::where('is_actif', false)->get();
+        $promotions = Promotion::where('is_deleted', false)->where('is_actif', false)->get();
         return (new ServiceController())->apiResponse(200, $promotions, 'Liste des promotions inactives');
     } catch (Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());

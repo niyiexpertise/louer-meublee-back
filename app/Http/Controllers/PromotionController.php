@@ -243,7 +243,7 @@ class PromotionController extends Controller
         $promotions = [];
 
         foreach ($housings as $housing) {
-            $housingPromotions = Promotion::where('housing_id', $housing->id)->get();
+            $housingPromotions = Promotion::where('housing_id', $housing->id)->where('deleted',false)->get();
 
             $promotions = array_merge($promotions, $housingPromotions->toArray());
         }
@@ -313,7 +313,7 @@ class PromotionController extends Controller
             return response()->json(['error' => 'Logement non trouvé.'], Response::HTTP_NOT_FOUND);
         }
 
-        $promotions = Promotion::where('housing_id', $housingId)->get();
+        $promotions = Promotion::where('housing_id', $housingId)->where('is_deleted',false)->get();
 
         return response()->json(['data' => $promotions], Response::HTTP_OK);
     } catch (Exception $e) {

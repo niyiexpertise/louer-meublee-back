@@ -117,6 +117,7 @@ class PortfeuilleTransactionController extends Controller
      }
 
      $transactions = Portfeuille_transaction::where('portfeuille_id', $portefeuille->id)
+     ->whereNot('operation_type',null)
          ->orderBy('created_at', 'desc')
          ->get();
 

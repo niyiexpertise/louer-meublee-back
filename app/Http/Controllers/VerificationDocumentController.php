@@ -262,14 +262,15 @@ public function index()
 
                  $imagePiece = $imagePieces[$key];
                  $identity_profil_url = '';
-                 $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/document_verification', 'extensionImage');;
-                 if ($identity_profil_url['fails']) {
-                    return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
-                }
+                 $identity_profil_url = $this->fileService->uploadFiles($request->file('image_piece'), 'image/document_verification', 'extensionImage');
+                 if ($identity_profil_url[0]['fails']) {
+                     return (new ServiceController())->apiResponse(404, [], $identity_profil_url[0]['result']);
+                    }
+                    
                  $verificationDocument = new verification_document();
                  $verificationDocument->user_id = $user_id;
                  $verificationDocument->document_id = $idDocument;
-                 $verificationDocument->path = $identity_profil_url;
+                 $verificationDocument->path = $identity_profil_url[0]['result'];
                  $verificationDocument->save();
 
                  $verificationStatut = new verification_statut();

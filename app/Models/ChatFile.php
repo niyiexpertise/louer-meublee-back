@@ -12,10 +12,10 @@ class ChatFile extends Model implements Auditable
     use HasFactory;
     use AuditableTrait;
     protected $fillable = [
-        'filename',
-        'type',
         'location',
         'referencecode',
         'is_deleted'
     ];
+
+
 }

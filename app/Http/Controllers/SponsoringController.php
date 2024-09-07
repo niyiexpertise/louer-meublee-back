@@ -145,6 +145,7 @@ class SponsoringController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
+     *           @OA\Property(property="titre", type="string", example="Titre du tarif"),
      *             @OA\Property(property="duree", type="integer", example=12),
      *             @OA\Property(property="prix", type="number", format="float", example=99.99),
      *             @OA\Property(property="description", type="string", example="Description du tarif")
@@ -171,6 +172,7 @@ class SponsoringController extends Controller
                        'duree' => 'required',
                         'prix' => 'required',
                         'description' => 'required',
+                        'titre' => 'required'
                     ]);
 
                     // return $request;
@@ -200,7 +202,7 @@ class SponsoringController extends Controller
 
                     $existDuree = Sponsoring::whereDuree(intval($request->duree))->where('is_actif',true)->exists();
                     if($existDuree){
-                        return (new ServiceController())->apiResponse(404,[],'Choisissez une autre duree car un tarif de sponsoring existe déjà avec la même ');
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez une autre duree car un tarif de sponsoring existe déjà avec la même durée.');
                     }
 
                     $existMaxDuree = Sponsoring::where('is_actif', true)
@@ -225,12 +227,19 @@ class SponsoringController extends Controller
                     $existPrix = Sponsoring::where('is_actif',true)->wherePrix(floatval($request->prix))->exists();
 
                     if($existPrix){
-                        return (new ServiceController())->apiResponse(404,[],'Choisissez un autre prix car un tarif de sponsoring existe déjà avec le prix');
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez un autre prix car un tarif de sponsoring existe déjà avec le même prix');
+                    }
+
+                    $existTitre = Sponsoring::where('is_actif',true)->whereTitre(floatval($request->titre))->exists();
+
+                    if($existTitre){
+                        return (new ServiceController())->apiResponse(404,[],'Choisissez un autre titre car un tarif de sponsoring existe déjà avec le même titre');
                     }
 
                     $sponsoring = new Sponsoring();
                     $sponsoring->duree = intval($request->duree);
                     $sponsoring->prix = floatval($request->prix);
+                    $sponsoring->titre = $request->titre;
                     $sponsoring->description = $request->description;
                     $sponsoring->save();
                    return (new ServiceController())->apiResponse(200,[],'Tarif de sponsoring créé avec succès');
@@ -255,6 +264,7 @@ class SponsoringController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
+     *             @OA\Property(property="titre", type="string", example="titre du plan de tarif"),
      *             @OA\Property(property="duree", type="integer", example=12),
      *             @OA\Property(property="prix", type="number", format="float", example=99.99),
      *             @OA\Property(property="description", type="string", example="Description mise à jour")
@@ -280,32 +290,42 @@ class SponsoringController extends Controller
 
             $sponsoring = Sponsoring::find($id);
 
-            if(!$sponsoring){
-                return (new ServiceController())->apiResponse(404,[],'Tarif de sponsoring non trouvé');
+            if($request->has('description')){
+                $existDescription = Sponsoring::whereDescription($request->description)->where('is_actif',true)->exists();
+                if($existDescription){
+                    return (new ServiceController())->apiResponse(404,[],'Choisissez un autre nom pour le plan car un tarif de sponsoring existe déjà avec lle même non ');
+                }
+            }
+            if($request->has('prix')){
+                if(floatval($request->prix) <= 0){
+                    return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre positif supérieur à 0');
+                }
+                $existPrix = Sponsoring::where('is_actif',true)->wherePrix(floatval($request->prix))->exists();
+
+                if($existPrix){
+                    return (new ServiceController())->apiResponse(404,[],'Choisissez un autre prix car un tarif de sponsoring existe déjà avec le même prix');
+                }
+            }
+            if($request->has('titre')){
+                $existTitre = Sponsoring::where('is_actif',true)->whereTitre(floatval($request->titre))->exists();
+
+                if($existTitre){
+                    return (new ServiceController())->apiResponse(404,[],'Choisissez un autre titre car un tarif de sponsoring existe déjà avec le même titre');
+                }
+            }
+            if($request->has('duree')){
+                if(intval($request->duree) <= 0){
+                    return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier positif supérieur à 0');
+                }
+                $existDuree = Sponsoring::whereDuree(intval($request->duree))->where('is_actif',true)->exists();
+                if($existDuree){
+                    return (new ServiceController())->apiResponse(404,[],'Choisissez une autre duree car un tarif de sponsoring existe déjà avec la même durée.');
+                }
             }
 
-            if(!is_int($request->duree)){
-                return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier');
-            }
-            if($request->duree <= 0){
-                return (new ServiceController())->apiResponse(404,[],'La valeur de la durée doit être un entier positif supérieur à 0');
-            }
-            if(!is_numeric($request->prix)){
-                return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre');
-            }
-
-            if($request->duree <= 0){
-                return (new ServiceController())->apiResponse(404,[],'La valeur du prix doit être un nombre positif supérieur à 0');
-            }
-
-            $exist = Sponsoring::whereDuree($request->duree)->wherePrix($request->prix)->exists();
-
-            if($exist){
-                return (new ServiceController())->apiResponse(404,[],'Le tarif de sponsoring existe de déjà');
-            }
-
-            $sponsoring->duree = $request->duree??$sponsoring->duree;
-            $sponsoring->prix = $request->prix??$sponsoring->prix;
+            $sponsoring->titre = $request->titre??$sponsoring->titre;
+            $sponsoring->duree = intval($request->duree)??$sponsoring->duree;
+            $sponsoring->prix = floatval($request->prix)??$sponsoring->prix;
             $sponsoring->description = $request->description??$sponsoring->description;
             $sponsoring->save();
 

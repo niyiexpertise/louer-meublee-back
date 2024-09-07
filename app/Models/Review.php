@@ -20,6 +20,7 @@ class Review extends Model implements Auditable
       'user_id'
   ];
 
+
   protected  static  $auditInclude = [
     'content',
       'is_deleted',

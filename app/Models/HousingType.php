@@ -19,6 +19,8 @@ class HousingType extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+
     public function housings()
     {
         return $this->hasMany(Housing::class);

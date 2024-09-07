@@ -37,7 +37,7 @@ class MethodPayementController extends Controller
   public function index()
   {
     try{
-            $methodPayements = MethodPayement::all();
+            $methodPayements =MethodPayement::where('is_deleted', false)->where('is_actif', true)->get();
             return response()->json(['data' => $methodPayements], 200);
       } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
@@ -348,7 +348,12 @@ class MethodPayementController extends Controller
             return response()->json(['error' => 'Méthode de payement non trouvé.'], 404);
         }
 
-        MethodPayement::whereId($id)->delete();
+        if($methodPayement->is_deleted == true){
+            return response()->json(['error' => 'Méthode de payement déjà supprimé.'], 404);
+        }
+
+        $methodPayement->is_deleted = true;
+        $methodPayement->save();
 
         return response()->json(['data' => 'Méthode de payement supprimé avec succès.'], 200);
 
@@ -359,9 +364,161 @@ class MethodPayementController extends Controller
   }
 
 
+  /**
+ * @OA\Post(
+ *     path="/api/methodPayement/active/{methodPayementId}",
+ *     tags={"MethodPayement"},
+ *     summary="Activer une méthode de paiement",
+ *     description="Cette route permet d'activer une méthode de paiement.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="methodPayementId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Méthode de paiement activée avec succès",
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La méthode de paiement spécifiée n'existe pas ou est déjà active",
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur"
+ *     )
+ * )
+ */
 
 
+  public function active($methodPayementId){
+    try {
+        $methodPayement = MethodPayement::find($methodPayementId);
+        if (!$methodPayement) {
+            return response()->json(['message' => 'La méthode de paiement spécifié n\'existe pas'], 404);
+        }
+        if($methodPayement->is_actif == true){
+            return (new ServiceController())->apiResponse(404,[],'La méthode de paiement est déjà active');
+        }
+        $methodPayement->is_actif = true;
+        $methodPayement->save();
+        return (new ServiceController())->apiResponse(200,[],'La méthode de paiement activé avec succès');
 
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+/**
+ * @OA\Post(
+ *     path="/api/methodPayement/desactive/{methodPayementId}",
+ *     tags={"MethodPayement"},
+ *     summary="Désactiver une méthode de paiement",
+ *     description="Cette route permet de désactiver une méthode de paiement.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="methodPayementId",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Méthode de paiement désactivée avec succès",
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La méthode de paiement spécifiée n'existe pas ou est déjà inactive",
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur"
+ *     )
+ * )
+ */
+
+public function desactive($methodPayementId){
+    try {
+        $methodPayement = MethodPayement::find($methodPayementId);
+        if (!$methodPayement) {
+            return response()->json(['message' => 'La méthode de paiement spécifié n\'existe pas'], 404);
+        }
+        if($methodPayement->is_actif == false){
+            return (new ServiceController())->apiResponse(404,[],'La méthode de paiement est déjà inactive');
+        }
+        $methodPayement->is_actif = false;
+        $methodPayement->save();
+        return (new ServiceController())->apiResponse(200,[],'La méthode de paiement a été désactivé  avec succès');
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/methodPayement/indexActive",
+ *     tags={"MethodPayement"},
+ *     summary="Liste des méthodes de paiement actives",
+ *     description="Cette route permet de récupérer la liste des méthodes de paiement actives.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des méthodes de paiement actives",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur"
+ *     )
+ * )
+ */
+public function indexActive() {
+    try {
+        $methodPayements = MethodPayement::where('is_deleted', false)->where('is_actif', true)->get();
+        return (new ServiceController())->apiResponse(200, $methodPayements, 'Liste des méthodes de paiement actives');
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+    }
+
+
+     /**
+     * @OA\Get(
+     *     path="/api/methodPayement/indexInactive",
+     *     tags={"MethodPayement"},
+     *     summary="Liste des méthodes de paiement inactives",
+     *     description="Cette route permet de récupérer la liste des méthodes de paiement inactives.",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des méthodes de paiement inactives",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur serveur"
+     *     )
+     * )
+     */
+
+    public function indexInactive() {
+        try {
+            $promotions = MethodPayement::where('is_deleted', false)->where('is_actif', false)->get();
+            return (new ServiceController())->apiResponse(200, $promotions, 'Liste des méthodes de paiement inactives');
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
 
 
 }

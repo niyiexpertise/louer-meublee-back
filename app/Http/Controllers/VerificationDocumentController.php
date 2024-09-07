@@ -209,7 +209,7 @@ public function index()
              'id_document' => 'required|array',
              'id_document.*' => 'required|integer|exists:documents,id', // Assurez-vous que chaque id_document existe dans la table documents
              'image_piece' => 'required|array',
-             'image_piece.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048' // Limitez la taille du fichier à 2MB et acceptez uniquement les formats d'image
+             'image_piece.*' => 'required' // Limitez la taille du fichier à 2MB et acceptez uniquement les formats d'image
          ];
 
          // Définir les messages d'erreur personnalisés
@@ -223,8 +223,6 @@ public function index()
              'image_piece.array' => 'Les images des documents doivent être sous forme de tableau.',
              'image_piece.*.required' => 'Chaque image de document est obligatoire.',
              'image_piece.*.image' => 'Chaque fichier doit être une image.',
-             'image_piece.*.mimes' => 'Chaque image doit être de type jpeg, png, jpg, gif ou svg.',
-             'image_piece.*.max' => 'Chaque image ne doit pas dépasser 2MB.',
          ];
 
          // Valider les données
@@ -262,14 +260,15 @@ public function index()
 
                  $imagePiece = $imagePieces[$key];
                  $identity_profil_url = '';
-                 $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/document_verification', 'extensionImage');;
+                 $identity_profil_url = $this->fileService->uploadFiles($imagePiece, 'image/document_verification', 'extensionDocumentImage');
                  if ($identity_profil_url['fails']) {
-                    return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
-                }
+                    //  return (new ServiceController())->apiResponse(404, [], $identity_profil_url[0]['result']);
+                    }
+
                  $verificationDocument = new verification_document();
                  $verificationDocument->user_id = $user_id;
                  $verificationDocument->document_id = $idDocument;
-                 $verificationDocument->path = $identity_profil_url;
+                 $verificationDocument->path = $identity_profil_url['result'];
                  $verificationDocument->save();
 
                  $verificationStatut = new verification_statut();
@@ -714,7 +713,7 @@ public function changeDocument(Request $request)
 {
     $data = $request->validate([
         'verification_document_id' => 'required|integer',
-        'new_document' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'new_document' => 'required',
     ]);
 
     $user_id = Auth::id();
@@ -731,19 +730,21 @@ public function changeDocument(Request $request)
                          unlink($oldDocumentPath);
                     }
 
-            $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
-            $path_url = url('/image/document_verification/' . $path_name);
-            $new_document->move(public_path('image/document_verification'), $path_name);
+                $identity_profil_url = '';
+                $identity_profil_url = $this->fileService->uploadFiles($new_document, 'image/document_verification', 'extensionDocumentImage');
+                if ($identity_profil_url['fails']) {
+                    // return (new ServiceController())->apiResponse(404, [], $identity_profil_url[0]['result']);
+                }
 
-            $verificationDocument->path = $path_url;
+            $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
 
-            return response()->json(['message' => 'Document changé avec succès.'], 200);
+            return response()->json(['message' => "Document changé avec succès."], 200);
         } else {
             return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);
         }
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors du changement de document.'], 500);
+        return response()->json(['error' =>$e->getMessage()], 500);
     }
 }
 

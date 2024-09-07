@@ -7,6 +7,7 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Housing;
 use App\Models\Reservation;
+use App\Models\ChatFile;
 use App\Models\Right;
 use App\Models\User;
 use App\Models\User_right;
@@ -15,12 +16,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\TextUI\Output\NullPrinter;
+use App\Services\FileService;
+
 
 use function PHPUnit\Framework\isNull;
 
 class ChatController extends Controller
 {
+    protected $fileService;
 
+    public function __construct(FileService $fileService=null)
+    {
+        $this->fileService = $fileService;
+    }
     /**
      * @OA\Get(
      *     path="/api/chats/getChatsByModelType/{modelType}",
@@ -621,7 +629,20 @@ class ChatController extends Controller
 
 
             if($request->file('files')){
-                $this->uploadFiles($request, $randomString,'ChatFile');
+                $identity_profil_url = $this->fileService->uploadFiles($request->file('files'), 'image/imageChat', 'extensionImageVideo');;
+                if ($identity_profil_url[0]['fails']!=1) {
+                    $locationFile = '';
+                    $locationFile = $identity_profil_url[0]['result'];
+                    $referencecode = $randomString;
+        
+                    DB::table('chat_files')->insert([
+                        'location' => $locationFile,
+                        'referencecode' => $referencecode,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                }
             }
 
             DB::commit();
@@ -692,43 +713,7 @@ class ChatController extends Controller
         return $randomS;
     }
 
-    private function uploadFiles(Request $request, $randomString,$location){
-        foreach($request->file('files') as $photo){
-             $this->storeFile($photo, $randomString, $location);
-        }
-    }
-
-    private function storeFile( $photo, $randomString, $location){
-        try {
-
-            $db = DB::connection()->getPdo();
-
-            $size = filesize($photo);
-            $created_at = date('Y-m-d H:i:s');
-            $updated_at = date('Y-m-d H:i:s');
-            $photoName = uniqid() . '.' . $photo->getClientOriginalExtension();
-            $photoPath = $photo->move(public_path("image/$location"), $photoName);
-            $photoUrl = url("/image/$location/" . $photoName);
-            $type = $photo->getClientOriginalExtension();
-            $locationFile = $photoUrl;
-            $referencecode = $randomString;
-            $filename = md5(uniqid()) . '.' . $type;
-            $q = "INSERT INTO chat_files (filename, type, location,  referencecode,created_at,updated_at) VALUES (?,?,?,?,?,?)";
-            $stmt = $db->prepare($q);
-            $stmt->bindParam(1, $filename);
-            $stmt->bindParam(2, $type);
-            $stmt->bindParam(3, $locationFile);
-            $stmt->bindParam(4,  $referencecode);
-            $stmt->bindParam(5,  $created_at);
-            $stmt->bindParam(6,  $updated_at);
-            $stmt->execute();
-
-        } catch (Exception $e) {
-           return response()->json([
-            'error' => $e->getMessage()
-           ]);
-        }
-    }
+   
     function detectSensitiveInfo($message)
     {
         $errors = [];

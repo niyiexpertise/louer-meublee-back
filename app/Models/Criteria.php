@@ -18,6 +18,7 @@ class Criteria extends Model implements Auditable
         'is_blocked'
     ];
 
+
     public function note()
     {
         return $this->hasMany(Note::class);

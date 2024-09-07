@@ -65,7 +65,7 @@ class User extends Authenticatable implements Auditable
     ];
 
 
-
+    
 
     public function user_language()
     {

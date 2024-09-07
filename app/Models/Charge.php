@@ -17,6 +17,8 @@ class Charge extends Model implements Auditable
         'is_blocked',
         'is_deleted'
     ];
+
+
     public function housing_charge(){
         return $this->hasMany(Housing_charge::class);
     }

@@ -50,6 +50,8 @@ class Reservation extends Model implements Auditable
         'is_accepted'
     ];
 
+
+
     public function user()
     {
         return $this->belongsTo(User::class);

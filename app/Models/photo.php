@@ -19,6 +19,8 @@ class photo extends Model implements Auditable
         'is_verified'
 
     ];
+
+
     use HasFactory;
     use AuditableTrait;
     public function housing()

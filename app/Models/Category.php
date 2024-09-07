@@ -19,6 +19,8 @@ class Category extends Model implements Auditable
         'is_blocked'
     ];
 
+
+
     public function equipment_category()
     {
       return $this->hasMany(equipment_category::class);

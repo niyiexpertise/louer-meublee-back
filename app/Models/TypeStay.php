@@ -18,6 +18,8 @@ class TypeStay extends Model implements Auditable
         'icone'
     ];
 
+    
+
     public function housing_price()
     {
         return $this->hasMany(housing_price::class);

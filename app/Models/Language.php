@@ -18,6 +18,8 @@ class Language extends Model implements Auditable
         'is_blocked'
     ];
 
+
+
     public function user_language()
     {
         return $this->hasMany(user_language::class);

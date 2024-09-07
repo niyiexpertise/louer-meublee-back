@@ -16,6 +16,8 @@ class File extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+
     public function housing_category_file()
     {
         return $this->hasMany(housing_category_file::class);

@@ -15,6 +15,9 @@ class type_demande extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+
+
     use HasFactory;
     use AuditableTrait;
     public function document_type_demande()

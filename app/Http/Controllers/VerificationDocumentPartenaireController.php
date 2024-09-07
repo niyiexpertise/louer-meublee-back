@@ -252,7 +252,7 @@ public function index()
 
             $imagePiece = $imagePieces[$key];
 
-            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocument');
+            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocumentImage');
 
             if ($validationResultFile['fails']) {
                 return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
@@ -300,9 +300,11 @@ public function index()
             }
         }
 
-        return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
+        return (new ServiceController())->apiResponse(200, $verificationDocuments, 'Documents de vérification créés avec succès.');
+
+       
     } catch (Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], 'Une erreur est survenue', 'message' .$e->getMessage());
     }
 }
 
@@ -726,9 +728,7 @@ public function changeDocument(Request $request)
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
-           // $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
-           // $path_url = url('/image/document_verification/' . $path_name);
-           // $new_document->move(public_path('image/document_verification'), $path_name);
+
 
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
@@ -739,6 +739,61 @@ public function changeDocument(Request $request)
         }
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/partenaire/getPartenaires",
+ * security={{"bearerAuth": {}}},
+ *     summary="Obtenir la liste des partenaires ",
+ *     description="Retourne les partenaires ",
+ *     operationId="getPartenaires",
+ *     tags={"Demande_partenaire"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des partenaires récupérée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+ *             @OA\Property(property="message", type="string", example="Détail du système de stockage")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur lors de la récupération des partenaires",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     )
+ * )
+ */
+
+
+
+public function getPartenaires(){
+    try {
+
+        $userPartenaires = user_partenaire::all();
+        $data = [];
+
+        foreach($userPartenaires as $userPartenaire){
+            $userPartenaire->user->code_promo = $userPartenaire->code_promo;
+            $userPartenaire->user->commission = $userPartenaire->commission;
+            $userPartenaire->user->reduction_traveler = $userPartenaire->reduction_traveler;
+            $userPartenaire->user->number_of_reservation = $userPartenaire->number_of_reservation;
+
+
+            $data[] = $userPartenaire->user;
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, "Liste des partenaires");
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

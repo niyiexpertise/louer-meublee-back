@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\Housing;
 use App\Models\HousingSponsoring;
+use App\Models\MethodPayement;
 use App\Models\Payement;
 use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
@@ -96,17 +97,6 @@ class HousingSponsoringController extends Controller
                 return (new ServiceController())->apiResponse(505,[],$message);
             }
 
-            // $request->validate([
-            //     'housing_id' => 'required',
-            //     'sponsoring_id' => 'required',
-            //     'date_debut' => 'required',
-            //     'nombre',
-            //     'payment_method' => 'required|string',
-            //     'id_transaction' => 'required|string',
-            //     'statut_paiement' => 'required',
-            //     'montant' => 'nullable|numeric'
-            // ]);
-
 
             $housing = Housing::find($request->housing_id);
             $sponsoring = Sponsoring::find($request->sponsoring_id);
@@ -127,15 +117,11 @@ class HousingSponsoringController extends Controller
             }
 
 
-            $nombre = $request->nombre??1;
+            $nombre = intval($request->nombre)??1;
 
             if($request->nombre){
 
-                if(!is_int($request->nombre)){
-                    return (new ServiceController())->apiResponse(404, [], ' Le nombre de fois dont vous souhaité bénéficié du tarif doit être un entier');
-                }
-
-                if($request->nombre<=0){
+                if(intval($request->nombre)<=0){
                     return (new ServiceController())->apiResponse(404, [], ' Le nombre de fois dont vous souhaité bénéficié du tarif doit être supérieur à 0');
                 }
             }
@@ -171,6 +157,7 @@ class HousingSponsoringController extends Controller
             $housingSponsoring->date_fin = $dateFin;
             $housingSponsoring->nombre = $nombre;
             $housingSponsoring->duree = $sponsoring->duree;
+            $housingSponsoring->titre = $sponsoring->titre;
             $housingSponsoring->prix = $sponsoring->prix;
             $housingSponsoring->description = $sponsoring->description;
             $housingSponsoring->is_actif = false;
@@ -305,6 +292,10 @@ class HousingSponsoringController extends Controller
 
             $payment_method = (new ReservationController())->findSimilarPaymentMethod($request->payment_method);
             $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
+
+            if(!MethodPayement::whereName($payment_method)->where('is_deleted', false)->where('is_actif', true)->exists()){
+                return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
+            }
 
             $nombre =  $housingSponsoring->nombre;
             $prix_tarif = $nombre * $housingSponsoring->prix;
@@ -462,6 +453,7 @@ class HousingSponsoringController extends Controller
         try {
 
             $housingSponsorings = HousingSponsoring::where('is_deleted',false)
+            ->where('statut','payee')
             ->get();
             $data = [];
 
@@ -472,12 +464,14 @@ class HousingSponsoringController extends Controller
                         'duree' => $housingSponsoring->duree,
                         'prix_unitaire' => $housingSponsoring->prix,
                         'prix_total' => $housingSponsoring->nombre * $housingSponsoring->prix,
+                        'titre_tarif' => $housingSponsoring->titre,
                         'description' => $housingSponsoring->description,
                         'nombre_de_fois' =>  $housingSponsoring->nombre,
                         'Jour_de_la_demande' => $housingSponsoring->created_at,
                         'date_de_commencement_du_sponsoring'=>  $housingSponsoring->date_debut,
                         'date_de_fin_du_sponsoring' =>  $housingSponsoring->date_fin,
-                        'statut' =>  $housingSponsoring->statut,
+                        'statut' =>  $housingSponsoring->is_actif == false?"sponsorisee":"non_sponsorisee",
+                        'motif' => is_null($housingSponsoring->motif)?"aucun_motif":$housingSponsoring->motif
                     ];
                 }
             }
@@ -529,6 +523,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_actif',false)
             ->where('is_deleted',false)
             ->where('is_rejected',false)
+            ->where('statut','payee')
             ->get();
 
             foreach($sponsoringrequests as  $sponsoringrequest){
@@ -576,6 +571,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_actif',true)
             ->where('is_deleted',false)
             ->where('is_rejected',false)
+            ->where('statut','payee')
             ->get();
             foreach($sponsoringrequests as  $sponsoringrequest){
                 $sponsoringrequest->user =User::find(Housing::whereId($sponsoringrequest->housing_id)->first()->user->id);
@@ -621,6 +617,7 @@ class HousingSponsoringController extends Controller
             $sponsoringrequests = HousingSponsoring::where('is_rejected',true)
             ->where('is_actif',false)
             ->where('is_deleted',false)
+            ->where('statut','payee')
             ->get();
             foreach($sponsoringrequests as  $sponsoringrequest){
                 $sponsoringrequest->user =User::find(Housing::whereId($sponsoringrequest->housing_id)->first()->user->id);
@@ -684,6 +681,10 @@ class HousingSponsoringController extends Controller
                 $housingSponsoring = HousingSponsoring::find($sponsorinRequestId);
                 if (!$housingSponsoring) {
                     return (new ServiceController())->apiResponse(404, [], 'Demande de sponsoring introuvable');
+                }
+
+                if ($housingSponsoring->statut != 'payee') {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas valider une demande qui n\'est pas encore payé');
                 }
 
                 if($housingSponsoring->is_actif == true){
@@ -817,6 +818,10 @@ class HousingSponsoringController extends Controller
                 $montat_percentage=($prix_total* $request->pourcentage)/100;
                 if($montat_percentage !=$request->montant){
                     return (new ServiceController())->apiResponse(404, [], "Le pourcentage et le montant que vous avez renseigné n'est pas conforme.{$request->pourcentage}% de {$prix_total} ne donne pas {$request->montant} mais plutôt {$montat_percentage}  ");
+                }
+
+                if ($housingSponsoring->statut != 'payee') {
+                    return (new ServiceController())->apiResponse(404, [], 'Vous ne pouvez pas valider une demande qui n\'est pas encore payé');
                 }
 
                 if($housingSponsoring->is_rejected == true){

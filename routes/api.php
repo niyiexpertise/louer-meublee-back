@@ -64,6 +64,7 @@ use App\Http\Controllers\SettingController;
 
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
+use App\Http\Controllers\FileStockageController;
 
 
 /*
@@ -635,6 +636,32 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
     });
 
+     //Gestion des systèmes de stockage.
+     Route::prefix('fileStockage')->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.store'])->group(function () {
+            Route::post('/store', [FileStockageController::class, 'store'])->name('fileStockage.store');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.update'])->group(function () {
+            Route::post('/update/{id}', [FileStockageController::class, 'update'])->name('fileStockage.update');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.show'])->group(function () {
+            Route::get('/show/{id}', [FileStockageController::class, 'show'])->name('fileStockage.show');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.showActif'])->group(function () {
+            Route::get('/showActif', [FileStockageController::class, 'showActif'])->name('fileStockage.showActif');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.indexInactif'])->group(function () {
+            Route::get('/indexInactif', [FileStockageController::class, 'indexInactif'])->name('fileStockage.indexInactif');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.active'])->group(function () {
+            Route::post('/active/{id}', [FileStockageController::class, 'active'])->name('fileStockage.active');
+        });
+        Route::middleware(['role_or_permission:superAdmin|ManagefileStockage.delete'])->group(function () {
+            Route::post('/delete/{id}', [FileStockageController::class, 'delete'])->name('fileStockage.delete');
+        });
+
+    });
+
 
 
     //Gestion de la liste des documents
@@ -1112,7 +1139,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::post('/confirmIntegration', [ReservationController::class, 'confirmIntegration'])
             ->name('reservation.confirmIntegration')
-            ->middleware('role_or_permission:superAdmin|Managereservation.confirmIntegration');
+            ->middleware('role_or_permission:superAdmin|traveler|Managereservation.confirmIntegration');
 
         // Admin
         Route::get('/housing_with_many_reservation', [AdminReservationController::class, 'housing_with_many_reservation'])
@@ -1197,6 +1224,12 @@ Route::prefix('portefeuille')->group(function () {
             Route::get('/index', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
                 ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin');
+            Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
+                ->name('methodPayement.indexInactive')
+                ->middleware('role_or_permission:ManagemethodPayement.indexInactive|superAdmin|admin');
+            Route::get('/indexActive', [MethodPayementController::class, 'indexActive'])
+                ->name('methodPayement.indexActive')
+                ->middleware('role_or_permission:ManagemethodPayement.indexActive|superAdmin|admin');
 
             Route::get('/show/{id}', [MethodPayementController::class, 'show'])
                 ->name('methodPayement.show')
@@ -1213,6 +1246,12 @@ Route::prefix('portefeuille')->group(function () {
             Route::delete('/destroy/{id}', [MethodPayementController::class, 'destroy'])
                 ->name('methodPayement.destroy')
                 ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+            Route::post('/active/{id}', [MethodPayementController::class, 'active'])
+                ->name('methodPayement.active')
+                ->middleware('role_or_permission:ManagemethodPayement.active|superAdmin|admin');
+            Route::post('/desactive/{id}', [MethodPayementController::class, 'desactive'])
+                ->name('methodPayement.desactive')
+                ->middleware('role_or_permission:ManagemethodPayement.desactive|superAdmin|admin');
 
             Route::put('/block/{id}', [MethodPayementController::class, 'block'])
                 ->name('methodPayement.block')
@@ -1693,6 +1732,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics|admin');
     });
 
+    Route::middleware(['role_or_permission:superAdmin|admin|Managepartenaire.getUsersPartenaire'])->group(function () {
+        Route::get('/partenaire/getPartenaires', [VerificationDocumentPartenaireController::class, 'getPartenaires'])->name('partenaire.getPartenaires');
+    });
+
 
 
 });
@@ -1726,7 +1769,7 @@ Route::post('housingsponsoring/disableExpiredHousings', [HousingSponsoringContro
 Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [ReservationController::class, 'getDateOfReservationsByHousingId'])
             ->name('reservation.getDateOfReservationsByHousingId');
 
-Route::post('/ajoutFile', [FileTestController::class, 'ajoutFile'])
-            ->name('ajoutFile');
+
+Route::post('/updateOrInsert', [PermissionController::class, 'updatePermissions']);
 
 /** end Route ne nécéssitant pas l'authentification */

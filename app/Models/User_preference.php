@@ -18,6 +18,8 @@ class User_preference extends Model implements Auditable
         'is_deleted',
         'is_blocked'
     ];
+
+    
     public function preference()
     {
         return $this->belongsTo(Preference::class);

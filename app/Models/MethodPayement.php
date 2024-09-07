@@ -15,5 +15,6 @@ class MethodPayement extends Model implements Auditable
         'name',
         'icone'
     ];
-    
+
+
 }

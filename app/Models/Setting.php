@@ -37,4 +37,6 @@ class Setting extends Model
         'max_value_promotion',
         'commission_seuil_hote_partenaire',
     ];
+
+    
 }

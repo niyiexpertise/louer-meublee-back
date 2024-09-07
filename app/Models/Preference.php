@@ -16,10 +16,7 @@ class Preference extends Model implements Auditable
     'is_blocked' 
 ];
 
-  protected $auditEvents = [
-    'updated',
-    'update',
-];
+
   
     use HasFactory;
     use AuditableTrait;

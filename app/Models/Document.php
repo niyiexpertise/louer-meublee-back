@@ -21,6 +21,7 @@ class Document extends Model implements Auditable
     ];
     
 
+
     public function verificationDocuments()
     {
         return $this->hasMany(verification_document::class);

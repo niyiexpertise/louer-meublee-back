@@ -20,6 +20,7 @@ class verification_document_partenaire extends Model implements Auditable
         'is_blocked',
     ];
 
+    
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -19,6 +19,8 @@ class PropertyType extends Model implements Auditable
         
     ];
 
+
+
     public function housings()
     {
         return $this->hasMany(Housing::class);

@@ -19,6 +19,8 @@ class Equipment extends Model implements Auditable
         'is_verified'
     ];
 
+
+
     public function equipment_category()
     {
         return $this->hasMany(equipment_category::class);

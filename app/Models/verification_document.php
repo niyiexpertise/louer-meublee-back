@@ -19,6 +19,8 @@ class verification_document extends Model implements Auditable
         'is_blocked',
     ];
 
+    
+
     public function user()
     {
         return $this->belongsTo(User::class);

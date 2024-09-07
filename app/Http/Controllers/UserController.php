@@ -349,7 +349,7 @@ public function userLanguages()
      }
 
      $validator = Validator::make($request->all(), [
-         'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+         'profile_photo' => 'required|image',
      ]);
 
      if ($validator->fails()) {
@@ -367,7 +367,7 @@ public function userLanguages()
 
      $identity_profil_url = '';
 
-     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil', 'extensionImageVideo');;
+     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil', 'extensionImage');
      if ($identity_profil_url['fails']) {
         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
     }

@@ -252,7 +252,7 @@ public function index()
 
             $imagePiece = $imagePieces[$key];
 
-            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocument');
+            $validationResultFile = $this->fileService->uploadFiles($imagePiece, 'image/document_verification','extensionDocumentImage');
 
             if ($validationResultFile['fails']) {
                 return (new ServiceController())->apiResponse(404, [], $validationResultFile['result']);
@@ -300,9 +300,11 @@ public function index()
             }
         }
 
-        return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
+        return (new ServiceController())->apiResponse(200, $verificationDocuments, 'Documents de vérification créés avec succès.');
+
+       
     } catch (Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue', 'message' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], 'Une erreur est survenue', 'message' .$e->getMessage());
     }
 }
 
@@ -726,9 +728,7 @@ public function changeDocument(Request $request)
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
-           // $path_name = uniqid() . '.' . $new_document->getClientOriginalExtension();
-           // $path_url = url('/image/document_verification/' . $path_name);
-           // $new_document->move(public_path('image/document_verification'), $path_name);
+
 
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();

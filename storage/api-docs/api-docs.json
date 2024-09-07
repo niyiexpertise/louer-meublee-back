@@ -17682,6 +17682,58 @@
                 ]
             }
         },
+        "/api/updateOrInsert": {
+            "post": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Update or Insert Permissions",
+                "description": "Update permissions if they exist or insert them if they do not.",
+                "operationId": "05abe39537ce833fc0dcc52442472e55",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Permissions updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/logement/updatephoto/{photo_id}": {
             "post": {
                 "tags": [

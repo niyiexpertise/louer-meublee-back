@@ -19,8 +19,9 @@ class FileService
         $s3Config = FileStockage::where('type', 's3')->where('is_actif', 1)->first();
 
         $this->serverUrl = $setting->adresse_serveur_fichier ?? url('/');
-        $this->disk = $s3Config ->type ?? 'defaut'; 
+        $this->disk = $s3Config ->type ?? 'defaut';
     }
+
 
     public function uploadFiles($files, string $directory, $type)
     {
@@ -88,7 +89,8 @@ class FileService
         $extensions = [
             'extensionImage' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'jfif'],
             'extensionImageVideo' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'mp4', 'mov', 'avi', 'mkv', 'mpeg', 'webm', 'jfif'],
-            'extensionDocument' => ['pdf']
+            'extensionDocument' => ['pdf'],
+            'extensionDocumentImage' => ['pdf','jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'jfif']
         ];
         
         return $extensions[$type] ?? [];

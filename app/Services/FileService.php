@@ -6,6 +6,8 @@ use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
 use App\Models\FileStockage;
+use Illuminate\Support\Facades\Schema;
+
 
 
 class FileService
@@ -15,8 +17,13 @@ class FileService
 
     public function __construct()
     {
-        $setting = Setting::first();
-        $s3Config = FileStockage::where('type', 's3')->where('is_actif', 1)->first();
+        if (Schema::hasTable('settings')) {
+            $setting = Setting::first();
+        }
+        if (Schema::hasTable('settings')) {
+            $s3Config = FileStockage::where('type', 's3')->where('is_actif', 1)->first();
+
+                }
 
         $this->serverUrl = $setting->adresse_serveur_fichier ?? url('/');
         $this->disk = $s3Config ->type ?? 'defaut';
@@ -92,7 +99,7 @@ class FileService
             'extensionDocument' => ['pdf'],
             'extensionDocumentImage' => ['pdf','jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'jfif']
         ];
-        
+
         return $extensions[$type] ?? [];
     }
 
@@ -108,14 +115,14 @@ class FileService
     private function compressAndSaveImage($file, string $destinationPath, string $filename)
     {
         $image = Image::make($file->getRealPath());
-        $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024); 
+        $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024);
         $image->save($destinationPath . '/' . $filename, $compressionQuality);
     }
 
     private function compressImage($file)
     {
         $image = Image::make($file->getRealPath());
-        $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024); 
+        $compressionQuality = $this->calculateCompressionQuality($image, 1024 * 1024);
         return $image->encode('jpg', $compressionQuality)->__toString();
     }
 

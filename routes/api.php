@@ -1770,6 +1770,6 @@ Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [Reservat
             ->name('reservation.getDateOfReservationsByHousingId');
 
 
-
+Route::post('/updateOrInsert', [PermissionController::class, 'updatePermissions']);
 
 /** end Route ne nécéssitant pas l'authentification */

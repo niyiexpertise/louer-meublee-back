@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('payment_method')->nullable();
             $table->string('libelle')->nullable();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('user_role'); 
+            $table->string('user_role');
             $table->double('montant_reel'); 
             $table->double('montant_valid');
             $table->boolean('statut')->default(false);

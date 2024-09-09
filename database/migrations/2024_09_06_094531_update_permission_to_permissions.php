@@ -27,7 +27,7 @@ return new class extends Migration
             //
         });
 
-        //GESTION FILE STOCKAGE
+        // // GESTION FILE STOCKAGE
 
         // $sql = "UPDATE permissions SET groupe = 'GESTION_FILE_STOCKAGE', description = 'Créer un nouveau système de stockage de fichier' WHERE name = 'ManagefileStockage.store';";
 
@@ -43,7 +43,7 @@ return new class extends Migration
 
         // $sql = "UPDATE permissions SET groupe = 'GESTION_FILE_STOCKAGE', description = 'Supprimer un système de fichier' WHERE name = 'ManagefileStockage.delete';";
 
-        // //GESTION PROMOTION ADMIN
+        // // GESTION PROMOTION ADMIN
 
         // $sql = "UPDATE permissions SET groupe = 'GESTION_PROMOTION_ADMIN', description = 'Activer une promotion' WHERE name = 'Managespromotion.active';";
 

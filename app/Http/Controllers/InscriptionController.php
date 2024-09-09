@@ -116,7 +116,7 @@ protected $fileService;
         'telephone' => 'required|numeric|unique:users',
         'email' => 'required|email|unique:users',
         'pays' => 'required|string',
-        'identity_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'identity_profil' => 'nullable',
         'ville' => 'required|string',
         'addresse' => 'required|string',
         'sexe' => 'required|string',

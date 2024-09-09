@@ -367,7 +367,13 @@ public function userLanguages()
 
      $identity_profil_url = '';
 
-     $identity_profil_url = $this->fileService->uploadFiles($request->file('profile_photo'), 'image/photo_profil', 'extensionImage');
+     $images = $request->file('icone');
+     if(!isset($images[0])){
+         return (new ServiceController())->apiResponse(404, [], 'L\'image n\'a  pas été correctement envoyé.');
+     }
+     $image =$images[0];
+
+     $identity_profil_url = $this->fileService->uploadFiles($image, 'image/photo_profil', 'extensionImage');
      if ($identity_profil_url['fails']) {
         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
     }

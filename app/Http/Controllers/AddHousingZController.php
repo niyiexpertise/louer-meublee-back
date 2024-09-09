@@ -329,6 +329,7 @@ public function __construct(FileService $fileService = null)
             $pdfArray = $request->file('interior_regulation_pdf');
 
             // Vérifiez que le premier élément du tableau est un fichier
+            //imposerpar le front
             if (isset($pdfArray[0])) {
                 $pdfFile = $pdfArray[0];
                 // $extension = $pdfFile->getClientOriginalExtension();

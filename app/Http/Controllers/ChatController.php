@@ -630,9 +630,9 @@ class ChatController extends Controller
 
             if($request->file('files')){
                 $identity_profil_url = $this->fileService->uploadFiles($request->file('files'), 'image/imageChat', 'extensionImageVideo');;
-                if ($identity_profil_url[0]['fails']!=1) {
+                if ($identity_profil_url['fails']!=1) {
                     $locationFile = '';
-                    $locationFile = $identity_profil_url[0]['result'];
+                    $locationFile = $identity_profil_url['result'];
                     $referencecode = $randomString;
         
                     DB::table('chat_files')->insert([

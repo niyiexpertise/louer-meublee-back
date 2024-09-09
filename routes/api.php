@@ -65,7 +65,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
 use App\Http\Controllers\FileStockageController;
-
+use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1221,7 +1221,7 @@ Route::prefix('portefeuille')->group(function () {
                 ->name('methodPayement.store')
                 ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
 
-            Route::get('/index', [MethodPayementController::class, 'index'])
+            Route::get('/index/{is_retrait}', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
                 ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin');
             Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
@@ -1771,5 +1771,7 @@ Route::get('reservation/getDateOfReservationsByHousingId/{housingId}', [Reservat
 
 
 Route::post('/updateOrInsert', [PermissionController::class, 'updatePermissions']);
+
+Route::get('/userInfo/{type}/{id}', [TestController::class, 'userInfo'])->middleware(['auth:sanctum']);
 
 /** end Route ne nécéssitant pas l'authentification */

@@ -23,7 +23,16 @@ class MethodPayementController extends Controller
 
      /**
    * @OA\Get(
-   *     path="/api/methodPayement/index",
+   *     path="/api/methodPayement/index/{is_retrait}",
+   *   @OA\Parameter(
+ *          name="is_retrait",
+ *          in="path",
+ *          required=true,
+ *          description="Voir si la route est appelé au niveau du retrait",
+ *          @OA\Schema(
+ *              type="integer"
+ *          )
+ *      ),
    *     summary="Get all methodPayements",
    *     tags={"MethodPayement"},
    * security={{"bearerAuth": {}}},
@@ -34,16 +43,29 @@ class MethodPayementController extends Controller
    *     )
    * )
    */
-  public function index()
-  {
-    try{
-            $methodPayements =MethodPayement::where('is_deleted', false)->where('is_actif', true)->get();
-            return response()->json(['data' => $methodPayements], 200);
-      } catch(Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-     }
+  public function index($is_retrait = false)
+{
 
-  }
+    try {
+        if($is_retrait != 1 && $is_retrait != 0){
+            return (new ServiceController())->apiResponse(404, [], 'is_retrait doit être un booleen');
+        }
+        $methodPayements = MethodPayement::where('is_deleted', false)
+            ->where('is_actif', true);
+
+        if ($is_retrait) {
+            $portfeuille = (new ReservationController())->findSimilarPaymentMethod("portfeuille");
+            $methodPayements = $methodPayements->where('name', '!=', $portfeuille);
+        }
+
+        $methodPayements = $methodPayements->get();
+
+        return response()->json(['data' => $methodPayements], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
 
 
 /**
@@ -89,14 +111,20 @@ class MethodPayementController extends Controller
             //     ], 500);
             // }
 
-              try{
+            try{
                 $data = $request->validate([
                     'name' => 'required|unique:method_payements|max:255',
                 ]);
                 $methodPayement = new MethodPayement();
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    $images = $request->file('icone');
+                    if(!isset($images[0])){
+                        return (new ServiceController())->apiResponse(404, [], 'L\'image n\'a  pas été correctement envoyé.');
+                    }
+                    $image =$images[0];
+
+                    $identity_profil_url = $this->fileService->uploadFiles($image, 'image/iconeMethodPayement', 'extensionImage');;
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
@@ -292,7 +320,12 @@ class MethodPayementController extends Controller
             }
                 $identity_profil_url = '';
                 if ($request->hasFile('icone')) {
-                    $identity_profil_url = $this->fileService->uploadFiles($request->file('icone'), 'image/iconeMethodPayement', 'extensionImage');;
+                    $images = $request->file('icone');
+                    if(!isset($images[0])){
+                        return (new ServiceController())->apiResponse(404, [], 'L\'image n\'a  pas été correctement envoyé.');
+                    }
+                    $image =$images[0];
+                    $identity_profil_url = $this->fileService->uploadFiles($image, 'image/iconeMethodPayement', 'extensionImage');;
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
@@ -300,7 +333,7 @@ class MethodPayementController extends Controller
                     $methodPayement->save();
                     return response()->json(['data' => 'icône du méthode de payement mis à jour avec succès.'], 200);
                 } else {
-                
+
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {

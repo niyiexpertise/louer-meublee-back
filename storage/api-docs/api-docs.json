@@ -16083,13 +16083,24 @@
                 ]
             }
         },
-        "/api/methodPayement/index": {
+        "/api/methodPayement/index/{is_retrait}": {
             "get": {
                 "tags": [
                     "MethodPayement"
                 ],
                 "summary": "Get all methodPayements",
-                "operationId": "141c9b0353861998c05b273b9b45f5c2",
+                "operationId": "9057f3d0c2fcc1835c8fd65804cc94ce",
+                "parameters": [
+                    {
+                        "name": "is_retrait",
+                        "in": "path",
+                        "description": "Voir si la route est appelé au niveau du retrait",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of methodPayements"

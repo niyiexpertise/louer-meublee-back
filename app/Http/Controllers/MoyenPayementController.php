@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MethodPayement;
 use App\Models\MoyenPayement;
 use Exception;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ public function ListeMoyenPayement()
                     
                     'method_payement_id' => $item->methodPayement->id,
                     'method_payement_name' => $item->methodPayement->name,
+                    'method_payement_icone' => $item->methodPayement->icone,
                     'valeur_method_payement' => $item->valeur_method_payement,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
@@ -119,7 +121,8 @@ public function ListeMoyenPayementUserAuth()
                 ->where('is_deleted', 0)
                 ->where('user_id', Auth::user()->id)
                 ->get();
-            
+
+               
             $data = $moyenPayement->map(function ($item) {
                 return [
                     'moyen_payement_id' => $item->id,
@@ -128,6 +131,7 @@ public function ListeMoyenPayementUserAuth()
                     
                     'method_payement_id' => $item->methodPayement->id,
                     'method_payement_name' => $item->methodPayement->name,
+                    'method_payement_icone' => $item->methodPayement->icone,
                     'valeur_method_payement' => $item->valeur_method_payement,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
@@ -187,6 +191,7 @@ public function ListeMoyenPayementUserAuth()
                     
                     'method_payement_id' => $item->methodPayement->id,
                     'method_payement_name' => $item->methodPayement->name,
+                    'method_payement_icone' => $item->methodPayement->icone,
                     'valeur_method_payement' => $item->valeur_method_payement,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
@@ -251,9 +256,10 @@ public function ListeMoyenPayementUserAuth()
                     'moyen_payement_id' => $item->id,
                     'user_id' => $item->user->id,
                     'user_detail' => $item->user,
-                    
+
                     'method_payement_id' => $item->methodPayement->id,
                     'method_payement_name' => $item->methodPayement->name,
+                    'method_payement_icone' => $item->methodPayement->icone,
                     'valeur_method_payement' => $item->valeur_method_payement,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,
@@ -330,6 +336,11 @@ public function ListeMoyenPayementUserAuth()
                 'method_payement_id' => 'required',
                 'valeur_method_payement' => 'required',
             ]);
+
+            if(!MethodPayement::find($request->method_payement_id)){
+                return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé');
+            }
+
             $exist = MoyenPayement::where('method_payement_id', $request->method_payement_id)
             ->where('valeur_method_payement', $request->valeur_method_payement)
             ->exists();
@@ -563,6 +574,9 @@ public function ListeMoyenPayementUserAuth()
                  'message ' => 'moyenPayement not found'
                 ],404);
              }
+             if(Auth::user()->id != $moyenPayement->user_id){
+                return (new ServiceController())->apiResponse(404, [], "Vous n'êtes pas autorisé à effectuer cette action");
+             }
              MoyenPayement::whereId($idMoyenPayement)->update(['is_deleted' => true]);
             } catch(Exception $e) {
                 return response()->json([
@@ -631,7 +645,7 @@ public function ListeMoyenPayementUserAuth()
  * )
  */
 
-    public function block( $idMoyenPayement)
+    public function block($idMoyenPayement)
     {
            try{
             $moyenPayement = moyenPayement::find($idMoyenPayement);
@@ -710,7 +724,7 @@ public function ListeMoyenPayementUserAuth()
  * )
  */
 
-    public function unblock( $idMoyenPayement)
+    public function unblock($idMoyenPayement)
     {
            try{
             $moyenPayement = moyenPayement::find($idMoyenPayement);

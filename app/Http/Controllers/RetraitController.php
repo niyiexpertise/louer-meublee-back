@@ -227,14 +227,16 @@ class RetraitController extends Controller
  {
      try {
          $retrait = Retrait::find($retraitId);
- 
+
+         
          if (!$retrait) {
              return (new ServiceController())->apiResponse(404, [], 'Retrait non trouvé');
-         }
- 
-         if (!$request->id_transaction) {
-             return (new ServiceController())->apiResponse(404, [], 'Le champ id_transaction est obligatoire');
-         }
+            }
+            
+            if (!$request->id_transaction) {
+                return (new ServiceController())->apiResponse(404, [], 'Le champ id_transaction est obligatoire');
+            }
+            // return $request;
  
          $existTransaction = Portfeuille_transaction::where('id_transaction', $request->id_transaction)->exists();
          if ($existTransaction) {

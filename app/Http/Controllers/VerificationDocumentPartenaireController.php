@@ -474,7 +474,7 @@ public function validateDocuments(Request $request)
 
          dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
 
-        return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Documents validés avec succès.');
     } catch (\Exception $e) {
         return response()->json(['error' =>  $e->getMessage()], 500);
     }
@@ -581,7 +581,8 @@ public function validateDocument(Request $request)
 
         }
 
-        return response()->json(['message' => 'Document validé avec succès.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Document validé avec succès.');
+
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }

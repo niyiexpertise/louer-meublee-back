@@ -1354,7 +1354,7 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('paiement')->group(function () {
                 Route::get('/reservation/user', [PayementController::class, 'listPaymentsForUser'])
                     ->name('paiement.reservation.user')
-                    ->middleware('role_or_permission:traveler|Managepaiement.reservation.user');
+                   ;
 
                 Route::get('/reservation/all', [PayementController::class, 'listAllPayments'])
                     ->name('paiement.reservation.all')

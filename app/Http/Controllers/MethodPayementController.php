@@ -300,7 +300,7 @@ class MethodPayementController extends Controller
                     $methodPayement->save();
                     return response()->json(['data' => 'icône du méthode de payement mis à jour avec succès.'], 200);
                 } else {
-                dd("h");
+                
                 return response()->json(['error' => 'Aucun fichier d\'icône trouvé dans la requête.'], 400);
             }
         } catch (QueryException $e) {

@@ -205,7 +205,7 @@ class PermissionController extends Controller
      *     )
      * )
      */
-public function updatePermissions()
+public function updatePermission()
 {
     try {
         // GESTION CHARGE ADMIN
@@ -301,6 +301,283 @@ public function updatePermissions()
         Log::error('Database update failed: ' . $e->getMessage());
     }
 }
+
+
+public function updatePermissions()
+    {
+        $permissions = [
+            [
+                'name' => 'Managecharge.indexChargeActive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Voir la liste des charges actives'
+            ],
+            [
+                'name' => 'Managecharge.indexChargeInactive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Voir la liste des charges inactives'
+            ],
+            [
+                'name' => 'Managecharge.active',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Activer une charge'
+            ],
+            [
+                'name' => 'Managecharge.desactive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Désactiver une charge'
+            ],
+            [
+                'name' => 'Managecharge.indexChargeActive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Voir la liste des charges actives'
+            ],
+            [
+                'name' => 'Managecharge.indexChargeInactive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Voir la liste des charges inactives'
+            ],
+            [
+                'name' => 'Managecharge.active',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Activer une charge'
+            ],
+            [
+                'name' => 'Managecharge.desactive',
+                'groupe' => 'GESTION_CHARGE_ADMIN',
+                'description' => 'Désactiver une charge'
+            ],
+            // GESTION FILE STOCKAGE
+            [
+                'name' => 'ManagefileStockage.store',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Créer un nouveau système de stockage de fichier'
+            ],
+            [
+                'name' => 'ManagefileStockage.update',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Modifier un système de stockage de fichier'
+            ],
+            [
+                'name' => 'ManagefileStockage.show',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Voir les détails d\'un système de stockage de fichier'
+            ],
+            [
+                'name' => 'ManagefileStockage.showActif',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Voir les détails du système de stockage de fichier actif'
+            ],
+            [
+                'name' => 'ManagefileStockage.indexInactif',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Voir la liste des systèmes de stockage de fichier inactifs'
+            ],
+            [
+                'name' => 'ManagefileStockage.active',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Activer un système de stockage de fichier'
+            ],
+            [
+                'name' => 'ManagefileStockage.delete',
+                'groupe' => 'GESTION_FILE_STOCKAGE',
+                'description' => 'Supprimer un système de fichier'
+            ],
+            // GESTION PROMOTION ADMIN
+            [
+                'name' => 'Managespromotion.active',
+                'groupe' => 'GESTION_PROMOTION_ADMIN',
+                'description' => 'Activer une promotion'
+            ],
+            [
+                'name' => 'Managespromotion.desactive',
+                'groupe' => 'GESTION_PROMOTION_ADMIN',
+                'description' => 'Désactiver une promotion'
+            ],
+            [
+                'name' => 'Managespromotion.listActivePromotions',
+                'groupe' => 'GESTION_PROMOTION_ADMIN',
+                'description' => 'Voir la liste des promotions activées'
+            ],
+            [
+                'name' => 'Managespromotion.listInactivePromotions',
+                'groupe' => 'GESTION_PROMOTION_ADMIN',
+                'description' => 'Voir la liste des promotions désactivées'
+            ],
+            // GESTION REDUCTION ADMIN
+            [
+                'name' => 'Managesreduction.activeReductionAdmin',
+                'groupe' => 'GESTION_REDUCTION_ADMIN',
+                'description' => 'Activer une réduction'
+            ],
+            [
+                'name' => 'Managesreduction.desactiveReductionAdmin',
+                'groupe' => 'GESTION_REDUCTION_ADMIN',
+                'description' => 'Désactiver une réduction'
+            ],
+            [
+                'name' => 'Managesreduction.listeActiveReductionAdmin',
+                'groupe' => 'GESTION_REDUCTION_ADMIN',
+                'description' => 'Voir la liste des réductions activées'
+            ],
+            [
+                'name' => 'Managesreduction.listeDesactiveReductionAdmin',
+                'groupe' => 'GESTION_REDUCTION_ADMIN',
+                'description' => 'Voir la liste des réductions désactivées'
+            ],
+            // GESTION TARIF SPONSORING ADMIN
+    [
+        'name' => 'Managesponsoring.indexAdmin',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Voir la liste complète des tarifs de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.indexActifAdmin',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des tarifs de sponsoring actifs'
+    ],
+    [
+        'name' => 'Managesponsoring.indexInactifAdmin',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des tarifs de sponsoring inactifs'
+    ],
+    [
+        'name' => 'Managesponsoring.store',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Créer un nouveau tarif de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.update',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Modifier un tarif de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.show',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Voir les détails d\'un tarif de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.destroy',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Supprimer un tarif de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.active',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Activer un tarif de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.desactive',
+        'groupe' => 'GESTION_TARIF_SPONSORING_ADMIN',
+        'description' => 'Désactiver un tarif de sponsoring'
+    ],
+
+    // GESTION SPONSORING ADMIN
+    [
+        'name' => 'Managesponsoring.demandeSponsoringNonvalidee',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des demandes de sponsoring non validée par l\'administrateur'
+    ],
+    [
+        'name' => 'Managesponsoring.demandeSponsoringvalidee',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des demandes de sponsoring validée par l\'administrateur'
+    ],
+    [
+        'name' => 'Managesponsoring.rejectSponsoringRequest',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Rejeter une demande de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.demandeSponsoringrejetee',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des demandes de sponsoring rejetée par l\'administrateur'
+    ],
+    [
+        'name' => 'Managesponsoring.demandeSponsoringsupprimee',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Voir la liste des demandes de sponsoring supprimée par l\'administrateur par les hôtes'
+    ],
+    [
+        'name' => 'Managesponsoring.validSponsoringRequest',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Valider une demande de sponsoring'
+    ],
+    [
+        'name' => 'Managesponsoring.invalidSponsoringRequest',
+        'groupe' => 'GESTION_SPONSORING_ADMIN',
+        'description' => 'Invalider une demande de sponsoring'
+    ],
+    
+    // GESTION PROMOTION ADMIN
+    [
+        'name' => 'Managespromotion.active',
+        'groupe' => 'GESTION_PROMOTION_ADMIN',
+        'description' => 'Activer une promotion'
+    ],
+    [
+        'name' => 'Managespromotion.desactive',
+        'groupe' => 'GESTION_PROMOTION_ADMIN',
+        'description' => 'Désactiver une promotion'
+    ],
+    [
+        'name' => 'Managespromotion.listActivePromotions',
+        'groupe' => 'GESTION_PROMOTION_ADMIN',
+        'description' => 'Voir la liste des promotions activées'
+    ],
+    [
+        'name' => 'Managespromotion.listInactivePromotions',
+        'groupe' => 'GESTION_PROMOTION_ADMIN',
+        'description' => 'Voir la liste des promotions désactivées'
+    ],
+
+    // GESTION REDUCTION ADMIN
+    [
+        'name' => 'Managesreduction.activeReductionAdmin',
+        'groupe' => 'GESTION_REDUCTION_ADMIN',
+        'description' => 'Activer une réduction'
+    ],
+    [
+        'name' => 'Managesreduction.desactiveReductionAdmin',
+        'groupe' => 'GESTION_REDUCTION_ADMIN',
+        'description' => 'Désactiver une réduction'
+    ],
+    [
+        'name' => 'Managesreduction.listeActiveReductionAdmin',
+        'groupe' => 'GESTION_REDUCTION_ADMIN',
+        'description' => 'Voir la liste des réductions activées'
+    ],
+    [
+        'name' => 'Managesreduction.listeDesactiveReductionAdmin',
+        'groupe' => 'GESTION_REDUCTION_ADMIN',
+        'description' => 'Voir la liste des réductions désactivées'
+    ]
+        ];
+
+        foreach ($permissions as $permission) {
+            // Vérifier si l'entrée existe déjà
+            $existingPermission = DB::table('permissions')->where('name', $permission['name'])->first();
+
+            if ($existingPermission) {
+                // Mettre à jour l'entrée existante
+                DB::table('permissions')->where('name', $permission['name'])->update([
+                    'groupe' => $permission['groupe'],
+                    'description' => $permission['description']
+                ]);
+            } else {
+                // Créer une nouvelle entrée
+                DB::table('permissions')->insert([
+                    'name' => $permission['name'],
+                    'groupe' => $permission['groupe'],
+                    'guard_name' => 'web',
+                    'description' => $permission['description'],
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Permissions mises à jour avec succès.']);
+    }
 
 
 

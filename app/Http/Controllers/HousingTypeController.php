@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
  *          email="zakiyoubababodi@gmail.com "
  *      )
  * )
- */
+ */     
 class HousingTypeController extends Controller
 {
     protected $fileService;

@@ -18492,6 +18492,125 @@
                 ]
             }
         },
+        "/api/portefeuille/verifyTransactionOfMethod/{methodPaiement}/{transactionId}": {
+            "post": {
+                "tags": [
+                    "Portefeuille"
+                ],
+                "summary": "Vérifie la transaction d'une méthode de paiement",
+                "description": "Cette fonction permet de vérifier une transaction pour une méthode de paiement spécifique.",
+                "operationId": "be8bdc9f0f61eef8baf57557d6ff015e",
+                "parameters": [
+                    {
+                        "name": "methodPaiement",
+                        "in": "path",
+                        "description": "Le nom de la méthode de paiement à utiliser.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "kkiapay"
+                        }
+                    },
+                    {
+                        "name": "transactionId",
+                        "in": "path",
+                        "description": "L'ID de la transaction à vérifier.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "123456789"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "description": "Détails de la transaction",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Méthode de paiement non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Méthode de paiement non trouvée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Service de paiement non supporté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Service de paiement non supporté."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message d'erreur détaillé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/portefeuille/user/transaction": {
             "get": {
                 "tags": [

@@ -307,6 +307,8 @@ public function updatePermissions()
                 'groupe' => 'GESTION_PROMOTION_ADMIN',
                 'description' => 'Voir la liste des promotions désactivées'
             ],
+
+            
             // GESTION REDUCTION ADMIN
             [
                 'name' => 'Managesreduction.activeReductionAdmin',
@@ -454,7 +456,79 @@ public function updatePermissions()
         'name' => 'Managesreduction.listeDesactiveReductionAdmin',
         'groupe' => 'GESTION_REDUCTION_ADMIN',
         'description' => 'Voir la liste des réductions désactivées'
-    ]
+    ],
+
+     // GESTION SERVICE PAIEMENT ADMIN
+     [
+        'name' => 'Manageservicepaiement.getServicesByMethodPaiement',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services par méthodes de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getActiveServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services actifs'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getInactiveServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services inactifs'
+    ],
+    [
+        'name' => 'Manageservicepaiement.active',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Activer un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.desactive',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Désactiver un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.update',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Modifier un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.store',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Ajouter un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.showServiceActifByMethodPaiement',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir le service actif d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.show',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir les détails d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.destroy',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Supprimer une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.desactiveSandbox',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Désactiver le mode sandbox d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.activeSandbox',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Activer le mode sandbox d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getSandboxServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Récupérer la liste des services qui sont en mode sandbox'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getNotSandboxServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Récupérer la liste des services qui ne sont pas en mode sandbox'
+    ],
         ];
 
         foreach ($permissions as $permission) {

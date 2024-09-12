@@ -124,9 +124,24 @@ class PortfeuilleController extends Controller
            if($errorPayement){
             return $errorPayement;
            }
+           
+           
+           DB::beginTransaction();
+           $statusPayement =  $request->statut_paiement;
 
+            $status = $this->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
 
-            DB::beginTransaction();
+            if($status['status'] == 'ERROR'){
+                return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
+            }
+
+            if($status['status'] == 'FAILED'){
+                $statusPayement = 0;
+            }
+
+            if($status['status'] == 'SUCCESS'){
+                $statusPayement = 1;
+            }
 
             
 
@@ -134,13 +149,13 @@ class PortfeuilleController extends Controller
             $payement->amount =  $amount;
             $payement->payment_method = $request->paiement_methode;
             $payement->id_transaction = $request->transaction_id;
-            $payement->statut = $request->statut_paiement;
+            $payement->statut =$statusPayement;
             $payement->user_id = Auth::user()->id;
             $payement->is_confirmed = true;
             $payement->is_canceled = false;
           
 
-            if( $request->statut_paiement ==1){
+            if( $statusPayement ==1){
                 $portefeuille->solde += $amount;
                 $portefeuille->save();
     
@@ -166,7 +181,7 @@ class PortfeuilleController extends Controller
 
             
 
-            if( $request->statut_paiement ==1){
+            if( $statusPayement==1){
                 $mail = [
                     "title" => "Confirmation de dépôt sur votre portefeuille",
                     "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
@@ -176,7 +191,7 @@ class PortfeuilleController extends Controller
                 $data = ["solde" => $portefeuille->solde];
                 return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
             }else{
-                return (new ServiceController())->apiResponse(200,[], "Echec de paiement");
+                return (new ServiceController())->apiResponse(404,[], "Echec de paiement");
             }
 
         } catch (Exception $e) {
@@ -185,6 +200,120 @@ class PortfeuilleController extends Controller
         }
     }
 
+
+    /**
+ * @OA\Post(
+ *     path="/api/portefeuille/verifyTransactionOfMethod/{methodPaiement}/{transactionId}",
+ *     tags={"Portefeuille"},
+ *     summary="Vérifie la transaction d'une méthode de paiement",
+ *     description="Cette fonction permet de vérifier une transaction pour une méthode de paiement spécifique.",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="methodPaiement",
+ *         in="path",
+ *         required=true,
+ *         description="Le nom de la méthode de paiement à utiliser.",
+ *         @OA\Schema(type="string", example="kkiapay")
+ *     ),
+ *     @OA\Parameter(
+ *         name="transactionId",
+ *         in="path",
+ *         required=true,
+ *         description="L'ID de la transaction à vérifier.",
+ *         @OA\Schema(type="string", example="123456789")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="string", example="success"),
+ *             @OA\Property(property="data", type="object", description="Détails de la transaction")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Méthode de paiement non trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="string", example="error"),
+ *             @OA\Property(property="message", type="string", example="Méthode de paiement non trouvée.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Service de paiement non supporté",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="string", example="error"),
+ *             @OA\Property(property="message", type="string", example="Service de paiement non supporté.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status", type="string", example="error"),
+ *             @OA\Property(property="message", type="string", example="Message d'erreur détaillé")
+ *         )
+ *     )
+ * )
+ * 
+ * @param string $methodPaiement Nom de la méthode de paiement
+ * @param string $transactionId ID de la transaction
+ * @return \Illuminate\Http\JsonResponse
+ */
+    public function verifyTransactionOfMethod($methodPaiement, $transactionId)
+{
+    try {
+        $kkiapay = 'kkiapay';
+
+        $method_paiement = (new ReservationController())->findSimilarPaymentMethod($methodPaiement);
+
+        $methodPaiement = MethodPayement::whereName($method_paiement)->first();
+
+        // if(!$methodPaiement){
+        //     return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvée.');
+        // }
+
+
+        // if (is_null($method_paiement)) {
+        //     return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvée.');
+        // }
+
+        $servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPaiement->id);
+
+
+        $responseDataType = ($servicePaiement->original['data']->type);
+
+
+        if ($responseDataType == $kkiapay) {
+            $result = (new KkiapayController())->verifyTransaction($transactionId);
+
+            $validTransaction = isset($result->status)?true:false;
+
+            if($validTransaction == false){
+                return [
+                    'status' => 'ERROR',
+                    'message' =>'ID de transaction invalid.'
+                ] ;
+            }
+            if($result->status == "SUCCESS"){
+                return [
+                    'status' => 'SUCCESS',
+                    'message' =>''
+                ] ;
+            }else{
+                return [
+                    'status' => 'FAILED',
+                    'message' =>''
+                ] ;
+            }
+        } else {
+            return (new ServiceController())->apiResponse(400, [], 'Service de paiement non supporté.');
+        }
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
 
 
 

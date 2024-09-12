@@ -330,6 +330,22 @@ class HousingSponsoringController extends Controller
                     return (new ServiceController())->apiResponse(404, [], "Le montant est incorrect. Vous devez payer $prix_tarif FCFA");
                 }
 
+                $statusPayement =  $request->statut_paiement;
+
+                $status = (new PortfeuilleController())->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
+    
+                if($status['status'] == 'ERROR'){
+                    return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
+                }
+    
+                if($status['status'] == 'FAILED'){
+                    $statusPayement = 0;
+                }
+    
+                if($status['status'] == 'SUCCESS'){
+                    $statusPayement = 1;
+                }
+
                 $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
                 if ($existTransaction) {
                     return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction exise déjà');

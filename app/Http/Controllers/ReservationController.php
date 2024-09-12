@@ -424,7 +424,7 @@ public function storeReservationWithPayment(Request $request)
         'montant_a_paye' => 'required|numeric',
     ]);
 
-       // $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
+    //    $method_paiement = $this->findSimilarPaymentMethod($request->payment_method);
 
     $message = [];
 
@@ -669,6 +669,8 @@ public function payReservation(Request $request,$reservationId){
             return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
         }
 
+        // return MethodPayement::whereName($method_paiement)->where('is_deleted', false)->where('is_actif', true)->first();
+
 
         if($request->statut_paiement !=1 || $request->statut_paiement !="1"){
             return (new ServiceController())->apiResponse(404, [], 'Statut paiement doit être un booléen');
@@ -713,6 +715,25 @@ public function payReservation(Request $request,$reservationId){
 
                 }
 
+                
+                
+                $statusPayement =  $request->statut_paiement;
+                
+                $status = (new PortfeuilleController())->verifyTransactionOfMethod($method_paiement,$request->transaction_id);
+
+                return $status;
+    
+                if($status['status'] == 'ERROR'){
+                    return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
+                }
+    
+                if($status['status'] == 'FAILED'){
+                    $statusPayement = 0;
+                }
+    
+                if($status['status'] == 'SUCCESS'){
+                    $statusPayement = 1;
+                }
 
 
 
@@ -728,7 +749,7 @@ public function payReservation(Request $request,$reservationId){
         $payment->payment_method = $method_paiement;
         $payment->id_transaction = $request->id_transaction;
         $payment->user_id = Auth::user()->id;
-        $payment->statut = $request->statut_paiement;
+        $payment->statut = $statusPayement;
         $payment->is_confirmed = true;
         $payment->is_canceled = false;
 
@@ -759,7 +780,7 @@ public function payReservation(Request $request,$reservationId){
 
                 $this->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
             }else{
-                if($request->statut_paiement ==1){
+                if($statusPayement == 1){
                     $portefeuilleTransaction = new Portfeuille_transaction();
                     $portefeuilleTransaction->credit = true;
                     $portefeuilleTransaction->debit = false;
@@ -788,7 +809,7 @@ public function payReservation(Request $request,$reservationId){
 
 
 
-        if($request->statut_paiement ==1 || $method_paiement == $portfeuille){
+        if($statusPayement ==1 || $method_paiement == $portfeuille){
             $mail_to_host = [
                 'title' => 'Nouvelle Réservation',
                 'body' => "Bonne nouvelle ! Votre logement a été réservé par un utilisateur. Détails de la réservation :\n" .

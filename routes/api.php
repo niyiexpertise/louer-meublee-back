@@ -1199,6 +1199,10 @@ Route::prefix('portefeuille')->group(function () {
         ->name('portefeuille.credit')
         ->middleware('role_or_permission:superAdmin|admin|hote|traveler|Manageportefeuille.credit');
 
+    Route::post('/verifyTransactionOfMethod/{methodId}/{transactionId}', [PortfeuilleController::class, 'verifyTransactionOfMethod'])
+        ->name('portefeuille.verifyTransactionOfMethod');
+     
+
     Route::get('/user/transaction', [PortfeuilleTransactionController::class, 'getPortfeuilleDetails'])
         ->name('portefeuille.user.transaction');
 

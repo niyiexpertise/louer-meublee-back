@@ -471,9 +471,10 @@ public function validateDocuments(Request $request)
             'body' => "Votre demande d'être partenaire a été validée avec succès."
         ];
 
-         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+       
 
         return (new ServiceController())->apiResponse(200, [], 'Documents validés avec succès.');
+        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
     } catch (\Exception $e) {
         return response()->json(['error' =>  $e->getMessage()], 500);
     }

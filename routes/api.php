@@ -65,7 +65,9 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SponsoringController;
 use App\Http\Controllers\HousingSponsoringController;
 use App\Http\Controllers\FileStockageController;
+use App\Http\Controllers\ServicePaiementController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\KkiapayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1221,7 +1223,7 @@ Route::prefix('portefeuille')->group(function () {
                 ->name('methodPayement.store')
                 ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
 
-            Route::get('/index/{is_retrait}', [MethodPayementController::class, 'index'])
+            Route::get('/index', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
                 ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin');
             Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
@@ -1256,6 +1258,39 @@ Route::prefix('portefeuille')->group(function () {
             Route::put('/block/{id}', [MethodPayementController::class, 'block'])
                 ->name('methodPayement.block')
                 ->middleware('role_or_permission:ManagemethodPayement.block|superAdmin|admin');
+
+            Route::post('/makeAccepted/{id}', [MethodPayementController::class, 'makeAccepted'])
+                ->name('methodPayement.makeAccepted')
+                ->middleware('role_or_permission:ManagemethodPayement.makeAccepted|superAdmin|admin');
+
+            Route::post('/makeNotAccepted/{id}', [MethodPayementController::class, 'makeNotAccepted'])
+                ->name('methodPayement.makeNotAccepted')
+                ->middleware('role_or_permission:ManagemethodPayement.makeNotAccepted|superAdmin|admin');
+
+            Route::post('/makeReceived/{id}', [MethodPayementController::class, 'makeReceived'])
+                ->name('methodPayement.makeReceived')
+                ->middleware('role_or_permission:ManagemethodPayement.makeReceived|superAdmin|admin');
+
+
+            Route::post('/makeNotReceived/{id}', [MethodPayementController::class, 'makeNotReceived'])
+                ->name('methodPayement.makeNotReceived')
+                ->middleware('role_or_permission:ManagemethodPayement.makeNotReceived|superAdmin|admin');
+
+            Route::get('/getMethodPaiementWithAcceptedTrue', [MethodPayementController::class, 'getMethodPaiementWithAcceptedTrue'])
+                ->name('methodPayement.getMethodPaiementWithAcceptedTrue')
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedTrue|superAdmin|admin');
+
+            Route::get('/getMethodPaiementWithAcceptedFalse', [MethodPayementController::class, 'getMethodPaiementWithAcceptedFalse'])
+                ->name('methodPayement.getMethodPaiementWithAcceptedFalse')
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedFalse|superAdmin|admin');
+
+            Route::get('/getMethodPaiementWithReceivedFalse', [MethodPayementController::class, 'getMethodPaiementWithReceivedFalse'])
+                ->name('methodPayement.getMethodPaiementWithReceivedFalse')
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedFalse|superAdmin|admin');
+
+            Route::get('/getMethodPaiementWithReceivedTrue', [MethodPayementController::class, 'getMethodPaiementWithReceivedTrue'])
+                ->name('methodPayement.getMethodPaiementWithReceivedTrue')
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedTrue|superAdmin|admin');
 
             Route::put('/unblock/{id}', [MethodPayementController::class, 'unblock'])
                 ->name('methodPayement.unblock')
@@ -1455,8 +1490,45 @@ Route::prefix('portefeuille')->group(function () {
                 ->name('invalidSponsoringRequest') ->middleware('role_or_permission:admin|superAdmin|Managesponsoring.invalidSponsoringRequest');
         });
 
+        //Gestion des services de paiement
 
-                  //  Gestion ajout promotion
+        Route::prefix('servicepaiement')->group(function() {
+            Route::get('getServicesByMethodPaiement/{methodPaiementId}', [ServicePaiementController::class, 'getServicesByMethodPaiement'])
+                ->name('servicepaiement.getServicesByMethodPaiement') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getServicesByMethodPaiement');
+            Route::get('getActiveServices', [ServicePaiementController::class, 'getActiveServices'])
+                ->name('servicepaiement.getActiveServices') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getActiveServices');
+            Route::get('getInactiveServices', [ServicePaiementController::class, 'getInactiveServices'])
+                ->name('servicepaiement.getInactiveServices') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getInactiveServices');
+            Route::post('active/{id}', [ServicePaiementController::class, 'active'])
+                ->name('servicepaiement.active') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.active');
+            Route::post('desactive/{id}', [ServicePaiementController::class, 'desactive'])
+                ->name('servicepaiement.desactive') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.desactive');
+            Route::post('update/{id}', [ServicePaiementController::class, 'update'])
+                ->name('servicepaiement.update') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.update');
+            Route::post('store', [ServicePaiementController::class, 'store'])
+                ->name('servicepaiement.store') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.store');
+            Route::get('showServiceActifByMethodPaiement/{methodPaiementId}', [ServicePaiementController::class, 'showServiceActifByMethodPaiement'])
+                ->name('servicepaiement.showServiceActifByMethodPaiement') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.showServiceActifByMethodPaiement');
+            Route::get('show/{methodPaiementId}', [ServicePaiementController::class, 'show'])
+                ->name('servicepaiement.show') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.show');
+            Route::post('destroy/{id}', [ServicePaiementController::class, 'destroy'])
+                ->name('servicepaiement.destroy') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.destroy');
+            Route::post('activeSandbox/{id}', [ServicePaiementController::class, 'activeSandbox'])
+                ->name('servicepaiement.activeSandbox') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.activeSandbox');
+            Route::post('desactiveSandbox/{id}', [ServicePaiementController::class, 'desactiveSandbox'])
+                ->name('servicepaiement.desactiveSandbox') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.desactiveSandbox');
+            Route::get('getSandboxServices', [ServicePaiementController::class, 'getSandboxServices'])
+                ->name('servicepaiement.getSandboxServices') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getSandboxServices');
+            Route::get('getNotSandboxServices', [ServicePaiementController::class, 'getNotSandboxServices'])
+                ->name('servicepaiement.getNotSandboxServices') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getNotSandboxServices');
+        });
+
+        //Verification kkiapay
+        Route::post('kkiapay/verifyTransaction/{transaction_id}', [KkiapayController::class, 'verifyTransaction'])
+                ->name('kkiapay.verifyTransaction') ->middleware('role_or_permission:admin|superAdmin|Managekkiapay.verifyTransaction');
+
+
+        //  Gestion ajout promotion
 
         Route::prefix('promotion')->group(function () {
                    Route::post('/add', [PromotionController::class, 'addPromotion'])

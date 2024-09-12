@@ -16,5 +16,10 @@ class MethodPayement extends Model implements Auditable
         'icone'
     ];
 
+    public function servicePaiement()
+    {
+        return $this->hasMany(ServicePaiement::class);
+    }
+
 
 }

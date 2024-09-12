@@ -502,7 +502,7 @@ class RetraitController extends Controller
             }
 
             if(!$moyenPayement){
-                return (new ServiceController())->apiResponse(404, [], 'Moyen de paiement non trouver ou bloquer ou encore supprimé.');
+                        
             }
 
     

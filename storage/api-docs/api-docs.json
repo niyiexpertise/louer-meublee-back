@@ -15206,6 +15206,69 @@
                 }
             }
         },
+        "/api/kkiapay/verifyTransaction/{transaction_id}": {
+            "post": {
+                "tags": [
+                    "Kkiapay"
+                ],
+                "summary": "Vérifie une transaction avec Kkiapay",
+                "operationId": "305d9e5cf06d10977c0288a9b21f417f",
+                "parameters": [
+                    {
+                        "name": "transaction_id",
+                        "in": "path",
+                        "description": "L'identifiant de la transaction à vérifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réponse de vérification de la transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "description": "Les détails de la vérification de la transaction",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Message d'erreur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/language/index": {
             "get": {
                 "tags": [
@@ -16083,27 +16146,76 @@
                 ]
             }
         },
-        "/api/methodPayement/index/{is_retrait}": {
+        "/api/methodPayement/index": {
             "get": {
                 "tags": [
                     "MethodPayement"
                 ],
-                "summary": "Get all methodPayements",
-                "operationId": "9057f3d0c2fcc1835c8fd65804cc94ce",
+                "summary": "Get all methodPayements based on acceptance and reception status",
+                "operationId": "141c9b0353861998c05b273b9b45f5c2",
                 "parameters": [
                     {
-                        "name": "is_retrait",
-                        "in": "path",
-                        "description": "Voir si la route est appelé au niveau du retrait",
-                        "required": true,
+                        "name": "is_accepted",
+                        "in": "query",
+                        "description": "Defini si on veut voir les méthodes de paiement qui accepent les paiements externes",
+                        "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "is_received",
+                        "in": "query",
+                        "description": "Defini si on veut voir les méthodes de paiement qui accepent les opérations de retournement de fonds",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of methodPayements"
+                        "description": "Liste des méthodes de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID de la méthode de paiement",
+                                                "type": "integer"
+                                            },
+                                            "is_accepted": {
+                                                "description": "Indique si les paiements externes sont acceptés",
+                                                "type": "boolean"
+                                            },
+                                            "is_received": {
+                                                "description": "Indique si les retournements de fonds sont acceptés",
+                                                "type": "boolean"
+                                            },
+                                            "is_actif": {
+                                                "description": "Indique si la méthode est active",
+                                                "type": "boolean"
+                                            },
+                                            "is_deleted": {
+                                                "description": "Indique si la méthode est supprimée",
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
                     }
                 },
                 "security": [
@@ -16129,6 +16241,12 @@
                                     "name": {
                                         "type": "string",
                                         "example": "flooz , momo"
+                                    },
+                                    "is_accepted": {
+                                        "type": "string"
+                                    },
+                                    "is_received": {
+                                        "type": "string"
                                     },
                                     "icone": {
                                         "description": "Image de profil d'identité (JPEG, PNG, JPG, GIF, taille max : 2048)",
@@ -16235,6 +16353,242 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/makeAccepted/{id}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Accepter les paiements externes",
+                "description": "Permet à une méthode de paiement d'accepter les paiements externes.",
+                "operationId": "b44164b7daff4defcf709801b3ca481d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement mise à jour."
+                    },
+                    "404": {
+                        "description": "Méthode de payement non trouvé ou déjà acceptée."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/makeNotAccepted/{id}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Refuser les paiements externes",
+                "description": "Permet à une méthode de paiement de refuser les paiements externes.",
+                "operationId": "71e741467cb2c8c0546ccd181bb5c6b3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement mise à jour."
+                    },
+                    "404": {
+                        "description": "Méthode de payement non trouvé ou déjà refusée."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/makeReceived/{id}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Accepter le retour des fonds",
+                "description": "Permet à une méthode de paiement d'accepter le retour des fonds.",
+                "operationId": "94b99d55cba220faa8a8dcf85cd9ca2b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement mise à jour."
+                    },
+                    "404": {
+                        "description": "Méthode de payement non trouvé ou déjà configurée pour retourner des fonds."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/makeNotReceived/{id}": {
+            "post": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Refuser le retour des fonds",
+                "description": "Permet à une méthode de paiement de refuser le retour des fonds.",
+                "operationId": "8d0e7b2cd0970d94d4345d519e4c4811",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Méthode de paiement mise à jour."
+                    },
+                    "404": {
+                        "description": "Méthode de payement non trouvé ou déjà configurée pour ne pas retourner les fonds."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/getMethodPaiementWithAcceptedTrue": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Lister les méthodes de paiement acceptant les paiements externes",
+                "description": "Retourne la liste des méthodes de paiement qui acceptent les paiements externes.",
+                "operationId": "ddb53e938963e8f1731da241613016a9",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/getMethodPaiementWithAcceptedFalse": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Lister les méthodes de paiement refusant les paiements externes",
+                "description": "Retourne la liste des méthodes de paiement qui refusent les paiements externes.",
+                "operationId": "acdc13c28cb1c0b647f783bb0ed54b6b",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/getMethodPaiementWithReceivedFalse": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Lister les méthodes de paiement refusant les retournements de fonds",
+                "description": "Retourne la liste des méthodes de paiement qui refusent les retournements de fonds.",
+                "operationId": "dbe102ae682c0a0c5d0009b004f91ba3",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/methodPayement/getMethodPaiementWithReceivedTrue": {
+            "get": {
+                "tags": [
+                    "MethodPayement"
+                ],
+                "summary": "Lister les méthodes de paiement acceptant les retournements de fonds",
+                "description": "Retourne la liste des méthodes de paiement qui acceptent les retournements de fonds.",
+                "operationId": "b74f3fd68e070540d19a2122f94da714",
+                "responses": {
+                    "200": {
+                        "description": "Liste des méthodes de paiement."
+                    },
+                    "500": {
+                        "description": "Erreur serveur."
                     }
                 },
                 "security": [
@@ -17530,7 +17884,7 @@
                 "tags": [
                     "Paiement"
                 ],
-                "summary": "Liste des paiements éffectués par le voyageur",
+                "summary": "Liste des paiements éffectués par un utilisteur connecté",
                 "description": "Liste des paiements éffectués par le voyageur.",
                 "operationId": "662319232b772e2d94de8e51010b8296",
                 "responses": {
@@ -22763,6 +23117,790 @@
                     },
                     "404": {
                         "description": "Role not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/store": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Créer un nouveau service de paiement",
+                "description": "Cette fonction permet de créer un nouveau service de paiement.",
+                "operationId": "983d9c634ba542806f7cec9a17fb672d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "method_payement_id",
+                                    "public_key",
+                                    "private_key",
+                                    "secret_key"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "method_payement_id": {
+                                        "type": "integer"
+                                    },
+                                    "public_key": {
+                                        "type": "string"
+                                    },
+                                    "private_key": {
+                                        "type": "string"
+                                    },
+                                    "secret_key": {
+                                        "type": "string"
+                                    },
+                                    "description_type": {
+                                        "type": "string"
+                                    },
+                                    "description_service": {
+                                        "type": "string"
+                                    },
+                                    "fees": {
+                                        "type": "number"
+                                    },
+                                    "is_actif": {
+                                        "type": "integer"
+                                    },
+                                    "is_sandbox": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/update/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Modifier un service de paiement",
+                "description": "Cette fonction permet de modifier un service de paiement existant.",
+                "operationId": "cf7353f06271bb733e405224355b7406",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "public_key": {
+                                        "type": "string"
+                                    },
+                                    "private_key": {
+                                        "type": "string"
+                                    },
+                                    "secret_key": {
+                                        "type": "string"
+                                    },
+                                    "description_type": {
+                                        "type": "string"
+                                    },
+                                    "description_service": {
+                                        "type": "string"
+                                    },
+                                    "fees": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement modifié avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/getServicesByMethodPaiement/{method_payement_id}": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Liste des services de paiement par méthode de paiement",
+                "description": "Cette fonction renvoie la liste des services de paiement pour une méthode de paiement spécifique.",
+                "operationId": "e688dd175c9df4790379200e7763f0c7",
+                "parameters": [
+                    {
+                        "name": "method_payement_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement par méthode",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/getActiveServices": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Liste des services de paiement actifs",
+                "description": "Cette fonction renvoie la liste des services de paiement actifs.",
+                "operationId": "25b7cb344b5fbbe7590ce9d8ca149049",
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement actifs",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/getInactiveServices": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Liste des services de paiement inactifs",
+                "description": "Cette fonction renvoie la liste des services de paiement inactifs.",
+                "operationId": "e94f292510a0176179b23d7e9f06eb89",
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement inactifs",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/active/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Activer un service de paiement",
+                "description": "Cette fonction permet d'activer un service de paiement et désactive tout autre service actif pour la même méthode de paiement.",
+                "operationId": "e375449032520fba2150c7b177c72e83",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement activé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/desactive/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Désactiver un service de paiement",
+                "description": "Cette fonction permet de désactiver un service de paiement.",
+                "operationId": "7e226983d559d32438a793b127168679",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement désactivé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/showServiceActifByMethodPaiement/{method_payement_id}": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Afficher le service actif pour une méthode de paiement",
+                "description": "Cette fonction affiche le service de paiement actif pour une méthode de paiement donnée.",
+                "operationId": "123b709e11beee408c8cadbfca8e0376",
+                "parameters": [
+                    {
+                        "name": "method_payement_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement actif renvoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Méthode de paiement non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/show/{id}": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Afficher un service de paiement",
+                "description": "Retourne le détail d'un service de paiement spécifique.",
+                "operationId": "52ee44bef60c950112188d415473e0ab",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du service de paiement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du service de paiement récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/destroy/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Supprimer un service de paiement",
+                "description": "Supprime un service de paiement spécifié.",
+                "operationId": "1f77e522a78b9d60910cffcf3e8a3dc5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du service de paiement à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service de paiement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/activeSandbox/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Active le mode sandbox pour un service de paiement",
+                "operationId": "e210dbf47bfd66b9424589d8b6eece14",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du service de paiement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mode sandbox activé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": ""
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Activation du mode sandbox pour le service de paiement fait avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé ou déjà en mode sandbox",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/desactiveSandbox/{id}": {
+            "post": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Désactive le mode sandbox pour un service de paiement",
+                "operationId": "018fdddb2ced8e1521c15df091fe8c68",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du service de paiement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mode live activé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": ""
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Activation du mode live pour le service de paiement fait avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service de paiement non trouvé ou déjà en mode live",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/getSandboxServices": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Récupère la liste des services de paiement en mode sandbox",
+                "operationId": "ecf1cab75476d7db53ce15e93a616c9d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement qui sont en mode sandbox",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": ""
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Liste des services de paiement qui sont en mode sandbox."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/servicepaiement/getNotSandboxServices": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Récupère la liste des services de paiement en mode live",
+                "operationId": "25ca5a8dddc369476c7c2bb9c2fde945",
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement qui sont en mode live",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": ""
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Liste des services de paiement qui sont en mode live."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

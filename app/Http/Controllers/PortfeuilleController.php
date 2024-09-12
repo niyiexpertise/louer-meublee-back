@@ -292,17 +292,20 @@ class PortfeuilleController extends Controller
             if($validTransaction == false){
                 return [
                     'status' => 'ERROR',
+                    'transaction_id' => $transactionId,
                     'message' =>'ID de transaction invalid.'
                 ] ;
             }
             if($result->status == "SUCCESS"){
                 return [
                     'status' => 'SUCCESS',
+                    'transaction_id' => $transactionId,
                     'message' =>''
                 ] ;
             }else{
                 return [
                     'status' => 'FAILED',
+                    'transaction_id' => $transactionId,
                     'message' =>''
                 ] ;
             }

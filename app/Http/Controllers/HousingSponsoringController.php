@@ -257,10 +257,11 @@ class HousingSponsoringController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'payment_method' => 'required|string',
-                'id_transaction' => 'nullable|string',
-                'statut_paiement' => 'nullable|boolean',
-                'montant' => 'nullable|numeric'
+                'id_transaction' => 'required|string',
+                'statut_paiement' => 'required|boolean',
+                'montant' => 'required|numeric'
             ]);
+
 
             $message = [];
 
@@ -332,7 +333,11 @@ class HousingSponsoringController extends Controller
 
                 $statusPayement =  $request->statut_paiement;
 
-                $status = (new PortfeuilleController())->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
+                // return $request->id_transaction;
+
+                $status = (new PortfeuilleController())->verifyTransactionOfMethod($payment_method,$request->id_transaction);
+
+                // return $status;
     
                 if($status['status'] == 'ERROR'){
                     return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
@@ -360,7 +365,7 @@ class HousingSponsoringController extends Controller
             $payement->amount =  $montant;
             $payement->payment_method = $payment_method;
             $payement->id_transaction = $request->id_transaction;
-            $payement->statut = $request->statut_paiement;
+            $payement->statut = $statusPayement;
             $payement->housing_sponsoring_id = $housingSponsoring->id;
             $payement->is_confirmed = false;
             $payement->is_canceled = false;
@@ -388,7 +393,7 @@ class HousingSponsoringController extends Controller
 
                 (new ReservationController())->initialisePortefeuilleTransaction($transaction->id);
             }else{
-                if($request->statut_paiement == 1){
+                if($statusPayement == 1){
                     $transaction = new Portfeuille_transaction();
                     $transaction->credit = true;
                     $transaction->debit = false;
@@ -419,7 +424,7 @@ class HousingSponsoringController extends Controller
                 }
 
 
-            if($request->statut_paiement == 1||$payment_method == $portfeuille){
+            if($statusPayement == 1||$payment_method == $portfeuille){
                 return (new ServiceController())->apiResponse(200,[],'Paiement de la demande de sponsoring fait avec succès');
             }else{
                 return (new ServiceController())->apiResponse(200,[],'Echec du paiement de la demande de sponsoring');

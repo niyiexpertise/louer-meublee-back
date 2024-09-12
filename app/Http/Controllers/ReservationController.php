@@ -715,13 +715,11 @@ public function payReservation(Request $request,$reservationId){
 
                 }
 
-                
-                
+
                 $statusPayement =  $request->statut_paiement;
                 
-                $status = (new PortfeuilleController())->verifyTransactionOfMethod($method_paiement,$request->transaction_id);
+                $status = (new PortfeuilleController())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
 
-                return $status;
     
                 if($status['status'] == 'ERROR'){
                     return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');

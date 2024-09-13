@@ -286,3 +286,24 @@ $table->text('url')->nullable();
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+
+switch ($this->request->payment_gateway_ppv) {
+            case 'wallet':
+                return $this->sendWallet();
+            case 1:
+                return $this->sendPayPal();
+            case 2:
+                return $this->sendStripe();
+            case 4:
+                return $this->sendCCbill();
+            case 5:
+                return $this->sendPaystack();
+            case 11:
+                return $this->sendCinetPay();
+            case "kikiapaycard13":
+                return $this->sendKikiapay("card");
+            case "kikiapaymomo13":
+                return $this->sendKikiapay("momo");
+            
+        }

@@ -133,6 +133,7 @@ class PortfeuilleController extends Controller
            
            $status = (new PaiementService())->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
 
+
             if($status['status'] == 'ERROR'){
                 return (new ServiceController())->apiResponse(404, [], $status['message'] );
             }

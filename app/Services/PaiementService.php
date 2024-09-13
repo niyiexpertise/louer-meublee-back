@@ -80,6 +80,7 @@ public function verifyTransactionOfMethod($methodPaiement, $transactionId)
 {
     try {
         $kkiapay = 'kkiapay';
+        $mtn = 'mtn';
 
         $method_paiement = (new ReservationController())->findSimilarPaymentMethod($methodPaiement);
 
@@ -90,51 +91,56 @@ public function verifyTransactionOfMethod($methodPaiement, $transactionId)
         }
 
 
-        if (!$method_paiement->is_actif) {
-            return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non actif.');
-        }
+        // if (!$method_paiement->is_actif) {
+        //     return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non actif.');
+        // }
 
         $servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPaiement->id);
 
 
         $responseDataType = ($servicePaiement->original['data']->type);
 
-
-        if ($responseDataType == $kkiapay) {
-            $result = (new KkiapayController())->verifyTransaction($transactionId);
-
-            $validTransaction = isset($result->status)?true:false;
-
-            if($validTransaction == false){
-                return [
-                    'status' => 'ERROR',
-                    'transaction_id' => $transactionId,
-                    'message' =>'ID de transaction invalid.'
-                ] ;
-            }
-            if($result->status == "SUCCESS"){
-                return [
-                    'status' => 'SUCCESS',
-                    'transaction_id' => $transactionId,
-                    'message' =>''
-                ] ;
-            }else{
-                return [
-                    'status' => 'FAILED',
-                    'transaction_id' => $transactionId,
-                    'message' =>''
-                ] ;
-            }
-        } else {
-            return [
-                'status' => 'ERROR',
-                'transaction_id' => $transactionId,
-                'message' =>'Service de paiement non supporté.'
-            ] ;
+        switch ($responseDataType) {
+            case $kkiapay:
+              return $this->getVerificationKkiapayStatus($transactionId);
+            case $mtn:
+                return $this->getVerificationMtnStatus($transactionId);
         }
 
     } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
+
+    private function getVerificationKkiapayStatus($transactionId){
+        $result = (new KkiapayController())->verifyTransaction($transactionId);
+
+        $validTransaction = isset($result->status)?true:false;
+
+        if($validTransaction == false){
+            return [
+                'status' => 'ERROR',
+                'transaction_id' => $transactionId,
+                'message' =>'ID de transaction invalid.'
+            ] ;
+        }
+        if($result->status == "SUCCESS"){
+            return [
+                'status' => 'SUCCESS',
+                'transaction_id' => $transactionId,
+                'message' =>''
+            ] ;
+        }else{
+            return [
+                'status' => 'FAILED',
+                'transaction_id' => $transactionId,
+                'message' =>''
+            ] ;
+        }
+    }
+
+    private function getVerificationMtnStatus($transactionId){
+        
+    }
 }
+

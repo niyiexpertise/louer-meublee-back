@@ -33,7 +33,7 @@ class PermissionController extends Controller
             }catch (Exception $e){
                   return response()->json(['error' => $e->getMessage()], 500);
             }
-        
+
 
     }
 
@@ -84,7 +84,7 @@ class PermissionController extends Controller
         }catch (Exception $e){
               return response()->json(['error' => $e->getMessage()], 500);
         }
-        
+
     }
 
      /**
@@ -130,7 +130,7 @@ class PermissionController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="List of permissions groupe by category"
-     * 
+     *
      *     )
      * )
      */
@@ -139,7 +139,7 @@ class PermissionController extends Controller
         try {
             // Récupérer toutes les permissions
             $permissions = Permission::all();
-    
+
             // Grouper les permissions par groupe
             $groupedPermissions = $permissions->filter(function ($permission) {
                 return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
@@ -156,10 +156,10 @@ class PermissionController extends Controller
                     'count' => $group->count() // Nombre de permissions dans ce groupe
                 ];
             });
-    
+
             // Calculer le nombre total de permissions en faisant la somme des sous-totaux
             $totalPermissionsCount = $groupedPermissions->sum('count');
-    
+
             // Préparer la structure de la réponse
             $response = [
                 'groups' => $groupedPermissions->mapWithKeys(function ($data, $group) {
@@ -170,10 +170,10 @@ class PermissionController extends Controller
                 }),
                 'total_permissions_count' => $totalPermissionsCount
             ];
-    
+
             // Retourner la réponse JSON
             return response()->json($response, 200);
-    
+
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -205,7 +205,6 @@ class PermissionController extends Controller
      *     )
      * )
      */
-
 
 
 public function updatePermissions()
@@ -308,6 +307,8 @@ public function updatePermissions()
                 'groupe' => 'GESTION_PROMOTION_ADMIN',
                 'description' => 'Voir la liste des promotions désactivées'
             ],
+
+
             // GESTION REDUCTION ADMIN
             [
                 'name' => 'Managesreduction.activeReductionAdmin',
@@ -412,7 +413,7 @@ public function updatePermissions()
         'groupe' => 'GESTION_SPONSORING_ADMIN',
         'description' => 'Invalider une demande de sponsoring'
     ],
-    
+
     // GESTION PROMOTION ADMIN
     [
         'name' => 'Managespromotion.active',
@@ -455,7 +456,79 @@ public function updatePermissions()
         'name' => 'Managesreduction.listeDesactiveReductionAdmin',
         'groupe' => 'GESTION_REDUCTION_ADMIN',
         'description' => 'Voir la liste des réductions désactivées'
-    ]
+    ],
+
+     // GESTION SERVICE PAIEMENT ADMIN
+     [
+        'name' => 'Manageservicepaiement.getServicesByMethodPaiement',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services par méthodes de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getActiveServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services actifs'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getInactiveServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir la liste des services inactifs'
+    ],
+    [
+        'name' => 'Manageservicepaiement.active',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Activer un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.desactive',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Désactiver un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.update',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Modifier un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.store',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Ajouter un service de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.showServiceActifByMethodPaiement',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir le service actif d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.show',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Voir les détails d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.destroy',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Supprimer une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.desactiveSandbox',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Désactiver le mode sandbox d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.activeSandbox',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Activer le mode sandbox d\'une méthode de paiement'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getSandboxServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Récupérer la liste des services qui sont en mode sandbox'
+    ],
+    [
+        'name' => 'Manageservicepaiement.getNotSandboxServices',
+        'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
+        'description' => 'Récupérer la liste des services qui ne sont pas en mode sandbox'
+    ],
         ];
 
         foreach ($permissions as $permission) {

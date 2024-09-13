@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\MethodPayement;
+use App\Models\MoyenPayement;
 use Illuminate\Validation\Rule;
 use App\Models\User_right;
 use App\Models\Right;
@@ -227,14 +228,16 @@ class RetraitController extends Controller
  {
      try {
          $retrait = Retrait::find($retraitId);
- 
+
+         
          if (!$retrait) {
              return (new ServiceController())->apiResponse(404, [], 'Retrait non trouvé');
-         }
- 
-         if (!$request->id_transaction) {
-             return (new ServiceController())->apiResponse(404, [], 'Le champ id_transaction est obligatoire');
-         }
+            }
+            
+            if (!$request->id_transaction) {
+                return (new ServiceController())->apiResponse(404, [], 'Le champ id_transaction est obligatoire');
+            }
+            // return $request;
  
          $existTransaction = Portfeuille_transaction::where('id_transaction', $request->id_transaction)->exists();
          if ($existTransaction) {
@@ -487,11 +490,21 @@ class RetraitController extends Controller
 
           try {
             $validator = Validator::make($request->all(), [
-                'payment_method' => 'required',
+                'moyen_payement_id' => 'required',
                 'montant_reel' => 'required',
-                'identifiant_payement_method' => 'required',
             ]);
-            
+
+            $moyenPayement = MoyenPayement::whereId($request->moyen_payement_id)->where('is_blocked',false)->where('is_deleted',false)->first();
+
+
+            if(Auth::user()->id != $moyenPayement->user_id){
+                return (new ServiceController())->apiResponse(404, [], 'Ce moyen de paiement ne vous appartient pas.');
+            }
+
+            if(!$moyenPayement){
+                        
+            }
+
     
             $message = [];
     
@@ -518,10 +531,6 @@ class RetraitController extends Controller
                     return (new ServiceController())->apiResponse(404, [], "Le montant minimum à retirer doit être supérieur à  ".Setting::first()->montant_minimum_retrait. " FCFA");
                 }
             }
-
-            if(!MethodPayement::whereName($request->payment_method)->where('is_deleted', false)->where('is_actif', true)->exists()){
-                return  (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non trouvé.');
-            }
     
            if(!is_null(Setting::first()->montant_maximum_retrait)){
                 if($request->input('montant_reel')> Setting::first()->montant_maximum_retrait){
@@ -541,12 +550,12 @@ class RetraitController extends Controller
             $retrait = new Retrait();
             $roles = User::find($user->id)->getRoleNames('0');
             $retrait->user_id = $user->id ;
-            $retrait->payment_method = $request->payment_method;
+            $retrait->payment_method = $moyenPayement->methodPayement->name;
             $retrait->montant_reel = $request->montant_reel;
             $retrait->montant_valid = $request->montant_reel;
             $retrait->libelle = $request->libelle;
             $retrait->user_role = $roles[0] ;
-            $retrait->identifiant_payement_method = $request->identifiant_payement_method;
+            $retrait->identifiant_payement_method = $moyenPayement->valeur_method_payement;
             $retrait->save();
     
                       
@@ -571,7 +580,7 @@ class RetraitController extends Controller
                  
                  
                          }
-                         return (new ServiceController())->apiResponse(200,$retrait, 'save successfuly');
+                         return (new ServiceController())->apiResponse(200,$retrait, 'Demande de retrait fait avec succès');
         
         } catch(Exception $e) {
              return (new ServiceController())->apiResponse(500,[],$e->getMessage());

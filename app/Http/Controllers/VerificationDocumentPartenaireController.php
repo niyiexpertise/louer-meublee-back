@@ -434,6 +434,7 @@ public function validateDocuments(Request $request)
 
     $verification_document_ids = $data['verification_document_ids'];
     $verificationDocumentsExist = verification_statut_partenaire::whereIn('vpdocument_id', $verification_document_ids)->exists();
+
     if (!$verificationDocumentsExist) {
         return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
     }
@@ -441,13 +442,11 @@ public function validateDocuments(Request $request)
     if (!$user_exist) {
         return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
     }
-    if (!$verificationDocumentsExist) {
-        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
-    }
+
 
     try {
         foreach ($verification_document_ids as $verification_document_id) {
-            $verificationStatut = verification_statut_partenaire::where($verification_document_id);
+            $verificationStatut = verification_statut_partenaire::where('vpdocument_id',$verification_document_id)->first();
            // $verificationStatut = verification_statut_partenaire::where('vpdocument_id', $verification_document_id)->first();
             if ($verificationStatut) {
                 $verificationStatut->status = 1;
@@ -472,9 +471,10 @@ public function validateDocuments(Request $request)
             'body' => "Votre demande d'être partenaire a été validée avec succès."
         ];
 
-         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+       
 
-        return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Documents validés avec succès.');
+        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
     } catch (\Exception $e) {
         return response()->json(['error' =>  $e->getMessage()], 500);
     }
@@ -583,7 +583,8 @@ public function validateDocument(Request $request)
 
         }
 
-        return response()->json(['message' => 'Document validé avec succès.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Document validé avec succès.');
+
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }

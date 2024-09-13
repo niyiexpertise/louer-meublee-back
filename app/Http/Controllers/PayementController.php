@@ -36,7 +36,7 @@ class PayementController extends Controller
  * @OA\Get(
  *     path="/api/paiement/reservation/user",
  *     tags={"Paiement"},
- *     summary="Liste des paiements éffectués par le voyageur",
+ *     summary="Liste des paiements éffectués par un utilisteur connecté",
  *     description="Liste des paiements éffectués par le voyageur.",
  *     security={{"bearerAuth": {}}},
  *     @OA\Response(
@@ -54,16 +54,8 @@ class PayementController extends Controller
     public function listPaymentsForUser()
     {
         $userId = Auth::id();
-    
-        $reservations = Reservation::where('user_id', Auth::user()->id)->get();
-    
-        if ($reservations->isEmpty()) {
-            return response()->json([
-                'error' => 'Aucune réservation trouvée pour cet utilisateur',
-            ], 404);
-        }
-    
-        $payments = Payement::where('user_id', $reservations->pluck('id'))->get();
+        
+        $payments = Payement::where('user_id', $userId)->get();
     
         if ($payments->isEmpty()) {
             return response()->json([

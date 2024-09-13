@@ -32,6 +32,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmailwithoutfile;
 use App\Models\MethodPayement;
+use App\Services\PaiementService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -124,9 +125,25 @@ class PortfeuilleController extends Controller
            if($errorPayement){
             return $errorPayement;
            }
+           
+           
+           DB::beginTransaction();
+           $statusPayement =  $request->statut_paiement;
 
+           
+           $status = (new PaiementService())->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
 
-            DB::beginTransaction();
+            if($status['status'] == 'ERROR'){
+                return (new ServiceController())->apiResponse(404, [], $status['message'] );
+            }
+
+            if($status['status'] == 'FAILED'){
+                $statusPayement = 0;
+            }
+
+            if($status['status'] == 'SUCCESS'){
+                $statusPayement = 1;
+            }
 
 
 
@@ -134,13 +151,13 @@ class PortfeuilleController extends Controller
             $payement->amount =  $amount;
             $payement->payment_method = $request->paiement_methode;
             $payement->id_transaction = $request->transaction_id;
-            $payement->statut = $request->statut_paiement;
+            $payement->statut =$statusPayement;
             $payement->user_id = Auth::user()->id;
             $payement->is_confirmed = true;
             $payement->is_canceled = false;
 
 
-            if( $request->statut_paiement ==1){
+            if( $statusPayement ==1){
                 $portefeuille->solde += $amount;
                 $portefeuille->save();
 
@@ -166,7 +183,7 @@ class PortfeuilleController extends Controller
 
 
 
-            if( $request->statut_paiement ==1){
+            if( $statusPayement==1){
                 $mail = [
                     "title" => "Confirmation de dépôt sur votre portefeuille",
                     "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
@@ -176,7 +193,7 @@ class PortfeuilleController extends Controller
                 $data = ["solde" => $portefeuille->solde];
                 return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
             }else{
-                return (new ServiceController())->apiResponse(200,[], "Echec de paiement");
+                return (new ServiceController())->apiResponse(404,[], "Echec de paiement");
             }
 
         } catch (Exception $e) {
@@ -185,6 +202,8 @@ class PortfeuilleController extends Controller
         }
     }
 
+
+  
 
 
 

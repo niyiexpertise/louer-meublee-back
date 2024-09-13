@@ -269,3 +269,20 @@ $table->text('url')->nullable();
         }
 
         |between:0,100
+
+
+        CREATE TABLE ServicePaiement (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(255),  
+    method_paiement_id INT,  
+    public_key VARCHAR(255), 
+    private_key VARCHAR(255),
+    secret_key VARCHAR(255),
+    is_actif BOOLEAN DEFAULT false,
+    description_type VARCHAR(255),  
+    description_service TEXT,  
+    fees DECIMAL(10, 2) DEFAULT 0,
+    date_activation TIMESTAMP NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

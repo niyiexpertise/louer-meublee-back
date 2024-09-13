@@ -14,6 +14,7 @@ use App\Models\Sponsoring;
 use App\Models\User;
 use App\Models\User_right;
 use App\Services\FileService;
+use App\Services\PaiementService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -335,7 +336,7 @@ class HousingSponsoringController extends Controller
 
                 // return $request->id_transaction;
 
-                $status = (new PortfeuilleController())->verifyTransactionOfMethod($payment_method,$request->id_transaction);
+                $status =  (new PaiementService())->verifyTransactionOfMethod($payment_method,$request->id_transaction);
 
                 // return $status;
     

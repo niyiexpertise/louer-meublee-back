@@ -41,6 +41,7 @@ use App\Models\user_partenaire;
 use App\Jobs\SendRegistrationEmail;
 use App\Models\MethodPayement;
 use App\Services\FileService;
+use App\Services\PaiementService;
 
 class ReservationController extends Controller
 {
@@ -717,7 +718,7 @@ public function payReservation(Request $request,$reservationId){
 
 
                 $statusPayement =  $request->statut_paiement;
-                $status = (new PortfeuilleController())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
+                $status = (new  (new PaiementService())())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
 
     
                 if($status['status'] == 'ERROR'){

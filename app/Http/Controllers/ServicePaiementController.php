@@ -487,6 +487,10 @@ public function showServiceActifByMethodPaiement($methodPaiementId){
             return (new ServiceController())->apiResponse(404,[],'Méthode de paiement non trouvé.');
         }
 
+        if(!$method->is_actif){
+            return (new ServiceController())->apiResponse(404,[],'Méthode de paiement non actif.');
+        }
+
         $service = ServicePaiement::where('method_payement_id',$methodPaiementId)->where('is_deleted',false)->where('is_actif',true)->first();
 
         return (new ServiceController())->apiResponse(200,$service,'Service actif d une méthode de paiement.');

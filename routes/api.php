@@ -68,6 +68,7 @@ use App\Http\Controllers\FileStockageController;
 use App\Http\Controllers\ServicePaiementController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\KkiapayController;
+use App\Services\PaiementService;
 
 /*
 |--------------------------------------------------------------------------
@@ -1199,7 +1200,7 @@ Route::prefix('portefeuille')->group(function () {
         ->name('portefeuille.credit')
         ->middleware('role_or_permission:superAdmin|admin|hote|traveler|Manageportefeuille.credit');
 
-    Route::post('/verifyTransactionOfMethod/{methodId}/{transactionId}', [PortfeuilleController::class, 'verifyTransactionOfMethod'])
+    Route::post('/verifyTransactionOfMethod/{methodId}/{transactionId}', [PaiementService::class, 'verifyTransactionOfMethod'])
         ->name('portefeuille.verifyTransactionOfMethod');
      
 

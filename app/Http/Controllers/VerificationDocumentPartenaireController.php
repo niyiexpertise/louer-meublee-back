@@ -302,7 +302,7 @@ public function index()
 
         return (new ServiceController())->apiResponse(200, $verificationDocuments, 'Documents de vérification créés avec succès.');
 
-       
+
     } catch (Exception $e) {
         return (new ServiceController())->apiResponse(500, [], 'Une erreur est survenue', 'message' .$e->getMessage());
     }
@@ -550,6 +550,8 @@ public function validateDocument(Request $request)
             return response()->json(['error' => "Ce document a déjà été validé. Vous ne pouvez plus le revalider."], 200);
         }
 
+        
+
         $verificationStatut->update(['status' => 1]);
 
         $user = User::findOrFail($user_id);
@@ -565,7 +567,7 @@ public function validateDocument(Request $request)
 
             $commission=new user_partenaire();
             $commission->user_id=$user->id;
-            
+
             $commission->commission = Setting::first()->commission_partenaire_defaut ?? 5;
             $commission->reduction_traveler = Setting::first()->reduction_partenaire_defaut ?? 3;
                 $commission->number_of_reservation = Setting::first()->number_of_reservation_partenaire_defaut ?? 3;

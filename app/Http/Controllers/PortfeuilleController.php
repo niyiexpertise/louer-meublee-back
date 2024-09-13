@@ -128,7 +128,7 @@ class PortfeuilleController extends Controller
 
             DB::beginTransaction();
 
-            
+
 
             $payement = new Payement();
             $payement->amount =  $amount;
@@ -138,12 +138,12 @@ class PortfeuilleController extends Controller
             $payement->user_id = Auth::user()->id;
             $payement->is_confirmed = true;
             $payement->is_canceled = false;
-          
+
 
             if( $request->statut_paiement ==1){
                 $portefeuille->solde += $amount;
                 $portefeuille->save();
-    
+
                 $portefeuilleTransaction = new Portfeuille_transaction();
                 $portefeuilleTransaction->credit = true;
                 $portefeuilleTransaction->debit = false;
@@ -161,17 +161,17 @@ class PortfeuilleController extends Controller
             $payement->save();
 
 
-           
+
             DB::commit();
 
-            
+
 
             if( $request->statut_paiement ==1){
                 $mail = [
                     "title" => "Confirmation de dépôt sur votre portefeuille",
                     "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
                 ];
-    
+
                 dispatch(new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
                 $data = ["solde" => $portefeuille->solde];
                 return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');

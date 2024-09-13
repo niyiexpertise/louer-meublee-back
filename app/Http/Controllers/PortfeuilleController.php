@@ -129,10 +129,11 @@ class PortfeuilleController extends Controller
            DB::beginTransaction();
            $statusPayement =  $request->statut_paiement;
 
-            $status = $this->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
+           
+           $status = $this->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
 
             if($status['status'] == 'ERROR'){
-                return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
+                return (new ServiceController())->apiResponse(404, [], $status['message'] );
             }
 
             if($status['status'] == 'FAILED'){
@@ -310,7 +311,11 @@ class PortfeuilleController extends Controller
                 ] ;
             }
         } else {
-            return (new ServiceController())->apiResponse(400, [], 'Service de paiement non supporté.');
+            return [
+                'status' => 'ERROR',
+                'transaction_id' => $transactionId,
+                'message' =>'Service de paiement non supporté.'
+            ] ;
         }
 
     } catch (\Exception $e) {

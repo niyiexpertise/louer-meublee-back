@@ -720,16 +720,23 @@ public function payReservation(Request $request,$reservationId){
                 $statusPayement =  $request->statut_paiement;
                 $status = (new  (new PaiementService())())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
 
+
     
                 if($status['status'] == 'ERROR'){
                     return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
                 }
     
                 if($status['status'] == 'FAILED'){
+                    if($request->statut_paiement == 1){
+                        return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a échoué et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
+                    }
                     $statusPayement = 0;
                 }
     
                 if($status['status'] == 'SUCCESS'){
+                    if($request->statut_paiement == 0){
+                        return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a réussi et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
+                    }
                     $statusPayement = 1;
                 }
 

@@ -478,7 +478,7 @@ public function desactive($id)
  * )
  */
 
-public function showServiceActifByMethodPaiement($methodPaiementId){
+public function showServiceActifByMethodPaiement($methodPaiementId,$data=false){
     try {
 
         $method = MethodPayement::whereId($methodPaiementId)->first();
@@ -493,6 +493,9 @@ public function showServiceActifByMethodPaiement($methodPaiementId){
 
         $service = ServicePaiement::where('method_payement_id',$methodPaiementId)->where('is_deleted',false)->where('is_actif',true)->first();
 
+        if($data==true){
+            return $service;
+        }
         return (new ServiceController())->apiResponse(200,$service,'Service actif d une méthode de paiement.');
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());

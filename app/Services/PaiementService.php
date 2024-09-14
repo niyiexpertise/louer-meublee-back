@@ -95,10 +95,19 @@ public function verifyTransactionOfMethod($methodPaiement, $transactionId)
         //     return (new ServiceController())->apiResponse(404, [], 'Méthode de paiement non actif.');
         // }
 
-        $servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPaiement->id);
+        $servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPaiement->id,true);
 
 
-        $responseDataType = ($servicePaiement->original['data']->type);
+        if( is_null($servicePaiement)){
+            return [
+                'status' => 'ERROR',
+                'message' =>"Cette méthode de paiement n'a aucun service actif."
+            ] ;
+            // return (new ServiceController())->apiResponse(404, [], "Cette méthode de paiement n'a aucun service actif.");
+        }
+
+
+        $responseDataType = $servicePaiement->type;
 
         switch ($responseDataType) {
             case $kkiapay:

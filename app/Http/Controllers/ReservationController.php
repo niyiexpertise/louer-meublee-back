@@ -727,6 +727,7 @@ public function payReservation(Request $request,$reservationId){
                 }
     
                 if($status['status'] == 'FAILED'){
+                    $motif = $status['message'];
                     if($request->statut_paiement == 1){
                         return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a échoué et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                     }
@@ -734,6 +735,7 @@ public function payReservation(Request $request,$reservationId){
                 }
     
                 if($status['status'] == 'SUCCESS'){
+                    $motif =  "Réservation effectuée avec autre moyen que le portefeuille";
                     if($request->statut_paiement == 0){
                         return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a réussi et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                     }
@@ -806,7 +808,7 @@ public function payReservation(Request $request,$reservationId){
 
 
 
-        $payment->motif = $portefeuilleTransaction->motif??"Echec de payement survenu lors du payement de la réservation";
+        $payment->motif = $motif??"Echec de payement survenu lors du payement de la réservation";
 
         $payment->save();
 

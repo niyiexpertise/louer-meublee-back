@@ -137,13 +137,13 @@ public function verifyTransactionOfMethod($methodPaiement, $transactionId)
             return [
                 'status' => 'SUCCESS',
                 'transaction_id' => $transactionId,
-                'message' =>''
+                'message' =>$result->reason
             ] ;
         }else{
             return [
                 'status' => 'FAILED',
                 'transaction_id' => $transactionId,
-                'message' =>''
+                'message' =>$result->reason
             ] ;
         }
     }

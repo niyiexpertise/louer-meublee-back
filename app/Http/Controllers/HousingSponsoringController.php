@@ -345,6 +345,7 @@ class HousingSponsoringController extends Controller
                 }
     
                 if($status['status'] == 'FAILED'){
+                    $motif = $status['message'];
                     if($request->statut_paiement == 1){
                         return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a échoué et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                     }
@@ -352,6 +353,7 @@ class HousingSponsoringController extends Controller
                 }
     
                 if($status['status'] == 'SUCCESS'){
+                    $motif =  "Demande de sponsoring effectuée avec un autre moyen autre que le portfeuille";
                     if($request->statut_paiement == 0){
                         return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a réussi et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                     }
@@ -415,7 +417,7 @@ class HousingSponsoringController extends Controller
                     (new ReservationController())->initialisePortefeuilleTransaction($transaction->id);
                 }
             }
-            $payement->motif = $transaction->motif??"Echec de paiyement survenu lors du payement de la demande";
+            $payement->motif = $motif??"Echec de paiyement survenu lors du payement de la demande";
             $payement->save();
 
             DB::commit();

@@ -135,12 +135,16 @@ class PortfeuilleController extends Controller
 
         //    return $status;
 
+       
+
 
             if($status['status'] == 'ERROR'){
                 return (new ServiceController())->apiResponse(404, [], $status['message'] );
             }
 
+
             if($status['status'] == 'FAILED'){
+                $motif = $status['message'];
                 if($request->statut_paiement == 1){
                     return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a échoué et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                 }
@@ -148,6 +152,7 @@ class PortfeuilleController extends Controller
             }
 
             if($status['status'] == 'SUCCESS'){
+                $motif =  "Recharge de portefeuille";
                 if($request->statut_paiement == 0){
                     return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a réussi et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
                 }
@@ -183,7 +188,7 @@ class PortfeuilleController extends Controller
                 (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
             }
 
-            $payement->motif =  $portefeuilleTransaction->motif ?? "Echec de Payement lors de l'approvisionnement de son portefeuille";
+            $payement->motif = $motif ?? "Echec de Payement lors de l'approvisionnement de son portefeuille";
             $payement->save();
 
 

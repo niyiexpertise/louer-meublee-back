@@ -242,8 +242,25 @@ public function getServicesByMethodPaiement($method_payement_id)
     try {
 
         $services = ServicePaiement::where('method_payement_id', $method_payement_id)->where('is_deleted',false)->get();
+        $data = [] ;
 
-        return (new ServiceController())->apiResponse(200,$services,'Liste des services de paiement par méthode de paiement.');
+        foreach($services as $service){
+            $data[] = [
+                'id' => $service->id,
+                'method_payement_id' => $service->method_payement_id,
+                'type' => $service->type,
+                'public_key' => $service->public_key,
+                'description_service' => $service->description_service,
+                'description_type' => $service->description_type,
+                'fees' => $service->fees,
+                'id' => $service->id,
+                'is_actif' => $service->is_actif,
+                'is_sandbox' => $service->is_sandbox,
+                'is_deleted' => $service->is_deleted
+            ];
+        }
+
+        return (new ServiceController())->apiResponse(200,$data,'Liste des services de paiement par méthode de paiement.');
 
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
@@ -277,7 +294,25 @@ public function getActiveServices()
 
         $services = ServicePaiement::where('is_actif', true)->where('is_deleted',false)->get();
 
-        return (new ServiceController())->apiResponse(200,$services,'Liste des services de paiement actifs.');
+        $data = [] ;
+
+        foreach($services as $service){
+            $data[] = [
+                'id' => $service->id,
+                'method_payement_id' => $service->method_payement_id,
+                'type' => $service->type,
+                'public_key' => $service->public_key,
+                'description_service' => $service->description_service,
+                'description_type' => $service->description_type,
+                'fees' => $service->fees,
+                'id' => $service->id,
+                'is_actif' => $service->is_actif,
+                'is_sandbox' => $service->is_sandbox,
+                'is_deleted' => $service->is_deleted
+            ];
+        }
+
+        return (new ServiceController())->apiResponse(200,$data,'Liste des services de paiement actifs.');
 
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
@@ -310,8 +345,25 @@ public function getInactiveServices()
     try {
 
         $services = ServicePaiement::where('is_actif', false)->where('is_deleted',false)->get();
+        $data = [] ;
 
-        return (new ServiceController())->apiResponse(200,$services,'Liste des services de paiement inactifs.');
+        foreach($services as $service){
+            $data[] = [
+                'id' => $service->id,
+                'method_payement_id' => $service->method_payement_id,
+                'type' => $service->type,
+                'public_key' => $service->public_key,
+                'description_service' => $service->description_service,
+                'description_type' => $service->description_type,
+                'fees' => $service->fees,
+                'id' => $service->id,
+                'is_actif' => $service->is_actif,
+                'is_sandbox' => $service->is_sandbox,
+                'is_deleted' => $service->is_deleted
+            ];
+        }
+
+        return (new ServiceController())->apiResponse(200,$data,'Liste des services de paiement inactifs.');
 
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
@@ -482,6 +534,7 @@ public function showServiceActifByMethodPaiement($methodPaiementId,$data=false){
     try {
 
         $method = MethodPayement::whereId($methodPaiementId)->first();
+        $donnee = [];
 
         if(!$method){
             return (new ServiceController())->apiResponse(404,[],'Méthode de paiement non trouvé.');
@@ -496,7 +549,21 @@ public function showServiceActifByMethodPaiement($methodPaiementId,$data=false){
         if($data==true){
             return $service;
         }
-        return (new ServiceController())->apiResponse(200,$service,'Service actif d une méthode de paiement.');
+
+        $donnee[] = [
+            'id' => $service->id,
+            'method_payement_id' => $service->method_payement_id,
+            'type' => $service->type,
+            'public_key' => $service->public_key,
+            'description_service' => $service->description_service,
+            'description_type' => $service->description_type,
+            'fees' => $service->fees,
+            'id' => $service->id,
+            'is_actif' => $service->is_actif,
+            'is_sandbox' => $service->is_sandbox,
+            'is_deleted' => $service->is_deleted
+        ];
+        return (new ServiceController())->apiResponse(200,$donnee,'Service actif d une méthode de paiement.');
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
     }
@@ -539,15 +606,26 @@ public function show($id){
     try {
 
         $service = ServicePaiement::whereId($id)->first();
+        $donnee = [];
 
         if (!$service) {
             return (new ServiceController())->apiResponse(404,[],'Service de paiement non trouvé.');
         }
 
-        $service->is_deleted = true;
-        $service->save();
-
-        return (new ServiceController())->apiResponse(200,$service,"Détail d'un service de paiement.");
+        $donnee[] = [
+            'id' => $service->id,
+            'method_payement_id' => $service->method_payement_id,
+            'type' => $service->type,
+            'public_key' => $service->public_key,
+            'description_service' => $service->description_service,
+            'description_type' => $service->description_type,
+            'fees' => $service->fees,
+            'id' => $service->id,
+            'is_actif' => $service->is_actif,
+            'is_sandbox' => $service->is_sandbox,
+            'is_deleted' => $service->is_deleted
+        ];
+        return (new ServiceController())->apiResponse(200,$donnee,"Détail d'un service de paiement.");
 
     } catch(\Exception $e) {
     return (new ServiceController())->apiResponse(500,[],$e->getMessage());
@@ -595,6 +673,10 @@ public function destroy($id){
         if (!$service) {
             return (new ServiceController())->apiResponse(404,[],'Service de paiement non trouvé.');
         }
+
+        $service->is_deleted = true;
+        $service->save();
+
 
         return (new ServiceController())->apiResponse(200,$service,"Suppression effectué avec succès.");
 

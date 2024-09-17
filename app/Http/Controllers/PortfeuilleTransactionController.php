@@ -179,7 +179,7 @@ class PortfeuilleTransactionController extends Controller
         }
 
         $data[] = [
-            'transaction' => $transaction,
+             $transaction,
         ];
     }
     return (new ServiceController())->apiResponse(200, $data, "Detail de portefeuille de l'utilisateur recupéré avec succès .");

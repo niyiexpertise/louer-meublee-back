@@ -719,7 +719,7 @@ public function changeDocument(Request $request)
     
         $user_id = Auth::id();
         $verification_document_id = $data['verification_document_id'];
-        $new_document = $data['new_document'];
+        $new_document = $data['new_document'][0];
         $verificationDocument = verification_document_partenaire::findOrFail($verification_document_id);
       
 

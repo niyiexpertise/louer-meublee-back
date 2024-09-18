@@ -182,7 +182,7 @@ class PortfeuilleController extends Controller
                 $portefeuilleTransaction->amount = $amount;
                 $portefeuilleTransaction->motif = "Recharge de portefeuille";
                 $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
-                $portefeuilleTransaction->id_transaction = 0;
+                $portefeuilleTransaction->id_transaction = $request->transaction_id;
                 $portefeuilleTransaction->payment_method = $request->input('paiement_methode');
                 $portefeuilleTransaction->save();
                 (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);

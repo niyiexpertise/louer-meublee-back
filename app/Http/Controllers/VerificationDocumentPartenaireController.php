@@ -706,17 +706,22 @@ public function validateDocument(Request $request)
 
 public function changeDocument(Request $request)
 {
-    $data = $request->validate([
-        'verification_document_id' => 'required|integer',
-        'new_document' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
-
-    $user_id = Auth::id();
-    $verification_document_id = $data['verification_document_id'];
-    $new_document = $data['new_document'];
+    
+    
+   
 
     try {
+
+        $data = $request->validate([
+            'verification_document_id' => 'required|integer',
+            'new_document' => 'required',
+        ]);
+    
+        $user_id = Auth::id();
+        $verification_document_id = $data['verification_document_id'];
+        $new_document = $data['new_document'];
         $verificationDocument = verification_document_partenaire::findOrFail($verification_document_id);
+      
 
         if ($verificationDocument->verificationStatutpartenaire->status === 0) {
             $filename = basename($verificationDocument->path);
@@ -725,11 +730,11 @@ public function changeDocument(Request $request)
                          unlink($oldDocumentPath);
                     }
                     $identity_profil_url = '';
-                    $identity_profil_url = $this->fileService->uploadFiles($new_document, 'image/document_verification', 'extensionDocument');;
+                    $identity_profil_url = $this->fileService->uploadFiles($new_document, 'image/document_verification', 'extensionDocumentImage');;
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
-
+                  
 
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();

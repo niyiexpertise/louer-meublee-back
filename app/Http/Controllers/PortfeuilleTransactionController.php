@@ -231,6 +231,8 @@ class PortfeuilleTransactionController extends Controller
  public function updateTransaction(Request $request)
 {
     try {
+
+        // return $request;
         $validatedData = Validator::make($request->all(), [
             'id' => 'required|integer|exists:portfeuille_transactions,id',
             'valeur_commission' => 'nullable|numeric|min:0',

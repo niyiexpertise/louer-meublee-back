@@ -650,11 +650,19 @@ public function validateDocument(Request $request)
 
          $requestStatus = $exist ? 'Validé' : 'Non validé';
 
-         return response()->json([
-             'verification_documents' => $verificationDocumentsWithStatus,
-             'Statut_demande' => $requestStatus,
-             'code_promo' => $code_promo,
-         ], 200);
+         $data = [
+            'verification_documents' => $verificationDocumentsWithStatus,
+            'Statut_demande' => $requestStatus,
+            'code_promo' => $code_promo,
+         ];
+
+         return (new ServiceController())->apiResponse(200, $data, "Liste des documents soumises par l'utilisateur connecté et leur statut ainsi que le statu de de sa demande");
+
+        //  return response()->json([
+        //      'verification_documents' => $verificationDocumentsWithStatus,
+        //      'Statut_demande' => $requestStatus,
+        //      'code_promo' => $code_promo,
+        //  ], 200);
      } catch (\Exception $e) {
          return response()->json(['error' => $e->getMessage()], 500);
      }
@@ -739,12 +747,15 @@ public function changeDocument(Request $request)
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
 
-            return response()->json(['message' => 'Document changé avec succès.'], 200);
+            return (new ServiceController())->apiResponse(200, [], 'Document changé avec succès.');
+
+            // return response()->json(['message' => 'Document changé avec succès.'], 200);
         } else {
-            return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);
+            return (new ServiceController())->apiResponse(404, [], 'Impossible de changer le document car il a déjà été validé.');
+            // return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);
         }
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

@@ -17554,6 +17554,66 @@
                 ]
             }
         },
+        "/api/notifications/getUserForNotification": {
+            "get": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Récupère la liste des utilisateurs pour les notifications",
+                "description": "Retourne une liste des utilisateurs non supprimés (is_deleted = false).",
+                "operationId": "getUserForNotification",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "lastname": {
+                                                "type": "string",
+                                                "example": "Doe"
+                                            },
+                                            "firstname": {
+                                                "type": "string",
+                                                "example": "John"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/notifications/index": {
             "get": {
                 "tags": [
@@ -17565,7 +17625,12 @@
                     "200": {
                         "description": "List of the notification"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/notifications/store": {

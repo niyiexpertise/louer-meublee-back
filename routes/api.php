@@ -829,6 +829,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::group(['middleware' => ['role:superAdmin|admin']], function () {
       Route::prefix('notifications')->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
+       Route::get('/getUserForNotification', [NotificationController::class, 'getUserForNotification']);
        Route::post('/store', [NotificationController::class, 'storeNotification']);
        Route::delete('/destroy/{id}', [NotificationController::class, 'destroy']);
        Route::post('/notifyUserHaveRoles/{mode}', [NotificationController::class, 'notifyUserHaveRoles']);

@@ -19,11 +19,63 @@ use Spatie\Permission\Models\Role;
 
 class NotificationController extends Controller
 {
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/notifications/getUserForNotification",
+ *     tags={"Notification"},
+ *     summary="Récupère la liste des utilisateurs pour les notifications",
+ *     description="Retourne une liste des utilisateurs non supprimés (is_deleted = false).",
+ *     operationId="getUserForNotification",
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des utilisateurs.",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="lastname", type="string", example="Doe"),
+ *                 @OA\Property(property="firstname", type="string", example="John")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur.",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur.")
+ *         )
+ *     )
+ * )
+ */
+
+    public function getUserForNotification(){
+        try {
+            $users = User::where('is_deleted', false)
+            ->get();
+
+            $formattedUsers = [];
+            foreach ($users as $user) {
+                $formattedUsers[] = [
+                    'id' => $user->id,
+                    'lastname' => $user->lastname,
+                    'firstname' => $user->firstname,
+                ];
+            }
+            
+            return (new ServiceController())->apiResponse(200, $formattedUsers, 'Liste des utilisateurs.');
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
    /**
      * @OA\Get(
      *     path="/api/notifications/index",
      *     summary="Get all notification in the site",
      *     tags={"Notification"},
+     * security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of the notification"
@@ -34,6 +86,10 @@ class NotificationController extends Controller
     {
         $notifications = Notification::all();
         $totalNotifications = $notifications->count();
+
+        foreach($notifications as $notification){
+            $notification->username = User::whereId($notification->user_id)->first()->firstname;
+        }
 
         return response()->json([
             'notifications' => $notifications,

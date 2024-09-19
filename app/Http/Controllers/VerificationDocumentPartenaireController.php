@@ -714,9 +714,6 @@ public function validateDocument(Request $request)
 
 public function changeDocument(Request $request)
 {
-    
-    
-   
 
     try {
 

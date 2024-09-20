@@ -362,6 +362,8 @@ public function getPartnerPortfeuilleDetails(Request $request)
                  'valeur_commission_partenaire' => null,
                  'montant_commission_partenaire' => null,
              ];
+
+            
  
              return array_merge([
                  'reservation_id' => $reservation->id,
@@ -378,10 +380,14 @@ public function getPartnerPortfeuilleDetails(Request $request)
                  'updated_at' => $reservation->updated_at,
              ], $transaction_info);
          });
- 
-     return response()->json([
-         'reservations' => $reservations,
-     ], 200);
+
+         $d = [
+            'reservations' => ($reservations),
+            'nombre_reservation' =>count($reservations)
+         ];
+
+        
+         return (new ServiceController())->apiResponse(200, $d, "Liste des réservations effectuées avec le code promo d'un partenaire connecté.");
  }
  
 

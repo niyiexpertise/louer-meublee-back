@@ -105,36 +105,40 @@ class CategorieController extends Controller
             $data = [];
 
 
+
             foreach ($categories as $category) {
                 $a = [];
                 $categoryEquipment = Equipment_category::where('category_id', $category->id)->get();
-                foreach ($categoryEquipment as $k) {
-                    $b = Equipment::where('id', $k->equipment_id)->where('is_verified',true)->get();
-                        foreach ($b as $e) {
-                            $a[] = [
-                                'id_equipement' => $e->id,
-                                'id_equipement_category' => $k->id,
-                                'name' => $e->name,
-                                'icone' => $e->icone,
-                                'is_deleted' => $e->is_deleted,
-                                'is_blocked' => $e->is_blocked,
-                                'created_at' => $e->created_at,
-                                'updated_at' => $e->updated_at,
-                            ];
-                        }
+                if(count($categoryEquipment) != 0){
+                    foreach ($categoryEquipment as $k) {
+                        $b = Equipment::where('id', $k->equipment_id)->where('is_verified',true)->get();
+                            foreach ($b as $e) {
+                                $a[] = [
+                                    'id_equipement' => $e->id,
+                                    'id_equipement_category' => $k->id,
+                                    'name' => $e->name,
+                                    'icone' => $e->icone,
+                                    'is_deleted' => $e->is_deleted,
+                                    'is_blocked' => $e->is_blocked,
+                                    'created_at' => $e->created_at,
+                                    'updated_at' => $e->updated_at,
+                                ];
+                            }
+                    }
+    
+                    $data[] = [
+                        'id_categorie' => $category->id,
+                        'name' =>$category->name,
+                        'icone' => $category->icone,
+                        'is_deleted' =>$category->id_deleted,
+                        'is_blocked' =>$category->is_blocked,
+                        'created_at' =>$category->created_at,
+                        'updated_at' =>$category->updated_at,
+                        'equipments'  => $a,
+    
+                    ];
                 }
-
-                $data[] = [
-                    'id_categorie' => $category->id,
-                    'name' =>$category->name,
-                    'icone' => $category->icone,
-                    'is_deleted' =>$category->id_deleted,
-                    'is_blocked' =>$category->is_blocked,
-                    'created_at' =>$category->created_at,
-                    'updated_at' =>$category->updated_at,
-                    'equipments'  => $a,
-
-                ];
+                
 
             }
             return response()->json([

@@ -921,8 +921,13 @@ class AddHousingController extends Controller
                 $uploadedPath = $this->fileService->uploadFiles($photo, 'image/photo_logement',$type='extensionImageVideo');
                 $type = $photo->getClientOriginalExtension();
 
+                if ($uploadedPath['fails']) {
+
+                    return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+                }
+
                 $photoModel = new photo();
-                $photoModel->path = $uploadedPath;
+                $photoModel->path =$uploadedPath['result'];
                 $photoModel->extension = $type;
                 $photoModel->housing_id = $housingId;
                 $photoModel->save();

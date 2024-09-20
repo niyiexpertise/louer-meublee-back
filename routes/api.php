@@ -1407,7 +1407,7 @@ Route::prefix('portefeuille')->group(function () {
 
         Route::prefix('charge')->group(function() {
                     Route::get('index', [ChargeController::class, 'index'])
-                        ->name('charge.index') ->middleware('role_or_permission:admin|superAdmin|Managecharge.index');
+                        ->name('charge.index') ->middleware('role_or_permission:admin|superAdmin|hote|Managecharge.index');
                     Route::get('indexChargeActive', [ChargeController::class, 'indexChargeActive'])
                         ->name('charge.indexChargeActive') ->middleware('role_or_permission:admin|superAdmin|Managecharge.indexChargeActive');
                     Route::get('indexChargeInactive', [ChargeController::class, 'indexChargeInactive'])

@@ -1231,7 +1231,8 @@ Route::prefix('portefeuille')->group(function () {
 
             Route::get('/index', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
-                ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin');
+                // ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin')
+                ;
             Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
                 ->name('methodPayement.indexInactive')
                 ->middleware('role_or_permission:ManagemethodPayement.indexInactive|superAdmin|admin');

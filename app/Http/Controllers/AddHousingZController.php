@@ -1740,13 +1740,12 @@ public function addHousing_step_8(Request $request, $housingId){
 
            
 
-            if (!$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
+            if (!$categorie['equipments'] || !$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
                 return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît pour la pièce ".Category::find($categorie['id'])->name);
             }
 
            
 
-            
             $items = $categorie['equipments'][0]['equipmentsId'];
            
             $uniqueItems = array_unique($items);

@@ -19,6 +19,8 @@ class MoyenPayement extends Model implements Auditable
         'is_blocked'
     ];
 
+
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -28,6 +28,13 @@ class TwoFactorAuth
                 'message' => "Double authentification requise.Passez par la procédure normale. Authentifiez vous d'abord et renseignez le code ensuite "
             ], 200);
         }
+        // if ($user->id !=10 ) {
+        //     return response()->json([
+        //         'status_code' =>403,
+        //         'data' =>[],
+        //         'message' => "Seul Mme parfaite peut le faire."
+        //     ], 200);
+        // }
         if ($user && $user->is_blocked==true ) {
             
             return response()->json([

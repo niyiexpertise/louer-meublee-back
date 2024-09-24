@@ -307,3 +307,25 @@ switch ($this->request->payment_gateway_ppv) {
                 return $this->sendKikiapay("momo");
             
         }
+
+INSENSIBLE
+"name",
+  "description",
+  "number_of_bed",
+  "number_of_traveller",
+  "is_camera",
+  "is_accepted_animal",
+  "is_animal_exist",
+  "is_instant_reservation",
+  "maximum_duration",
+  "minimum_duration"
+
+SENSIBLE
+ "interior_regulation",
+  "telephone",
+  "code_pays",
+  "arrived_independently",
+  "cancelation_condition",
+  "departure_instruction",
+  "surface",
+  "price"

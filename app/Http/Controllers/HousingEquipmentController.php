@@ -774,4 +774,113 @@ public function getUnexistEquipmentInvalidForHousing()
     return response()->json(['data' => $data]);
 }
 
+   /**
+ * @OA\Get(
+ *     path="/api/logement/equipment/getHousingCategoriesEquipmentForAdd/{housingId}",
+ *     summary="Obtenir les équipements restants à ajouter par catégorie pour un logement",
+ *     description="Récupère la liste des pièces (catégories) et les équipements qui restent à ajouter pour chaque pièce associée à un logement donné.",
+ *     operationId="getHousingCategories",
+ *     tags={"Housing Equipment"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Équipements restants récupérés avec succès",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="category", type="string", description="Nom de la catégorie (pièce)"),
+ *                 @OA\Property(
+ *                     property="remaining_equipments",
+ *                     type="array",
+ *                     description="Liste des équipements restants à ajouter à la pièce",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", description="ID de l'équipement"),
+ *                         @OA\Property(property="name", type="string", description="Nom de l'équipement")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Logement non trouvé")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth": {}}}
+ * )
+ */
+public function getHousingCategoriesEquipment($housingId){
+    try {
+        $housing = Housing::find($housingId);
+        if (!$housing) {
+            return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+        }
+
+        $categorieHousingIds = Housing_equipment::where('housing_id',$housingId)
+        ->pluck('category_id')
+        ->toArray();
+        // ->get();
+
+        // return $categorieHousingIds;
+
+        $categories = [];
+
+        // return array_values(array_unique($categorieHousingIds));
+
+        foreach(array_values(array_unique($categorieHousingIds)) as $id){
+            $categories[] = Category::whereId($id)->first();
+        }
+
+        // return $categories;
+
+        $data = [];
+
+        foreach ($categories as $category) {
+            $defaultEquipments = Equipment_category::where('category_id', $category->id)->pluck('equipment_id')->toArray();
+
+            $associatedEquipments = Housing_equipment::where('category_id', $category->id)
+         ->where('housing_id', $housingId)
+                                                                    ->pluck('equipment_id')
+                                                                    ->toArray();
+
+
+            $remainingEquipments = array_diff($defaultEquipments, $associatedEquipments);
+
+            $equipments = Equipment::whereIn('id', $remainingEquipments)->get();
+
+            $data[] = [
+                'id' => $category->id, 
+                'category' => $category->name, 
+                'remaining_equipments' => $equipments 
+            ];
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, 'Équipements restants pour chaque catégorie récupérés avec succès');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+
+
 }

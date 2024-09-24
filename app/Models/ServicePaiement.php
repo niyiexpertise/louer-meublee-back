@@ -13,6 +13,11 @@ class ServicePaiement extends Model
         'is_actif', 'description_type', 'description_service', 'fees', 'date_activation'
     ];
 
+    protected $hidden = [
+        'private_key',
+        'secret_key'
+    ];
+
     public function methodPaiement()
     {
         return $this->belongsTo(MethodPayement::class);

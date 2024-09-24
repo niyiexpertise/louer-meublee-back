@@ -10,6 +10,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
 use Illuminate\Validation\ValidationException ;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class HousingChargeController extends Controller
 {
@@ -59,7 +60,7 @@ class HousingChargeController extends Controller
                 if (!Housing::find($request->housingId)) {
                     return response()->json(['message' => 'Logement non trouvé'], 404);
                 }
-                
+
                 $e = [];
                 $m = [];
                 $hoteCharge_id = [];
@@ -283,6 +284,100 @@ public function DeleteChargeHousing(Request $request)
         return response()->json(['message' => 'Les charges du logement ont été retirés avec succès'], 200);
     } catch (ValidationException $e) {
         return response()->json(['message' => 'Un ou plusieurs charges du logement à retirer n\'existent pas'], 404);
+    }
+}
+
+
+/**
+ * @OA\Put(
+ *     path="/api/logement/charge/updateHousingChargeValue/{id}",
+ *     summary="Mettre à jour la valeur d'une charge de logement",
+ *     description="Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
+ *     tags={"Housing Charge"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID de la charge de logement à mettre à jour",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="value", type="number", example=100.50, description="La nouvelle valeur de la charge")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Valeur de la charge mise à jour avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="charge", type="object", 
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="value", type="number", example=100.50),
+ *                 @OA\Property(property="housing_id", type="integer", example=3)
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Valeur de la charge modifiée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès refusé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Vous n'avez pas le droit de modifier la valeur d'une charge d'un logement qui ne vous appartient pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement ou charge non trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Le logement auquel appartient cette charge n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{ "bearerAuth": {} }}
+ * )
+ */
+
+
+public function updateHousingChargeValue(Request $request,$id){
+    try {
+
+        $request->validate([
+            'value' => 'required'
+        ]);
+
+       $charge =  Housing_charge::whereId($id)->first();
+
+       if(!$charge){
+            return (new ServiceController())->apiResponse(404,[],'Charge non trouvée');
+       }
+
+       if(!Housing::whereId($charge->housing_id)->first()){
+            return (new ServiceController())->apiResponse(404,[],"Le logement auquel appartient cette charge n'existe pas");
+       }
+
+       if(Auth::user()->id != Housing::whereId($charge->housing_id)->first()->user_id){
+        return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit de modifié la valeur d\'une charge d\un logement qui ne vous appartient pas');
+       }
+
+       if(floatval($request->value)<=0){
+        return (new ServiceController())->apiResponse(404,[],'Le valeur de la charge ne peut être inférieur ou égal à 0');
+       }
+
+       $charge->value = $request->value;
+       $charge->save();
+       return (new ServiceController())->apiResponse(200,$charge,'Valeur de la charge modifié avec succès');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

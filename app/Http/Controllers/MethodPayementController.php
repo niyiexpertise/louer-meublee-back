@@ -84,16 +84,23 @@ class MethodPayementController extends Controller
         if ($is_accepted == true) {
             $methodPayements = MethodPayement::where('is_deleted', false)
                 ->where('is_actif', true)
+                ->with('servicePaiementactif')
                 ->where('is_accepted', true)
                 ->get()
                 ->filter(function($methodPayement) {
+                    
                     return $methodPayement->servicePaiement->contains(function($service) {
+                        
                         return $service->is_actif == true;
                     });
                 })
                 ->map(function($methodPayement) {
                     return $methodPayement->makeHidden(['servicePaiement']);
                 });
+
+                // foreach($methodPayements as $methodPayement){
+                //     $methodPayement->servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPayement->id);
+                // }
         }
         
 

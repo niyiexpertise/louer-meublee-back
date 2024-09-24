@@ -21,5 +21,10 @@ class MethodPayement extends Model implements Auditable
         return $this->hasMany(ServicePaiement::class);
     }
 
+    public function servicePaiementactif()
+    {
+        return $this->hasMany(ServicePaiement::class)->where('is_actif',true);
+    }
+
 
 }

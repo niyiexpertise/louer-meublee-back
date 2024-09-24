@@ -239,6 +239,7 @@ class PhotoController extends Controller
 
     public function deletePhotoHousing(Request $request, $id)
     {
+        //todo: supprimer un tableau de photo et vérifier si ça appartient à ton logement
         $photo = photo::findOrFail($id);
 
         if ($photo->is_couverture == 1) {
@@ -255,6 +256,84 @@ class PhotoController extends Controller
         $photo->delete();
 
         return response()->json(['message' => 'La photo a été supprimée avec succès.'], 200);
+    }
+
+    /**
+ * @OA\Get(
+ *      path="/api/logement/getHousingPhoto/{id}",
+ *     tags={"Housing Photo"},
+ *     summary="Obtenir les photos d'un logement",
+ *     description="Cette API permet de récupérer les photos d'un logement spécifique. L'utilisateur doit être propriétaire du logement.",
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID du logement",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Photos du logement récupérées avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="photos", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="url", type="string", example="https://example.com/photo1.jpg"),
+ *                     @OA\Property(property="housing_id", type="integer", example=3)
+ *                 )
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Photo d'un logement")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès refusé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Vous n'avez pas le droit d'afficher les photos d'un logement qui ne vous appartient pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Logement non trouvée")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{ "bearerAuth": {} }}
+ * )
+ */
+
+    public function getHousingPhoto($id){
+        try {
+    
+           $housing =  Housing::whereId($id)->first();
+
+        //    return Auth::user()->roles[0]->name;
+    
+           if(!$housing){
+                return (new ServiceController())->apiResponse(404,[],'Logement non trouvée');
+           }
+    
+           if(Auth::user()->id != $housing->user_id){
+            return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit d\'afficher les photos d\'un logement qui ne vous appartiennent pas');
+           }
+    
+           $data = photo::where('housing_id',$housing->id)->get();
+         
+           return (new ServiceController())->apiResponse(200,$data,'Photo d\un logement');
+    
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
     }
 
 }

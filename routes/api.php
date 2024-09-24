@@ -361,7 +361,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/rolesPermsCount/{role}', [AuthController::class, 'rolesPermsCount'])->name('users.rolesPermsCount');
             });
 
-            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersCountByRole'])->group(function () {
+            Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.usersCountByRole'])->group(function () {
                 Route::get('/usersCountByRole', [AuthController::class, 'usersCountByRole'])->name('users.usersCountByRole');
             });
 
@@ -874,6 +874,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing'])->name('logement.updateSensible');
             });
 
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingSensibleOrInsensibleDetail']], function () {
+                Route::get('/getHousingSensibleOrInsensibleDetail/{housinId}', [HousingController::class, 'getHousingSensibleOrInsensibleDetail']);
+            });
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateInsensible']], function () {
                 Route::put('/update/insensible/{housingid}', [HousingController::class, 'updateInsensibleHousing'])->name('logement.updateInsensible');
             });
@@ -917,6 +921,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addPhoto']], function () {
                 Route::post('/add/file/{housingId}', [HousingController::class, 'addPhotoToHousing'])->name('logement.addPhoto');
             });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingPhoto']], function () {
+                Route::get('/getHousingPhoto/{housingId}', [PhotoController::class, 'getHousingPhoto'])->name('logement.getHousingPhoto');
+            });
             // Gestion des équipements du logement
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.storeUnexistEquipment']], function () {
@@ -954,8 +962,18 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             // Gestion des catégories pour un hôte qui ajoute déjà un logement
 
+           
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deletePhotoCategory']], function () {
-            Route::delete('/category/photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory'])->name('logement.deletePhotoCategory');
+                Route::delete('/category/photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory'])->name('logement.deletePhotoCategory');
+                });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateHousingCategoryNumber']], function () {
+                Route::post('/category/updateHousingCategoryNumber/{id}', [HousingCategoryFileController::class, 'updateHousingCategoryNumber'])->name('logement.updateHousingCategoryNumber');
+            });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingCategoryFile']], function () {
+                Route::get('/category/getHousingCategoryFile/{housingId}/{categoryId}', [HousingCategoryFileController::class, 'getHousingCategoryFile'])->name('logement.getHousingCategoryFile');
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addDefaultCategory']], function () {
@@ -976,9 +994,13 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             // Gestion des charges
 
-            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addCharge']], function () {
-            Route::post('/charge/addChargeToHousing', [HousingChargeController::class, 'addChargeToHousing'])->name('logement.addCharge');
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateHousingChargeValue']], function () {
+            Route::post('/charge/updateHousingChargeValue/{id}', [HousingChargeController::class, 'updateHousingChargeValue'])->name('logement.updateHousingChargeValue');
             });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addCharge']], function () {
+                Route::post('/charge/addChargeToHousing', [HousingChargeController::class, 'addChargeToHousing'])->name('logement.addCharge');
+                });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.listCharge']], function () {
             Route::get('/charge/listelogementcharge/{housingId}', [HousingChargeController::class, 'listelogementcharge'])->name('logement.listCharge');
@@ -1020,6 +1042,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::put('/category/photo/{id}/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateHousingCategoryFile');
        //Gestion des équipements côté admin
        Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid'])->name('logement.ListHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingEquipmentInvalid');
+
+       Route::get('/equipment/getHousingCategoriesEquipmentForAdd/{id}', [HousingEquipmentController::class, 'getHousingCategoriesEquipment'])->name('logement.getHousingCategoriesEquipment')
+       ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingCategoriesEquipment');
        Route::post('/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment'])->name('logement.makeVerifiedHousingEquipment')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingEquipment');
        Route::get('/equipment/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid'])->name('logement.ListEquipmentForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListEquipmentForHousingInvalid');
        Route::get('/equipment/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid'])->name('logement.getHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingEquipmentInvalid');
@@ -1707,12 +1732,15 @@ Route::prefix('logement')->group(function () {
    Route::get('/filterby/city/{city}', [HousingController::class, 'ListeDesLogementsFilterByCity']);
    Route::get('/filterby/hote/{hote_id}', [HousingController::class, 'ListeDesLogementsFilterByHote']);
    Route::get('/filterby/preference/{preference_id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByPreference']);
+   Route::get('/filterby/destination/{nbtraveler}', [HousingController::class, 'ListeDesLogementsFilterByDestination']);
    Route::get('/filterby/nbtraveler/{nbtraveler}', [HousingController::class, 'ListeDesLogementsAcceuilFilterNbtravaller']);
    Route::get('/filterby/nightpricemax/{price}', [HousingController::class, 'getListingsByNightPriceMax']);
    Route::get('/filterby/nightpricemin/{price}', [HousingController::class, 'getListingsByNightPriceMin']);
    Route::get('/detail/getHousingStatisticAcceuil/{housing_id}', [HousingController::class, 'getHousingStatisticAcceuil']);
    Route::get('/available_at_date', [HousingController::class, 'getAvailableHousingsAtDate']);
    Route::get('/available_between_dates', [HousingController::class, 'getAvailableHousingsBetweenDates']);
+
+   
 
 
 

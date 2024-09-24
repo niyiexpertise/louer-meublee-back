@@ -1649,6 +1649,94 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         return response()->json(['data' => $data],200);
     }
 
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/logement/filterby/destination/{location}",
+ *     tags={"Housing"},
+ *     summary="Liste des logements filtrée par destination (pays, ville ou département)",
+ *     description="Récupère la liste des logements filtrée par pays, ville ou département spécifié.",
+ *     @OA\Parameter(
+ *         name="location",
+ *         in="path",
+ *         description="Pays, ville ou département à filtrer",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string",
+ *             example="Paris"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Le numéro de la page pour la pagination",
+ *         required=false,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements filtrée par pays, ville ou département",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="title", type="string", example="Charmant appartement à Paris"),
+ *                     @OA\Property(property="price", type="number", format="float", example=120.50),
+ *                     @OA\Property(property="status", type="string", example="verified")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucun logement trouvé pour la destination spécifiée"
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès interdit"
+ *     )
+ * )
+ */
+
+
+    public function ListeDesLogementsFilterByDestination(Request $request, $location)
+{
+    if(!$request->page){
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = Setting::first()->pagination_logement_acceuil;
+
+    $query = Housing::where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1);
+
+    $query->where(function($q) use ($location) {
+        $q->where('country', $location)
+          ->orWhere('city', $location)
+          ->orWhere('department', $location);
+    });
+
+    $listings = $query->paginate($perPage, ['*'], 'page', $page);
+
+    $data = $this->formatListingsData($listings);
+
+    return response()->json(['data' => $data], 200);
+
+    return (new ServiceController())->apiResponse(403,[],'Liste des logements filtrés par destination');
+}
+
+
     /**
  * @OA\Get(
  *     path="/api/logement/filterby/nightpricemax/{price}",
@@ -2121,6 +2209,7 @@ public function formatListingsData($listings,$userId=0)
             'delai_integral_remboursement' => $listing->delai_integral_remboursement ?? 'non renseigné',
             'valeur_integral_remboursement' => $listing->valeur_integral_remboursement ?? 'non renseigné',
             'valeur_partiel_remboursement' => $listing->valeur_partiel_remboursement ?? 'non renseigné',
+            'step' => $listing->step ?? 'non renseigné',
             'photos_logement' => $listing->photos->map(function ($photo) {
                 if ($photo->is_verified) {
                     return [
@@ -3243,6 +3332,134 @@ public function HousingHoteInProgress(){
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
 
+            }
+        }
+
+
+ /**
+ * @OA\Get(
+ *     path="/api/logement/getHousingSensibleOrInsensibleDetail/{housingId}",
+ *     summary="Récupérer les détails d'un logement",
+ *     description="Récupérer les détails d'un logement en fonction de l'ID du logement. Les informations sensibles ou non dépendront du paramètre `isSensible`.",
+ *     tags={"Housing"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="ID du logement à récupérer",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="isSensible",
+ *         in="query",
+ *         description="Spécifie si les informations sensibles doivent être incluses",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="boolean",
+ *             default=false
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Succès - Détails du logement récupérés",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="name", type="string", example="Appartement cosy"),
+ *             @OA\Property(property="description", type="string", example="Appartement avec vue sur mer"),
+ *             @OA\Property(property="number_of_bed", type="integer", example=2),
+ *             @OA\Property(property="number_of_traveller", type="integer", example=4),
+ *             @OA\Property(property="is_camera", type="boolean", example=true),
+ *             @OA\Property(property="is_accepted_animal", type="boolean", example=true),
+ *             @OA\Property(property="is_animal_exist", type="boolean", example=false),
+ *             @OA\Property(property="is_instant_reservation", type="boolean", example=true),
+ *             @OA\Property(property="maximum_duration", type="integer", example=7),
+ *             @OA\Property(property="minimum_duration", type="integer", example=2),
+ *             @OA\Property(property="interior_regulation", type="string", example="Pas de bruit après 22h"),
+ *             @OA\Property(property="telephone", type="string", example="+33123456789"),
+ *             @OA\Property(property="code_pays", type="string", example="FR"),
+ *             @OA\Property(property="arrived_independently", type="boolean", example=true),
+ *             @OA\Property(property="cancelation_condition", type="string", example="Annulation gratuite 24h avant l'arrivée"),
+ *             @OA\Property(property="departure_instruction", type="string", example="Fermer les fenêtres avant de partir"),
+ *             @OA\Property(property="surface", type="integer", example=50),
+ *             @OA\Property(property="price", type="number", example=120.50)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth": {}}},
+ * )
+ */
+        public function  getHousingSensibleOrInsensibleDetail(Request $request, $housinId){
+            try {
+
+                $isSensible = $request->query('isSensible') ??false;
+
+                // return $isSensible;
+
+                $housing = Housing::whereId($housinId)->first();
+
+                if (!$housing) {
+                    return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
+                    return (new ServiceController())->apiResponse(200,$result, 'Le logement spécifié n\'existe pas');
+                }
+
+                $insensitiveFields = [
+                    "name",
+                    "description",
+                    "number_of_bed",
+                    "number_of_traveller",
+                    "is_camera",
+                    "is_accepted_animal",
+                    "is_animal_exist",
+                    "is_instant_reservation",
+                    "maximum_duration",
+                    "minimum_duration"
+                ];
+
+                $sensitiveFields = [
+                    "interior_regulation",
+                    "telephone",
+                    "code_pays",
+                    "arrived_independently",
+                    "cancelation_condition",
+                    "departure_instruction",
+                    "surface",
+                    "price"
+                ];
+
+                $data = [];
+
+                $data['id'] = $housing->id;
+
+                if ($isSensible) {
+                    $message = 'Données sensibles';
+                    foreach ($sensitiveFields as $field) {
+                        $data[$field] = $housing->$field ?? 'non renseigné';
+                    }
+                }else{
+                    $message = 'Données insensibles';
+                    foreach ($insensitiveFields as $field) {
+                        $data[$field] = $housing->$field ?? 'non renseigné';
+                    }
+                }
+                return (new ServiceController())->apiResponse(200,$data,$message);
+    
+            } catch (Exception $e) {
+                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
         }
         

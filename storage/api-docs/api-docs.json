@@ -10448,6 +10448,227 @@
                 ]
             }
         },
+        "/api/logement/category/updateHousingCategoryNumber/{id}": {
+            "post": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Mettre à jour le nombre de pièces d'une catégorie de logement",
+                "description": "Cette API permet de mettre à jour le nombre de pièces d'une catégorie spécifique de logement.",
+                "operationId": "986b9fe51551d69bffe17b78e292d9f1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la catégorie de logement à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "number": {
+                                        "description": "Le nombre de pièces à mettre à jour",
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nombre de pièces mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nombre de pièce modifié avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'avez pas le droit de modifier le nombre de pièces d'un logement qui ne vous appartient pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou pièce non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement auquel appartient cette pièce n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/getHousingCategoryFile/{housingId}/{categoryId}": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Obtenir les fichiers d'une catégorie pour un logement",
+                "description": "Récupère les fichiers associés à une catégorie (pièce) spécifique pour un logement donné.",
+                "operationId": "getHousingCategoryFile",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "ID de la catégorie (pièce)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichiers de la catégorie récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID du fichier",
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "description": "Nom du fichier",
+                                                "type": "string"
+                                            },
+                                            "path": {
+                                                "description": "Chemin du fichier",
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou catégorie non trouvé(e)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement ou catégorie non trouvé(e)"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'avez pas le droit d'afficher les photos d'une pièce d'un logement qui ne vous appartiennent pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/charge/addChargeToHousing": {
             "post": {
                 "tags": [
@@ -10593,6 +10814,132 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Les charges du logement ont été retirés avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/charge/updateHousingChargeValue/{id}": {
+            "put": {
+                "tags": [
+                    "Housing Charge"
+                ],
+                "summary": "Mettre à jour la valeur d'une charge de logement",
+                "description": "Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
+                "operationId": "eb45703e1ae8af76f0ccc80a45183d3b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la charge de logement à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "value": {
+                                        "description": "La nouvelle valeur de la charge",
+                                        "type": "number",
+                                        "example": 100.5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Valeur de la charge mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "charge": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "value": {
+                                                    "type": "number",
+                                                    "example": 100.5
+                                                },
+                                                "housing_id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Valeur de la charge modifiée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'avez pas le droit de modifier la valeur d'une charge d'un logement qui ne vous appartient pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement ou charge non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement auquel appartient cette charge n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
                                         }
                                     },
                                     "type": "object"
@@ -11403,6 +11750,83 @@
                     },
                     "404": {
                         "description": "Aucun logement trouvé pour le type spécifié"
+                    }
+                }
+            }
+        },
+        "/api/logement/filterby/destination/{location}": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements filtrée par destination (pays, ville ou département)",
+                "description": "Récupère la liste des logements filtrée par pays, ville ou département spécifié.",
+                "operationId": "80b707879bbb8b10ef1426bd8de7d3b3",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "Pays, ville ou département à filtrer",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Paris"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements filtrée par pays, ville ou département",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Charmant appartement à Paris"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 120.5
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "verified"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun logement trouvé pour la destination spécifiée"
+                    },
+                    "403": {
+                        "description": "Accès interdit"
                     }
                 }
             }
@@ -12808,6 +13232,164 @@
                 ]
             }
         },
+        "/api/logement/getHousingSensibleOrInsensibleDetail/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Récupérer les détails d'un logement",
+                "description": "Récupérer les détails d'un logement en fonction de l'ID du logement. Les informations sensibles ou non dépendront du paramètre `isSensible`.",
+                "operationId": "d0ae80464004b032d7ab3afe9a50d049",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement à récupérer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "isSensible",
+                        "in": "query",
+                        "description": "Spécifie si les informations sensibles doivent être incluses",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Succès - Détails du logement récupérés",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Appartement cosy"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "example": "Appartement avec vue sur mer"
+                                        },
+                                        "number_of_bed": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "number_of_traveller": {
+                                            "type": "integer",
+                                            "example": 4
+                                        },
+                                        "is_camera": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "is_accepted_animal": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "is_animal_exist": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "is_instant_reservation": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "maximum_duration": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "minimum_duration": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "interior_regulation": {
+                                            "type": "string",
+                                            "example": "Pas de bruit après 22h"
+                                        },
+                                        "telephone": {
+                                            "type": "string",
+                                            "example": "+33123456789"
+                                        },
+                                        "code_pays": {
+                                            "type": "string",
+                                            "example": "FR"
+                                        },
+                                        "arrived_independently": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "cancelation_condition": {
+                                            "type": "string",
+                                            "example": "Annulation gratuite 24h avant l'arrivée"
+                                        },
+                                        "departure_instruction": {
+                                            "type": "string",
+                                            "example": "Fermer les fenêtres avant de partir"
+                                        },
+                                        "surface": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "price": {
+                                            "type": "number",
+                                            "example": 120.5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le logement spécifié n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/{housingId}/equipements": {
             "get": {
                 "tags": [
@@ -13263,6 +13845,102 @@
                     },
                     "404": {
                         "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/getHousingCategoriesEquipmentForAdd/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Obtenir les équipements restants à ajouter par catégorie pour un logement",
+                "description": "Récupère la liste des pièces (catégories) et les équipements qui restent à ajouter pour chaque pièce associée à un logement donné.",
+                "operationId": "getHousingCategories",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Équipements restants récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "category": {
+                                                "description": "Nom de la catégorie (pièce)",
+                                                "type": "string"
+                                            },
+                                            "remaining_equipments": {
+                                                "description": "Liste des équipements restants à ajouter à la pièce",
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "description": "ID de l'équipement",
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "description": "Nom de l'équipement",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -18409,6 +19087,118 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Une erreur s'est produite lors de la suppression de la photo."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/getHousingPhoto/{id}": {
+            "get": {
+                "tags": [
+                    "Housing Photo"
+                ],
+                "summary": "Obtenir les photos d'un logement",
+                "description": "Cette API permet de récupérer les photos d'un logement spécifique. L'utilisateur doit être propriétaire du logement.",
+                "operationId": "1cfc94f9d6ae57bc56aa0f70865ef4bf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du logement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Photos du logement récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "photos": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "url": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/photo1.jpg"
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Photo d'un logement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'avez pas le droit d'afficher les photos d'un logement qui ne vous appartient pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
                                         }
                                     },
                                     "type": "object"

@@ -170,7 +170,7 @@ class HousingCategoryFileController extends Controller
      $identity_profil_url = '';
      foreach ($request->file('photos') as $photo) {
          $photoModel = new File();
-         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');;
+         $identity_profil_url = $this->fileService->uploadFiles($photo, 'image/photo_category', 'extensionImageVideo');
          if ($identity_profil_url['fails']) {
             return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
         }
@@ -1059,5 +1059,199 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             ], 500);
         }
     }
+
+    /**
+ * @OA\Post(
+ *     path="/api/logement/category/updateHousingCategoryNumber/{id}",
+ *     summary="Mettre à jour le nombre de pièces d'une catégorie de logement",
+ *     description="Cette API permet de mettre à jour le nombre de pièces d'une catégorie spécifique de logement.",
+ *    tags={"Housing Category Photo"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID de la catégorie de logement à mettre à jour",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="number", type="integer", example=2, description="Le nombre de pièces à mettre à jour")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Nombre de pièces mis à jour avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Nombre de pièce modifié avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès refusé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Vous n'avez pas le droit de modifier le nombre de pièces d'un logement qui ne vous appartient pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement ou pièce non trouvée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Le logement auquel appartient cette pièce n'existe pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{ "bearerAuth": {} }}
+ * )
+ */
+
+
+    public function updateHousingCategoryNumber(Request $request,$id){
+        try {
+
+            $request->validate([
+                'number' => 'required'
+            ]);
+
+           $piece =  Housing_category_file::whereId($id)->first();
+
+           if(!$piece){
+                return (new ServiceController())->apiResponse(404,[],'Piece non trouvé');
+           }
+
+           if(!Housing::whereId($piece->housing_id)->first()){
+                return (new ServiceController())->apiResponse(404,[],"Le logement auquel appartient cette pièce n'existe pas");
+           }
+
+           if(Auth::user()->id != Housing::whereId($piece->housing_id)->first()->user_id){
+            return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit de modifié le nombre de piece d\un logement qui ne vous appartient pas');
+           }
+
+           if(intval($request->number)<=0){
+            return (new ServiceController())->apiResponse(404,[],'Le nombre de pièce ne peut être inférieur ou égal à 0');
+           }
+
+           $piece->number = $request->number;
+           $piece->is_verified = false;
+           $piece->save();
+           return (new ServiceController())->apiResponse(200,$piece,'Nombre de pièce modifié avec succès');
+
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+    /**
+ * @OA\Get(
+ *     path="/api/logement/category/getHousingCategoryFile/{housingId}/{categoryId}",
+ *     summary="Obtenir les fichiers d'une catégorie pour un logement",
+ *     description="Récupère les fichiers associés à une catégorie (pièce) spécifique pour un logement donné.",
+ *     operationId="getHousingCategoryFile",
+ *    tags={"Housing Category Photo"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         required=true,
+ *         description="ID du logement",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="categoryId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la catégorie (pièce)",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Fichiers de la catégorie récupérés avec succès",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", description="ID du fichier"),
+ *                 @OA\Property(property="name", type="string", description="Nom du fichier"),
+ *                 @OA\Property(property="path", type="string", description="Chemin du fichier")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement ou catégorie non trouvé(e)",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Logement ou catégorie non trouvé(e)")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès refusé",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Vous n'avez pas le droit d'afficher les photos d'une pièce d'un logement qui ne vous appartiennent pas")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ *     security={{"bearerAuth": {}}}
+ * )
+ */
+
+    public function getHousingCategoryFile($housingId,$categoryId){
+        try {
+    
+           $housing =  Housing::whereId($housingId)->first();
+
+    
+           if(!$housing){
+                return (new ServiceController())->apiResponse(404,[],'Logement non trouvée');
+           }
+
+           $category =  Category::whereId($categoryId)->first();
+
+    
+           if(!$category){
+                return (new ServiceController())->apiResponse(404,[],'Catégorie non trouvée');
+           }
+    
+           if(Auth::user()->id != $housing->user_id){
+            return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit d\'afficher les photos d\une pièce d\'un logement qui ne vous appartiennent pas');
+           }
+
+           $data = [];
+    
+           $fileIds = Housing_category_file::where('housing_id',$housing->id)
+           ->where('category_id',$category->id)
+           ->pluck('file_id')
+           ->toArray();
+
+        //    return $fileIds;
+
+           $data = File::whereIn('id',$fileIds)->get();
+         
+
+           return (new ServiceController())->apiResponse(200,$data,'Photos d\'une pièce d\'un logement');
+    
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+
+ 
 
 }

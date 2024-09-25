@@ -12454,6 +12454,16 @@
                             "type": "string",
                             "format": "date"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -13388,6 +13398,154 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/logement/filterby/destination/{location}/available_between_dates": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Liste des logements disponibles filtrée par destination et période",
+                "description": "Récupère la liste des logements disponibles pour une destination donnée et entre deux dates spécifiées.",
+                "operationId": "d1fe15a06d4ff888c0fd567a6deb8eb8",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "Destination (pays, ville ou département)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Date de début de la période (au format YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-09-01"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "Date de fin de la période (au format YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-09-10"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Le numéro de la page pour la pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements disponibles pour la destination et la période spécifiées.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Appartement moderne"
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "example": "Paris"
+                                                    },
+                                                    "country": {
+                                                        "type": "string",
+                                                        "example": "France"
+                                                    },
+                                                    "price_per_night": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 120.5
+                                                    },
+                                                    "availability": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Paramètres invalides ou manquants",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun logement disponible trouvé pour la destination et la période spécifiées.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucun logement disponible trouvé pour la destination et la période spécifiées."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/logement/{housingId}/equipements": {

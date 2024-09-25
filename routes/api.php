@@ -1731,6 +1731,7 @@ Route::prefix('logement')->group(function () {
    Route::get('/filterby/department/{department}', [HousingController::class, 'ListeDesLogementsFilterByDepartement']);
    Route::get('/filterby/city/{city}', [HousingController::class, 'ListeDesLogementsFilterByCity']);
    Route::get('/filterby/hote/{hote_id}', [HousingController::class, 'ListeDesLogementsFilterByHote']);
+   Route::get('/filterby/destination/{location}/available_between_dates', [HousingController::class, 'ListeDesLogementsFilterByDestinationavailable_between_dates']);
    Route::get('/filterby/preference/{preference_id}', [HousingController::class, 'ListeDesLogementsAcceuilFilterByPreference']);
    Route::get('/filterby/destination/{nbtraveler}', [HousingController::class, 'ListeDesLogementsFilterByDestination']);
    Route::get('/filterby/nbtraveler/{nbtraveler}', [HousingController::class, 'ListeDesLogementsAcceuilFilterNbtravaller']);

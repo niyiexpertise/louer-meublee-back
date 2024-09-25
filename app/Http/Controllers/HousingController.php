@@ -51,7 +51,7 @@ class HousingController extends Controller
 
     public function __construct(FileService $fileService = null)
     {
-        $this->fileService = $fileService ?: new FileService();
+        $this->fileService = $fileService ?: new FileServiceController();
     }
 
  public function addHousing(Request $request)
@@ -930,59 +930,88 @@ public function ListeDesPhotosLogementAcceuil($id)
  */
 
 
-public function ListeDesLogementsAcceuil(Request $request)
-    {
+ public function ListeDesLogementsAcceuil(Request $request)
+{
+    $page = intval($request->query('page', 1));
+    $perPage = Setting::first()->pagination_logement_acceuil;
 
-        if($request->page){
-            $page = intval($request->query('page', 1));
-            $perPage = Setting::first()->pagination_logement_acceuil;
+    // Étape 1: Récupérer les logements sponsorisés actifs
+    $today = date('Y-m-d');
+    $sponsoredHousings = DB::table('housing_sponsorings')
+        ->where('is_actif', true)
+        ->where('is_deleted', false)
+        ->where('date_debut', '<=', $today)
+        ->where('date_fin', '>=', $today)
+        ->orderBy(DB::raw('prix * nombre'), 'asc')
+        ->pluck('housing_id')
+        ->toArray();
 
-            $listings = Housing::where('status', 'verified')
-                ->where('is_deleted', 0)
-                ->where('is_blocked', 0)
-                ->where('is_updated', 0)
-                ->where('is_actif', 1)
-                ->where('is_destroy', 0)
-                ->where('is_finished', 1)
-                ->paginate($perPage, ['*'], 'page', $page);
+    // Récupérer les logements sponsorisés pour cette page
+    $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
 
-        }else{
+    // Compter les logements sponsorisés récupérés
+    $sponsoredCount = $sponsoredListings->count();
+
+    // Liste finale des logements à retourner
+    $listings = collect();
+
+    // Si on n'a pas assez de logements sponsorisés pour la page actuelle
+    if ($sponsoredCount < $perPage) {
+        $remaining = $perPage - $sponsoredCount; // Nombre de logements manquants
+
+        // Récupérer les logements non sponsorisés seulement si on a des places restantes
+        $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+            ->where('status', 'verified')
+            ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+            ->where('is_updated', 0)
+            ->where('is_actif', 1)
+            ->where('is_destroy', 0)
+            ->where('is_finished', 1)
+            ->skip(($page - 1) * $perPage - count($sponsoredHousings)) // Calculer le skip sur les non-sponsorisés uniquement
+            ->take($remaining)
+            ->get();
+
+        // Fusionner les logements sponsorisés et non sponsorisés dans la liste finale
+        $listings = $sponsoredListings->merge($nonSponsoredListings);
+    } else {
+        // Sinon, retourner uniquement les logements sponsorisés si suffisants
+        $listings = $sponsoredListings;
+    }
+
+    // Étape 2: Vérification de l'utilisateur
+    $userId = intval($request->query('id'));
+    if ($request->query('id') && $userId <= 0) {
+        return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
+    }
+
+    // Étape 3: Formatter les données
+    $data = $this->formatListingsData($listings, $userId);
+
+    // Enregistrement des visites sur le site
+    $controllervisitesite = App::make('App\Http\Controllers\UserVisiteSiteController');
+    if ($request->has('user_id')) {
+        $user_id = $request->input('user_id');
+        $insertvisite = $controllervisitesite->recordSiteVisit($user_id);
+    } else {
+        $insertvisite = $controllervisitesite->recordSiteVisit();
+    }
+
+    // Retourner la réponse JSON avec les données formatées
+    return response()->json(['data' => $data], 200);
+}
 
 
-            $listings = Housing::where('status', 'verified')
-                ->where('is_deleted', 0)
-                ->where('is_blocked', 0)
-                ->where('is_updated', 0)
-                ->where('is_actif', 1)
-                ->where('is_destroy', 0)
-                ->where('is_finished', 1)
-                ->get();
-        }
-
-
-        $userId = intval($request->query('id'));
-
-        if($request->query('id')){
-            if($userId<=0){
-                return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
-            }
-        }
-
-
-
-        $data = $this->formatListingsData($listings,$userId);
-
-        $controllervisitesite=App::make('App\Http\Controllers\UserVisiteSiteController');
-        if ($request->has('user_id') ) {
-            $user_id= $request->input('user_id');
-            $insertvisite=$controllervisitesite->recordSiteVisit($user_id);
-                }else{
-                    $insertvisite=$controllervisitesite->recordSiteVisit();
-                }
-
-
-             return response()->json(['data' => $data],200);
-            }
 
 
 
@@ -1286,15 +1315,63 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('housing_type_id', $id)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->paginate($perPage, ['*'], 'page', $page);
+        // $listings = Housing::where('status', 'verified')
+        // ->where('is_deleted', 0)
+        // ->where('is_blocked', 0)
+        // ->where('housing_type_id', $id)
+        // ->where('is_updated', 0)
+        // ->where('is_actif', 1)
+        // ->where('is_destroy', 0)
+        // ->where('is_finished', 1)
+        // ->paginate($perPage, ['*'], 'page', $page);
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+            $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+            ->where('status', 'verified')
+            ->where('is_deleted', 0)
+            ->where('is_blocked', 0)
+            ->where('is_updated', 0)
+            ->where('is_actif', 1)
+            ->where('is_destroy', 0)
+            ->where('housing_type_id', $id)
+            ->where('is_finished', 1)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+    
+            $sponsoredCount = $sponsoredListings->count();
+    
+            $listings = collect();
+    
+            if ($sponsoredCount < $perPage) {
+                $remaining = $perPage - $sponsoredCount; 
+
+                $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                    ->where('status', 'verified')
+                    ->where('is_deleted', 0)
+                    ->where('is_blocked', 0)
+                    ->where('is_updated', 0)
+                    ->where('is_actif', 1)
+                    ->where('is_destroy', 0)
+                    ->where('housing_type_id', $id)
+                    ->where('is_finished', 1)
+                    ->skip(($page - 1) * $perPage - count($sponsoredHousings))
+                    ->take($remaining)
+                    ->get();
+        
+                $listings = $sponsoredListings->merge($nonSponsoredListings);
+            } else {
+                $listings = $sponsoredListings;
+            }
 
         $data = $this->formatListingsData($listings);
 
@@ -1346,15 +1423,54 @@ public function ListeDesLogementsAcceuil(Request $request)
         }
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('property_type_id', $id)
         ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
                 ->where('property_type_id', $id)
-                ->paginate($perPage, ['*'], 'page', $page);
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
+
+        $data = $this->formatListingsData($listings);
 
         $data = $this->formatListingsData($listings);
 
@@ -1406,15 +1522,53 @@ public function ListeDesLogementsAcceuil(Request $request)
 
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1)
         ->where('country', $country)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('country', $country)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
@@ -1464,17 +1618,57 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1)
         ->whereHas('housing_preference', function ($query) use ($preferenceId) {
             $query->where('preference_id', $preferenceId);
         })
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->whereHas('housing_preference', function ($query) use ($preferenceId) {
+                    $query->where('preference_id', $preferenceId);
+                })
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
@@ -1521,15 +1715,53 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1)
         ->where('city', $city)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('city', $city)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
@@ -1579,15 +1811,53 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
 
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1)
         ->where('department', $department)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('department', $department)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
         $data = $this->formatListingsData($listings);
         return response()->json(['data' => $data],200);
  }
@@ -1634,15 +1904,53 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1)
         ->where('number_of_traveller', $nbtravaler)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('number_of_traveller', $nbtravaler)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
         $data = $this->formatListingsData($listings);
 
@@ -1713,23 +2021,66 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
     $page = intval($request->query('page', 1));
     $perPage = Setting::first()->pagination_logement_acceuil;
 
-    $query = Housing::where('status', 'verified')
+
+    $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('is_finished', 1);
+        ->where(function($q) use ($location) {
+            $q->where('country', $location)
+              ->orWhere('city', $location)
+              ->orWhere('department', $location);
+        })
+        ->where('is_finished', 1)
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
 
-    $query->where(function($q) use ($location) {
-        $q->where('country', $location)
-          ->orWhere('city', $location)
-          ->orWhere('department', $location);
-    });
+        $sponsoredCount = $sponsoredListings->count();
 
-    $listings = $query->paginate($perPage, ['*'], 'page', $page);
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where(function($q) use ($location) {
+                    $q->where('country', $location)
+                      ->orWhere('city', $location)
+                      ->orWhere('department', $location);
+                })
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
+
 
     $data = $this->formatListingsData($listings);
+
+
 
     return response()->json(['data' => $data], 200);
 
@@ -1778,16 +2129,54 @@ public function getListingsByNightPriceMax(Request $request, $price)
         return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
     }
     $page = intval($request->query('page', 1));
-    $perPage = 15;
-    $listings = Housing::where('price', '<=', $price)
-    ->where('status', 'verified')
-    ->where('is_deleted', 0)
-    ->where('is_blocked', 0)
-    ->where('is_updated', 0)
-    ->where('is_actif', 1)
+    $perPage = Setting::first()->pagination_logement_acceuil;
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('price', '<=', $price)
         ->where('is_finished', 1)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('price', '<=', $price)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
     $data = $this->formatListingsData($listings);
 
@@ -1838,15 +2227,53 @@ public function getListingsByNightPriceMin(Request $request,$price)
 
     $page = intval($request->query('page', 1));
     $perPage = Setting::first()->pagination_logement_acceuil;
-    $listings = Housing::where('price', '>=', $price)
-    ->where('status', 'verified')
-    ->where('is_deleted', 0)
-    ->where('is_blocked', 0)
-    ->where('is_updated', 0)
-    ->where('is_actif', 1)
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
         ->where('is_destroy', 0)
+        ->where('price', '>=', $price)
         ->where('is_finished', 1)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('price', '>=', $price)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
 
     $data = $this->formatListingsData($listings);
 
@@ -1896,7 +2323,19 @@ public function getListingsByNightPriceMin(Request $request,$price)
         }
         $page = intval($request->query('page', 1));
         $perPage = Setting::first()->pagination_logement_acceuil;
-        $listings = Housing::where('status', 'verified')
+
+        $today = date('Y-m-d');
+        $sponsoredHousings = DB::table('housing_sponsorings')
+            ->where('is_actif', true)
+            ->where('is_deleted', false)
+            ->where('date_debut', '<=', $today)
+            ->where('date_fin', '>=', $today)
+            ->orderBy(DB::raw('prix * nombre'), 'asc')
+            ->pluck('housing_id')
+            ->toArray();
+
+        $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
         ->where('is_blocked', 0)
         ->where('is_updated', 0)
@@ -1904,8 +2343,36 @@ public function getListingsByNightPriceMin(Request $request,$price)
         ->where('is_destroy', 0)
         ->where('user_id', $userId)
         ->where('is_finished', 1)
-        ->paginate($perPage, ['*'], 'page', $page);
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
+
+        $sponsoredCount = $sponsoredListings->count();
+
+        $listings = collect();
+
+        if ($sponsoredCount < $perPage) {
+            $remaining = $perPage - $sponsoredCount;
+            $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+                ->where('status', 'verified')
+                ->where('is_deleted', 0)
+                ->where('is_blocked', 0)
+                ->where('is_updated', 0)
+                ->where('is_actif', 1)
+                ->where('is_destroy', 0)
+                ->where('user_id', $userId)
+                ->where('is_finished', 1)
+                ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
+                ->take($remaining)
+                ->get();
+    
+            $listings = $sponsoredListings->merge($nonSponsoredListings);
+        } else {
+            $listings = $sponsoredListings;
+        }
+
         $data = $this->formatListingsData($listings);
+
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
  }
 
@@ -2029,7 +2496,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
 
      dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
     }
- 
+
      return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
  }
 
@@ -2563,7 +3030,7 @@ public function enableHousing($housingId)
         ]);
     }
 
-    /**
+   /**
  * @OA\Get(
  *     path="/api/logement/available_at_date",
  *     summary="Liste des logements disponibles à une date donnée",
@@ -2575,6 +3042,13 @@ public function enableHousing($housingId)
  *         description="Date pour laquelle vérifier la disponibilité des logements (format: YYYY-MM-DD)",
  *         required=true,
  *         @OA\Schema(type="string", format="date"),
+ *     ),
+ * @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Numéro de page",
+ *         required=true,
+ *         @OA\Schema(type="string", format="integer"),
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -2609,41 +3083,76 @@ public function enableHousing($housingId)
  * )
  */
 
- public function getAvailableHousingsAtDate(Request $request) {
 
+ public function getAvailableHousingsAtDate(Request $request)
+{
     $date = $request->query('date');
 
     if (empty($date)) {
-        return response()->json([
-            'message' => 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.'
-        ], 200);
+        return (new ServiceController())->apiResponse(404, [], 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.');
     }
 
     try {
         $targetDate = Carbon::parse($date);
     } catch (Exception $e) {
-        return response()->json([
-            'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
-        ], 200);
+        return (new ServiceController())->apiResponse(400, [], 'Format de date invalide. Utilisez YYYY-MM-DD.');
     }
 
     if ($targetDate < Carbon::now()->startOfDay()) {
-        return response()->json([
-            'message' => 'La date ne peut pas être antérieure à la date actuelle.'
-        ], 200);
+        return (new ServiceController())->apiResponse(400, [], 'La date ne peut pas être antérieure à la date actuelle.');
     }
 
-    $allHousings = Housing::where('status', 'verified')
+    if (!$request->page) {
+        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = Setting::first()->pagination_logement_acceuil;
+    $today = date('Y-m-d');
+
+    // Récupérer les logements sponsorisés actifs
+    $sponsoredHousings = DB::table('housing_sponsorings')
+        ->where('is_actif', true)
+        ->where('is_deleted', false)
+        ->where('date_debut', '<=', $today)
+        ->where('date_fin', '>=', $today)
+        ->orderBy(DB::raw('prix * nombre'), 'asc')
+        ->pluck('housing_id')
+        ->toArray();
+
+    // Récupérer les logements sponsorisés
+    $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
         ->where('is_deleted', 0)
-                ->where('is_blocked', 0)
+        ->where('is_blocked', 0)
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
         ->where('is_finished', 1)
-                ->get();
-    $availableHousings = [];
+        ->get();
 
-    foreach ($allHousings as $housing) {
+    // Récupérer les logements non sponsorisés
+    $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->get();
+
+    // Fusionner les logements sponsorisés et non sponsorisés en conservant l'ordre
+    $allListings = $sponsoredListings->merge($nonSponsoredListings);
+
+    // Pagination manuelle
+    $totalListings = $allListings->count();
+    $skip = ($page - 1) * $perPage;
+    $pagedListings = $allListings->slice($skip, $perPage);
+
+    // Vérifier la disponibilité des logements
+    $availableHousings = [];
+    foreach ($pagedListings as $housing) {
         $reservations = Reservation::where('housing_id', $housing->id)->get();
         $isAvailable = true;
 
@@ -2666,8 +3175,19 @@ public function enableHousing($housingId)
 
     $formattedData = $this->formatListingsData(collect($availableHousings));
 
-    return response()->json(['data' => $formattedData], 200);
+    return response()->json([
+        'data' => $formattedData,
+        'nombre' => count($formattedData),
+        'current_page' => $page,
+        'last_page' => ceil($totalListings / $perPage),
+        'per_page' => $perPage,
+    ], 200);
 }
+
+
+ 
+
+
 
 
 /**
@@ -3318,8 +3838,8 @@ public function HousingHoteInProgress(){
                     ->with(['photos' => function ($query) {
                         $query->where('is_couverture', 1)->select('housing_id', 'path');
                     }])
-                    ->get(['id', 'name']); 
-        
+                    ->get(['id', 'name']);
+
                 $result = $housings->map(function ($housing) {
                     return [
                         'housing_id' => $housing->id,
@@ -3408,7 +3928,6 @@ public function HousingHoteInProgress(){
 
                 $isSensible = $request->query('isSensible') ??false;
 
-                // return $isSensible;
 
                 $housing = Housing::whereId($housinId)->first();
 
@@ -3457,11 +3976,213 @@ public function HousingHoteInProgress(){
                     }
                 }
                 return (new ServiceController())->apiResponse(200,$data,$message);
-    
+
             } catch (Exception $e) {
                 return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
         }
-        
+
+
+        /**
+ * @OA\Get(
+ *     path="/api/logement/filterby/destination/{location}/available_between_dates",
+ *     tags={"Housing"},
+ *     summary="Liste des logements disponibles filtrée par destination et période",
+ *     description="Récupère la liste des logements disponibles pour une destination donnée et entre deux dates spécifiées.",
+ *     @OA\Parameter(
+ *         name="location",
+ *         in="path",
+ *         description="Destination (pays, ville ou département)",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="start_date",
+ *         in="query",
+ *         description="Date de début de la période (au format YYYY-MM-DD)",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string",
+ *             format="date",
+ *             example="2024-09-01"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="end_date",
+ *         in="query",
+ *         description="Date de fin de la période (au format YYYY-MM-DD)",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string",
+ *             format="date",
+ *             example="2024-09-10"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Le numéro de la page pour la pagination",
+ *         required=false,
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=1
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements disponibles pour la destination et la période spécifiées.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="Appartement moderne"),
+ *                     @OA\Property(property="city", type="string", example="Paris"),
+ *                     @OA\Property(property="country", type="string", example="France"),
+ *                     @OA\Property(property="price_per_night", type="number", format="float", example=120.50),
+ *                     @OA\Property(property="availability", type="boolean", example=true)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Paramètres invalides ou manquants",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucun logement disponible trouvé pour la destination et la période spécifiées.",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Aucun logement disponible trouvé pour la destination et la période spécifiées."
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Erreur interne du serveur."
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
+
+    public function ListeDesLogementsFilterByDestinationavailable_between_dates(Request $request,$location){
+         try {
+
+    if (!$request->page) {
+            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+        }
+
+    $startDateParam = $request->query('start_date');
+    $endDateParam = $request->query('end_date');
+
+    if (empty($startDateParam) || empty($endDateParam)) {
+        return response()->json([
+            'message' => 'Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD.'
+        ], 400);
+    }
+
+    try {
+        $startDate = Carbon::parse($startDateParam);
+        $endDate = Carbon::parse($endDateParam);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
+        ], 400);
+    }
+
+    if ($startDate > $endDate) {
+        return response()->json([
+            'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
+        ], 400);
+    }
+
+    if ($startDate < Carbon::now()->startOfDay()) {
+        return response()->json([
+            'message' => 'La date de début ne peut pas être antérieure à la date actuelle.'
+        ], 400);
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = Setting::first()->pagination_logement_acceuil;
+
+    $query = Housing::where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->where(function($q) use ($location) {
+            $q->where('country', $location)
+              ->orWhere('city', $location)
+              ->orWhere('department', $location);
+        });
+
+    $allHousings = $query->get();
+    $availableHousings = [];
+
+    foreach ($allHousings as $housing) {
+        $reservations = Reservation::where('housing_id', $housing->id)->get();
+        $isAvailable = true;
+
+        foreach ($reservations as $reservation) {
+            $reservationStart = Carbon::parse($reservation->date_of_starting);
+            $reservationEnd = Carbon::parse($reservation->date_of_end);
+
+            $timeBeforeReservation = $housing->time_before_reservation ?? 0;
+            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
+
+            if (($startDate <= $reservationEnd && $endDate >= $reservationStart) ||
+                ($endDate >= $reservationEnd && $startDate <= $minimumStartDate)) {
+                $isAvailable = false;
+                break;
+            }
+        }
+
+        if ($isAvailable) {
+            $availableHousings[] = $housing;
+        }
+    }
+
+    if (count($availableHousings) === 0) {
+        return response()->json([
+            'message' => 'Aucun logement disponible trouvé pour la destination et la période spécifiées.'
+        ], 404);
+    }
+
+    $paginatedHousings = collect($availableHousings)->forPage($page, $perPage);
+    $formattedData = $this->formatListingsData($paginatedHousings);
+
+    return response()->json(['data' => $formattedData], 200);
+
+            } catch (Exception $e) {
+                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+            }
+    }
 
 }

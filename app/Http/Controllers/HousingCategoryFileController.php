@@ -1413,6 +1413,10 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
                  ->where('is_deleted', false)
                  ->where('is_blocked', false)
                  ->get();
+
+            foreach($categories as $category){
+                $category->number = Housing_category_file::whereCategoryId($category->id)->first()->number;
+            }
      
              if ($categories->isEmpty()) {
                  return (new ServiceController())->apiResponse(404, [], 'Aucune catégorie trouvée pour ce logement');

@@ -450,14 +450,14 @@ public function validateDocuments(Request $request)
     $verification_document_ids = $data['verification_document_ids'];
     $verificationDocumentsExist = verification_statut::whereIn('verification_document_id', $verification_document_ids)->exists();
     if (!$verificationDocumentsExist) {
-        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
+        return (new ServiceController())->apiResponse(404, [],'IDs de documents de vérification invalides.');
     }
     $user_exist = User::where('id', $user_id )->exists();
     if (!$user_exist) {
-        return response()->json(['error' => "ID de l'utilisateur  invalides."], 400);
+        return (new ServiceController())->apiResponse(404, [],"ID de l'utilisateur  invalides.");
     }
     if (!$verificationDocumentsExist) {
-        return response()->json(['error' => 'IDs de documents de vérification invalides.'], 400);
+        return (new ServiceController())->apiResponse(404, [],'IDs de documents de vérification invalides.');
     }
 
     try {
@@ -491,9 +491,9 @@ public function validateDocuments(Request $request)
 
          dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 1));
 
-        return response()->json(['message' => 'Documents validés avec succès et notification envoyée.'], 200);
+        return (new ServiceController())->apiResponse(200, [],  'Documents validés avec succès et notification envoyée.');
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

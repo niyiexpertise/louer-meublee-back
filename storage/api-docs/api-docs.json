@@ -10209,9 +10209,6 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "photos[]"
-                                ],
                                 "properties": {
                                     "photos[]": {
                                         "type": "array",
@@ -10448,17 +10445,26 @@
                 ]
             }
         },
-        "/api/logement/category/updateHousingCategoryNumber/{id}": {
+        "/api/logement/category/updateHousingCategoryNumber/{housingId}/{categoryId}": {
             "post": {
                 "tags": [
                     "Housing Category Photo"
                 ],
                 "summary": "Mettre à jour le nombre de pièces d'une catégorie de logement",
                 "description": "Cette API permet de mettre à jour le nombre de pièces d'une catégorie spécifique de logement.",
-                "operationId": "986b9fe51551d69bffe17b78e292d9f1",
+                "operationId": "a6a63df838f70bec01efa02715eca7d2",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
                         "in": "path",
                         "description": "ID de la catégorie de logement à mettre à jour",
                         "required": true,
@@ -10669,6 +10675,207 @@
                 ]
             }
         },
+        "/api/logement/category/getRemainingCategories/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les catégories (pièces) restant à ajouter à un logement",
+                "description": "Cette fonction retourne la liste des catégories (pièces) qui n'ont pas encore été associées au logement donné.",
+                "operationId": "getRemainingCategories",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement pour lequel on veut récupérer les catégories restantes",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des catégories restantes à ajouter au logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "remaining_categories": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Salon"
+                                                    },
+                                                    "icone": {
+                                                        "type": "string",
+                                                        "example": "icone_salon.png"
+                                                    },
+                                                    "is_verified": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "nombre": {
+                                            "type": "integer",
+                                            "example": 3
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Logement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/getHousingCategories/{housingId}": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les catégories (pièces) d'un logement",
+                "description": "Cette fonction retourne la liste des catégories (pièces) associées à un logement spécifique, sans duplications, et excluant les catégories supprimées ou bloquées.",
+                "operationId": "a9b0fcaaa2b5f381f4ac0c19bc544b1d",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "ID du logement pour lequel on souhaite récupérer les catégories",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des catégories associées au logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Salon"
+                                            },
+                                            "icone": {
+                                                "type": "string",
+                                                "example": "icone_salon.png"
+                                            },
+                                            "is_verified": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "is_deleted": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "is_blocked": {
+                                                "type": "boolean",
+                                                "example": false
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune catégorie trouvée pour ce logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucune catégorie trouvée pour ce logement"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/charge/addChargeToHousing": {
             "post": {
                 "tags": [
@@ -10830,13 +11037,13 @@
             }
         },
         "/api/logement/charge/updateHousingChargeValue/{id}": {
-            "put": {
+            "post": {
                 "tags": [
                     "Housing Charge"
                 ],
                 "summary": "Mettre à jour la valeur d'une charge de logement",
                 "description": "Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
-                "operationId": "eb45703e1ae8af76f0ccc80a45183d3b",
+                "operationId": "c389d03d3bb577f343c77a363eef3120",
                 "parameters": [
                     {
                         "name": "id",
@@ -13264,10 +13471,9 @@
                         "name": "isSensible",
                         "in": "query",
                         "description": "Spécifie si les informations sensibles doivent être incluses",
-                        "required": false,
+                        "required": true,
                         "schema": {
-                            "type": "boolean",
-                            "default": false
+                            "type": "integer"
                         }
                     }
                 ],

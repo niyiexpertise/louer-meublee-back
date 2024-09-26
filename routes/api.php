@@ -969,11 +969,15 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateHousingCategoryNumber']], function () {
-                Route::post('/category/updateHousingCategoryNumber/{id}', [HousingCategoryFileController::class, 'updateHousingCategoryNumber'])->name('logement.updateHousingCategoryNumber');
+                Route::post('/category/updateHousingCategoryNumber/{housingId}/{categoryId}', [HousingCategoryFileController::class, 'updateHousingCategoryNumber'])->name('logement.updateHousingCategoryNumber');
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingCategoryFile']], function () {
                 Route::get('/category/getHousingCategoryFile/{housingId}/{categoryId}', [HousingCategoryFileController::class, 'getHousingCategoryFile'])->name('logement.getHousingCategoryFile');
+            });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getRemainingCategories']], function () {
+                Route::get('category/getRemainingCategories/{housingId}', [HousingCategoryFileController::class, 'getRemainingCategories'])->name('logement.getRemainingCategories');
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addDefaultCategory']], function () {
@@ -991,6 +995,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addPhotoCategory']], function () {
             Route::post('/{housingId}/category/{categoryId}/photos/add', [HousingCategoryFileController::class, 'addPhotosCategoryToHousing'])->name('logement.addPhotoCategory');
             });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingCategories']], function () {
+                Route::get('/category/getHousingCategories/{housingId}', [HousingCategoryFileController::class, 'getHousingCategories'])->name('logement.getHousingCategories');
+                });
 
             // Gestion des charges
 

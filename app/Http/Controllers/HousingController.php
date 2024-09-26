@@ -1922,7 +1922,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('number_of_traveller', $nbtravaler)
+        ->where('number_of_traveller','<=',$nbtravaler)
         ->where('is_finished', 1)
         ->skip(($page - 1) * $perPage)
         ->take($perPage)
@@ -1941,7 +1941,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
                 ->where('is_updated', 0)
                 ->where('is_actif', 1)
                 ->where('is_destroy', 0)
-                ->where('number_of_traveller', $nbtravaler)
+                ->where('number_of_traveller','<=', $nbtravaler)
                 ->where('is_finished', 1)
                 ->skip(($page - 1) * $perPage - count($sponsoredHousings)) 
                 ->take($remaining)
@@ -3875,10 +3875,9 @@ public function HousingHoteInProgress(){
  *         name="isSensible",
  *         in="query",
  *         description="Spécifie si les informations sensibles doivent être incluses",
- *         required=false,
+ *         required=true,
  *         @OA\Schema(
- *             type="boolean",
- *             default=false
+ *             type="integer",
  *         )
  *     ),
  *     @OA\Response(
@@ -3926,7 +3925,9 @@ public function HousingHoteInProgress(){
         public function  getHousingSensibleOrInsensibleDetail(Request $request, $housinId){
             try {
 
-                $isSensible = $request->query('isSensible') ??false;
+                $isSensible = $request->query('isSensible') ;
+
+                // return $isSensible;
 
 
                 $housing = Housing::whereId($housinId)->first();
@@ -3951,6 +3952,7 @@ public function HousingHoteInProgress(){
 
                 $sensitiveFields = [
                     "interior_regulation",
+                    "interior_regulation_pdf",
                     "telephone",
                     "code_pays",
                     "arrived_independently",

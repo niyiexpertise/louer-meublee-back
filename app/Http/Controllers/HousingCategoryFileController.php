@@ -837,7 +837,6 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
  *                     type="array",
  *                     @OA\Items(type="string", format="binary", description="Image de la catégorie (JPEG, PNG, JPG, GIF, taille max : 2048)")
  *                 ),
- *                 required={"photos[]"}
  *             )
  *         )
  *     ),
@@ -869,7 +868,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
  {
 
      $validator = Validator::make($request->all(), [
-         'photos' => 'required',
+         'photos' => 'nullable',
          'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
      ]);
 
@@ -1062,12 +1061,21 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
 
     /**
  * @OA\Post(
- *     path="/api/logement/category/updateHousingCategoryNumber/{id}",
+ *     path="/api/logement/category/updateHousingCategoryNumber/{housingId}/{categoryId}",
  *     summary="Mettre à jour le nombre de pièces d'une catégorie de logement",
  *     description="Cette API permet de mettre à jour le nombre de pièces d'une catégorie spécifique de logement.",
  *    tags={"Housing Category Photo"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="housingId",
+ *         in="path",
+ *         description="ID du logement à mettre à jour",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ * @OA\Parameter(
+ *         name="categoryId",
  *         in="path",
  *         description="ID de la catégorie de logement à mettre à jour",
  *         required=true,
@@ -1114,14 +1122,14 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
  */
 
 
-    public function updateHousingCategoryNumber(Request $request,$id){
+    public function updateHousingCategoryNumber(Request $request,$housingId,$categoryId){
         try {
 
             $request->validate([
                 'number' => 'required'
             ]);
 
-           $piece =  Housing_category_file::whereId($id)->first();
+           $piece =  Housing_category_file::where('housing_id',$housingId)->where('category_id',$categoryId)->first();
 
            if(!$piece){
                 return (new ServiceController())->apiResponse(404,[],'Piece non trouvé');
@@ -1139,10 +1147,11 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             return (new ServiceController())->apiResponse(404,[],'Le nombre de pièce ne peut être inférieur ou égal à 0');
            }
 
-           $piece->number = $request->number;
-           $piece->is_verified = false;
-           $piece->save();
-           return (new ServiceController())->apiResponse(200,$piece,'Nombre de pièce modifié avec succès');
+           Housing_category_file::where('housing_id',$housingId)->where('category_id',$categoryId)->update(['number' => $request->number]);
+
+           Housing_category_file::where('housing_id',$housingId)->where('category_id',$categoryId)->update(['is_verified' => false]);
+
+           return (new ServiceController())->apiResponse(200,[],'Nombre de pièce modifié avec succès');
 
         } catch (\Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -1252,6 +1261,169 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
     }
 
 
- 
+
+    /**
+ * @OA\Get(
+ *    path="/api/logement/category/getRemainingCategories/{housingId}",
+ *     summary="Récupérer les catégories (pièces) restant à ajouter à un logement",
+ *     description="Cette fonction retourne la liste des catégories (pièces) qui n'ont pas encore été associées au logement donné.",
+ *     operationId="getRemainingCategories",
+ *     tags={"Housing Category Photo"},
+ * security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="ID du logement pour lequel on veut récupérer les catégories restantes",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des catégories restantes à ajouter au logement",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="remaining_categories",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="Salon"),
+ *                     @OA\Property(property="icone", type="string", example="icone_salon.png"),
+ *                     @OA\Property(property="is_verified", type="boolean", example=true)
+ *                 )
+ *             ),
+ *             @OA\Property(property="nombre", type="integer", example=3)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Logement non trouvé",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Logement non trouvé")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Erreur interne du serveur")
+ *         )
+ *     ),
+ * )
+ */
+
+
+    public function getRemainingCategories($housingId)
+    {
+        $allCategories = Category::where('is_deleted', false)
+                                 ->where('is_blocked', false)
+                                //  ->where('is_verified', true)
+                                 ->pluck('id')
+                                 ->toArray();
+    
+        $associatedCategories = DB::table('housing_category_files')
+                                   ->where('housing_id', $housingId)
+                                //    ->where('is_verified', true) 
+                                   ->pluck('category_id')
+                                   ->toArray();
+          
+
+        $remainingCategories = array_diff($allCategories, $associatedCategories);
+        $categories = Category::whereIn('id', $remainingCategories) ->where('is_verified', true)->get();
+    
+        return response()->json([
+            'remaining_categories' => $categories,
+            'nombre' => count($remainingCategories),
+        ], 200);
+    }
+    
+
+
+    /**
+ * @OA\Get(
+ *     path="/api/logement/category/getHousingCategories/{housingId}",
+ *     summary="Récupérer les catégories (pièces) d'un logement",
+ *  security={{"bearerAuth": {}}},
+ *     description="Cette fonction retourne la liste des catégories (pièces) associées à un logement spécifique, sans duplications, et excluant les catégories supprimées ou bloquées.",
+ *     tags={"Housing Category Photo"},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="ID du logement pour lequel on souhaite récupérer les catégories",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             example=1
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des catégories associées au logement",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="name", type="string", example="Salon"),
+ *                 @OA\Property(property="icone", type="string", example="icone_salon.png"),
+ *                 @OA\Property(property="is_verified", type="boolean", example=true),
+ *                 @OA\Property(property="is_deleted", type="boolean", example=false),
+ *                 @OA\Property(property="is_blocked", type="boolean", example=false)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune catégorie trouvée pour ce logement",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Aucune catégorie trouvée pour ce logement"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Erreur interne du serveur"
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
+     public function getHousingCategories($housingId)
+     {
+         try {
+             $categoryIds = Housing_category_file::where('housing_id', $housingId)
+                 ->distinct()
+                 ->pluck('category_id');
+     
+             $categories = Category::whereIn('id', $categoryIds)
+                 ->where('is_deleted', false)
+                 ->where('is_blocked', false)
+                 ->get();
+     
+             if ($categories->isEmpty()) {
+                 return (new ServiceController())->apiResponse(404, [], 'Aucune catégorie trouvée pour ce logement');
+             }
+     
+             return (new ServiceController())->apiResponse(200, $categories, 'Liste des catégories du logement');
+     
+         } catch (\Exception $e) {
+             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+         }
+     }
+     
 
 }

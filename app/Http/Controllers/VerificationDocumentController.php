@@ -545,26 +545,30 @@ public function validateDocuments(Request $request)
 
 public function validateDocument(Request $request)
 {
-    $data = $request->validate([
-        'user_id' => 'required|integer',
-        'verification_document_id' => 'required|integer',
-    ]);
-
-    $user_id = $data['user_id'];
-    $verification_document_id = $data['verification_document_id'];
+   
 
     try {
+
+        $data = $request->validate([
+            'user_id' => 'required|integer',
+            'verification_document_id' => 'required|integer',
+        ]);
+    
+        $user_id = $data['user_id'];
+        $verification_document_id = $data['verification_document_id'];
         $verificationStatut = verification_statut::where('verification_document_id', $verification_document_id)->first();
         if (!$verificationStatut) {
-            return response()->json(['error' => 'Le document de vérification spécifié n\'existe pas.'], 404);
+
+            return (new ServiceController())->apiResponse(404, [],  'Le document de vérification spécifié n\'existe pas.');
         }
 
         $user_exist = User::where('id', $user_id )->exists();
         if (!$user_exist) {
-            return response()->json(['error' => "ID de l'utilisateur  invalides."], 200);
+
+            return (new ServiceController())->apiResponse(404, [],  "ID de l'utilisateur  invalides.");
         }
         if($verificationStatut->status == 1){
-            return response()->json(['error' => "Ce document a déjà été validé. Vous ne pouvez plus le revalider."], 200);
+            return (new ServiceController())->apiResponse(404, [],  "Ce document a déjà été validé. Vous ne pouvez plus le revalider.");
         }
 
         $verificationStatut->update(['status' => 1]);
@@ -594,9 +598,11 @@ public function validateDocument(Request $request)
 
         }
 
-        return response()->json(['message' => 'Document validé avec succès.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Document validé avec succès.');
+
+
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Une erreur est survenue lors de la validation du document.'], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

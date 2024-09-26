@@ -289,7 +289,7 @@ public function DeleteChargeHousing(Request $request)
 
 
 /**
- * @OA\Put(
+ * @OA\Post(
  *     path="/api/logement/charge/updateHousingChargeValue/{id}",
  *     summary="Mettre à jour la valeur d'une charge de logement",
  *     description="Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
@@ -372,7 +372,7 @@ public function updateHousingChargeValue(Request $request,$id){
         return (new ServiceController())->apiResponse(404,[],'Le valeur de la charge ne peut être inférieur ou égal à 0');
        }
 
-       $charge->value = $request->value;
+       $charge->valeur = $request->value;
        $charge->save();
        return (new ServiceController())->apiResponse(200,$charge,'Valeur de la charge modifié avec succès');
 

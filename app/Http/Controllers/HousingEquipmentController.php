@@ -859,8 +859,8 @@ public function getHousingCategoriesEquipment($housingId){
 
             $associatedEquipments = Housing_equipment::where('category_id', $category->id)
          ->where('housing_id', $housingId)
-                                                                    ->pluck('equipment_id')
-                                                                    ->toArray();
+        ->pluck('equipment_id')
+        ->toArray();
 
 
             $remainingEquipments = array_diff($defaultEquipments, $associatedEquipments);

@@ -1114,8 +1114,11 @@ public function getSponsoredHousings()
 
             $fileService = new FileService();
 
+         
+
             $data[]= (new HousingController($fileService))->formatListingsData($listings);
         }
+
 
     return (new ServiceController())->apiResponse(200, $data,"Liste des logements sponsorisés retournée avec succès.");
 }

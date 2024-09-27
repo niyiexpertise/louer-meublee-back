@@ -19,4 +19,9 @@ class Sponsoring extends Model implements Auditable
         'is_deleted',
         'is_actif'
     ];
+
+    public function housing_sponsoring()
+    {
+        return $this->hasMany(HousingSponsoring::class);
+    }
 }

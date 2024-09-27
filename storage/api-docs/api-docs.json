@@ -13030,6 +13030,16 @@
                 "operationId": "d76e3e988d1995a50dfdfc508e32f251",
                 "parameters": [
                     {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "integer"
+                        }
+                    },
+                    {
                         "name": "start_date",
                         "in": "query",
                         "description": "Date de début pour vérifier la disponibilité des logements (format: YYYY-MM-DD)",

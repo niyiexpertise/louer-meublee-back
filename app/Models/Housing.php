@@ -139,6 +139,11 @@ class Housing extends Model implements Auditable
         return $this->hasMany(UserVisiteHousing::class);
     }
 
+    public function housing_sponsoring()
+    {
+        return $this->hasMany(HousingSponsoring::class);
+    }
+
 
 }
 

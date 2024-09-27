@@ -3083,106 +3083,106 @@ public function enableHousing($housingId)
  * )
  */
 
-
  public function getAvailableHousingsAtDate(Request $request)
-{
-    $date = $request->query('date');
-
-    if (empty($date)) {
-        return (new ServiceController())->apiResponse(404, [], 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.');
-    }
-
-    try {
-        $targetDate = Carbon::parse($date);
-    } catch (Exception $e) {
-        return (new ServiceController())->apiResponse(400, [], 'Format de date invalide. Utilisez YYYY-MM-DD.');
-    }
-
-    if ($targetDate < Carbon::now()->startOfDay()) {
-        return (new ServiceController())->apiResponse(400, [], 'La date ne peut pas être antérieure à la date actuelle.');
-    }
-
-    if (!$request->page) {
-        return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
-    }
-
-    $page = intval($request->query('page', 1));
-    $perPage = Setting::first()->pagination_logement_acceuil;
-    $today = date('Y-m-d');
-
-    // Récupérer les logements sponsorisés actifs
-    $sponsoredHousings = DB::table('housing_sponsorings')
-        ->where('is_actif', true)
-        ->where('is_deleted', false)
-        ->where('date_debut', '<=', $today)
-        ->where('date_fin', '>=', $today)
-        ->orderBy(DB::raw('prix * nombre'), 'asc')
-        ->pluck('housing_id')
-        ->toArray();
-
-    // Récupérer les logements sponsorisés
-    $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
-        ->where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->get();
-
-    // Récupérer les logements non sponsorisés
-    $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
-        ->where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->get();
-
-    // Fusionner les logements sponsorisés et non sponsorisés en conservant l'ordre
-    $allListings = $sponsoredListings->merge($nonSponsoredListings);
-
-    // Pagination manuelle
-    $totalListings = $allListings->count();
-    $skip = ($page - 1) * $perPage;
-    $pagedListings = $allListings->slice($skip, $perPage);
-
-    // Vérifier la disponibilité des logements
-    $availableHousings = [];
-    foreach ($pagedListings as $housing) {
-        $reservations = Reservation::where('housing_id', $housing->id)->get();
-        $isAvailable = true;
-
-        foreach ($reservations as $reservation) {
-            $reservationEnd = Carbon::parse($reservation->date_of_end);
-            $timeBeforeReservation = $housing->time_before_reservation ?? 0;
-            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
-
-            if (($targetDate >= $reservation->date_of_starting && $targetDate <= $reservationEnd) ||
-                ($targetDate >= $reservationEnd && $targetDate <= $minimumStartDate)) {
-                $isAvailable = false;
-                break;
-            }
-        }
-
-        if ($isAvailable) {
-            $availableHousings[] = $housing;
-        }
-    }
-
-    $formattedData = $this->formatListingsData(collect($availableHousings));
-
-    return response()->json([
-        'data' => $formattedData,
-        'nombre' => count($formattedData),
-        'current_page' => $page,
-        'last_page' => ceil($totalListings / $perPage),
-        'per_page' => $perPage,
-    ], 200);
-}
+ {
+     $date = $request->query('date');
+ 
+     if (empty($date)) {
+         return (new ServiceController())->apiResponse(404, [], 'La date est obligatoire. Veuillez fournir une date au format YYYY-MM-DD.');
+     }
+ 
+     try {
+         $targetDate = Carbon::parse($date);
+     } catch (Exception $e) {
+         return (new ServiceController())->apiResponse(400, [], 'Format de date invalide. Utilisez YYYY-MM-DD.');
+     }
+ 
+     if ($targetDate < Carbon::now()->startOfDay()) {
+         return (new ServiceController())->apiResponse(400, [], 'La date ne peut pas être antérieure à la date actuelle.');
+     }
+ 
+     if (!$request->page) {
+         return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+     }
+ 
+     $page = intval($request->query('page', 1));
+     $perPage = Setting::first()->pagination_logement_acceuil; // Nombre de logements par page
+     $today = date('Y-m-d');
+ 
+     // Récupérer les logements sponsorisés actifs
+     $sponsoredHousings = DB::table('housing_sponsorings')
+         ->where('is_actif', true)
+         ->where('is_deleted', false)
+         ->where('date_debut', '<=', $today)
+         ->where('date_fin', '>=', $today)
+         ->orderBy(DB::raw('prix * nombre'), 'asc')
+         ->pluck('housing_id')
+         ->toArray();
+ 
+     // Récupérer les logements sponsorisés
+     $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+         ->where('status', 'verified')
+         ->where('is_deleted', 0)
+         ->where('is_blocked', 0)
+         ->where('is_updated', 0)
+         ->where('is_actif', 1)
+         ->where('is_destroy', 0)
+         ->where('is_finished', 1)
+         ->get();
+ 
+     // Récupérer les logements non sponsorisés
+     $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+         ->where('status', 'verified')
+         ->where('is_deleted', 0)
+         ->where('is_blocked', 0)
+         ->where('is_updated', 0)
+         ->where('is_actif', 1)
+         ->where('is_destroy', 0)
+         ->where('is_finished', 1)
+         ->get();
+ 
+     // Fusionner les logements sponsorisés et non sponsorisés
+     $allListings = $sponsoredListings->merge($nonSponsoredListings);
+ 
+     // Vérifier la disponibilité des logements
+     $availableHousings = [];
+     foreach ($allListings as $housing) {
+         $reservations = Reservation::where('housing_id', $housing->id)->get();
+         $isAvailable = true;
+ 
+         foreach ($reservations as $reservation) {
+             $reservationEnd = Carbon::parse($reservation->date_of_end);
+             $timeBeforeReservation = $housing->time_before_reservation ?? 0;
+             $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
+ 
+             if (($targetDate >= $reservation->date_of_starting && $targetDate <= $reservationEnd) ||
+                 ($targetDate >= $reservationEnd && $targetDate <= $minimumStartDate)) {
+                 $isAvailable = false;
+                 break;
+             }
+         }
+ 
+         if ($isAvailable) {
+             $availableHousings[] = $housing;
+         }
+     }
+ 
+     // Pagination manuelle
+     $totalListings = count($availableHousings);
+     $skip = ($page - 1) * $perPage;
+     $pagedListings = array_slice($availableHousings, $skip, $perPage);
+ 
+     $formattedData = $this->formatListingsData(collect($pagedListings));
+ 
+     return response()->json([
+         'data' => $formattedData,
+         'nombre' => count($formattedData),
+         'current_page' => $page,
+         'last_page' => ceil($totalListings / $perPage),
+         'per_page' => $perPage,
+     ], 200);
+ }
+ 
 
 
  
@@ -3453,6 +3453,13 @@ public function validatePhoto(Request $request, $photoId)
  *     summary="Liste des logements disponibles entre un intervalle de dates",
  *     description="Renvoie la liste des logements disponibles entre deux dates, en tenant compte du délai de 'time before reservation'.",
  *     tags={"Housing"},
+ * @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         description="Numéro de page",
+ *         required=true,
+ *         @OA\Schema(type="string", format="integer"),
+ *     ),
  *     @OA\Parameter(
  *         name="start_date",
  *         in="query",
@@ -3501,14 +3508,13 @@ public function validatePhoto(Request $request, $photoId)
  */
 public function getAvailableHousingsBetweenDates(Request $request)
 {
-
     $startDateParam = $request->query('start_date');
     $endDateParam = $request->query('end_date');
 
     if (empty($startDateParam) || empty($endDateParam)) {
         return response()->json([
             'message' => 'Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD.'
-        ], 200);
+        ], 400);
     }
 
     try {
@@ -3517,33 +3523,67 @@ public function getAvailableHousingsBetweenDates(Request $request)
     } catch (Exception $e) {
         return response()->json([
             'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
-        ], 200);
+        ], 400);
     }
-
 
     if ($startDate > $endDate) {
         return response()->json([
             'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
-        ], 200);
+        ], 400);
     }
 
     if ($startDate < Carbon::now()->startOfDay()) {
         return response()->json([
             'message' => 'La date de début ne peut pas être antérieure à la date actuelle.'
-        ], 200);
+        ], 400);
     }
 
-    $allHousings = Housing::where('status', 'verified')
-    ->where('is_deleted', 0)
-            ->where('is_blocked', 0)
-    ->where('is_updated', 0)
-    ->where('is_actif', 1)
-    ->where('is_destroy', 0)
-    ->where('is_finished', 1)
-            ->get();
+    if (!$request->page) {
+        return response()->json([
+            'message' => "Le numéro de page est obligatoire"
+        ], 400);
+    }
+
+    $page = intval($request->query('page', 1));
+    $perPage = Setting::first()->pagination_logement_acceuil; // Nombre de logements par page
+
+    // Récupérer les logements sponsorisés actifs
+    $sponsoredHousings = DB::table('housing_sponsorings')
+        ->where('is_actif', true)
+        ->where('is_deleted', false)
+        ->where('date_debut', '<=', Carbon::now()->toDateString())
+        ->where('date_fin', '>=', Carbon::now()->toDateString())
+        ->orderBy(DB::raw('prix * nombre'), 'asc')
+        ->pluck('housing_id')
+        ->toArray();
+
+    // Récupérer les logements sponsorisés
+    $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->get();
+
+    // Récupérer les logements non sponsorisés
+    $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
+        ->get();
+
+    // Fusionner les logements sponsorisés et non sponsorisés
+    $allListings = $sponsoredListings->merge($nonSponsoredListings);
     $availableHousings = [];
 
-    foreach ($allHousings as $housing) {
+    foreach ($allListings as $housing) {
         $reservations = Reservation::where('housing_id', $housing->id)->get();
         $isAvailable = true;
 
@@ -3565,16 +3605,28 @@ public function getAvailableHousingsBetweenDates(Request $request)
         }
     }
 
-    if (count($availableHousings) === 0) {
+    // Pagination manuelle
+    $totalListings = count($availableHousings);
+    $skip = ($page - 1) * $perPage;
+    $pagedListings = array_slice($availableHousings, $skip, $perPage);
+
+    if (count($pagedListings) === 0) {
         return response()->json([
             'message' => 'Aucun logement trouvé entre les dates données.'
         ], 404);
     }
 
-    $formattedData = $this->formatListingsData(collect($availableHousings));
+    $formattedData = $this->formatListingsData(collect($pagedListings));
 
-    return response()->json(['data' => $formattedData], 200);
+    return response()->json([
+        'data' => $formattedData,
+        'nombre' => count($formattedData),
+        'current_page' => $page,
+        'last_page' => ceil($totalListings / $perPage),
+        'per_page' => $perPage,
+    ], 200);
 }
+
 
 public function getOrDefault($input, $default = 'XX') {
     return empty($input) ? $default : $input;
@@ -4091,100 +4143,129 @@ public function HousingHoteInProgress(){
  * )
  */
 
-
-    public function ListeDesLogementsFilterByDestinationavailable_between_dates(Request $request,$location){
+ public function ListeDesLogementsFilterByDestinationavailable_between_dates(Request $request, $location)
+ {
+     try {
+         if (!$request->page) {
+             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
+         }
+ 
+         $startDateParam = $request->query('start_date');
+         $endDateParam = $request->query('end_date');
+ 
+         if (empty($startDateParam) || empty($endDateParam)) {
+             return response()->json([
+                 'message' => 'Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD.'
+             ], 400);
+         }
+ 
          try {
-
-    if (!$request->page) {
-            return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
-        }
-
-    $startDateParam = $request->query('start_date');
-    $endDateParam = $request->query('end_date');
-
-    if (empty($startDateParam) || empty($endDateParam)) {
-        return response()->json([
-            'message' => 'Les dates de début et de fin sont obligatoires. Veuillez fournir les dates au format YYYY-MM-DD.'
-        ], 400);
-    }
-
-    try {
-        $startDate = Carbon::parse($startDateParam);
-        $endDate = Carbon::parse($endDateParam);
-    } catch (Exception $e) {
-        return response()->json([
-            'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
-        ], 400);
-    }
-
-    if ($startDate > $endDate) {
-        return response()->json([
-            'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
-        ], 400);
-    }
-
-    if ($startDate < Carbon::now()->startOfDay()) {
-        return response()->json([
-            'message' => 'La date de début ne peut pas être antérieure à la date actuelle.'
-        ], 400);
-    }
-
-    $page = intval($request->query('page', 1));
-    $perPage = Setting::first()->pagination_logement_acceuil;
-
-    $query = Housing::where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->where(function($q) use ($location) {
-            $q->where('country', $location)
-              ->orWhere('city', $location)
-              ->orWhere('department', $location);
-        });
-
-    $allHousings = $query->get();
-    $availableHousings = [];
-
-    foreach ($allHousings as $housing) {
-        $reservations = Reservation::where('housing_id', $housing->id)->get();
-        $isAvailable = true;
-
-        foreach ($reservations as $reservation) {
-            $reservationStart = Carbon::parse($reservation->date_of_starting);
-            $reservationEnd = Carbon::parse($reservation->date_of_end);
-
-            $timeBeforeReservation = $housing->time_before_reservation ?? 0;
-            $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
-
-            if (($startDate <= $reservationEnd && $endDate >= $reservationStart) ||
-                ($endDate >= $reservationEnd && $startDate <= $minimumStartDate)) {
-                $isAvailable = false;
-                break;
-            }
-        }
-
-        if ($isAvailable) {
-            $availableHousings[] = $housing;
-        }
-    }
-
-    if (count($availableHousings) === 0) {
-        return response()->json([
-            'message' => 'Aucun logement disponible trouvé pour la destination et la période spécifiées.'
-        ], 404);
-    }
-
-    $paginatedHousings = collect($availableHousings)->forPage($page, $perPage);
-    $formattedData = $this->formatListingsData($paginatedHousings);
-
-    return response()->json(['data' => $formattedData], 200);
-
-            } catch (Exception $e) {
-                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-            }
-    }
+             $startDate = Carbon::parse($startDateParam);
+             $endDate = Carbon::parse($endDateParam);
+         } catch (Exception $e) {
+             return response()->json([
+                 'message' => 'Format de date invalide. Utilisez YYYY-MM-DD.'
+             ], 400);
+         }
+ 
+         if ($startDate > $endDate) {
+             return response()->json([
+                 'message' => 'La date de début ne peut pas être postérieure à la date de fin.'
+             ], 400);
+         }
+ 
+         if ($startDate < Carbon::now()->startOfDay()) {
+             return response()->json([
+                 'message' => 'La date de début ne peut pas être antérieure à la date actuelle.'
+             ], 400);
+         }
+ 
+         $page = intval($request->query('page', 1));
+         $perPage = Setting::first()->pagination_logement_acceuil;
+ 
+         $sponsoredHousings = DB::table('housing_sponsorings')
+             ->where('is_actif', true)
+             ->where('is_deleted', false)
+             ->where('date_debut', '<=', Carbon::now()->toDateString())
+             ->where('date_fin', '>=', Carbon::now()->toDateString())
+             ->pluck('housing_id')
+             ->toArray();
+ 
+         $query = Housing::where('status', 'verified')
+             ->where('is_deleted', 0)
+             ->where('is_blocked', 0)
+             ->where('is_updated', 0)
+             ->where('is_actif', 1)
+             ->where('is_destroy', 0)
+             ->where('is_finished', 1)
+             ->where(function($q) use ($location) {
+                 $q->where('country', $location)
+                   ->orWhere('city', $location)
+                   ->orWhere('department', $location);
+             })
+             ->orWhereIn('id', $sponsoredHousings); 
+ 
+         $allHousings = $query->get();
+         $availableHousings = [];
+ 
+         $sponsoredAvailable = [];
+         $nonSponsoredAvailable = [];
+ 
+         foreach ($allHousings as $housing) {
+             $reservations = Reservation::where('housing_id', $housing->id)->get();
+             $isAvailable = true;
+ 
+             foreach ($reservations as $reservation) {
+                 $reservationStart = Carbon::parse($reservation->date_of_starting);
+                 $reservationEnd = Carbon::parse($reservation->date_of_end);
+ 
+                 $timeBeforeReservation = $housing->time_before_reservation ?? 0;
+                 $minimumStartDate = $reservationEnd->copy()->addDays($timeBeforeReservation);
+ 
+                 if (($startDate <= $reservationEnd && $endDate >= $reservationStart) ||
+                     ($endDate >= $reservationEnd && $startDate <= $minimumStartDate)) {
+                     $isAvailable = false;
+                     break;
+                 }
+             }
+ 
+             if ($isAvailable) {
+                 if (in_array($housing->id, $sponsoredHousings)) {
+                     $sponsoredAvailable[] = $housing;
+                 } else {
+                     $nonSponsoredAvailable[] = $housing;
+                 }
+             }
+         }
+ 
+         $availableHousings = array_merge($sponsoredAvailable, $nonSponsoredAvailable);
+ 
+         if (count($availableHousings) === 0) {
+             return response()->json([
+                 'message' => 'Aucun logement disponible trouvé pour la destination et la période spécifiées.'
+             ], 404);
+         }
+ 
+         // Pagination
+         $totalListings = count($availableHousings);
+         $skip = ($page - 1) * $perPage;
+         $pagedHousings = array_slice($availableHousings, $skip, $perPage);
+ 
+         $formattedData = $this->formatListingsData(collect($pagedHousings));
+ 
+         return response()->json([
+             'data' => $formattedData,
+             'nombre' => count($formattedData),
+             'current_page' => $page,
+             'last_page' => ceil($totalListings / $perPage),
+             'per_page' => $perPage,
+         ], 200);
+ 
+     } catch (Exception $e) {
+         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+     }
+ }
+ 
+ 
 
 }

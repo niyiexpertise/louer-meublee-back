@@ -12178,8 +12178,8 @@
                 "tags": [
                     "Dashboard hote"
                 ],
-                "summary": "Modifier les informations sensibles d'un logement",
-                "description": "Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
+                "summary": "Met à jour un logement sensible",
+                "description": "Met à jour les informations d'un logement spécifié par son ID.",
                 "operationId": "878ec1d3984676506778762965d95f77",
                 "parameters": [
                     {
@@ -12195,32 +12195,65 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "interior_regulation": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "interior_regulation_pdf": {
+                                        "description": "Télécharger un fichier PDF",
+                                        "type": "file",
+                                        "nullable": true
                                     },
                                     "telephone": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "code_pays": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "arrived_independently": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "nullable": true
                                     },
                                     "cancelation_condition": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "departure_instruction": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "surface": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
                                     },
                                     "price": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "delai_partiel_remboursement": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "delai_integral_remboursement": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "valeur_integral_remboursement": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "valeur_partiel_remboursement": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -12230,14 +12263,30 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Les informations du logement ont été mises à jour avec succès",
+                        "description": "Logement mis à jour avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Les informations du logement ont été mises à jour avec succès"
+                                            "example": "Logement mis à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Seul le propriétaire du logement peut le modifier",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Seul le propriétaire du logement peut le modifier"
                                         }
                                     },
                                     "type": "object"
@@ -12246,14 +12295,14 @@
                         }
                     },
                     "404": {
-                        "description": "Le logement à mettre à jour n'existe pas",
+                        "description": "Le logement spécifié n'existe pas",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Le logement à mettre à jour n'existe pas"
+                                            "example": "Le logement spécifié n'existe pas"
                                         }
                                     },
                                     "type": "object"
@@ -12295,34 +12344,94 @@
                             "schema": {
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "description": "Nom du logement",
+                                        "type": "string",
+                                        "example": "Villa Paradis"
                                     },
                                     "description": {
-                                        "type": "string"
+                                        "description": "Description du logement",
+                                        "type": "string",
+                                        "example": "Charmante villa avec piscine et vue sur la mer."
                                     },
                                     "number_of_bed": {
-                                        "type": "integer"
+                                        "description": "Nombre de lits disponibles dans le logement",
+                                        "type": "integer",
+                                        "example": 3
                                     },
                                     "number_of_traveller": {
-                                        "type": "integer"
+                                        "description": "Nombre maximum de voyageurs",
+                                        "type": "integer",
+                                        "example": 6
                                     },
                                     "is_camera": {
-                                        "type": "integer"
+                                        "description": "Indique si le logement est équipé de caméras de sécurité (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "is_accepted_animal": {
-                                        "type": "integer"
+                                        "description": "Indique si les animaux sont acceptés (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "is_animal_exist": {
-                                        "type": "integer"
+                                        "description": "Indique si des animaux vivent déjà dans le logement (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 0
                                     },
                                     "is_instant_reservation": {
-                                        "type": "integer"
+                                        "description": "Indique si la réservation instantanée est possible (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "maximum_duration": {
-                                        "type": "integer"
+                                        "description": "Durée maximale de séjour en jours",
+                                        "type": "integer",
+                                        "example": 30
                                     },
                                     "minimum_duration": {
-                                        "type": "integer"
+                                        "description": "Durée minimale de séjour en jours",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "time_before_reservation": {
+                                        "description": "Temps avant la réservation en heures",
+                                        "type": "integer",
+                                        "example": 24
+                                    },
+                                    "is_accept_arm": {
+                                        "description": "Indique si les armes sont acceptées (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "is_accept_smoking": {
+                                        "description": "Indique si fumer est accepté (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_accept_chill": {
+                                        "description": "Indique si les soirées tranquilles sont acceptées (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_accept_noise": {
+                                        "description": "Indique si le bruit est accepté (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "is_accept_alccol": {
+                                        "description": "Indique si l'alcool est accepté (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_accept_anulation": {
+                                        "description": "Indique si l'annulation est acceptée (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_accepted_photo": {
+                                        "description": "Indique si les photos sont autorisées dans le logement (0 = non, 1 = oui)",
+                                        "type": "integer",
+                                        "example": 1
                                     }
                                 },
                                 "type": "object"
@@ -12347,6 +12456,22 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "L'utilisateur n'est pas autorisé à modifier ce logement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Seul le propriétaire du logement peut le modifier"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Le logement à mettre à jour n'existe pas",
                         "content": {
@@ -12356,6 +12481,22 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Le logement à mettre à jour n'existe pas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Les données de la requête sont invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Les champs 'name' et 'description' sont requis"
                                         }
                                     },
                                     "type": "object"

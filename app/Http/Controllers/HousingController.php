@@ -2376,129 +2376,136 @@ public function getListingsByNightPriceMin(Request $request,$price)
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
  }
 
-/**
- * @OA\Put(
- *     path="/api/logement/update/sensible/{id}",
- *     tags={"Dashboard hote"},
- *     summary="Modifier les informations sensibles d'un logement",
- *     description="Permet de mettre à jour les informations sensibles d'un logement existant à partir de son ID",
- *     security={{"bearerAuth":{}}},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         description="ID du logement à mettre à jour",
- *         required=true,
- *         @OA\Schema(
- *             type="integer"
- *         )
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="application/json",
- *             @OA\Schema(
- *                 type="object",
- *                 @OA\Property(
- *                     property="interior_regulation",
- *                     type="string"
- *                 ),
- *                 @OA\Property(
- *                     property="telephone",
- *                     type="string"
- *                 ),
- *                 @OA\Property(
- *                     property="code_pays",
- *                     type="string"
- *                 ),
- *                 @OA\Property(
- *                     property="arrived_independently",
- *                     type="integer"
- *                 ),
- *                 @OA\Property(
- *                     property="cancelation_condition",
- *                     type="string"
- *                 ),
- *                 @OA\Property(
- *                     property="departure_instruction",
- *                     type="string"
- *                 ),
- *                 @OA\Property(
- *                     property="surface",
- *                     type="number"
- *                 ),
- *                 @OA\Property(
- *                     property="price",
- *                     type="number"
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Les informations du logement ont été mises à jour avec succès",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Les informations du logement ont été mises à jour avec succès")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Le logement à mettre à jour n'existe pas",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Le logement à mettre à jour n'existe pas")
- *         )
- *     )
+
+
+ /**
+ * @OA\Post(
+ *      path="/api/logement/update/sensible/{id}",
+ *      tags={"Dashboard hote"},
+ *      summary="Met à jour un logement sensible",
+ *      security={{"bearerAuth":{}}},
+ *      description="Met à jour les informations d'un logement spécifié par son ID.",
+ *      @OA\Parameter(
+ *          name="id",
+ *          in="path",
+ *          required=true,
+ *          description="ID du logement à mettre à jour",
+ *          @OA\Schema(type="integer")
+ *      ),
+ *      @OA\RequestBody(
+ *          required=true,
+ *          @OA\MediaType(
+ *              mediaType="multipart/form-data",
+ *              @OA\Schema(
+ *                  type="object",
+ *                  @OA\Property(property="interior_regulation", type="string", nullable=true),
+ *                  @OA\Property(property="interior_regulation_pdf", type="file", nullable=true, description="Télécharger un fichier PDF"),
+ *                  @OA\Property(property="telephone", type="string", nullable=true),
+ *                  @OA\Property(property="code_pays", type="string", nullable=true),
+ *                  @OA\Property(property="arrived_independently", type="integer", nullable=true),
+ *                  @OA\Property(property="cancelation_condition", type="string", nullable=true),
+ *                  @OA\Property(property="departure_instruction", type="string", nullable=true),
+ *                  @OA\Property(property="surface", type="number", format="float", nullable=true),
+ *                  @OA\Property(property="price", type="number", format="float", nullable=true),
+ *                  @OA\Property(property="delai_partiel_remboursement", type="integer", nullable=true),
+ *                  @OA\Property(property="delai_integral_remboursement", type="integer", nullable=true),
+ *                  @OA\Property(property="valeur_integral_remboursement", type="number", format="float", nullable=true),
+ *                  @OA\Property(property="valeur_partiel_remboursement", type="number", format="float", nullable=true)
+ *              )
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Logement mis à jour avec succès",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="message", type="string", example="Logement mis à jour avec succès")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Seul le propriétaire du logement peut le modifier",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="error", type="string", example="Seul le propriétaire du logement peut le modifier")
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Le logement spécifié n'existe pas",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="message", type="string", example="Le logement spécifié n'existe pas")
+ *          )
+ *      )
  * )
  */
 
 
+
  public function updateSensibleHousing(Request $request, $id)
- {
-     $userId = Auth::id();
-     $housing = Housing::find($id);
+{
+    $userId = Auth::id();
+    $housing = Housing::find($id);
 
-     if (!$housing) {
-         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
-     }
-
-     (new PromotionController())->actionRepetitif($id);
-
-     $validatedData = $request->validate([
-         'interior_regulation' => 'required',
-         'telephone' => 'required',
-         'code_pays' => 'required',
-         'arrived_independently' => 'required',
-         'cancelation_condition' => 'required',
-         'departure_instruction' => 'required',
-         'surface' => 'required',
-         'price' => 'required',
-     ]);
-
-     if ($housing->user_id != $userId ) {
-        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier '], 403);
+    if (!$housing) {
+        return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
-     $housing->update($validatedData);
-     $housing->is_updated = true;
-     $housing->save();
-
-     $notificationText = "Le logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible.";
+    (new PromotionController())->actionRepetitif($id);
 
 
-     $right = Right::where('name','admin')->first();
-     $adminUsers = User_right::where('right_id', $right->id)->get();
-     foreach ($adminUsers as $adminUser) {
+    $validatedData = $request->validate([
+        'interior_regulation' => 'nullable|string',
+        'interior_regulation_pdf' => 'nullable',
+        'telephone' => 'nullable|string',
+        'code_pays' => 'nullable|string',
+        'arrived_independently' => 'nullable|integer',
+        'cancelation_condition' => 'nullable|string',
+        'departure_instruction' => 'nullable|string',
+        'surface' => 'nullable|numeric',
+        'price' => 'nullable|numeric',
+        'delai_partiel_remboursement' => 'nullable|integer',
+        'delai_integral_remboursement' => 'nullable|integer',
+        'valeur_integral_remboursement' => 'nullable|numeric',
+        'valeur_partiel_remboursement' => 'nullable|numeric',
+    ]);
 
-
-     $mail = [
-         "title" => "Mise à jour de logement",
-         "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
-     ];
-
-     dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
+    if ($housing->user_id != $userId) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut le modifier'], 403);
     }
 
-     return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
- }
+    if ($request->hasFile('interior_regulation_pdf')) {
+        $photo = $request->file('interior_regulation_pdf');
+
+        $uploadedPath = $this->fileService->uploadFiles($photo, 'image/interior_regulation', 'extensionDocument');
+
+        if ($uploadedPath['fails']) {
+            return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
+        }
+
+
+        $validatedData['interior_regulation_pdf'] = $uploadedPath['result'];
+    }
+
+    $housing->update($validatedData);
+
+    $housing->is_updated = true;
+    $housing->save();
+
+    $right = Right::where('name', 'admin')->first();
+    $adminUsers = User_right::where('right_id', $right->id)->get();
+    foreach ($adminUsers as $adminUser) {
+        $mail = [
+            "title" => "Mise à jour de logement",
+            "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
+        ];
+
+        dispatch(new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
+    }
+
+    return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
+}
+
+ 
+
 
 
 
@@ -2508,7 +2515,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
  *     tags={"Dashboard hote"},
  *     summary="Modifier les informations insensibles d'un logement",
  *     description="Permet de modifier les informations insensibles d'un logement existant à partir de son ID",
- *     security={{"bearerAuth":{}}},
+ *     security={{"bearerAuth":{}}}, 
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -2526,44 +2533,112 @@ public function getListingsByNightPriceMin(Request $request,$price)
  *                 type="object",
  *                 @OA\Property(
  *                     property="name",
- *                     type="string"
+ *                     type="string",
+ *                     description="Nom du logement",
+ *                     example="Villa Paradis"
  *                 ),
  *                 @OA\Property(
  *                     property="description",
- *                     type="string"
+ *                     type="string",
+ *                     description="Description du logement",
+ *                     example="Charmante villa avec piscine et vue sur la mer."
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_bed",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Nombre de lits disponibles dans le logement",
+ *                     example=3
  *                 ),
  *                 @OA\Property(
  *                     property="number_of_traveller",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Nombre maximum de voyageurs",
+ *                     example=6
  *                 ),
  *                 @OA\Property(
  *                     property="is_camera",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Indique si le logement est équipé de caméras de sécurité (0 = non, 1 = oui)",
+ *                     example=1
  *                 ),
  *                 @OA\Property(
  *                     property="is_accepted_animal",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Indique si les animaux sont acceptés (0 = non, 1 = oui)",
+ *                     example=1
  *                 ),
  *                 @OA\Property(
  *                     property="is_animal_exist",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Indique si des animaux vivent déjà dans le logement (0 = non, 1 = oui)",
+ *                     example=0
  *                 ),
  *                 @OA\Property(
  *                     property="is_instant_reservation",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Indique si la réservation instantanée est possible (0 = non, 1 = oui)",
+ *                     example=1
  *                 ),
  *                 @OA\Property(
  *                     property="maximum_duration",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Durée maximale de séjour en jours",
+ *                     example=30
  *                 ),
  *                 @OA\Property(
  *                     property="minimum_duration",
- *                     type="integer"
+ *                     type="integer",
+ *                     description="Durée minimale de séjour en jours",
+ *                     example=2
  *                 ),
+ *                 @OA\Property(
+ *                     property="time_before_reservation",
+ *                     type="integer",
+ *                     description="Temps avant la réservation en heures",
+ *                     example=24
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_arm",
+ *                     type="integer",
+ *                     description="Indique si les armes sont acceptées (0 = non, 1 = oui)",
+ *                     example=0
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_smoking",
+ *                     type="integer",
+ *                     description="Indique si fumer est accepté (0 = non, 1 = oui)",
+ *                     example=1
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_chill",
+ *                     type="integer",
+ *                     description="Indique si les soirées tranquilles sont acceptées (0 = non, 1 = oui)",
+ *                     example=1
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_noise",
+ *                     type="integer",
+ *                     description="Indique si le bruit est accepté (0 = non, 1 = oui)",
+ *                     example=0
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_alccol",
+ *                     type="integer",
+ *                     description="Indique si l'alcool est accepté (0 = non, 1 = oui)",
+ *                     example=1
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accept_anulation",
+ *                     type="integer",
+ *                     description="Indique si l'annulation est acceptée (0 = non, 1 = oui)",
+ *                     example=1
+ *                 ),
+ *                 @OA\Property(
+ *                     property="is_accepted_photo",
+ *                     type="integer",
+ *                     description="Indique si les photos sont autorisées dans le logement (0 = non, 1 = oui)",
+ *                     example=1
+ *                 )
  *             )
  *         )
  *     ),
@@ -2575,22 +2650,40 @@ public function getListingsByNightPriceMin(Request $request,$price)
  *         )
  *     ),
  *     @OA\Response(
+ *         response=403,
+ *         description="L'utilisateur n'est pas autorisé à modifier ce logement",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Seul le propriétaire du logement peut le modifier")
+ *         )
+ *     ),
+ *     @OA\Response(
  *         response=404,
  *         description="Le logement à mettre à jour n'existe pas",
  *         @OA\JsonContent(
  *             @OA\Property(property="message", type="string", example="Le logement à mettre à jour n'existe pas")
  *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Les données de la requête sont invalides",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Les champs 'name' et 'description' sont requis")
+ *         )
  *     )
  * )
  */
+
+
 public function updateInsensibleHousing(Request $request, $id)
 {
     $userId = Auth::id();
     $housing = Housing::find($id);
+
     if (!$housing) {
         return response()->json(['message' => 'Le logement spécifié n\'existe pas'], 404);
     }
 
+//    return $request;
 
     (new PromotionController())->actionRepetitif($id);
 
@@ -2603,12 +2696,19 @@ public function updateInsensibleHousing(Request $request, $id)
         'is_accepted_animal' => 'required|integer',
         'is_animal_exist' => 'required|integer',
         'is_instant_reservation' => 'required|integer',
-        'maximum_duration' => 'required|integer',
         'minimum_duration' => 'required|integer',
+        'time_before_reservation' => 'nullable|integer',
+        'is_accept_arm' => 'nullable|boolean',
+        'is_accept_smoking' => 'nullable|boolean',
+        'is_accept_chill' => 'nullable|boolean',
+        'is_accept_noise' => 'nullable|boolean',
+        'is_accept_alccol' => 'nullable|boolean',
+        'step' => 'nullable|string',
+        'is_accepted_photo' => 'nullable|boolean',
     ]);
 
-    if ($housing->user_id != $userId ) {
-        return response()->json(['error' => 'Seul le propriétaire du logement peut la modifier'], 403);
+    if ($housing->user_id != $userId) {
+        return response()->json(['error' => 'Seul le propriétaire du logement peut le modifier'], 403);
     }
 
     $housing->update($validatedData);
@@ -2617,6 +2717,7 @@ public function updateInsensibleHousing(Request $request, $id)
 
     return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
 }
+
 
 
 
@@ -3998,10 +4099,19 @@ public function HousingHoteInProgress(){
                     "is_accepted_animal",
                     "is_animal_exist",
                     "is_instant_reservation",
-                    "maximum_duration",
-                    "minimum_duration"
+                    "minimum_duration",
+                    
+                    // Champs ajoutés
+                    "time_before_reservation",
+                    "is_accept_arm",
+                    "is_accept_smoking",
+                    "is_accept_chill",
+                    "is_accept_noise",
+                    "is_accept_alccol",
+                    "is_accept_anulation",
+                    "is_accepted_photo"
                 ];
-
+                
                 $sensitiveFields = [
                     "interior_regulation",
                     "interior_regulation_pdf",
@@ -4011,8 +4121,15 @@ public function HousingHoteInProgress(){
                     "cancelation_condition",
                     "departure_instruction",
                     "surface",
-                    "price"
+                    "price",
+                
+                    // Champs ajoutés
+                    "delai_partiel_remboursement",
+                    "delai_integral_remboursement",
+                    "valeur_integral_remboursement",
+                    "valeur_partiel_remboursement"
                 ];
+                
 
                 $data = [];
 

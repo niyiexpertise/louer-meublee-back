@@ -871,7 +871,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateSensible']], function () {
-                Route::put('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing'])->name('logement.updateSensible');
+                Route::post('/update/sensible/{housingid}', [HousingController::class, 'updateSensibleHousing'])->name('logement.updateSensible');
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingSensibleOrInsensibleDetail']], function () {

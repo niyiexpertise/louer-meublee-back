@@ -1922,7 +1922,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         ->where('is_updated', 0)
         ->where('is_actif', 1)
         ->where('is_destroy', 0)
-        ->where('number_of_traveller','<=',$nbtravaler)
+        ->where('number_of_traveller','>=',$nbtravaler)
         ->where('is_finished', 1)
         ->skip(($page - 1) * $perPage)
         ->take($perPage)
@@ -2457,15 +2457,15 @@ public function getListingsByNightPriceMin(Request $request,$price)
         'interior_regulation_pdf' => 'nullable',
         'telephone' => 'nullable|string',
         'code_pays' => 'nullable|string',
-        'arrived_independently' => 'nullable|integer',
+        'arrived_independently' => 'nullable|integer|min:0',
         'cancelation_condition' => 'nullable|string',
         'departure_instruction' => 'nullable|string',
-        'surface' => 'nullable|numeric',
-        'price' => 'nullable|numeric',
-        'delai_partiel_remboursement' => 'nullable|integer',
-        'delai_integral_remboursement' => 'nullable|integer',
-        'valeur_integral_remboursement' => 'nullable|numeric',
-        'valeur_partiel_remboursement' => 'nullable|numeric',
+        'surface' => 'nullable|numeric|min:0',
+        'price' => 'nullable|numeric|min:0',
+        'delai_partiel_remboursement' => 'nullable|integer|min:0',
+        'delai_integral_remboursement' => 'nullable|integer|min:0',
+        'valeur_integral_remboursement' => 'nullable|numeric|min:0|max:100',
+        'valeur_partiel_remboursement' => 'nullable|numeric|min:0|max:100',
     ]);
 
     if ($housing->user_id != $userId) {
@@ -2480,7 +2480,6 @@ public function getListingsByNightPriceMin(Request $request,$price)
         if ($uploadedPath['fails']) {
             return (new ServiceController())->apiResponse(404, [], $uploadedPath['result']);
         }
-
 
         $validatedData['interior_regulation_pdf'] = $uploadedPath['result'];
     }
@@ -2504,7 +2503,7 @@ public function getListingsByNightPriceMin(Request $request,$price)
     return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
 }
 
- 
+
 
 
 
@@ -2691,19 +2690,18 @@ public function updateInsensibleHousing(Request $request, $id)
         'name' => 'required|string',
         'description' => 'required|string',
         'number_of_bed' => 'required|integer',
-        'number_of_traveller' => 'required|integer',
-        'is_camera' => 'required|integer',
-        'is_accepted_animal' => 'required|integer',
+        'number_of_traveller' => 'required|integer|min:0',
+        'is_camera' => 'required|boolean',
+        'is_accepted_animal' => 'required|boolean',
         'is_animal_exist' => 'required|integer',
-        'is_instant_reservation' => 'required|integer',
-        'minimum_duration' => 'required|integer',
-        'time_before_reservation' => 'nullable|integer',
+        'is_instant_reservation' => 'required|boolean',
+        'minimum_duration' => 'required|integer|min:0',
+        'time_before_reservation' => 'nullable|integer|min:0',
         'is_accept_arm' => 'nullable|boolean',
         'is_accept_smoking' => 'nullable|boolean',
         'is_accept_chill' => 'nullable|boolean',
         'is_accept_noise' => 'nullable|boolean',
         'is_accept_alccol' => 'nullable|boolean',
-        'step' => 'nullable|string',
         'is_accepted_photo' => 'nullable|boolean',
     ]);
 

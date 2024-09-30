@@ -179,9 +179,11 @@ public function DeleteEquipementHousing(Request $request)
 
         Housing_equipment::whereIn('id', $housingEquipmentIds)->delete();
 
-        return response()->json(['message' => 'Les équipements du logement ont été retirés avec succès'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Les équipements du logement ont été retirés avec succès');
     } catch (ValidationException $e) {
-        return response()->json(['message' => 'Un ou plusieurs équipements du logement à retirer n\'existent pas'], 404);
+        return (new ServiceController())->apiResponse(404, [], 'Un ou plusieurs équipements du logement à retirer n\'existent pas');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 
@@ -333,7 +335,7 @@ public function DeleteEquipementHousing(Request $request)
          *     )
          * )
          */
-        public function addEquipmentToHousing(Request $request)
+        public function addEquipmentToHousings(Request $request)
         {
             try {
 
@@ -858,9 +860,9 @@ public function getHousingCategoriesEquipment($housingId){
             $defaultEquipments = Equipment_category::where('category_id', $category->id)->pluck('equipment_id')->toArray();
 
             $associatedEquipments = Housing_equipment::where('category_id', $category->id)
-         ->where('housing_id', $housingId)
-        ->pluck('equipment_id')
-        ->toArray();
+            ->where('housing_id', $housingId)
+            ->pluck('equipment_id')
+            ->toArray();
 
 
             $remainingEquipments = array_diff($defaultEquipments, $associatedEquipments);
@@ -880,6 +882,217 @@ public function getHousingCategoriesEquipment($housingId){
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
+
+ /**
+ * @OA\Post(
+ *     path="/api/logement/equipment/addEquipmentToHousingCategory/{housingId}",
+ *     summary="Ajouter des équipements aux pièces d'un logement",
+ *     tags={"Housing Equipment"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="L'ID du logement auquel on veut ajouter des équipements",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="categories",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(property="id", type="integer", example=1, description="ID de la catégorie"),
+ *                         @OA\Property(
+ *                             property="equipments",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="object",
+ *                                 @OA\Property(
+ *                                     property="equipmentsId",
+ *                                     type="array",
+ *                                     @OA\Items(type="integer", example=9),
+ *                                     description="Tableau contenant les IDs des équipements existants"
+ *                                 ),
+ *                                 @OA\Property(
+ *                                     property="newEquipementName",
+ *                                     type="array",
+ *                                     @OA\Items(type="string", example="lenouveau"),
+ *                                     description="Tableau contenant les noms des nouveaux équipements à ajouter"
+ *                                 )
+ *                             )
+ *                         )
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Équipements ajoutés avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Équipements ajoutés avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Identifiants invalides",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Identifiants invalides")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur dans les données fournies",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Données invalides")
+ *         )
+ *     )
+ * )
+ */
+
+
+    public function addEquipmentToHousingCategory(Request $request,$housingId){
+        try {
+            $errorcheckOwner =  (new AddHousingZController())->checkOwner($housingId);
+
+            if ($errorcheckOwner) {
+                return $errorcheckOwner;
+            }
+
+            foreach($request->categories as $categorie) {
+                if(!Housing_category_file::where('housing_id',$housingId)->where('category_id',$categorie['id'])->exists()){
+                    return (new ServiceController())->apiResponse(404, [$categorie['id']], "Seules les pièces associées à ce logement sont valides");
+                }
+            }
+
+            foreach ($request->categories as $categorie) {
+
+
+                if (!$categorie['equipments'] || !$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
+                    return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît pour la pièce ".Category::find($categorie['id'])->name);
+                }
+
+                $items = $categorie['equipments'][0]['equipmentsId'];
+
+                // return $items;
+
+                $uniqueItems = array_unique($items);
+    
+                if (count($uniqueItems) < count($items)) {
+                    return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux équipements existants avec le même id.");
+                }
+
+                foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                    $equipmentId=intval($equipmentId);
+                    if (!is_int($equipmentId)) {
+                        return (new ServiceController())->apiResponse(404, [], "Les équipements doivent être des entiers, cela concerne le logement ".Category::find($categorie['id'])->name);
+                    }
+    
+                    $equipment = Equipment::find($equipmentId);
+                    if (!$equipment) {
+                        return (new ServiceController())->apiResponse(404, [],'Équipement non trouvé pour la pièce '.Category::find($categorie['id'])->name);
+                    }
+    
+                    $EquipmentCategorieExists = Equipment_category::where('equipment_id', $equipmentId)
+                        ->where('category_id', $categorie['id'])->exists();
+    
+                    if (!$EquipmentCategorieExists) {
+                        return (new ServiceController())->apiResponse(404, [], "Revoyez les id de catégorie et équipement que vous renvoyez. L'équipement ".Equipment::find($equipmentId)->name ." n'est pas associé à la pièce " . Category::find($categorie['id'])->name);
+                    }
+                }
+
+                if(Housing_equipment::where('housing_id',$housingId)->where('equipment_id',$equipmentId)->where('category_id',$categorie['id'])->exists()){
+                    $equipement = Equipment::whereId($equipmentId)->first()->name;
+                    $category = Category::whereId($categorie['id'])->first()->name;
+                    return (new ServiceController())->apiResponse(404, [], "L'équipement $equipement est déjà associé à la pièce $category de ce logement.");
+                }
+                // return count($categorie['equipments'][0]['newEquipementName']);
+
+                
+
+                if (isset($categorie['equipments'][0]['newEquipementName']) && count($categorie['equipments'][0]['newEquipementName']) > 0) {
+                    $items = $categorie['equipments'][0]['newEquipementName'];
+                    $uniqueItems = array_unique($items);
+    
+                    if (count($uniqueItems) < count($items)) {
+                        return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas ajouter deux nouveaux équipements avec le même nom à la pièce ". Category::find($categorie['id'])->name);
+                    }
+    
+                    foreach ($categorie['equipments'][0]['newEquipementName'] as $equipmentName) {
+                        $EquipmentExists = Equipment::whereName($equipmentName)->exists();
+                        if ($EquipmentExists) {
+                            return (new ServiceController())->apiResponse(404, [], "Un autre équipement ayant le même nom existe déjà dans la base de données ou a été exclu. $equipmentName existe déjà comme nom d'équipement");
+                        }
+                    }
+                }
+
+                foreach ($request->categories as $categorie) {
+                    foreach ($categorie['equipments'][0]['equipmentsId'] as $equipmentId) {
+                        $equipment = Equipment::find($equipmentId);
+                        if ($equipment) {
+                            $housingEquipment = new Housing_equipment();
+                            $housingEquipment->equipment_id = $equipmentId;
+                            $housingEquipment->category_id = $categorie['id'];
+                            $housingEquipment->housing_id = $housingId;
+                            $housingEquipment->is_verified = false;
+                            $housingEquipment->save();
+                            $equipmentIds[] = $equipmentId;
+                        }
+                    }
+                    if (isset($categorie['equipments'][0]['newEquipementName'])) {
+                        foreach ($categorie['equipments'][0]['newEquipementName'] as $newEquipment) {
+
+                            $equipment = Equipment::whereName($newEquipment)->first();
+                            if (!$equipment) {
+                                $equipment = new Equipment();
+                                $equipment->name = $newEquipment;
+                                $equipment->is_verified = false;
+                                $equipment->save();
+                            }
+                            $equipmentCategory = new Equipment_category();
+                            $equipmentCategory->equipment_id = $equipment->id;
+                            $equipmentCategory->category_id = $categorie['id'];
+                            $equipmentCategory->save();
+            
+                            $housingEquipment = new Housing_equipment();
+                            $housingEquipment->equipment_id = $equipment->id;
+                            $housingEquipment->category_id = $categorie['id'];
+                            $housingEquipment->housing_id = $housingId;
+                            $housingEquipment->is_verified = false;
+                            $housingEquipment->save();
+                        }
+                }
+
+            }
+        }
+
+        $right = Right::where('name','admin')->first();
+        $adminUsers = User_right::where('right_id', $right->id)->get();
+
+        foreach ($adminUsers as $adminUser) {
+            $mail = [
+                "title" => "Ajout d'un/de nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement",
+                "body" => "Un hote vient d'ajouter un/plusieurs nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement."
+            ];
+       
+            dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
+                  }
+    
+            return (new ServiceController())->apiResponse(200, [], 'Équipement(s) ajouté(s) avec succès');
+    
+        } catch (\Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
 
 
 

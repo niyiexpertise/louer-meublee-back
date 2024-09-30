@@ -171,11 +171,14 @@ public function deletePreferenceHousing(Request $request)
 
         Housing_preference::whereIn('id', $housingPreferenceIds)->delete();
 
-        return response()->json(['message' => 'Les préférences du logement ont été retirées avec succès'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Les préférences du logement ont été retirées avec succès');
     } catch (ValidationException $e) {
-        return response()->json(['message' => 'Un ou plusieurs préférences du logement à retirer n\'existent pas'], 404);
+        return (new ServiceController())->apiResponse(404, [], 'Un ou plusieurs préférences du logement à retirer n\'existent pas');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
+
 
   /**
  * @OA\Post(

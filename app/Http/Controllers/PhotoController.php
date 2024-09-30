@@ -165,26 +165,25 @@ class PhotoController extends Controller
         // Vérifiez d'abord si le logement existe
         $housing = Housing::find($housingId);
         if (!$housing) {
-            return response()->json(['message' => 'Le logement n\'existe pas.'], 404);
+            return (new ServiceController())->apiResponse(400, [], "Logement non trouvé");
         }
+
 
         // Vérifiez ensuite si la photo existe et est associée au logement
-        $photo = $housing->photos()->find($photoId);
+        $photo =photo::where('housing_id',$housingId)->whereId($photoId) ->first();
         if (!$photo) {
-            return response()->json(['message' => 'La photo n\'existe pas ou n\'est pas associée à ce logement.'], 404);
+            return (new ServiceController())->apiResponse(404, [], "La photo n'existe pas ou n'est pas associée à ce logement");
         }
 
-        // Réinitialisez la photo de couverture pour ce logement
-        $housing->is_couverture = false;
-        $housing->save();
-
+        photo::where('housing_id',$housingId)->update(["is_couverture"=>false]);
 
         $photo->is_couverture = true;
         $photo->save();
 
-        return response()->json(['message' => 'La nouvelle photo de couverture a été définie avec succès.'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'La nouvelle photo de couverture a été définie avec succès.');
+
     } catch (Exception $e) {
-        return response()->json(['message' => 'Une erreur s\'est produite lors de la définition de la nouvelle photo de couverture.'], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

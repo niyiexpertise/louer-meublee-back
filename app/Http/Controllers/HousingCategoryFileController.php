@@ -714,7 +714,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
         ], 200);
 
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 
@@ -773,7 +773,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
                               ->get();
 
         if ($housingCategoryFiles->isEmpty()) {
-            return response()->json(['error' => 'Aucune relation entre le logement et la catégorie trouvée.'], 400);
+            return (new ServiceController())->apiResponse(404,[], 'ucune relation entre le logement et la catégorie trouvée.');
         }
 
         foreach ($housingCategoryFiles as $housingCategoryFile) {
@@ -797,10 +797,10 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
             $category->delete();
         }
 
-        return response()->json(['message' => 'Catégorie et fichiers associés supprimés avec succès.'], 200);
+        return (new ServiceController())->apiResponse(200,[], 'Catégorie et fichiers associés supprimés avec succès.');
 
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 
@@ -1429,5 +1429,171 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
          }
      }
      
+
+     /**
+ * @OA\Post(
+ *     path="/api/logement/category/addCategoryToHousing/{housingId}",
+ *     summary="Ajouter des catégories à un logement",
+ *     tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *         name="housingId",
+ *         in="path",
+ *         description="L'ID du logement auquel on veut ajouter des catégories",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="categorieIds",
+ *                     type="array",
+ *                     description="Tableau des IDs des catégories existantes à associer au logement",
+ *                     @OA\Items(type="integer")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="numbers",
+ *                     type="array",
+ *                     description="Tableau des quantités correspondant aux catégories existantes",
+ *                     @OA\Items(type="integer")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="newCategorieNames",
+ *                     type="array",
+ *                     description="Tableau des noms des nouvelles catégories à ajouter",
+ *                     @OA\Items(type="string")
+ *                 ),
+ *                 @OA\Property(
+ *                     property="newNumber",
+ *                     type="array",
+ *                     description="Tableau des quantités correspondant aux nouvelles catégories",
+ *                     @OA\Items(type="integer")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Catégories ajoutées avec succès"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Erreur de validation des données"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="La catégorie ou la quantité spécifiée est invalide"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur interne"
+ *     )
+ * )
+ */
+
+
+     public function addCategoryToHousing(Request $request, $housingId)
+{
+    try {
+        $request->validate([
+            'categorieIds' => 'required|array',
+            'numbers' => 'required|array',
+            'newCategorieNames' => 'nullable|array',
+            'newNumber' => 'nullable|array'
+        ]);
+
+        $categorieIds = $request->categorieIds;
+        $numbers = $request->numbers;
+        $newCategorieNames = $request->newCategorieNames ?? [];
+        $newNumber = $request->newNumber ?? [];
+
+        if (count($categorieIds) !== count($numbers)) {
+            return (new ServiceController())->apiResponse(404, [], 'Le nombre de catégories et de quantités ne correspond pas.');
+        }
+
+        if (count($newCategorieNames) !== count($newNumber)) {
+            return (new ServiceController())->apiResponse(404, [], 'Le nombre de nouvelles catégories et de quantités ne correspond pas.');
+        }
+
+        foreach ($categorieIds as $index => $categorieId) {
+            $category = Category::find($categorieId);
+            if (!$category) {
+                return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $categorieId n'existe pas.");
+            }
+
+            if (!is_numeric($numbers[$index]) || intval($numbers[$index]) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], "La quantité pour la catégorie avec l'ID $categorieId doit être un nombre positif.");
+            }
+
+            $existingRecord = Housing_category_file::where('housing_id', $housingId)
+                ->where('category_id', $categorieId)
+                ->first();
+            if ($existingRecord) {
+                return (new ServiceController())->apiResponse(404, [], "Une catégorie avec l'ID $categorieId est déjà associée à ce logement.");
+            }
+        }
+
+        foreach ($newCategorieNames as $index => $newCategorieName) {
+            if (Category::where('name', $newCategorieName)->exists()) {
+                return (new ServiceController())->apiResponse(404, [], "Une catégorie avec le nom '$newCategorieName' existe déjà.");
+            }
+
+            if (!is_numeric($newNumber[$index]) || intval($newNumber[$index]) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], "La quantité pour la nouvelle catégorie '$newCategorieName' doit être un nombre positif.");
+            }
+        }
+
+        foreach ($categorieIds as $index => $categorieId) {
+            $housingCategoryFile = new Housing_category_file();
+            $housingCategoryFile->housing_id = $housingId;
+            $housingCategoryFile->category_id = $categorieId;
+            $housingCategoryFile->number = $numbers[$index];
+            $housingCategoryFile->is_verified= false;
+            $housingCategoryFile->save();
+        }
+
+        foreach ($newCategorieNames as $index => $newCategorieName) {
+            $newCategory = new Category();
+            $newCategory->name = $newCategorieName;
+            $newCategory->is_verified= false;
+            $newCategory->save();
+
+            $housingCategoryFile = new Housing_category_file();
+            $housingCategoryFile->housing_id = $housingId;
+            $housingCategoryFile->category_id = $newCategory->id;
+            $housingCategoryFile->number = $newNumber[$index];
+            $housingCategoryFile->is_verified= false;
+            $housingCategoryFile->save();
+        }
+
+        $right = Right::where('name','admin')->first();
+        $adminUsers = User_right::where('right_id', $right->id)->get();
+
+        foreach ($adminUsers as $adminUser) {
+
+
+            $mail = [
+                "title" => "Ajout d'une/de nouvelle(s) catégorie(s) à un logement",
+                "body" => "Un hote vient d'ajouter une/de categorie(s) photo(s) à un logement."
+            ];
+       
+            dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
+                  }
+
+        return (new ServiceController())->apiResponse(200, [], 'Catégories ajoutées avec succès.');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+
+
 
 }

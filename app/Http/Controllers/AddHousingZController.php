@@ -1731,20 +1731,16 @@ public function addHousing_step_8(Request $request, $housingId){
             if (!isset($categorie['nombre']) || !$categorie['nombre']) {
                 return (new ServiceController())->apiResponse(404, [], "Nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " non renseigné");
             }
-            $categorie['nombre']=intval ($categorie['nombre']);                 
+            $categorie['nombre']=intval ($categorie['nombre']);
             if (!is_int($categorie['nombre'])) {
                 return (new ServiceController())->apiResponse(404, [], "Le nombre de la pièce " . Category::whereId($categorie['id'])->first()->name . " doit être un entier");
             }
-           
-            // return  count($categorie['equipments'][0]['equipmentsId']);
 
-           
+            // return  count($categorie['equipments'][0]['equipmentsId']);
 
             if (!$categorie['equipments'] || !$categorie['equipments'][0]['equipmentsId'] || count($categorie['equipments'][0]['equipmentsId']) == 0) {
                 return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît pour la pièce ".Category::find($categorie['id'])->name);
             }
-
-           
 
             $items = $categorie['equipments'][0]['equipmentsId'];
            

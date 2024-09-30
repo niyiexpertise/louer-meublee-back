@@ -942,6 +942,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addEquipment']], function () {
                 Route::post('/equipment/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing'])->name('logement.addEquipment');
             });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addEquipmentToHousingCategory']], function () {
+                Route::post('/equipment/addEquipmentToHousingCategory/{housingId}', [HousingEquipmentController::class, 'addEquipmentToHousingCategory'])->name('logement.addEquipmentToHousingCategory');
+            });
             // Gestion des préférences du logement
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.housingPreference']], function () {
@@ -1000,10 +1004,14 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/category/getHousingCategories/{housingId}', [HousingCategoryFileController::class, 'getHousingCategories'])->name('logement.getHousingCategories');
                 });
 
+                Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addCategoryToHousing']], function () {
+                    Route::post('/category/addCategoryToHousing/{housingId}', [HousingCategoryFileController::class, 'addCategoryToHousing'])->name('logement.addCategoryToHousing');
+                    });
+
             // Gestion des charges
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateHousingChargeValue']], function () {
-            Route::post('/charge/updateHousingChargeValue/{id}', [HousingChargeController::class, 'updateHousingChargeValue'])->name('logement.updateHousingChargeValue');
+            Route::post('/charge/updateHousingChargeValue', [HousingChargeController::class, 'updateHousingChargeValue'])->name('logement.updateHousingChargeValue');
             });
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addCharge']], function () {

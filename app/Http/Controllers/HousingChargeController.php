@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Charge;
 use App\Models\Housing;
 use App\Models\Housing_charge;
+use App\Models\Right;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File as F ;
@@ -281,44 +282,58 @@ public function DeleteChargeHousing(Request $request)
 
         Housing_charge::whereIn('id', $housingChargeIds)->delete();
 
-        return response()->json(['message' => 'Les charges du logement ont été retirés avec succès'], 200);
+        return (new ServiceController())->apiResponse(200, [], 'Les charges du logement ont été retirées avec succès');
     } catch (ValidationException $e) {
-        return response()->json(['message' => 'Un ou plusieurs charges du logement à retirer n\'existent pas'], 404);
+        return (new ServiceController())->apiResponse(404, [], 'Un ou plusieurs charges du logement à retirer n\'existent pas');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 
 
+
 /**
  * @OA\Post(
- *     path="/api/logement/charge/updateHousingChargeValue/{id}",
- *     summary="Mettre à jour la valeur d'une charge de logement",
- *     description="Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
+ *     path="/api/logement/charge/updateHousingChargeValue",
+ *     summary="Mettre à jour les valeurs de plusieurs charges de logement",
+ *     description="Cette API permet de mettre à jour les valeurs de plusieurs charges spécifiques d'un logement.",
  *     tags={"Housing Charge"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         description="ID de la charge de logement à mettre à jour",
- *         required=true,
- *         @OA\Schema(
- *             type="integer"
- *         )
- *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             @OA\Property(property="value", type="number", example=100.50, description="La nouvelle valeur de la charge")
+ *             @OA\Property(
+ *                 property="chargeIds",
+ *                 type="array",
+ *                 description="Tableau contenant les IDs des charges de logement à mettre à jour",
+ *                 @OA\Items(type="integer", example=1)
+ *             ),
+ *             @OA\Property(
+ *                 property="values",
+ *                 type="array",
+ *                 description="Tableau contenant les nouvelles valeurs des charges à mettre à jour. Chaque valeur correspond à l'ID de charge à la même position dans le tableau `chargeIds`",
+ *                 @OA\Items(type="number", example=100.50)
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Valeur de la charge mise à jour avec succès",
+ *         description="Valeurs des charges mises à jour avec succès",
  *         @OA\JsonContent(
- *             @OA\Property(property="charge", type="object", 
- *                 @OA\Property(property="id", type="integer", example=1),
- *                 @OA\Property(property="value", type="number", example=100.50),
- *                 @OA\Property(property="housing_id", type="integer", example=3)
+ *             @OA\Property(property="charges", type="array", 
+ *                 @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="value", type="number", example=100.50),
+ *                     @OA\Property(property="housing_id", type="integer", example=3)
+ *                 )
  *             ),
- *             @OA\Property(property="message", type="string", example="Valeur de la charge modifiée avec succès")
+ *             @OA\Property(property="message", type="string", example="Valeurs des charges modifiées avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Mauvaise requête - les tableaux chargeIds et values doivent avoir la même taille",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Le nombre d'ID de charges et de valeurs doit être identique")
  *         )
  *     ),
  *     @OA\Response(
@@ -347,38 +362,61 @@ public function DeleteChargeHousing(Request $request)
  */
 
 
-public function updateHousingChargeValue(Request $request,$id){
-    try {
 
+ public function updateHousingChargeValue(Request $request) {
+    try {
         $request->validate([
-            'value' => 'required'
+            'chargeIds' => 'required|array',
+            'chargeIds.*' => 'integer|exists:housing_charges,id',
+            'values' => 'required|array',
+            'values.*' => 'numeric|min:0.01'
         ]);
 
-       $charge =  Housing_charge::whereId($id)->first();
+        if (count($request->chargeIds) !== count($request->values)) {
+            return (new ServiceController())->apiResponse(404, [], 'Le nombre d\'ID de charges et de valeurs doit être identique');
+        }
 
-       if(!$charge){
-            return (new ServiceController())->apiResponse(404,[],'Charge non trouvée');
-       }
+        foreach ($request->chargeIds as $index => $chargeId) {
+            $value = $request->values[$index];
 
-       if(!Housing::whereId($charge->housing_id)->first()){
-            return (new ServiceController())->apiResponse(404,[],"Le logement auquel appartient cette charge n'existe pas");
-       }
+            $charge = Housing_charge::whereId($chargeId)->first();
 
-       if(Auth::user()->id != Housing::whereId($charge->housing_id)->first()->user_id){
-        return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit de modifié la valeur d\'une charge d\un logement qui ne vous appartient pas');
-       }
+            if (!$charge) {
+                return (new ServiceController())->apiResponse(404, [], 'Charge non trouvée pour l\'ID : ' . $chargeId);
+            }
 
-       if(floatval($request->value)<=0){
-        return (new ServiceController())->apiResponse(404,[],'Le valeur de la charge ne peut être inférieur ou égal à 0');
-       }
+            $housing = Housing::whereId($charge->housing_id)->first();
+            if (!$housing) {
+                return (new ServiceController())->apiResponse(404, [], 'Le logement auquel appartient la charge avec ID : ' . $chargeId . ' n\'existe pas');
+            }
 
-       $charge->valeur = $request->value;
-       $charge->save();
-       return (new ServiceController())->apiResponse(200,$charge,'Valeur de la charge modifié avec succès');
+            if (Auth::user()->id != $housing->user_id) {
+                return (new ServiceController())->apiResponse(403, [], 'Vous n\'avez pas le droit de modifier la valeur de la charge pour l\'ID : ' . $chargeId);
+            }
+
+            if (floatval($value) <= 0) {
+                return (new ServiceController())->apiResponse(404, [], 'La valeur de la charge pour l\'ID : ' . $chargeId . ' doit être supérieure à 0');
+            }
+        }
+
+        $updatedCharges = [];
+        foreach ($request->chargeIds as $index => $chargeId) {
+            $value = $request->values[$index];
+
+            $charge = Housing_charge::whereId($chargeId)->first();
+
+            $charge->valeur = $value;
+            $charge->save();
+
+            $updatedCharges[] = $charge;
+        }
+
+        return (new ServiceController())->apiResponse(200, $updatedCharges, 'Valeurs des charges modifiées avec succès');
 
     } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
+
 
 }

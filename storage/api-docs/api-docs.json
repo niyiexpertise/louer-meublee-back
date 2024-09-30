@@ -10876,6 +10876,86 @@
                 ]
             }
         },
+        "/api/logement/category/addCategoryToHousing/{housingId}": {
+            "post": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Ajouter des catégories à un logement",
+                "operationId": "85a60ae328db8b953ccb0161df6b8a10",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "L'ID du logement auquel on veut ajouter des catégories",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "categorieIds": {
+                                        "description": "Tableau des IDs des catégories existantes à associer au logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "numbers": {
+                                        "description": "Tableau des quantités correspondant aux catégories existantes",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "newCategorieNames": {
+                                        "description": "Tableau des noms des nouvelles catégories à ajouter",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "newNumber": {
+                                        "description": "Tableau des quantités correspondant aux nouvelles catégories",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Catégories ajoutées avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur de validation des données"
+                    },
+                    "404": {
+                        "description": "La catégorie ou la quantité spécifiée est invalide"
+                    },
+                    "500": {
+                        "description": "Erreur serveur interne"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/charge/addChargeToHousing": {
             "post": {
                 "tags": [
@@ -11036,35 +11116,35 @@
                 ]
             }
         },
-        "/api/logement/charge/updateHousingChargeValue/{id}": {
+        "/api/logement/charge/updateHousingChargeValue": {
             "post": {
                 "tags": [
                     "Housing Charge"
                 ],
-                "summary": "Mettre à jour la valeur d'une charge de logement",
-                "description": "Cette API permet de mettre à jour la valeur d'une charge spécifique d'un logement.",
-                "operationId": "c389d03d3bb577f343c77a363eef3120",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la charge de logement à mettre à jour",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
+                "summary": "Mettre à jour les valeurs de plusieurs charges de logement",
+                "description": "Cette API permet de mettre à jour les valeurs de plusieurs charges spécifiques d'un logement.",
+                "operationId": "240c4546c353f4a6ea0b66f89c7b6ea9",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "value": {
-                                        "description": "La nouvelle valeur de la charge",
-                                        "type": "number",
-                                        "example": 100.5
+                                    "chargeIds": {
+                                        "description": "Tableau contenant les IDs des charges de logement à mettre à jour",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "values": {
+                                        "description": "Tableau contenant les nouvelles valeurs des charges à mettre à jour. Chaque valeur correspond à l'ID de charge à la même position dans le tableau `chargeIds`",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "number",
+                                            "example": 100.5
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -11074,31 +11154,50 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Valeur de la charge mise à jour avec succès",
+                        "description": "Valeurs des charges mises à jour avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "charge": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
+                                        "charges": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "example": 100.5
+                                                    },
+                                                    "housing_id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    }
                                                 },
-                                                "value": {
-                                                    "type": "number",
-                                                    "example": 100.5
-                                                },
-                                                "housing_id": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                }
-                                            },
-                                            "type": "object"
+                                                "type": "object"
+                                            }
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Valeur de la charge modifiée avec succès"
+                                            "example": "Valeurs des charges modifiées avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Mauvaise requête - les tableaux chargeIds et values doivent avoir la même taille",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le nombre d'ID de charges et de valeurs doit être identique"
                                         }
                                     },
                                     "type": "object"
@@ -12174,13 +12273,13 @@
             }
         },
         "/api/logement/update/sensible/{id}": {
-            "put": {
+            "post": {
                 "tags": [
                     "Dashboard hote"
                 ],
                 "summary": "Met à jour un logement sensible",
                 "description": "Met à jour les informations d'un logement spécifié par son ID.",
-                "operationId": "878ec1d3984676506778762965d95f77",
+                "operationId": "0c579a199f9c9e6d6361841aeaed8b16",
                 "parameters": [
                     {
                         "name": "id",
@@ -14094,7 +14193,7 @@
                     "Housing Equipment"
                 ],
                 "summary": "ajouter des équipements existants à un logement donné ",
-                "operationId": "fd7641ca9accf1fa3af2624dfa34d2a5",
+                "operationId": "247b70b41baf0b88d41d8a9bd51f7a6c",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -14450,6 +14549,131 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/addEquipmentToHousingCategory/{housingId}": {
+            "post": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Ajouter des équipements aux pièces d'un logement",
+                "operationId": "983df7928f97e38c6e74715663212a43",
+                "parameters": [
+                    {
+                        "name": "housingId",
+                        "in": "path",
+                        "description": "L'ID du logement auquel on veut ajouter des équipements",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "categories": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "ID de la catégorie",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "equipments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "equipmentsId": {
+                                                                "description": "Tableau contenant les IDs des équipements existants",
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "integer",
+                                                                    "example": 9
+                                                                }
+                                                            },
+                                                            "newEquipementName": {
+                                                                "description": "Tableau contenant les noms des nouveaux équipements à ajouter",
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string",
+                                                                    "example": "lenouveau"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Équipements ajoutés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Équipements ajoutés avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Identifiants invalides"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur dans les données fournies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Données invalides"
                                         }
                                     },
                                     "type": "object"

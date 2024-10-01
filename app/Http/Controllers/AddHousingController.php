@@ -11,6 +11,7 @@ use App\Models\HousingType;
 use App\Models\photo;
 use App\Models\Preference;
 use App\Models\PropertyType;
+use App\Models\Setting;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -916,6 +917,13 @@ class AddHousingController extends Controller
             }
 
             photo::where('housing_id', $housingId)->delete();
+
+            if(!is_null(Setting::first()->min_housing_file)){
+                if(count($request->file('photos')) < Setting::first()->min_housing_file){
+                    return (new ServiceController())->apiResponse(404, [], "Le nombre minimum de fichier doit être  ".Setting::first()->min_housing_file);
+                }
+            }
+
 
             foreach ($request->file('photos') as $index => $photo) {
                 $uploadedPath = $this->fileService->uploadFiles($photo, 'image/photo_logement',$type='extensionImageVideo');

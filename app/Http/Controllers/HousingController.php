@@ -1225,7 +1225,7 @@ public function ListeDesPhotosLogementAcceuil($id)
          'housing_preference' => $listing->housing_preference->filter(function ($preference) {
             return $preference->is_verified;
             })->map(function ($housingpreference) {
-            return [
+            return [    
                  'id' => $housingpreference->id,
                  'preference_id' => $housingpreference->preference_id,
                  'preference_name' => $housingpreference->preference->name,
@@ -3459,90 +3459,142 @@ public function getCurrentReductions($housingId)
      * )
      */
 
-public function getUnverifiedPhotos()
-{
-    $unverifiedPhotos = Photo::where('is_verified', false)
-        ->with(['housing.user'])
-        ->where('is_deleted', false)
-        ->where('is_blocked', false)
-        ->get();
+     public function getUnverifiedPhotos()
+     {
+         $logements = Housing::whereHas('photos', function ($query) {
+             $query->where('is_verified', 0);
+         })->with(['photos' => function ($query) {
+             $query->where('is_verified', 0);
+         }])->get();
+     
+         $result = $logements->map(function ($housing) {
+             return [
+                 'housing_id' => $housing->id,  
+                 'photos' => $housing->photos 
+             ];
+         });
+     
+         return (new ServiceController())->apiResponse(200, $result, "Photos en attente de validation récupérées avec succès.");
+     }
+     
 
-    if ($unverifiedPhotos->isEmpty()) {
-        return response()->json([
-            'message' => 'Aucune photo en attente de validation.',
-        ], 404);
-    }
+/**
+ * @OA\Put(
+ *     path="/api/logement/photos/validate",
+ *     summary="Valider plusieurs photos du logement par leurs IDs",
+ *     tags={"Housing Photo"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"photo_ids"},
+ *             @OA\Property(
+ *                 property="photo_ids",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 description="Tableau des IDs des photos à valider"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Photos validées avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string"),
+ *             @OA\Property(property="validated_photo_ids", type="array",
+ *                 @OA\Items(type="integer")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Certaines photos sont introuvables",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string"),
+ *             @OA\Property(property="missing_photo_ids", type="array",
+ *                 @OA\Items(type="integer")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=409,
+ *         description="Certaines photos sont déjà validées",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string"),
+ *             @OA\Property(property="already_validated_ids", type="array",
+ *                 @OA\Items(type="integer")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Aucun ID de photo fourni",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string")
+ *         )
+ *     )
+ * )
+ */
 
-    return response()->json([
-        'message' => 'Photos en attente de validation récupérées avec succès.',
-        'photos' => $unverifiedPhotos,
-    ], 200);
-}
-
- /**
-     * @OA\Put(
-     *     path="/api/logement/photos/validate/{photoId}",
-     *     summary="Valider une photo du logement par son ID",
-     *     tags={"Housing Photo"},
-     *  security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="photoId",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer"),
-     *         description="ID de la photo à valider"
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Photo validée avec succès",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="photo", type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="path", type="string"),
-     *                 @OA\Property(property="is_verified", type="boolean"),
-     *                 @OA\Property(property="housing_id", type="integer")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Photo non trouvée",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string")
-     *         )
-     *     )
-     * )
-     */
-public function validatePhoto(Request $request, $photoId)
+public function validatePhoto(Request $request)
 {
     try {
-        $photo = Photo::findOrFail($photoId);
+        {
+            $photoIds = $request->input('photo_ids', []); 
+        
+            if (empty($photoIds)) {
+                return (new ServiceController())->apiResponse(404, [], "Aucun ID de photo fourni");
+            }
+        
+            $photos = Photo::whereIn('id', $photoIds)->get();
+        
+            $missingPhotos = array_diff($photoIds, $photos->pluck('id')->toArray());
+        
+            if (!empty($missingPhotos)) {
+                return (new ServiceController())->apiResponse(404, ['missing_photo_ids' => $missingPhotos], "Certaines photos sont introuvables.");
+            }
+        
+            $alreadyValidated = [];
+            foreach ($photos as $photo) {
+                if ($photo->is_verified) {
+                    $alreadyValidated[] = $photo->id;
+                }
+            }
+        
+            if (!empty($alreadyValidated)) {
+                return (new ServiceController())->apiResponse(404, ['already_validated_ids' => $alreadyValidated], "Certaines photos sont déjà validées.");
+            }
+        
+            foreach ($photos as $photo) {
+                $mail = [
+                    'title' => "Validation de la photo  de votre logement",
+                    'body' => "Une des photos que vous avez ajouté à un de vos logements été validé avec succès par l'administrateur.",
+                ];
 
-        $photo->is_verified = true;
-            $photo->save();
+                dispatch(new SendRegistrationEmail(Housing::whereId($photo->housing_id)->first()->user->email, $mail['body'], $mail['title'], 2));
 
-        return response()->json([
-            'message' => 'Photo validée avec succès.',
-            'photo' => $photo,
-        ], 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json([
-            'message' => 'Photo non trouvée avec cet ID.',
-        ], 404);
+                $photo->is_verified = true;
+                $photo->save();
+            }
+
+            return (new ServiceController())->apiResponse(200, ['validated_photo_ids' => $photoIds], "Photos validées avec succès.");
+
+        }
     } catch (Exception $e) {
-        return response()->json([
-            'message' => 'Une erreur s\'est produite lors de la validation de la photo.',
-        ], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

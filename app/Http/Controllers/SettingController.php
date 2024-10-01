@@ -68,6 +68,7 @@ class SettingController extends Controller
      *                @OA\Property(property="max_number_of_reservation", type="number", format="integer"),
      *                @OA\Property(property="max_value_promotion", type="number", format="float"),
      *                @OA\Property(property="commission_seuil_hote_partenaire", type="number", format="float"),
+     * @OA\Property(property="min_housing_file", type="number" ),
      *             )
      *         )
      *     ),
@@ -118,9 +119,11 @@ class SettingController extends Controller
                 'max_value_reduction' => '',
                 'max_number_of_reservation' => '',
                 'max_value_promotion' => '',
-                'commission_seuil_hote_partenaire' => ''
+                'commission_seuil_hote_partenaire' => '',
+                 'min_housing_file' => ''
             ]);
         }
+
 
         $validationResult = $this->validateSettings($request);
 
@@ -169,6 +172,12 @@ class SettingController extends Controller
                 }
                
             }
+        }
+
+        if($request->has('min_housing_file')){
+           if($request->min_housing_file <= 1){
+               return (new ServiceController())->apiResponse(404,[], "La valeur de min_housing_file doit être superieur à 1");
+           }
         }
 
         $settings->save();
@@ -243,7 +252,8 @@ class SettingController extends Controller
             'max_value_reduction' => 'nullable|numeric|between:0,100',
             'max_number_of_reservation' => 'nullable|integer|min:1',
             'max_value_promotion' => 'nullable|numeric|between:0,100',
-             'commission_seuil_hote_partenaire' => 'nullable|numeric|between:0,100'
+             'commission_seuil_hote_partenaire' => 'nullable|numeric|between:0,100',
+              'min_housing_file' => 'nullable|integer|min:1'
         ]);
 
         if ($validator->fails()) {

@@ -10289,7 +10289,7 @@
                     "Housing Category Photo"
                 ],
                 "summary": "Récupérer les photos des catégories(pièce) en attente de validation",
-                "operationId": "fb7430d6cdba90c427bb4177a5a3900d",
+                "operationId": "208fd176b7ec59dd8331ed9d286bddec",
                 "responses": {
                     "200": {
                         "description": "Liste des  photos des catégories(pièce) en attente de validation",
@@ -10366,27 +10366,38 @@
                 ]
             }
         },
-        "/api/logement/category/photo/{id}/validate": {
+        "/api/logement/category/photo/validate": {
             "put": {
                 "tags": [
                     "Housing Category Photo"
                 ],
-                "summary": "Mettre à jour le statut de vérification d'un fichier de logement",
-                "operationId": "e173daedf2f5ad4b1fb00820c13905a6",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du housing_category_file",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Mettre à jour le statut de vérification des fichiers de logement",
+                "operationId": "196dff9e1982fe8ff69ac78928bf6929",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "photo_ids"
+                                ],
+                                "properties": {
+                                    "photo_ids": {
+                                        "description": "Tableau d'IDs des fichiers à valider",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Statut de vérification mis à jour avec succès",
+                        "description": "Photos validées avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10395,9 +10406,29 @@
                                             "description": "Message de confirmation",
                                             "type": "string"
                                         },
-                                        "is_verified": {
-                                            "description": "Statut de vérification",
-                                            "type": "boolean"
+                                        "photos": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID du fichier",
+                                                        "type": "integer"
+                                                    },
+                                                    "message": {
+                                                        "description": "Message concernant la validation",
+                                                        "type": "string"
+                                                    },
+                                                    "is_verified": {
+                                                        "description": "Statut de vérification",
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "description": "Statut de l'opération",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -10406,7 +10437,7 @@
                         }
                     },
                     "404": {
-                        "description": "Fichier non trouvé",
+                        "description": "Aucune photo validée ou ID non trouvé",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13171,27 +13202,38 @@
                 ]
             }
         },
-        "/api/logement/photos/validate/{photoId}": {
+        "/api/logement/photos/validate": {
             "put": {
                 "tags": [
                     "Housing Photo"
                 ],
-                "summary": "Valider une photo du logement par son ID",
-                "operationId": "d53c60384059f380ec75a2c5e0aa9e84",
-                "parameters": [
-                    {
-                        "name": "photoId",
-                        "in": "path",
-                        "description": "ID de la photo à valider",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Valider plusieurs photos du logement par leurs IDs",
+                "operationId": "8b2d9b580fb0f471afe4af457d0a89b6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "photo_ids"
+                                ],
+                                "properties": {
+                                    "photo_ids": {
+                                        "description": "Tableau des IDs des photos à valider",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Photo validée avec succès",
+                        "description": "Photos validées avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13199,22 +13241,11 @@
                                         "message": {
                                             "type": "string"
                                         },
-                                        "photo": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "path": {
-                                                    "type": "string"
-                                                },
-                                                "is_verified": {
-                                                    "type": "boolean"
-                                                },
-                                                "housing_id": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
+                                        "validated_photo_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -13223,7 +13254,49 @@
                         }
                     },
                     "404": {
-                        "description": "Photo non trouvée",
+                        "description": "Certaines photos sont introuvables",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "missing_photo_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Certaines photos sont déjà validées",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "already_validated_ids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Aucun ID de photo fourni",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -25623,6 +25696,9 @@
                                     "commission_seuil_hote_partenaire": {
                                         "type": "number",
                                         "format": "float"
+                                    },
+                                    "min_housing_file": {
+                                        "type": "number"
                                     }
                                 },
                                 "type": "object"

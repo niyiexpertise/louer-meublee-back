@@ -34,7 +34,7 @@ class HousingCategoryFileController extends Controller
 {
     protected $fileService;
 
-    public function __construct(FileService $fileService)
+    public function __construct(FileService $fileService=null)
     {
         $this->fileService = $fileService;
     }
@@ -972,7 +972,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
      *     )
      * )
      */
-public function getUnverifiedHousingCategoryFilesWithDetails()
+public function getUnverifiedHousingCategoryFilesWithDetailss()
 {
 
     $unverifiedFiles = Housing_category_file::with(['file', 'housing.user', 'category'])
@@ -988,76 +988,147 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
     ]);
 }
 
- /**
-     * @OA\Put(
-     *     path="/api/logement/category/photo/{id}/validate",
-     *     summary="Mettre à jour le statut de vérification d'un fichier de logement",
-     *     tags={"Housing Category Photo"},
-     *     security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer"),
-     *         description="ID du housing_category_file"
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Statut de vérification mis à jour avec succès",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", description="Message de confirmation"),
-     *             @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Fichier non trouvé",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", description="Message d'erreur")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", description="Message d'erreur")
-     *         )
-     *     )
-     * )
-     */
-    public function validateHousingCategoryFile($id)
-    {
-        try {
-            $housingCategoryFile = Housing_category_file::find($id);
-            if (!$housingCategoryFile) {
-                return response()->json([
-                    'message' => 'Le fichier de logement avec cet ID n\'a pas été trouvé',
-                ], 404);
-            }
-            $housingCategoryFile->is_verified = true;
-            $housingCategoryFile->save();
+/**
+ * @OA\Put(
+ *     path="/api/logement/category/photo/validate",
+ *     summary="Mettre à jour le statut de vérification des fichiers de logement",
+ *     tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"photo_ids"},
+ *             @OA\Property(property="photo_ids", type="array", @OA\Items(type="integer"), description="Tableau d'IDs des fichiers à valider")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Photos validées avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", description="Message de confirmation"),
+ *             @OA\Property(property="photos", type="array", @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", description="ID du fichier"),
+ *                 @OA\Property(property="message", type="string", description="Message concernant la validation"),
+ *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification"),
+ *                 @OA\Property(property="status", type="string", description="Statut de l'opération")
+ *             ))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune photo validée ou ID non trouvé",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", description="Message d'erreur")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", description="Message d'erreur")
+ *         )
+ *     )
+ * )
+ */
 
-            $mail = [
-                'title' => "Validation de  la photo ajoutée à la catégorie de votre logement",
-                'body' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur.",
-            ];
+ public function validateHousingCategoryFile(Request $request)
+{
+    try {
+        $photoIds = $request->input('photo_ids');
 
-            dispatch( new SendRegistrationEmail($housingCategoryFile->first()->housing->user->email, $mail['body'], $mail['title'], 2));
-
-            return response()->json([
-                'message' => 'Statut de vérification mis à jour avec succès',
-                'is_verified' => $housingCategoryFile->is_verified,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-
-               'message' => 'Une erreur s\'est produite',
-            ], 500);
+        // Vérifier si les IDs de photo sont fournis et si le format est correct
+        if (empty($photoIds) || !is_array($photoIds)) {
+            return (new ServiceController())->apiResponse(404, [], "Aucun ID de photo fourni ou le format est incorrect.");
         }
+
+        $results = [];
+
+        // Traiter chaque ID de photo
+        foreach ($photoIds as $id) {
+            try {
+                // Récupérer le fichier de logement par file_id
+                $housingCategoryFile = Housing_category_file::where('file_id', $id)->first();
+                if (!$housingCategoryFile) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Le fichier de logement avec cet ID n\'a pas été trouvé',
+                        'status' => 'not_found',
+                    ];
+                    continue;
+                }
+
+                // Récupérer le fichier associé à partir de l'ID (file_id)
+                // $file = File::find($id);
+                // if (!$file) {
+                //     $results[] = [
+                //         'id' => $id,
+                //         'message' => 'Le fichier associé n\'a pas été trouvé',
+                //         'status' => 'file_not_found',
+                //     ];
+                //     continue;
+                // }
+
+                // Vérifier si le fichier a déjà été validé
+                if ($housingCategoryFile->is_verified) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Le fichier a déjà été validé',
+                        'status' => 'already_verified',
+                    ];
+                    continue;
+                }
+
+                $housingCategoryFile->is_verified = true;
+                $housingCategoryFile->save();
+
+                Housing_category_file::where('file_id', $id)->update(["is_verified" =>true]);
+
+                $mail = [
+                    'title' => "Validation de la photo ajoutée à la catégorie de votre logement",
+                    'body' => "Votre ajout de la photo à la catégorie a été validé avec succès par l'administrateur.",
+                ];
+
+                // Envoyer l'email de notification
+                dispatch(new SendRegistrationEmail($housingCategoryFile->housing->user->email, $mail['body'], $mail['title'], 2));
+
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Statut de vérification mis à jour avec succès',
+                    'is_verified' => true,
+                    'status' => 'verified',
+                ];
+
+            } catch (\Exception $e) {
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Une erreur s\'est produite lors de la validation',
+                    'status' => 'error',
+                ];
+            }
+        }
+
+        // Filtrer les résultats réussis
+        $successfulValidations = array_filter($results, function ($result) {
+            return $result['status'] === 'verified';
+        });
+
+        // Vérifier si des validations réussies ont eu lieu
+        if (!empty($successfulValidations)) {
+            return (new ServiceController())->apiResponse(200, ['photos' => $results], "Photos en attente de validation récupérées avec succès.");
+        }
+
+        return (new ServiceController())->apiResponse(404, $results, "Aucune photo validée ou toutes les photos fournies étaient déjà validées.");
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], "Une erreur s'est produite");
     }
+}
+
+ 
 
     /**
  * @OA\Post(
@@ -1402,7 +1473,7 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
  * )
  */
 
-     public function getHousingCategories($housingId)
+     public function getHousingCategories($housingId,$l=0)
      {
          try {
              $categoryIds = Housing_category_file::where('housing_id', $housingId)
@@ -1420,6 +1491,10 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
      
              if ($categories->isEmpty()) {
                  return (new ServiceController())->apiResponse(404, [], 'Aucune catégorie trouvée pour ce logement');
+             }
+
+             if($l==1){
+                return $categories;
              }
      
              return (new ServiceController())->apiResponse(200, $categories, 'Liste des catégories du logement');
@@ -1594,6 +1669,60 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
 }
 
 
+public function getUnverifiedHousingCategoryFilesWithDetails()
+{
+    try {
+        $housings = Housing::all();
+
+        $data = [];
+
+        foreach ($housings as $housing) {
+            $categories = Housing_category_file::where('housing_id', $housing->id)
+                ->distinct()
+                ->pluck('category_id');
+
+            $categoriesWithFiles = [];
+
+            foreach ($categories as $categoryId) {
+                $category = Category::whereId($categoryId)
+                    ->where('is_deleted', false)
+                    ->where('is_blocked', false)
+                    ->first();
+
+                if ($category) {
+                    $unverifiedFiles = Housing_category_file::where('housing_id', $housing->id)
+                        ->where('category_id', $categoryId)
+                        ->where('is_verified', false)
+                        ->pluck('file_id');
+
+                    $files = File::whereIn('id', $unverifiedFiles)->get();
+
+                    if ($files->isNotEmpty()) {
+                        $categoriesWithFiles[] = [
+                            'category' => $category,
+                            'unverified_photos' => $files
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($categoriesWithFiles)) {
+                $data[] = [
+                    'housing_id' => $housing->id, 
+                    'categories_with_unverified_photos' => $categoriesWithFiles
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
 
 
 }

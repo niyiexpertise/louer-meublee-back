@@ -1055,7 +1055,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing'])->name('logement.validateUnexistCategoryHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateUnexistCategoryHousing');
        Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail'])->name('logement.getCategoryDetail')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDetail');
        Route::get('/category/photo/unverified', [HousingCategoryFileController::class, 'getUnverifiedHousingCategoryFilesWithDetails'])->name('logement.getUnverifiedHousingCategoryFilesWithDetails')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingCategoryFilesWithDetails');
-       Route::put('/category/photo/{id}/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateHousingCategoryFile');
+       Route::put('/category/photo/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateHousingCategoryFile');
        //Gestion des équipements côté admin
        Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid'])->name('logement.ListHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingEquipmentInvalid');
 
@@ -1076,7 +1076,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
        //Gestion des photos de logement
        Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
-       Route::put('/photos/validate/{photoId}', [HousingController::class, 'validatePhoto'])->name('logement.validatePhoto')->middleware('role_or_permission:superAdmin|admin|Managelogement.validatePhoto');
+       Route::put('/photos/validate', [HousingController::class, 'validatePhoto'])->name('logement.validatePhoto')->middleware('role_or_permission:superAdmin|admin|Managelogement.validatePhoto');
 
    });
 

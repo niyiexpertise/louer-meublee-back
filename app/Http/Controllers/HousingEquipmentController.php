@@ -837,20 +837,11 @@ public function getHousingCategoriesEquipment($housingId){
             return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
         }
 
-        $categorieHousingIds = Housing_equipment::where('housing_id',$housingId)
-        ->pluck('category_id')
-        ->toArray();
-        // ->get();
 
-        // return $categorieHousingIds;
 
         $categories = [];
 
-        // return array_values(array_unique($categorieHousingIds));
-
-        foreach(array_values(array_unique($categorieHousingIds)) as $id){
-            $categories[] = Category::whereId($id)->first();
-        }
+        $categories = (new HousingCategoryFileController())->getHousingCategories($housingId,1);
 
         // return $categories;
 

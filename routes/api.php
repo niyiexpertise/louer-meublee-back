@@ -304,7 +304,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::get('/indexUnverified', [EquipementController::class, 'indexUnverified'])->name('indexUnverified');
         });
         Route::group(['middleware' => ['role_or_permission:superAdmin|Manageequipment.makeVerified']], function () {
-            Route::put('/makeVerified/{id}', [EquipementController::class, 'makeVerified'])->name('equipment.makeVerified');
+            Route::post('/makeVerified', [EquipementController::class, 'makeVerified'])->name('equipment.makeVerified');
         });
      });
 
@@ -579,7 +579,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
 
         Route::middleware(['role_or_permission:superAdmin|Managepreference.makeVerified'])->group(function () {
-            Route::put('/makeVerified/{id}', [PreferenceController::class, 'makeVerified'])->name('preference.makeVerified');
+            Route::post('/makeVerified', [PreferenceController::class, 'makeVerified'])->name('preference.makeVerified');
         });
 
         Route::middleware(['role_or_permission:admin|superAdmin|Managepreference.block'])->group(function () {
@@ -943,6 +943,16 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::post('/equipment/addEquipmentToHousing', [HousingEquipmentController::class, 'addEquipmentToHousing'])->name('logement.addEquipment');
             });
 
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getUnverifiedHousingCategoryEquipmentExistant']], function () {
+                Route::get('/equipment/getUnverifiedHousingCategoryEquipmentExistant', [HousingEquipmentController::class, 'getUnverifiedHousingCategoryEquipmentExistant'])->name('logement.getUnverifiedHousingCategoryEquipmentExistant');
+            });
+
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getUnverifiedHousingCategoryEquipmentInexistant']], function () {
+                Route::get('/equipment/getUnverifiedHousingCategoryEquipmentInexistant', [HousingEquipmentController::class, 'getUnverifiedHousingCategoryEquipmentInexistant'])->name('logement.getUnverifiedHousingCategoryEquipmentInexistant');
+            });
+
+            
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addEquipmentToHousingCategory']], function () {
                 Route::post('/equipment/addEquipmentToHousingCategory/{housingId}', [HousingEquipmentController::class, 'addEquipmentToHousingCategory'])->name('logement.addEquipmentToHousingCategory');
             });
@@ -1061,16 +1071,22 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
        Route::get('/equipment/getHousingCategoriesEquipmentForAdd/{id}', [HousingEquipmentController::class, 'getHousingCategoriesEquipment'])->name('logement.getHousingCategoriesEquipment')
        ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingCategoriesEquipment');
-       Route::post('/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment'])->name('logement.makeVerifiedHousingEquipment')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingEquipment');
+       Route::post('/equipment/makeVerifiedHousingEquipment', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment'])->name('logement.makeVerifiedHousingEquipment')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingEquipment');
        Route::get('/equipment/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid'])->name('logement.ListEquipmentForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListEquipmentForHousingInvalid');
        Route::get('/equipment/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid'])->name('logement.getHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingEquipmentInvalid');
        Route::get('/equipment/getUnexistEquipmentInvalidForHousing', [HousingEquipmentController::class, 'getUnexistEquipmentInvalidForHousing'])->name('logement.getUnexistEquipmentInvalidForHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnexistEquipmentInvalidForHousing');
        //Gestion des preference côté admin
        Route::get('/preference/getHousingPreferenceInvalid', [HousingPreferenceController::class, 'getHousingPreferenceInvalid'])->name('logement.getHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingPreferenceInvalid');
-       Route::get('/preference/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing'])->name('logement.getUnexistPreferenceInvalidForHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnexistPreferenceInvalidForHousing');
+       Route::get('/preference/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing'])->name('logement.getUnexistPreferenceInvalidForHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnexistPreferenceInvalidForHousing')
+       ;
+
+       Route::get('/preference/getUnverifiedHousingPreferencesExistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesExistant'])->name('logement.getUnverifiedHousingPreferencesExistant')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingPreferencesExistant');
+
+       Route::get('/preference/getUnverifiedHousingPreferencesInexistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesInexistant'])->name('logement.getUnverifiedHousingPreferencesInexistant')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingPreferencesInexistant');
+
        Route::get('/preference/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid'])->name('logement.ListHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingPreferenceInvalid');
        Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
-       Route::post('/preference/makeVerifiedHousingPreference/{housingPreferenceId}', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
+       Route::post('/preference/makeVerifiedHousingPreferences', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
        Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
        Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.delete');
        Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');

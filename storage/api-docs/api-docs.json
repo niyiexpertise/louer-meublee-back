@@ -8759,34 +8759,69 @@
                 ]
             }
         },
-        "/api/equipment/makeVerified/{id}": {
-            "put": {
+        "/api/equipment/makeVerified": {
+            "post": {
                 "tags": [
-                    "Equipment"
+                    "Housing Equipment"
                 ],
-                "summary": "make verified an equipment",
-                "operationId": "466f22fa1bee3feb3ac505310f59bbc9",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the equipment to verified",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Valider les équipements inexistantes des pièces de logement",
+                "operationId": "9192cdf80bf174f8037cba9300137bf6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "equipment_ids": {
+                                        "description": "Array of equipment IDs to be verified",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Equipment successfully verified",
+                        "description": "Equipment verification results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Équipement vérifié avec succès"
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "example": "verified"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
+                                        "error": {
                                             "type": "string",
-                                            "example": "Equipment successfully verified"
+                                            "example": "Aucun ID d'équipement fourni ou le format est incorrect."
                                         }
                                     },
                                     "type": "object"
@@ -8800,9 +8835,33 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Équipement non trouvé"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "not_found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Equipment not found"
+                                            "example": "Une erreur est survenue lors de la vérification de l'équipement"
                                         }
                                     },
                                     "type": "object"
@@ -10283,89 +10342,6 @@
                 ]
             }
         },
-        "/api/logement/category/photo/unverified": {
-            "get": {
-                "tags": [
-                    "Housing Category Photo"
-                ],
-                "summary": "Récupérer les photos des catégories(pièce) en attente de validation",
-                "operationId": "208fd176b7ec59dd8331ed9d286bddec",
-                "responses": {
-                    "200": {
-                        "description": "Liste des  photos des catégories(pièce) en attente de validation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "housing_id": {
-                                                "description": "ID du logement",
-                                                "type": "integer"
-                                            },
-                                            "category_id": {
-                                                "description": "ID de la catégorie",
-                                                "type": "integer"
-                                            },
-                                            "file_path": {
-                                                "description": "Chemin du fichier",
-                                                "type": "string"
-                                            },
-                                            "housing_name": {
-                                                "description": "Nom du logement",
-                                                "type": "string"
-                                            },
-                                            "housing_address": {
-                                                "description": "Adresse du logement",
-                                                "type": "string"
-                                            },
-                                            "owner_name": {
-                                                "description": "Nom du propriétaire",
-                                                "type": "string"
-                                            },
-                                            "owner_email": {
-                                                "description": "E-mail du propriétaire",
-                                                "type": "string"
-                                            },
-                                            "category_name": {
-                                                "description": "Nom de la catégorie",
-                                                "type": "string"
-                                            },
-                                            "is_verified": {
-                                                "description": "Statut de vérification",
-                                                "type": "boolean"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur interne du serveur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "description": "Message d'erreur",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/logement/category/photo/validate": {
             "put": {
                 "tags": [
@@ -10978,6 +10954,89 @@
                     },
                     "500": {
                         "description": "Erreur serveur interne"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/photo/unverified": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les photos des catégories(pièce) en attente de validation",
+                "operationId": "fb7430d6cdba90c427bb4177a5a3900d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des  photos des catégories(pièce) en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "category_id": {
+                                                "description": "ID de la catégorie",
+                                                "type": "integer"
+                                            },
+                                            "file_path": {
+                                                "description": "Chemin du fichier",
+                                                "type": "string"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "housing_address": {
+                                                "description": "Adresse du logement",
+                                                "type": "string"
+                                            },
+                                            "owner_name": {
+                                                "description": "Nom du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "owner_email": {
+                                                "description": "E-mail du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "category_name": {
+                                                "description": "Nom de la catégorie",
+                                                "type": "string"
+                                            },
+                                            "is_verified": {
+                                                "description": "Statut de vérification",
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -14388,24 +14447,34 @@
                 ]
             }
         },
-        "/api/logement/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}": {
+        "/api/logement/equipment/makeVerifiedHousingEquipment": {
             "post": {
                 "tags": [
                     "Housing Equipment"
                 ],
-                "summary": "Valider une association équipement logement et dont l'équipement existe déjà",
-                "operationId": "eb8fc015392ef72ae03d0e1ce47b562e",
-                "parameters": [
-                    {
-                        "name": "housingEquipmentId",
-                        "in": "path",
-                        "description": "ID of the housing equipment association",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Valider plusieurs associations équipement logement dont les équipements existent déjà",
+                "operationId": "b0499e770179410ae4d4a3ccef2c38f9",
+                "requestBody": {
+                    "description": "Tableau d'IDs des associations équipement logement à valider",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "housing_category_equipment_ids": {
+                                        "description": "Tableau d'IDs des associations équipement logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Housing equipment verified successfully",
@@ -14414,8 +14483,25 @@
                                 "schema": {
                                     "properties": {
                                         "data": {
-                                            "type": "string",
-                                            "example": "association equipement logement vérifié avec succès."
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID de l'association équipement logement",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Association équipement logement vérifiée avec succès."
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "verified"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -14424,13 +14510,86 @@
                         }
                     },
                     "404": {
-                        "description": "Housing equipment not found"
+                        "description": "Housing equipment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID de l'association équipement logement",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Association équipement logement non trouvée."
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "not_found"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
-                        "description": "Housing equipment already verified"
+                        "description": "Housing equipment already verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID de l'association équipement logement",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Association équipement logement déjà vérifiée."
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "already_verified"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Internal server error"
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Une erreur s'est produite lors de la validation."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -14762,6 +14921,172 @@
                 ]
             }
         },
+        "/api/logement/equipment/getUnverifiedHousingCategoryEquipmentExistant": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Récupérer les équipements existants des catégories(pièce) en attente de validation",
+                "operationId": "9c7bd131832ce395c3687928c297f054",
+                "responses": {
+                    "200": {
+                        "description": "Liste des  équipements existants des catégories(pièce) en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "category_id": {
+                                                "description": "ID de la catégorie",
+                                                "type": "integer"
+                                            },
+                                            "file_path": {
+                                                "description": "Chemin du fichier",
+                                                "type": "string"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "housing_address": {
+                                                "description": "Adresse du logement",
+                                                "type": "string"
+                                            },
+                                            "owner_name": {
+                                                "description": "Nom du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "owner_email": {
+                                                "description": "E-mail du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "category_name": {
+                                                "description": "Nom de la catégorie",
+                                                "type": "string"
+                                            },
+                                            "is_verified": {
+                                                "description": "Statut de vérification",
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/equipment/getUnverifiedHousingCategoryEquipmentInexistant": {
+            "get": {
+                "tags": [
+                    "Housing Equipment"
+                ],
+                "summary": "Récupérer les équipements inexistants des catégories(pièce) en attente de validation",
+                "operationId": "1d35407a0d01a65f8a4a47d270a3b99d",
+                "responses": {
+                    "200": {
+                        "description": "Liste des  équipements inexistants des catégories(pièce) en attente de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "category_id": {
+                                                "description": "ID de la catégorie",
+                                                "type": "integer"
+                                            },
+                                            "file_path": {
+                                                "description": "Chemin du fichier",
+                                                "type": "string"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "housing_address": {
+                                                "description": "Adresse du logement",
+                                                "type": "string"
+                                            },
+                                            "owner_name": {
+                                                "description": "Nom du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "owner_email": {
+                                                "description": "E-mail du propriétaire",
+                                                "type": "string"
+                                            },
+                                            "category_name": {
+                                                "description": "Nom de la catégorie",
+                                                "type": "string"
+                                            },
+                                            "is_verified": {
+                                                "description": "Statut de vérification",
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Message d'erreur",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/{housingId}/preferences": {
             "get": {
                 "tags": [
@@ -15076,34 +15401,59 @@
                 ]
             }
         },
-        "/api/logement/preference/makeVerifiedHousingPreference/{housingPreferenceId}": {
+        "/api/logement/preference/makeVerifiedHousingPreferences": {
             "post": {
                 "tags": [
                     "Housing Preference"
                 ],
-                "summary": "Valider les associations logement préférence invalide  et ayant leur préférence qui existe déjà",
-                "operationId": "a1218a7edfa62686770cec3dcbb3b575",
-                "parameters": [
-                    {
-                        "name": "housingPreferenceId",
-                        "in": "path",
-                        "description": "ID of the housingPreference",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Valider plusieurs associations logement-préférence non vérifiées",
+                "operationId": "e7a4efe2e2811914015c121b8bb0c21e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "housingPreferenceIds": {
+                                        "description": "Tableau des IDs des préférences logement à vérifier",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Housing preference verified successfully",
+                        "description": "Housing preferences verified successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
-                                            "type": "string",
-                                            "example": "association equipement logement vérifié avec succès."
+                                        "verified": {
+                                            "description": "Liste des IDs des préférences logement vérifiées",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "already_verified": {
+                                            "description": "Liste des IDs des préférences logement déjà vérifiées",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "not_found": {
+                                            "description": "Liste des IDs des préférences logement introuvables",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -15112,10 +15462,10 @@
                         }
                     },
                     "404": {
-                        "description": "Housing preference not found"
+                        "description": "Certaines préférences logement non trouvées"
                     },
                     "400": {
-                        "description": "Housing preference already verified"
+                        "description": "Aucune ID fournie ou format invalide"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -15220,6 +15570,224 @@
                     },
                     "404": {
                         "description": "Housing not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/getUnverifiedHousingPreferencesExistant": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Récupérer la liste des préférences non vérifiées pour les logements",
+                "operationId": "eb1caddf1421c5bfbaef142e145ce7d4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements avec préférences non vérifiées",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "unverified_preferences": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "preference": {
+                                                            "description": "Informations sur la préférence",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "description": "ID de la préférence",
+                                                                    "type": "integer"
+                                                                },
+                                                                "name": {
+                                                                    "description": "Nom de la préférence",
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "unverified_preferences": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "description": "ID de l'association logement-préférence",
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "preference_name": {
+                                                                        "description": "Nom de la préférence non vérifiée",
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune préférence non vérifiée trouvée pour les logements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Aucune préférence non vérifiée trouvée pour les logements"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Message d'erreur détaillé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/preference/getUnverifiedHousingPreferencesInexistant": {
+            "get": {
+                "tags": [
+                    "Housing Preference"
+                ],
+                "summary": "Récupérer la liste des préférences non vérifiées pour les logements",
+                "operationId": "13e6e200ff3391c4afc784e97bc89fc0",
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements avec préférences non vérifiées",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "housing_id": {
+                                                "description": "ID du logement",
+                                                "type": "integer"
+                                            },
+                                            "housing_name": {
+                                                "description": "Nom du logement",
+                                                "type": "string"
+                                            },
+                                            "unverified_preferences": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "preference": {
+                                                            "description": "Informations sur la préférence",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "description": "ID de la préférence",
+                                                                    "type": "integer"
+                                                                },
+                                                                "name": {
+                                                                    "description": "Nom de la préférence",
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "unverified_preferences": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "description": "ID de l'association logement-préférence",
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "preference_name": {
+                                                                        "description": "Nom de la préférence non vérifiée",
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune préférence non vérifiée trouvée pour les logements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Aucune préférence non vérifiée trouvée pour les logements"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Message d'erreur détaillé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -20907,34 +21475,75 @@
                 ]
             }
         },
-        "/api/preference/makeVerified/{id}": {
-            "put": {
+        "/api/preference/makeVerified": {
+            "post": {
                 "tags": [
-                    "Preference"
+                    "Housing Preference"
                 ],
-                "summary": "make verified an preference",
-                "operationId": "4c9605e94300e0c5d3630b8cb3069627",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the preference to verified",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Valider plusieurs préférences inexistantes des logements",
+                "operationId": "056fe1f408f21d79829fb75fa49ea207",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "preference_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Preference successfully verified",
+                        "description": "Préférences vérifiées avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
-                                            "type": "string",
-                                            "example": "Preference successfully verified"
+                                            "properties": {
+                                                "verified": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "example": [
+                                                        1,
+                                                        3
+                                                    ]
+                                                },
+                                                "already_verified": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "example": [
+                                                        2
+                                                    ]
+                                                },
+                                                "not_found": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "example": [
+                                                        4
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -20942,15 +21551,31 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Preference not found",
+                    "400": {
+                        "description": "Invalid preference IDs provided",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Preference not found"
+                                            "example": "Invalid preference IDs provided"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Internal server error"
                                         }
                                     },
                                     "type": "object"

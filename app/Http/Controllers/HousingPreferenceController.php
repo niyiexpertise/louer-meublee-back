@@ -433,74 +433,158 @@ public function ListHousingPreferenceInvalid($housingId) {
 
 
 /**
-* @OA\Post(
-*     path="/api/logement/preference/makeVerifiedHousingPreference/{housingPreferenceId}",
-*     summary="Valider les associations logement préférence invalide  et ayant leur préférence qui existe déjà",
-*     tags={"Housing Preference"},
-*security={{"bearerAuth":{}}},
-*     @OA\Parameter(
-*         name="housingPreferenceId",
-*         in="path",
-*         required=true,
-*         description="ID of the housingPreference",
-*         @OA\Schema(
-*             type="integer"
-*         )
-*     ),
-*     @OA\Response(
-*         response=200,
-*         description="Housing preference verified successfully",
-*         @OA\JsonContent(
-*             type="object",
-*             @OA\Property(
-*                 property="data",
-*                 type="string",
-*                 example="association equipement logement vérifié avec succès."
-*             )
-*         )
-*     ),
-*     @OA\Response(
-*         response=404,
-*         description="Housing preference not found"
-*     ),
-*     @OA\Response(
-*         response=400,
-*         description="Housing preference already verified"
-*     ),
-*     @OA\Response(
-*         response=500,
-*         description="Internal server error"
-*     )
-* )
-*/
-public function makeVerifiedHousingPreference(string $housingPreferenceId)
-{
-try{
-    $housingPreference = housing_preference::find($housingPreferenceId);
-    if (!$housingPreference) {
-        return response()->json(['error' => 'association preference logement  non trouvé.'], 404);
-    }
-    if ($housingPreference->is_verified == true) {
-        return response()->json(['data' => 'association preference logement déjà vérifié.'], 200);
-    }
-    $housingPreference->is_verified = true;
-    $housingPreference->save();
+ * @OA\Post(
+ *     path="/api/logement/preference/makeVerifiedHousingPreferences",
+ *     summary="Valider plusieurs associations logement-préférence non vérifiées",
+ *     tags={"Housing Preference"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="housingPreferenceIds",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 description="Tableau des IDs des préférences logement à vérifier"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Housing preferences verified successfully",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="verified",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 description="Liste des IDs des préférences logement vérifiées"
+ *             ),
+ *             @OA\Property(
+ *                 property="already_verified",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 description="Liste des IDs des préférences logement déjà vérifiées"
+ *             ),
+ *             @OA\Property(
+ *                 property="not_found",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 description="Liste des IDs des préférences logement introuvables"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Certaines préférences logement non trouvées"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Aucune ID fournie ou format invalide"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error"
+ *     )
+ * )
+ */
 
-    $mailhote = [
-        'title' => "Notification de validation d'une nouvelle préférence'",
-        'body' => "L'ajout de cette préférence : ".Preference::find($housingPreference->preference_id)->name." a été validé par l'administrateur",
-    ];
+ public function makeVerifiedHousingPreference(Request $request) 
+ {
+     try {
+         $housingPreferenceIds = $request->input('housingPreferenceIds');
+ 
+         if (!is_array($housingPreferenceIds) || empty($housingPreferenceIds)) {
+             return (new ServiceController())->apiResponse(404, [], 'Aucune ID fournie ou format invalide.');
+         }
+ 
+         $results = [];
+ 
+         foreach ($housingPreferenceIds as $housingPreferenceId) {
+             try {
+                 if (!intval($housingPreferenceId) || $housingPreferenceId < 0) {
+                     $results[] = [
+                         'id' => $housingPreferenceId,
+                         'message' => 'ID de préférence invalide.',
+                         'status' => 'invalid_value'
+                     ];
+                     continue;
+                 }
+ 
+                 $housingPreference = housing_preference::find($housingPreferenceId);
 
+ 
+                 if (!$housingPreference) {
+                     $results[] = [
+                         'id' => $housingPreferenceId,
+                         'message' => 'Préférence de logement non trouvée.',
+                         'status' => 'not_found'
+                     ];
+                     continue;
+                 }
 
-    dispatch( new SendRegistrationEmail($housingPreference->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
+                
+                 if (!Preference::whereId($housingPreference->preference_id)->first()->is_verified) {
+                     $results[] = [
+                         'id' => $housingPreferenceId,
+                         'message' => 'Préférence en attente de validation.',
+                         'status' => 'invalid_preference'
+                     ];
+                     continue;
+                 }
 
-    return response()->json(['data' => 'association preference logement vérifié avec succès.'], 200);
-} catch(\Exception $e) {
-    return response()->json($e->getMessage(), 500);
-}
+ 
+                 if ($housingPreference->is_verified) {
+                     $results[] = [
+                         'id' => $housingPreferenceId,
+                         'message' => 'Préférence de logement déjà vérifiée.',
+                         'status' => 'already_verified'
+                     ];
+                     continue;
+                 }
+ 
+                 $housingPreference->is_verified = true;
+                 $housingPreference->save();
+ 
+                 $mailhote = [
+                     'title' => "Notification de validation d'une nouvelle préférence",
+                     'body' => "L'ajout de cette préférence : " . Preference::find($housingPreference->preference_id)->name . " a été validé par l'administrateur.",
+                 ];
+ 
+                 dispatch(new SendRegistrationEmail($housingPreference->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
+ 
+                 $results[] = [
+                     'id' => $housingPreferenceId,
+                     'message' => 'Préférence vérifiée avec succès.',
+                     'status' => 'verified'
+                 ];
+ 
+             } catch (\Exception $e) {
+                 $results[] = [
+                     'id' => $housingPreferenceId,
+                     'message' => $e->getMessage(),
+                     'status' => 'error'
+                 ];
+             }
+         }
+ 
+         $successfulValidations = array_filter($results, function ($result) {
+             return $result['status'] === 'verified';
+         });
+ 
+         if (!empty($successfulValidations)) {
+             return (new ServiceController())->apiResponse(200,$results, 'Association validé avec succès');
+         }
+ 
+         return (new ServiceController())->apiResponse(404, $results, 'Aucune préférence vérifiée ou toutes étaient déjà vérifiées.');
+ 
+     } catch (\Exception $e) {
+         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+     }
+ }
+ 
 
-
-}
 
 /**
 * @OA\Get(
@@ -681,6 +765,259 @@ foreach($preferences as $preference){
 }
 return response()->json(['data' => $data]);
 }
+
+
+
+/**
+ * @OA\Get(
+ *     path="/api/logement/preference/getUnverifiedHousingPreferencesExistant",
+ *     summary="Récupérer la liste des préférences non vérifiées pour les logements",
+ *     tags={"Housing Preference"},
+ *     security={{"bearerAuth": {}}}, 
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements avec préférences non vérifiées",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="housing_id",
+ *                     type="integer",
+ *                     description="ID du logement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="housing_name",
+ *                     type="string",
+ *                     description="Nom du logement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="unverified_preferences",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(
+ *                             property="preference",
+ *                             type="object",
+ *                             description="Informations sur la préférence",
+ *                             @OA\Property(property="id", type="integer", description="ID de la préférence"),
+ *                             @OA\Property(property="name", type="string", description="Nom de la préférence")
+ *                         ),
+ *                         @OA\Property(
+ *                             property="unverified_preferences",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="object",
+ *                                 @OA\Property(property="id", type="integer", description="ID de l'association logement-préférence"),
+ *                                 @OA\Property(property="preference_name", type="string", description="Nom de la préférence non vérifiée")
+ *                             )
+ *                         )
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune préférence non vérifiée trouvée pour les logements",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Aucune préférence non vérifiée trouvée pour les logements")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Message d'erreur détaillé")
+ *         )
+ *     )
+ * )
+ */
+
+public function getUnverifiedHousingPreferencesExistant()
+{
+    try {
+        $housings = Housing::all();
+        
+        $data = [];
+        
+        foreach ($housings as $housing) {
+            $preferences = Housing_preference::where('housing_id', $housing->id)
+                ->distinct()
+                ->pluck('preference_id');
+            
+            $preferencesWithStatus = [];
+
+            foreach ($preferences as $preferenceId) {
+                $preference = Preference::whereId($preferenceId)
+                    ->where('is_deleted', false)
+                    ->where('is_blocked', false)
+                    ->first();
+
+                
+
+                if ($preference) {
+                    $unverifiedPreferences = Housing_preference::where('housing_id', $housing->id)
+                        ->where('preference_id', $preferenceId)
+                        ->where('is_verified', false)
+                        ->pluck('preference_id');
+                    
+                    $preferencesList = Preference::whereIn('id', $unverifiedPreferences) ->where('is_verified', true)
+                    ->first();
+
+                    if ($preferencesList) {
+                        $preferencesList->housing_preference_id =  Housing_preference::where('housing_id', $housing->id)
+                    ->where('preference_id', $preferenceId)
+                    ->first()
+                    ->id;
+                        $preferencesWithStatus[] =$preferencesList;
+                    }
+                }
+               
+            }
+
+            if (!empty($preferencesWithStatus)) {
+                $data[] = [
+                    'housing_id' => $housing->id,
+                    'housing_name' => $housing->name ?? "non renseigné",
+                    'unverified_preferences' => $preferencesWithStatus
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return (new ServiceController())->apiResponse(404, [], 'Aucune préférence non vérifiée trouvée pour les logements');
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec préférences non vérifiées');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+/**
+ * @OA\Get(
+ *     path="/api/logement/preference/getUnverifiedHousingPreferencesInexistant",
+ *     summary="Récupérer la liste des préférences non vérifiées pour les logements",
+ *     tags={"Housing Preference"},
+ *     security={{"bearerAuth": {}}}, 
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements avec préférences non vérifiées",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="housing_id",
+ *                     type="integer",
+ *                     description="ID du logement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="housing_name",
+ *                     type="string",
+ *                     description="Nom du logement"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="unverified_preferences",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         @OA\Property(
+ *                             property="preference",
+ *                             type="object",
+ *                             description="Informations sur la préférence",
+ *                             @OA\Property(property="id", type="integer", description="ID de la préférence"),
+ *                             @OA\Property(property="name", type="string", description="Nom de la préférence")
+ *                         ),
+ *                         @OA\Property(
+ *                             property="unverified_preferences",
+ *                             type="array",
+ *                             @OA\Items(
+ *                                 type="object",
+ *                                 @OA\Property(property="id", type="integer", description="ID de l'association logement-préférence"),
+ *                                 @OA\Property(property="preference_name", type="string", description="Nom de la préférence non vérifiée")
+ *                             )
+ *                         )
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune préférence non vérifiée trouvée pour les logements",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Aucune préférence non vérifiée trouvée pour les logements")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Message d'erreur détaillé")
+ *         )
+ *     )
+ * )
+ */
+
+ public function getUnverifiedHousingPreferencesInexistant()
+ {
+     try {
+         $housings = Housing::all();
+         
+         $data = [];
+         
+         foreach ($housings as $housing) {
+             $preferences = Housing_preference::where('housing_id', $housing->id)
+                 ->distinct()
+                 ->pluck('preference_id');
+             
+             $preferencesWithStatus = [];
+ 
+             foreach ($preferences as $preferenceId) {
+                 $preference = Preference::whereId($preferenceId)
+                     ->where('is_deleted', false)
+                     ->where('is_blocked', false)
+                     ->first();
+                 
+                 if ($preference) {
+                     $unverifiedPreferences = Housing_preference::where('housing_id', $housing->id)
+                         ->where('preference_id', $preferenceId)
+                         ->where('is_verified', false)
+                         ->pluck('preference_id');
+                     
+                     $preferencesList = Preference::whereIn('id', $unverifiedPreferences) ->where('is_verified', false)
+                         ->first();
+                     
+                     if ($preferencesList) {
+                        $preferencesList->housing_preference_id =  Housing_preference::where('housing_id', $housing->id)
+                    ->where('preference_id', $preferenceId)
+                    ->first()
+                    ->id;
+                         $preferencesWithStatus[] = $preferencesList;
+                     }
+                 }
+             }
+
+             if (!empty($preferencesWithStatus)) {
+                 $data[] = [
+                     'housing_id' => $housing->id,
+                     'housing_name' => $housing->name ?? "non renseigné",
+                     'unverified_preferences' => $preferencesWithStatus
+                 ];
+             }
+         }
+ 
+         if (empty($data)) {
+             return (new ServiceController())->apiResponse(404, [], 'Aucune préférence non vérifiée trouvée pour les logements');
+         }
+ 
+         return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec préférences non vérifiées');
+     } catch (\Exception $e) {
+         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+     }
+ }
 
 }
 

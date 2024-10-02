@@ -938,55 +938,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
         ], 201);
  }
 
-/**
-     * @OA\Get(
-     *     path="/api/logement/category/photo/unverified",
-     *     summary="Récupérer les photos des catégories(pièce) en attente de validation",
-     *     tags={"Housing Category Photo"},
-     *     security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Liste des  photos des catégories(pièce) en attente de validation",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement"),
-     *                 @OA\Property(property="category_id", type="integer", description="ID de la catégorie"),
-     *                 @OA\Property(property="file_path", type="string", description="Chemin du fichier"),
-     *                 @OA\Property(property="housing_name", type="string", description="Nom du logement"),
-     *                 @OA\Property(property="housing_address", type="string", description="Adresse du logement"),
-     *                 @OA\Property(property="owner_name", type="string", description="Nom du propriétaire"),
-     *                 @OA\Property(property="owner_email", type="string", description="E-mail du propriétaire"),
-     *                 @OA\Property(property="category_name", type="string", description="Nom de la catégorie"),
-     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur interne du serveur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", description="Message d'erreur")
-     *         )
-     *     )
-     * )
-     */
-public function getUnverifiedHousingCategoryFilesWithDetailss()
-{
 
-    $unverifiedFiles = Housing_category_file::with(['file', 'housing.user', 'category'])
-        ->where('is_verified', false)
-        ->whereHas('category', function ($query) {
-            $query->where('is_verified', true);
-        })
-        ->get();
-
-    return response()->json([
-        'message' => 'Liste des photos des catégoriesen attente de validation avec détails',
-        'data' => $unverifiedFiles,
-    ]);
-}
 
 /**
  * @OA\Put(
@@ -1668,6 +1620,40 @@ public function getUnverifiedHousingCategoryFilesWithDetailss()
     }
 }
 
+/**
+     * @OA\Get(
+     *     path="/api/logement/category/photo/unverified",
+     *     summary="Récupérer les photos des catégories(pièce) en attente de validation",
+     *     tags={"Housing Category Photo"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des  photos des catégories(pièce) en attente de validation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement"),
+     *                 @OA\Property(property="category_id", type="integer", description="ID de la catégorie"),
+     *                 @OA\Property(property="file_path", type="string", description="Chemin du fichier"),
+     *                 @OA\Property(property="housing_name", type="string", description="Nom du logement"),
+     *                 @OA\Property(property="housing_address", type="string", description="Adresse du logement"),
+     *                 @OA\Property(property="owner_name", type="string", description="Nom du propriétaire"),
+     *                 @OA\Property(property="owner_email", type="string", description="E-mail du propriétaire"),
+     *                 @OA\Property(property="category_name", type="string", description="Nom de la catégorie"),
+     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
 
 public function getUnverifiedHousingCategoryFilesWithDetails()
 {
@@ -1709,6 +1695,7 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
             if (!empty($categoriesWithFiles)) {
                 $data[] = [
                     'housing_id' => $housing->id, 
+                    'housing_name' => $housing->name??"non renseigné",  
                     'categories_with_unverified_photos' => $categoriesWithFiles
                 ];
             }

@@ -580,69 +580,158 @@ class PreferenceController extends Controller
 }
 
 
-    /**
-     * @OA\Put(
-     *     path="/api/preference/makeVerified/{id}",
-     *     summary="make verified an preference",
-     *     tags={"Preference"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the preference to verified",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Preference successfully verified",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="Preference successfully verified")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Preference not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Preference not found")
-     *         )
-     *     )
-     * )
-     */
-    public function makeVerified($id)
-{
-    try {
-        // Récupérer la préférence par son ID, ou échouer si elle n'existe pas
-        $preference = Preference::findOrFail($id);
+   /**
+ * @OA\Post(
+ *     path="/api/preference/makeVerified",
+ *     summary="Valider plusieurs préférences inexistantes des logements",
+ *      tags={"Housing Preference"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="preference_ids",
+ *                 type="array",
+ *                 @OA\Items(type="integer"),
+ *                 example={1, 2, 3}
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Préférences vérifiées avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="verified",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     example={1, 3}
+ *                 ),
+ *                 @OA\Property(
+ *                     property="already_verified",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     example={2}
+ *                 ),
+ *                 @OA\Property(
+ *                     property="not_found",
+ *                     type="array",
+ *                     @OA\Items(type="integer"),
+ *                     example={4}
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid preference IDs provided",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Invalid preference IDs provided")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Internal server error")
+ *         )
+ *     )
+ * )
+ */
 
-        if ($preference->is_verified) {
-            return response()->json(['data' => 'Préférence déjà vérifiée.'], 200);
+ public function makeVerified(Request $request)
+ {
+     try {
+         $request->validate([
+             'preference_ids' => 'required'
+         ]);
+
+         
+ 
+         $results = [];
+ 
+         foreach ($request->preference_ids as $id) {
+             try {
+                 // Vérification de la validité de l'ID
+                 if (!intval($id) || $id < 0) {
+                     $results[] = [
+                         'id' => $id,
+                         'message' => 'Valeur invalide',
+                         'status' => 'invalid_value',
+                     ];
+                     continue;
+                 }
+ 
+                 $preference = Preference::find($id);
+ 
+                 if (!$preference) {
+                     $results[] = [
+                         'id' => $id,
+                         'message' => 'Préférence non trouvée',
+                         'status' => 'not_found',
+                     ];
+                     continue;
+                 }
+ 
+                 if ($preference->is_verified) {
+                     $results[] = [
+                         'id' => $id,
+                         'message' => 'Préférence déjà vérifiée',
+                         'status' => 'already_verified',
+                     ];
+                     continue;
+                 }
+ 
+                 // Marquer la préférence comme vérifiée
+                 $preference->is_verified = true;
+                 $preference->save();
+ 
+                 $housingPreference = Housing_preference::where('preference_id', $id)->first();
+                 if ($housingPreference) {
+                     $housingPreference->is_verified = true;
+                     $housingPreference->save();
+ 
+                     $mail = [
+                         'title' => "Validation de la nouvelle préférence ajoutée au logement",
+                         'body' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
+                     ];
+ 
+                     dispatch(new SendRegistrationEmail($housingPreference->housing->user->email, $mail['body'], $mail['title'], 2));
+                 }
+ 
+                 $results[] = [
+                     'id' => $id,
+                     'message' => 'Préférence vérifiée avec succès',
+                     'status' => 'verified',
+                 ];
+             } catch (Exception $e) {
+                 $results[] = [
+                     'id' => $id,
+                     'message' => 'Erreur lors de la vérification de la préférence',
+                     'status' => 'error',
+                 ];
+             }
+         }
+ 
+         $successfulValidations = array_filter($results, function ($result) {
+            return $result['status'] === 'verified';
+        });
+
+        if (!empty($successfulValidations)) {
+            return (new ServiceController())->apiResponse(200,$results,'Validé avec succès');
         }
 
-        // Mettre à jour le statut de vérification
-        $preference->is_verified = true;
-        $preference->save();  // Assurez-vous de sauvegarder les changements
 
-        // Récupérer la relation Housing_preference et la mettre à jour si elle existe
-        $housingPreference = Housing_preference::find($id);
+        return (new ServiceController())->apiResponse(404,$results,'Aucune association vérifiée ou toutes étaient déjà vérifiées.');
+     } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+     }
+ }
+ 
 
-        if ($housingPreference) {
-            $housingPreference->is_verified = true;
-            $housingPreference->save();
-            // Envoyer un e-mail de notification
-            $mail = [
-                'title' => "Validation de la nouvelle préférence ajoutée au logement",
-                'body' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
-            ];
-
-            dispatch( new SendRegistrationEmail($housingPreference->housing->user->email, $mail['body'], $mail['title'], 2));
-        }
-
-        return response()->json(['data' => 'Préférence vérifiée avec succès.'], 200);
-    } catch (Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
 
 
 

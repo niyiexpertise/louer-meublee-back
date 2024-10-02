@@ -455,8 +455,8 @@ public function ListHousingEquipmentInvalid($housingId)
 {
     // Récupérer tous les équipements qui ne sont pas vérifiés pour un logement donné
     $housingEquipments = Housing_equipment::where('housing_id', $housingId)
-                                          ->where('is_verified', false)
-                                          ->get();
+        ->where('is_verified', false)
+        ->get();
     $equipmentT = [];
     foreach ($housingEquipments as $housingEquipment) {
 
@@ -492,17 +492,24 @@ public function ListHousingEquipmentInvalid($housingId)
 
 /**
  * @OA\Post(
- *     path="/api/logement/equipment/makeVerifiedHousingEquipment/{housingEquipmentId}",
- *     summary="Valider une association équipement logement et dont l'équipement existe déjà",
+ *     path="/api/logement/equipment/makeVerifiedHousingEquipment",
+ *     summary="Valider plusieurs associations équipement logement dont les équipements existent déjà",
  *     tags={"Housing Equipment"},
- * security={{"bearerAuth":{}}},
- *     @OA\Parameter(
- *         name="housingEquipmentId",
- *         in="path",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
  *         required=true,
- *         description="ID of the housing equipment association",
- *         @OA\Schema(
- *             type="integer"
+ *         description="Tableau d'IDs des associations équipement logement à valider",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="housing_category_equipment_ids",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="integer",
+ *                     example=1
+ *                 ),
+ *                 description="Tableau d'IDs des associations équipement logement"
+ *             )
  *         )
  *     ),
  *     @OA\Response(
@@ -512,51 +519,154 @@ public function ListHousingEquipmentInvalid($housingId)
  *             type="object",
  *             @OA\Property(
  *                 property="data",
- *                 type="string",
- *                 example="association equipement logement vérifié avec succès."
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1, description="ID de l'association équipement logement"),
+ *                     @OA\Property(property="message", type="string", example="Association équipement logement vérifiée avec succès."),
+ *                     @OA\Property(property="status", type="string", example="verified")
+ *                 )
  *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Housing equipment not found"
+ *         description="Housing equipment not found",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1, description="ID de l'association équipement logement"),
+ *                     @OA\Property(property="message", type="string", example="Association équipement logement non trouvée."),
+ *                     @OA\Property(property="status", type="string", example="not_found")
+ *                 )
+ *             )
+ *         )
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Housing equipment already verified"
+ *         description="Housing equipment already verified",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1, description="ID de l'association équipement logement"),
+ *                     @OA\Property(property="message", type="string", example="Association équipement logement déjà vérifiée."),
+ *                     @OA\Property(property="status", type="string", example="already_verified")
+ *                 )
+ *             )
+ *         )
  *     ),
  *     @OA\Response(
  *         response=500,
- *         description="Internal server error"
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="error",
+ *                 type="string",
+ *                 example="Une erreur s'est produite lors de la validation."
+ *             )
+ *         )
  *     )
  * )
  */
-public function makeVerifiedHousingEquipment(string $id)
+
+public function makeVerifiedHousingEquipment(Request $request)
 {
-    try{
-        $housingEquipment = Housing_equipment::find($id);
-        if (!$housingEquipment) {
-            return response()->json(['error' => 'association equipement logement  non trouvé.'], 404);
+    try {
+        $equipmentIds = $request->input('housing_category_equipment_ids');
+
+        if (empty($equipmentIds) || !is_array($equipmentIds)) {
+            return (new ServiceController())->apiResponse(404,[],'Aucun ID d\'équipement fourni ou format incorrect.');
         }
-        if ($housingEquipment->is_verified == true) {
-            return response()->json(['data' => 'association equipement logement déjà vérifié.'], 200);
+
+        $results = [];
+
+        foreach ($equipmentIds as $id) {
+            try {
+
+                $housingEquipment = Housing_equipment::find($id);
+                if (!intval($id) || $id < 0) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Valeur invalide',
+                        'status' => 'invalid_value',
+                    ];
+                    continue;
+                }
+                if (!$housingEquipment) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Association équipement logement non trouvée.',
+                        'status' => 'not_found'
+                    ];
+                    continue;
+                }
+
+                if(!Equipment::whereId($housingEquipment->equipment_id)->first()->is_verified){
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'équipement en attente de validation pour cette association.',
+                        'status' => 'equipment not verified'
+                    ];
+                    continue;
+                }
+
+                if ($housingEquipment->is_verified == true) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Association équipement logement déjà vérifiée.',
+                        'status' => 'already_verified'
+                    ];
+                    continue;
+                }
+
+                $housingEquipment->is_verified = true;
+                $housingEquipment->save();
+
+                $mail = [
+                    'title' => "Notification sur la validation du nouvel équipement ajouté au logement",
+                    'body' => "L'ajout de cet équipement : " . Equipment::find($housingEquipment->equipment_id)->name . " a été validé par l'administrateur.",
+                ];
+
+                dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Association équipement logement vérifiée avec succès.',
+                    'status' => 'verified'
+                ];
+
+            } catch (\Exception $e) {
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Une erreur s\'est produite lors de la vérification.',
+                    'status' => 'error'
+                ];
+            }
         }
-        $housingEquipment->is_verified = true;
-        $housingEquipment->save();
 
-              $mail = [
-                'title' => "Notification sur la validation du nouveau équipement ajouté au logement",
-                'body' => "L'ajout de cet équipement : ".Equipment::find($housingEquipment->equipment_id)->name." a été validé par l'administrateur",
-            ];
+        $successfulValidations = array_filter($results, function ($result) {
+            return $result['status'] === 'verified';
+        });
 
-            dispatch( new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+        if (!empty($successfulValidations)) {
+            return (new ServiceController())->apiResponse(200,$results,'');
+        }
 
-        return response()->json(['data' => 'association equipement logement vérifié avec succès.'], 200);
-    } catch(Exception $e) {
-          return response()->json(['error' => $e->getMessage()], 500);
+
+        return (new ServiceController())->apiResponse(404,$results,'Aucune association vérifiée ou toutes étaient déjà vérifiées.');
+
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
-
-
 }
 
 /**
@@ -1084,6 +1194,208 @@ public function getHousingCategoriesEquipment($housingId){
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }
     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/logement/equipment/getUnverifiedHousingCategoryEquipmentExistant",
+     *     summary="Récupérer les équipements existants des catégories(pièce) en attente de validation",
+     *     tags={"Housing Equipment"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des  équipements existants des catégories(pièce) en attente de validation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement"),
+     *                 @OA\Property(property="category_id", type="integer", description="ID de la catégorie"),
+     *                 @OA\Property(property="file_path", type="string", description="Chemin du fichier"),
+     *                 @OA\Property(property="housing_name", type="string", description="Nom du logement"),
+     *                 @OA\Property(property="housing_address", type="string", description="Adresse du logement"),
+     *                 @OA\Property(property="owner_name", type="string", description="Nom du propriétaire"),
+     *                 @OA\Property(property="owner_email", type="string", description="E-mail du propriétaire"),
+     *                 @OA\Property(property="category_name", type="string", description="Nom de la catégorie"),
+     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+
+public function getUnverifiedHousingCategoryEquipmentExistant()
+{
+    try {
+        $housings = Housing::all();
+
+        $data = [];
+
+        foreach ($housings as $housing) {
+            $categories = Housing_equipment::where('housing_id', $housing->id)
+                ->distinct()
+                ->pluck('category_id');
+
+            $categoriesWithFiles = [];
+
+            foreach ($categories as $categoryId) {
+                $category = Category::whereId($categoryId)
+                    ->where('is_deleted', false)
+                    ->where('is_blocked', false)
+                    ->first();
+
+                if ($category) {
+                    $unverifiedFiles = Housing_equipment::where('housing_id', $housing->id)
+                        ->where('category_id', $categoryId)
+                        ->where('is_verified', false)
+                        ->pluck('equipment_id');
+
+                    $equipments = Equipment::whereIn('id', $unverifiedFiles)
+                    ->where('is_verified',true)
+                    ->get();
+
+                    foreach($equipments as $equipment){
+                        $equipment->housing_category_equipment_id = Housing_equipment::where('housing_id', $housing->id)
+                        ->where('category_id', $categoryId)
+                        ->where('equipment_id', $equipment->id)
+                        ->first()->id;
+                    }
+
+                    if ($equipments->isNotEmpty()) {
+                        $categoriesWithFiles[] = [
+                            'category' => $category,
+                            'unverified_equipments_existant' => $equipments
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($categoriesWithFiles)) {
+                $data[] = [
+                    'housing_id' => $housing->id, 
+                    'housing_name' => $housing->name??"non renseigné",
+                    'categories_with_unverified_equipments' => $categoriesWithFiles
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+ /**
+     * @OA\Get(
+     *     path="/api/logement/equipment/getUnverifiedHousingCategoryEquipmentInexistant",
+     *     summary="Récupérer les équipements inexistants des catégories(pièce) en attente de validation",
+     *     tags={"Housing Equipment"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des  équipements inexistants des catégories(pièce) en attente de validation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="housing_id", type="integer", description="ID du logement"),
+     *                 @OA\Property(property="category_id", type="integer", description="ID de la catégorie"),
+     *                 @OA\Property(property="file_path", type="string", description="Chemin du fichier"),
+     *                 @OA\Property(property="housing_name", type="string", description="Nom du logement"),
+     *                 @OA\Property(property="housing_address", type="string", description="Adresse du logement"),
+     *                 @OA\Property(property="owner_name", type="string", description="Nom du propriétaire"),
+     *                 @OA\Property(property="owner_email", type="string", description="E-mail du propriétaire"),
+     *                 @OA\Property(property="category_name", type="string", description="Nom de la catégorie"),
+     *                 @OA\Property(property="is_verified", type="boolean", description="Statut de vérification")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", description="Message d'erreur")
+     *         )
+     *     )
+     * )
+     */
+
+     public function getUnverifiedHousingCategoryEquipmentInexistant()
+     {
+         try {
+             $housings = Housing::all();
+     
+             $data = [];
+     
+             foreach ($housings as $housing) {
+                 $categories = Housing_equipment::where('housing_id', $housing->id)
+                     ->distinct()
+                     ->pluck('category_id');
+     
+                 $categoriesWithFiles = [];
+     
+                 foreach ($categories as $categoryId) {
+                     $category = Category::whereId($categoryId)
+                         ->where('is_deleted', false)
+                         ->where('is_blocked', false)
+                         ->first();
+     
+                     if ($category) {
+                         $unverifiedFiles = Housing_equipment::where('housing_id', $housing->id)
+                             ->where('category_id', $categoryId)
+                             ->where('is_verified', false)
+                             ->pluck('equipment_id');
+     
+                         $equipments = Equipment::whereIn('id', $unverifiedFiles)
+                         ->where('is_verified',false)
+                         ->get();
+     
+                         foreach($equipments as $equipment){
+                             $equipment->housing_category_equipment_id = Housing_equipment::where('housing_id', $housing->id)
+                             ->where('category_id', $categoryId)
+                             ->where('equipment_id', $equipment->id)
+                             ->first()->id;
+                         }
+     
+                         if ($equipments->isNotEmpty()) {
+                             $categoriesWithFiles[] = [
+                                 'category' => $category,
+                                 'unverified_equipments_existant' => $equipments
+                             ];
+                         }
+                     }
+                 }
+     
+                 if (!empty($categoriesWithFiles)) {
+                     $data[] = [
+                         'housing_id' => $housing->id, 
+                         'housing_name' => $housing->name??"non renseigné",
+                         'categories_with_unverified_equipments' => $categoriesWithFiles
+                     ];
+                 }
+             }
+     
+             if (empty($data)) {
+                 return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
+             }
+     
+             return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
+         } catch (\Exception $e) {
+             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+         }
+     }
+
 
 
 

@@ -751,68 +751,147 @@ class EquipementController extends Controller
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/equipment/makeVerified/{id}",
-     *     summary="make verified an equipment",
-     *     tags={"Equipment"},
-     * security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the equipment to verified",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Equipment successfully verified",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="Equipment successfully verified")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Equipment not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Equipment not found")
-     *         )
-     *     )
-     * )
-     */
-    public function makeVerified(string $id)
+ * @OA\Post(
+ *     path="/api/equipment/makeVerified",
+ *     summary="Valider les équipements inexistantes des pièces de logement",
+ *      tags={"Housing Equipment"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="equipment_ids",
+ *                 type="array",
+ *                 description="Array of equipment IDs to be verified",
+ *                 @OA\Items(type="integer")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Equipment verification results",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="message", type="string", example="Équipement vérifié avec succès"),
+ *                 @OA\Property(property="status", type="string", example="verified")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid request",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Aucun ID d'équipement fourni ou le format est incorrect.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Equipment not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="id", type="integer", example=1),
+ *             @OA\Property(property="message", type="string", example="Équipement non trouvé"),
+ *             @OA\Property(property="status", type="string", example="not_found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Une erreur est survenue lors de la vérification de l'équipement")
+ *         )
+ *     )
+ * )
+ */
+
+    public function makeVerified(Request $request)
 {
     try {
+        $equipmentIds = $request->input('equipment_ids');
 
-        $equipment = Equipment::find($id);
-
-        if (!$equipment) {
-            return response()->json(['error' => 'Équipement non trouvé.'], 404);
+        if (empty($equipmentIds) || !is_array($equipmentIds)) {
+            return response()->json(['error' => 'Aucun ID d\'équipement fourni ou le format est incorrect.'], 400);
         }
 
-        if ($equipment->is_verified) {
-            return response()->json(['data' => 'Équipement déjà vérifié.'], 200);
+        $results = [];
+
+        foreach ($equipmentIds as $id) {
+            try {
+                if (!intval($id) || $id < 0) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Valeur invalide',
+                        'status' => 'invalid_value',
+                    ];
+                    continue;
+                }
+                $equipment = Equipment::find($id);
+
+                if (!$equipment) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Équipement non trouvé',
+                        'status' => 'not_found',
+                    ];
+                    continue;
+                }
+
+                if ($equipment->is_verified) {
+                    $results[] = [
+                        'id' => $id,
+                        'message' => 'Équipement déjà vérifié',
+                        'status' => 'already_verified',
+                    ];
+                    continue;
+                }
+
+                $equipment->is_verified = true;
+                $equipment->save();
+
+                $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
+                if ($housingEquipment) {
+                    $housingEquipment->is_verified = true;
+                    $housingEquipment->save();
+
+                    $mail = [
+                        'title' => "Validation du nouvel équipement ajouté au logement",
+                        'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
+                    ];
+
+                    dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+                }
+
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Équipement vérifié avec succès',
+                    'status' => 'verified',
+                ];
+            } catch (\Exception $e) {
+                $results[] = [
+                    'id' => $id,
+                    'message' => 'Erreur lors de la vérification de l\'équipement',
+                    'status' => 'error',
+                ];
+            }
         }
 
-        $equipment->is_verified = true;
-        $equipment->save();
+        $successfulValidations = array_filter($results, function ($result) {
+            return $result['status'] === 'verified';
+        });
 
-        $housingEquipment = Housing_equipment::find($id);
-        if ($housingEquipment) {
-            $housingEquipment->is_verified = true;
-            $housingEquipment->save();
-            $mail = [
-                'title' => "Validation du nouvel équipement ajouté au logement",
-                'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
-            ];
-
-            dispatch( new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+        if (!empty($successfulValidations)) {
+            return (new ServiceController())->apiResponse(200,$results,'Validé avec succès');
         }
 
-        return response()->json(['data' => 'Équipement vérifié avec succès.'], 200);
+
+        return (new ServiceController())->apiResponse(404,$results,'Aucune association vérifiée ou toutes étaient déjà vérifiées.');
+
     } catch (Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
+
 
 /**
  * @OA\Get(

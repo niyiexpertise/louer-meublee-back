@@ -756,7 +756,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                 $photo_info = [
                     'photo_unique_id' => $photo_id,
                     'id_photo' => $photo->id,
-                    'path' => url($photo->path),
+                    'path' => $photo->path,
                     'extension' => $photo->extension,
                     'is_couverture' => $photo->is_couverture,
                 ];
@@ -787,7 +787,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                     $photo_info = [
                         'photo_unique_id' => $photo_id,
                         'file_id' => $categoryFile->file->id,
-                        'path' => url($categoryFile->file->path),
+                        'path' => $categoryFile->file->path,
                     ];
 
                     $category_photos[] = $photo_info;
@@ -3470,6 +3470,7 @@ public function getCurrentReductions($housingId)
          $result = $logements->map(function ($housing) {
              return [
                  'housing_id' => $housing->id,  
+                 'housing_name' => $housing->name??"non renseigné",  
                  'photos' => $housing->photos 
              ];
          });

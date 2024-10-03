@@ -55,15 +55,17 @@ class ReservationController extends Controller
 
     private function canCreateReservation($housing_id, $new_start_date, $new_end_date, $number_of_domestical_animal) {
         $housing = Housing::where('id', $housing_id)
-            ->where('is_deleted', 0)
-            ->where('is_blocked', 0)
-            ->where('is_updated', 0)
-            ->where('is_actif', 1)
-            ->where('is_destroy', 0)
+        ->where('status', 'verified')
+        ->where('is_deleted', 0)
+        ->where('is_blocked', 0)
+        ->where('is_updated', 0)
+        ->where('is_actif', 1)
+        ->where('is_destroy', 0)
+        ->where('is_finished', 1)
             ->first();
 
         if (!$housing) {
-            return ['is_allowed' => false, 'message' => 'Logement non trouvé ou a été supprimé ou désactivé par l\'hôte'];
+            return ['is_allowed' => false, 'message' => 'Logement non trouvé ou a été supprimé ou désactivé par l\'hôte(Attention)'];
         }
 
         if (!$housing->is_accepted_animal && $number_of_domestical_animal > 0) {

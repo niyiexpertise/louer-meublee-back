@@ -90,6 +90,19 @@ class FavorisController extends Controller
             $message[] = $validator->errors();
             return (new ServiceController())->apiResponse(505,[],$message);
         }
+        $housing = Housing::where('id', $request->housing_id)
+        ->where('status', 'verified')
+      ->where('is_deleted', 0)
+      ->where('is_blocked', 0)
+      ->where('is_updated', 0)
+      ->where('is_actif', 1)
+      ->where('is_destroy', 0)
+      ->where('is_finished', 1)
+        ->get();
+
+      if($housing->isEmpty()) {
+          return (new ServiceController())->apiResponse(404, [], " L'ID du logement spécifié n'existe pas ou le logement ne respecte pas encore les critère pour être visible sur l'acceuil.");
+      }
 
         try {
             $user = auth()->user();
@@ -214,7 +227,13 @@ public function removeFromFavorites($housingId)
          $user = auth()->user();
          $favorite_listings = $user->favorites()
              ->whereHas('housing', function ($query) {
-                 $query->where('is_blocked', false)->where('is_deleted', false);
+                 $query->where('status', 'verified')
+                 ->where('is_deleted', 0)
+                 ->where('is_blocked', 0)
+                 ->where('is_updated', 1)
+                 ->where('is_actif', 1)
+                 ->where('is_destroy', 0)
+                 ->where('is_finished', 1);
              })
              ->with(['housing', 'housing.photos','housing.user'])
              ->get()
@@ -224,8 +243,10 @@ public function removeFromFavorites($housingId)
                 $favorite->is_favorite = true;
                 $favorite->housing_note = (new ReviewReservationController())->LogementAvecMoyenneNotesCritereEtCommentairesAcceuil($favorite->id)->original['data']['overall_average'] ?? 'non renseigné';
              }
+             $data = (new HousingController())->formatListingsData( $favorite_listings,$user->id);
+
              $data = [
-                'favoris_housing' => $favorite_listings,
+                'favoris_housing' => $data,
 
                     ];
 

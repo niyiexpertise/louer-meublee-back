@@ -1711,5 +1711,142 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
     }
 }
 
+/**
+ * @OA\Get(
+ *     path="/api/logement/category/getHousingCategoryFiles/{isexist}",
+ *     tags={"Housing Category Photo"},
+ *     security={{"bearerAuth": {}}},
+ *     summary="Récupérer les logements avec des photos non vérifiées par catégorie",
+ *     description="Retourne une liste des logements avec des photos non vérifiées par catégorie",
+ *     @OA\Parameter(
+ *         name="isexist",
+ *         in="path",
+ *         required=true,
+ *         description="Valeur booléenne pour filtrer les catégories vérifiées ou non",
+ *         @OA\Schema(
+ *             type="integer"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements avec photos non vérifiées par catégorie",
+ *         @OA\JsonContent(
+ *             @OA\Property(
+ *                 property="housing_id",
+ *                 type="integer",
+ *                 description="ID du logement"
+ *             ),
+ *             @OA\Property(
+ *                 property="housing_name",
+ *                 type="string",
+ *                 description="Nom du logement"
+ *             ),
+ *             @OA\Property(
+ *                 property="categories_with_unverified_photos",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(
+ *                         property="category",
+ *                         type="object",
+ *                         description="Catégorie du logement"
+ *                     ),
+ *                     @OA\Property(
+ *                         property="unverified_photos",
+ *                         type="array",
+ *                         @OA\Items(
+ *                             @OA\Property(
+ *                                 property="file_id",
+ *                                 type="integer",
+ *                                 description="ID du fichier photo"
+ *                             )
+ *                         )
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Aucune photo non vérifiée trouvée pour les logements"
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur"
+ *     )
+ * )
+ */
+
+
+
+public function getHousingCategoryFiles($isexist)
+{
+    try {
+        $housings = Housing::all();
+
+        $data = [];
+
+        if(intval($isexist)!=0 && intval($isexist)!=1){
+            return (new ServiceController())->apiResponse(404, [], "isexiste doit avoir pour valeur 1 ou 0");
+        }
+
+        foreach ($housings as $housing) {
+            $categories = Housing_category_file::where('housing_id', $housing->id)
+                ->distinct()
+                ->pluck('category_id');
+
+            $categoriesWithFiles = [];
+
+            foreach ($categories as $categoryId) {
+                $category = Category::whereId($categoryId)
+                    ->where('is_deleted', false)
+                    ->where('is_blocked', false)
+                    ->where('is_verified', $isexist)
+                    ->first();
+
+               
+
+                if ($category) {
+                    $unverifiedFiles = Housing_category_file::where('housing_id', $housing->id)
+                        ->where('category_id', $categoryId)
+                        ->where('is_verified', false)
+                        ->pluck('file_id');
+
+                    $files = File::whereIn('id', $unverifiedFiles)->get();
+
+                    $filess = File::whereIn('id', $unverifiedFiles)->first();
+
+                    $category->Housing_category_file_id = Housing_category_file::where('housing_id', $housing->id)
+                    ->where('category_id', $categoryId)
+                    // ->where('file_id', $filess->id)
+                    ;
+                    
+
+                    if ($files->isNotEmpty()) {
+                        $categoriesWithFiles[] = [
+                            'category' => $category,
+                            'unverified_photos' => $files
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($categoriesWithFiles)) {
+                $data[] = [
+                    'housing_id' => $housing->id, 
+                    'housing_name' => $housing->name??"non renseigné",  
+                    'categories_with_unverified_photos' => $categoriesWithFiles
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
+        }
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
 
 }

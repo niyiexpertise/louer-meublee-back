@@ -11046,6 +11046,84 @@
                 ]
             }
         },
+        "/api/logement/category/getHousingCategoryFiles/{isexist}": {
+            "get": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Récupérer les logements avec des photos non vérifiées par catégorie",
+                "description": "Retourne une liste des logements avec des photos non vérifiées par catégorie",
+                "operationId": "b9bd68a6d9de778811e37f129aad1978",
+                "parameters": [
+                    {
+                        "name": "isexist",
+                        "in": "path",
+                        "description": "Valeur booléenne pour filtrer les catégories vérifiées ou non",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des logements avec photos non vérifiées par catégorie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement",
+                                            "type": "integer"
+                                        },
+                                        "housing_name": {
+                                            "description": "Nom du logement",
+                                            "type": "string"
+                                        },
+                                        "categories_with_unverified_photos": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "category": {
+                                                        "description": "Catégorie du logement",
+                                                        "type": "object"
+                                                    },
+                                                    "unverified_photos": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "file_id": {
+                                                                    "description": "ID du fichier photo",
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune photo non vérifiée trouvée pour les logements"
+                    },
+                    "500": {
+                        "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/logement/charge/addChargeToHousing": {
             "post": {
                 "tags": [

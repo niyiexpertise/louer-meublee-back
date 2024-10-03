@@ -99,11 +99,20 @@ class HousingSponsoringController extends Controller
             }
 
 
-            $housing = Housing::find($request->housing_id);
+      
+            $housing = Housing::where('id', $request->housing_id)
+            ->where('status', 'verified')
+          ->where('is_deleted', 0)
+          ->where('is_blocked', 0)
+          ->where('is_updated', 0)
+          ->where('is_actif', 1)
+          ->where('is_destroy', 0)
+          ->where('is_finished', 1)
+            ->get();
             $sponsoring = Sponsoring::find($request->sponsoring_id);
 
             if (!$housing) {
-                return (new ServiceController())->apiResponse(404, [], 'Logement non trouvé');
+                return (new ServiceController())->apiResponse(404, [], 'L\'ID du logement spécifié n\'existe pas ou le logement ne respecte pas encore les critères pour être visible.');
             }
 
             if($housing->user_id != Auth::user()->id){

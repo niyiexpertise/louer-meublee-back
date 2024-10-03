@@ -1065,6 +1065,9 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing'])->name('logement.validateUnexistCategoryHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateUnexistCategoryHousing');
        Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail'])->name('logement.getCategoryDetail')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDetail');
        Route::get('/category/photo/unverified', [HousingCategoryFileController::class, 'getUnverifiedHousingCategoryFilesWithDetails'])->name('logement.getUnverifiedHousingCategoryFilesWithDetails')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingCategoryFilesWithDetails');
+
+       Route::get('/category/getHousingCategoryFiles/{isexist}', [HousingCategoryFileController::class, 'getHousingCategoryFiles'])->name('logement.getHousingCategoryFiles')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingCategoryFiles');
+       
        Route::put('/category/photo/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateHousingCategoryFile');
        //Gestion des équipements côté admin
        Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid'])->name('logement.ListHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingEquipmentInvalid');

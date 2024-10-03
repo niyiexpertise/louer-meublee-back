@@ -745,12 +745,13 @@ public function changeDocument(Request $request)
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();
 
-            return response()->json(['message' => "Document changé avec succès."], 200);
+            return (new ServiceController())->apiResponse(200, [], 'Document changé avec succès.');
+
         } else {
-            return response()->json(['error' => 'Impossible de changer le document car il a déjà été validé.'], 400);
+            return (new ServiceController())->apiResponse(404, [], 'Impossible de changer le document car il a déjà été validé.');
         }
     } catch (\Exception $e) {
-        return response()->json(['error' =>$e->getMessage()], 500);
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
     }
 }
 

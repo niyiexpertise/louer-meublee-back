@@ -631,6 +631,7 @@ public function makeVerifiedHousingEquipment(Request $request)
                 $housingEquipment->is_verified = true;
                 $housingEquipment->save();
 
+
                 $mail = [
                     'title' => "Notification sur la validation du nouvel équipement ajouté au logement",
                     'body' => "L'ajout de cet équipement : " . Equipment::find($housingEquipment->equipment_id)->name . " a été validé par l'administrateur.",

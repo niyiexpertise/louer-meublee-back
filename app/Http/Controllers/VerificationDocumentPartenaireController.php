@@ -728,6 +728,7 @@ public function changeDocument(Request $request)
         $verificationDocument = verification_document_partenaire::findOrFail($verification_document_id);
       
 
+
         if ($verificationDocument->verificationStatutpartenaire->status === 0) {
             $filename = basename($verificationDocument->path);
             $oldDocumentPath = public_path('image/document_verification/' . $filename);
@@ -739,7 +740,6 @@ public function changeDocument(Request $request)
                     if ($identity_profil_url['fails']) {
                         return (new ServiceController())->apiResponse(404, [], $identity_profil_url['result']);
                     }
-                  
 
             $verificationDocument->path = $identity_profil_url['result'];
             $verificationDocument->save();

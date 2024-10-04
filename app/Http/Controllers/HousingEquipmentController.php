@@ -587,45 +587,27 @@ public function makeVerifiedHousingEquipment(Request $request)
             return (new ServiceController())->apiResponse(404,[],'Aucun ID d\'équipement fourni ou format incorrect.');
         }
 
-        $results = [];
 
         foreach ($equipmentIds as $id) {
-            try {
 
                 $housingEquipment = Housing_equipment::find($id);
                 if (!intval($id) || $id < 0) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Valeur invalide',
-                        'status' => 'invalid_value',
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, [], "Valeur invalide");
                 }
                 if (!$housingEquipment) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Association équipement logement non trouvée.',
-                        'status' => 'not_found'
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, [], "Association équipement logement non trouvée");
                 }
 
                 if(!Equipment::whereId($housingEquipment->equipment_id)->first()->is_verified){
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'équipement en attente de validation pour cette association.',
-                        'status' => 'equipment not verified'
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404,$id, "équipement en attente de validation pour cette association.");
+                }
+
+                if(Housing_category_file::whereHousingId($housingEquipment->housing_id)->whereCategoryId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
+                    return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider cet équipement car la pièce à laquelle elle est associé n'est pas encore validée.");
                 }
 
                 if ($housingEquipment->is_verified == true) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Association équipement logement déjà vérifiée.',
-                        'status' => 'already_verified'
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, [], "Association équipement logement déjà vérifiée.");
                 }
 
                 $housingEquipment->is_verified = true;
@@ -638,32 +620,9 @@ public function makeVerifiedHousingEquipment(Request $request)
                 ];
 
                 dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
-
-                $results[] = [
-                    'id' => $id,
-                    'message' => 'Association équipement logement vérifiée avec succès.',
-                    'status' => 'verified'
-                ];
-
-            } catch (\Exception $e) {
-                $results[] = [
-                    'id' => $id,
-                    'message' => 'Une erreur s\'est produite lors de la vérification.',
-                    'status' => 'error'
-                ];
-            }
         }
 
-        $successfulValidations = array_filter($results, function ($result) {
-            return $result['status'] === 'verified';
-        });
-
-        if (!empty($successfulValidations)) {
-            return (new ServiceController())->apiResponse(200,$results,'');
-        }
-
-
-        return (new ServiceController())->apiResponse(404,$results,'Aucune association vérifiée ou toutes étaient déjà vérifiées.');
+        return (new ServiceController())->apiResponse(200, [], "Association équipement logement vérifiée avec succès.");
 
     } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -1282,6 +1241,7 @@ public function getUnverifiedHousingCategoryEquipmentExistant()
                 $data[] = [
                     'housing_id' => $housing->id, 
                     'housing_name' => $housing->name??"non renseigné",
+                    'user_id' => $housing->user->id,
                     'categories_with_unverified_equipments' => $categoriesWithFiles
                 ];
             }
@@ -1382,6 +1342,7 @@ public function getUnverifiedHousingCategoryEquipmentExistant()
                      $data[] = [
                          'housing_id' => $housing->id, 
                          'housing_name' => $housing->name??"non renseigné",
+                         'user_id' => $housing->user->id,
                          'categories_with_unverified_equipments' => $categoriesWithFiles
                      ];
                  }

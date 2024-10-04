@@ -230,7 +230,7 @@ public function removeFromFavorites($housingId)
                  $query->where('status', 'verified')
                  ->where('is_deleted', 0)
                  ->where('is_blocked', 0)
-                 ->where('is_updated', 1)
+                 ->where('is_updated', 0)
                  ->where('is_actif', 1)
                  ->where('is_destroy', 0)
                  ->where('is_finished', 1);

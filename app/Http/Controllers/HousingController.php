@@ -4447,5 +4447,152 @@ public function HousingHoteInProgress(){
  }
 
 
+/**
+ * @OA\Get(
+ *      path="/api/logement/getElementToVerify",
+ *      tags={"Housing"},
+ *      summary="Récupérer les éléments en attente de validation",
+ *      description="Compte les photos de logement en attente de validation et inclut les autres éléments à vérifier (préférences, catégories, équipements, etc.).",
+ *      security={{"bearerAuth": {}}},
+ *      
+ *      @OA\Response(
+ *          response=200,
+ *          description="Éléments en attente de validation récupérés avec succès",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="status_code", type="integer", example=200),
+ *              @OA\Property(
+ *                  property="data",
+ *                  type="array",
+ *                  @OA\Items(
+ *                      @OA\Property(property="number_housing_photo_pending", type="integer", example=3)
+ *                  )
+ *              ),
+ *              @OA\Property(property="message", type="string", example="Aucune association vérifiée ou toutes étaient déjà vérifiées.")
+ *          )
+ *      ),
+ *      
+ *      @OA\Response(
+ *          response=500,
+ *          description="Erreur interne du serveur",
+ *          @OA\JsonContent(
+ *              @OA\Property(property="status_code", type="integer", example=500),
+ *              @OA\Property(property="message", type="string", example="Erreur lors de la récupération des éléments en attente de validation.")
+ *          )
+ *      )
+ * )
+ */
+
+ public function getElementToVerify(){
+    try {
+
+        //Photo Logement
+        $pendingPhotosCount = 0;
+        $pendingPhotos = $this->getUnverifiedPhotos()->original['data'];
+
+        foreach ($pendingPhotos as $housing) {
+            foreach ($housing['photos'] as $photo) {
+                if ($photo['is_verified'] == 0) {
+                    $pendingPhotosCount++;
+                }
+            }
+        }
+
+        //Préférence existantes
+        $pendingPreferencesCount = 0;
+        $pendingPreferencesExistant = (new HousingPreferenceController())->getUnverifiedHousingPreferencesExistant()->original['data'];
+        
+        foreach ($pendingPreferencesExistant as $housing) {
+            foreach ($housing['unverified_preferences'] as $preference) {
+                $pendingPreferencesCount++;
+            }
+        }
+
+        //Préférence inexistantes
+        $pendingPreferencesInextanteCount = 0;
+        $pendingPreferencesInxistant = (new HousingPreferenceController())->getUnverifiedHousingPreferencesInexistant()->original['data'];
+        
+        foreach ($pendingPreferencesInxistant as $housing) {
+            foreach ($housing['unverified_preferences'] as $preference) {
+                $pendingPreferencesInextanteCount++;
+            }
+        }
+
+        //Categorie Existantes
+        $pendingCategoriesExistanteCount = 0;
+        $pendingCategoriesExistante = (new HousingCategoryFileController())->getHousingCategoryFiles(1)->original['data'];
+
+        foreach ($pendingCategoriesExistante as $housing) {
+            foreach ($housing['categories_with_unverified_photos'] as $category) {
+                if (count($category['unverified_photos']) > 0) {
+                    $pendingCategoriesExistanteCount++;
+                }
+            }
+        }
+
+        //Catégorie Inexistantes
+        $pendingCategoriesInxistanteCount = 0;
+        $pendingCategoriesInxistante = (new HousingCategoryFileController())->getHousingCategoryFiles(0)->original['data'];
+
+        foreach ($pendingCategoriesInxistante as $housing) {
+            foreach ($housing['categories_with_unverified_photos'] as $category) {
+                if (count($category['unverified_photos']) > 0) {
+                    $pendingCategoriesInxistanteCount++;
+                }
+            }
+        }
+
+        //Photos Catégorie
+        $pendingCategoryPhotosCount = 0;
+        $pendingCategories = (new HousingCategoryFileController())->getUnverifiedHousingCategoryFilesWithDetails()->original['data'];
+
+        foreach ($pendingCategories as $housing) {
+            foreach ($housing['categories_with_unverified_photos'] as $category) {
+                $pendingCategoryPhotosCount += count($category['unverified_photos']);
+            }
+        }
+
+        //Equipment Existant
+        $pendingHousingEquipmentExistantCount = 0;
+        $pendingHousingEquipmentExistant = (new HousingEquipmentController())->getUnverifiedHousingCategoryEquipmentExistant()->original['data'];
+
+        foreach ($pendingHousingEquipmentExistant as $housing) {
+            foreach ($housing['categories_with_unverified_equipments'] as $category) {
+                $pendingHousingEquipmentExistantCount += count($category['unverified_equipments_existant']);
+            }
+        }
+
+        //Equipment Inexistant
+        $pendingHousingEquipmentInexistantCount = 0;
+        $pendingHousingEquipmentInexistant = (new HousingEquipmentController())->getUnverifiedHousingCategoryEquipmentInexistant()->original['data'];
+
+        foreach ($pendingHousingEquipmentInexistant as $housing) {
+            foreach ($housing['categories_with_unverified_equipments'] as $category) {
+                $pendingHousingEquipmentInexistantCount += count($category['unverified_equipments_existant']);
+            }
+        }
+
+        //data
+
+        $data[] = [
+            'number_housing_photo_pending' => $pendingPhotosCount,
+            'number_housing_preference_existing_pending' => $pendingPreferencesCount,
+            'number_housing_preference_inexisting_pending' => $pendingPreferencesInextanteCount,
+            'number_housing_category_existing_pending' => $pendingCategoriesExistanteCount,
+            'number_housing_category_inexisting_pending' => $pendingCategoriesInxistanteCount,
+            'number_housing_category_photos_pending' => $pendingCategoryPhotosCount,
+            'number_housing_category_equipment_existant_pending' => $pendingHousingEquipmentExistantCount,
+            'number_housing_category_equipment_inexistant_pending' => $pendingHousingEquipmentInexistantCount,
+        ];
+
+
+
+        return (new ServiceController())->apiResponse(200,$data,"Nombre d'éléments à vérifier");
+
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
+
 
 }

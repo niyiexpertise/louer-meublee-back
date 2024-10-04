@@ -502,46 +502,25 @@ public function ListHousingPreferenceInvalid($housingId) {
          $results = [];
  
          foreach ($housingPreferenceIds as $housingPreferenceId) {
-             try {
                  if (!intval($housingPreferenceId) || $housingPreferenceId < 0) {
-                     $results[] = [
-                         'id' => $housingPreferenceId,
-                         'message' => 'ID de préférence invalide.',
-                         'status' => 'invalid_value'
-                     ];
-                     continue;
+                    return (new ServiceController())->apiResponse(404,  $housingPreferenceId, 'ID de préférence invalide.');
                  }
  
                  $housingPreference = housing_preference::find($housingPreferenceId);
 
  
                  if (!$housingPreference) {
-                     $results[] = [
-                         'id' => $housingPreferenceId,
-                         'message' => 'Préférence de logement non trouvée.',
-                         'status' => 'not_found'
-                     ];
-                     continue;
+                    return (new ServiceController())->apiResponse(404,$housingPreferenceId, 'Préférence de logement non trouvée.');
                  }
 
                 
                  if (!Preference::whereId($housingPreference->preference_id)->first()->is_verified) {
-                     $results[] = [
-                         'id' => $housingPreferenceId,
-                         'message' => 'Préférence en attente de validation.',
-                         'status' => 'invalid_preference'
-                     ];
-                     continue;
+                    return (new ServiceController())->apiResponse(404,$housingPreferenceId, 'Préférence en attente de validation.');
                  }
 
  
                  if ($housingPreference->is_verified) {
-                     $results[] = [
-                         'id' => $housingPreferenceId,
-                         'message' => 'Préférence de logement déjà vérifiée.',
-                         'status' => 'already_verified'
-                     ];
-                     continue;
+                    return (new ServiceController())->apiResponse(404,$housingPreferenceId, 'Préférence de logement déjà vérifiée');
                  }
  
                  $housingPreference->is_verified = true;
@@ -553,31 +532,10 @@ public function ListHousingPreferenceInvalid($housingId) {
                  ];
  
                  dispatch(new SendRegistrationEmail($housingPreference->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
- 
-                 $results[] = [
-                     'id' => $housingPreferenceId,
-                     'message' => 'Préférence vérifiée avec succès.',
-                     'status' => 'verified'
-                 ];
- 
-             } catch (\Exception $e) {
-                 $results[] = [
-                     'id' => $housingPreferenceId,
-                     'message' => $e->getMessage(),
-                     'status' => 'error'
-                 ];
-             }
+
          }
- 
-         $successfulValidations = array_filter($results, function ($result) {
-             return $result['status'] === 'verified';
-         });
- 
-         if (!empty($successfulValidations)) {
-             return (new ServiceController())->apiResponse(200,$results, 'Association validé avec succès');
-         }
- 
-         return (new ServiceController())->apiResponse(404, $results, 'Aucune préférence vérifiée ou toutes étaient déjà vérifiées.');
+
+         return (new ServiceController())->apiResponse(200, $results, 'Préférence vérifiée avec succès.');
  
      } catch (\Exception $e) {
          return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -880,6 +838,7 @@ public function getUnverifiedHousingPreferencesExistant()
                 $data[] = [
                     'housing_id' => $housing->id,
                     'housing_name' => $housing->name ?? "non renseigné",
+                    'user_id' => $housing->user->id,
                     'unverified_preferences' => $preferencesWithStatus
                 ];
             }
@@ -1004,6 +963,7 @@ public function getUnverifiedHousingPreferencesExistant()
                  $data[] = [
                      'housing_id' => $housing->id,
                      'housing_name' => $housing->name ?? "non renseigné",
+                     'user_id' => $housing->user->id,
                      'unverified_preferences' => $preferencesWithStatus
                  ];
              }

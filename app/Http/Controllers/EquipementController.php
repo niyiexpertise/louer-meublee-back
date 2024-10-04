@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificationEmail;
 use App\Mail\NotificationEmailwithoutfile;
+use App\Models\Housing_category_file;
 use App\Services\FileService;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -811,45 +812,33 @@ class EquipementController extends Controller
         $equipmentIds = $request->input('equipment_ids');
 
         if (empty($equipmentIds) || !is_array($equipmentIds)) {
-            return response()->json(['error' => 'Aucun ID d\'équipement fourni ou le format est incorrect.'], 400);
+            return (new ServiceController())->apiResponse(404,[],'Aucun ID d\'équipement fourni ou format incorrect.');
         }
 
-        $results = [];
 
         foreach ($equipmentIds as $id) {
-            try {
                 if (!intval($id) || $id < 0) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Valeur invalide',
-                        'status' => 'invalid_value',
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, $id, 'Valeur invalide');
                 }
                 $equipment = Equipment::find($id);
 
                 if (!$equipment) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Équipement non trouvé',
-                        'status' => 'not_found',
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, $id, 'Valeur invalide');
                 }
 
                 if ($equipment->is_verified) {
-                    $results[] = [
-                        'id' => $id,
-                        'message' => 'Équipement déjà vérifié',
-                        'status' => 'already_verified',
-                    ];
-                    continue;
+                    return (new ServiceController())->apiResponse(404, $id, 'Équipement déjà vérifié');
                 }
 
                 $equipment->is_verified = true;
                 $equipment->save();
 
                 $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
+
+                if(Housing_category_file::whereHousingId($housingEquipment->housing_id)->whereCategoryId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
+                    return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider cet équipement car la pièce à laquelle elle est associé n'est pas encore validée.");
+                }
+
                 if ($housingEquipment) {
                     $housingEquipment->is_verified = true;
                     $housingEquipment->save();
@@ -862,30 +851,9 @@ class EquipementController extends Controller
                     dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
                 }
 
-                $results[] = [
-                    'id' => $id,
-                    'message' => 'Équipement vérifié avec succès',
-                    'status' => 'verified',
-                ];
-            } catch (\Exception $e) {
-                $results[] = [
-                    'id' => $id,
-                    'message' => 'Erreur lors de la vérification de l\'équipement',
-                    'status' => 'error',
-                ];
-            }
         }
 
-        $successfulValidations = array_filter($results, function ($result) {
-            return $result['status'] === 'verified';
-        });
-
-        if (!empty($successfulValidations)) {
-            return (new ServiceController())->apiResponse(200,$results,'Validé avec succès');
-        }
-
-
-        return (new ServiceController())->apiResponse(404,$results,'Aucune association vérifiée ou toutes étaient déjà vérifiées.');
+        return (new ServiceController())->apiResponse(200,[],'Association vérifié avec succès.');
 
     } catch (Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -908,7 +876,6 @@ class EquipementController extends Controller
 public function allEquipments()
 {
     try {
-        // Récupération des équipements non bloqués et non supprimés, avec des noms uniques
         $equipments = Equipment::where('is_blocked', false)
             ->where('is_deleted', false)
             ->get()
@@ -918,18 +885,16 @@ public function allEquipments()
             return [
                 'id' => $equipment->id,
                 'name' => $equipment->name,
-                'icone' => $equipment->icone ?? null,  // Valeur par défaut si icône est null
+                'icone' => $equipment->icone ?? null, 
 
             ];
-        })->values();  // Utilisation de values() pour réindexer le tableau (au cas où)
+        })->values();  
 
-        // Retourne la réponse JSON avec le statut HTTP 200
         return response()->json([
             'data' => $equipmentList
         ], 200);
 
     } catch (Exception $e) {
-        // Retourne une erreur 500 en cas d'exception
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }

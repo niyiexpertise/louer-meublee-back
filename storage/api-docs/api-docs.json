@@ -9995,49 +9995,6 @@
                 ]
             }
         },
-        "/api/logement/category/default/{housing_id}/{category_id}/validate": {
-            "put": {
-                "tags": [
-                    "Housing Category Photo"
-                ],
-                "summary": "Valider une catégorie existante par défaut en attente de validation",
-                "description": "Valide une catégorie existante par défaut en attente de validation en mettant à jour le statut is_verified de housing_category_file à true.",
-                "operationId": "12a2332f85ef2bbc75f7d5294f64136a",
-                "parameters": [
-                    {
-                        "name": "housing_id",
-                        "in": "path",
-                        "description": "ID du logement associé à la catégorie",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "category_id",
-                        "in": "path",
-                        "description": "ID de la catégorie à valider",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Succès - Catégorie validée avec succès"
-                    },
-                    "404": {
-                        "description": "Erreur - Catégorie non trouvée"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/logement/category/unexist/invalid": {
             "get": {
                 "tags": [
@@ -11115,6 +11072,112 @@
                     },
                     "500": {
                         "description": "Erreur serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/default/validate": {
+            "post": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Valider plusieurs catégories par défaut en attente de validation pour différents logements",
+                "description": "Valide plusieurs catégories par défaut en attente de validation pour différents logements en mettant à jour le statut is_verified de housing_category_file à true pour chaque catégorie.",
+                "operationId": "d6095c06a1ac4dd25233c2cd19813bb2",
+                "requestBody": {
+                    "description": "Tableau contenant les IDs des logements et les listes de catégories à valider",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement associé",
+                                            "type": "integer"
+                                        },
+                                        "categoryIds": {
+                                            "description": "Liste des IDs des catégories à valider",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Succès - Toutes les catégories ont été validées avec succès"
+                    },
+                    "404": {
+                        "description": "Erreur - Logement ou catégorie non trouvés"
+                    },
+                    "400": {
+                        "description": "Erreur - Certaines catégories ne sont pas vérifiées ou sont invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logement/category/inexistant/validate": {
+            "post": {
+                "tags": [
+                    "Housing Category Photo"
+                ],
+                "summary": "Valider plusieurs catégories inexistantes en attente de validation pour différents logements",
+                "description": "Valide plusieurs catégories inexistantes en attente de validation pour différents logement.",
+                "operationId": "5c2dd89b5c57cb315c371c55c5b19c6a",
+                "requestBody": {
+                    "description": "Tableau contenant les IDs des logements et les listes de catégories à valider",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "housing_id": {
+                                            "description": "ID du logement associé",
+                                            "type": "integer"
+                                        },
+                                        "categoryIds": {
+                                            "description": "Liste des IDs des catégories à valider",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Succès - Toutes les catégories ont été validées avec succès"
+                    },
+                    "404": {
+                        "description": "Erreur - Logement ou catégorie non trouvés"
+                    },
+                    "400": {
+                        "description": "Erreur - Certaines catégories ne sont pas vérifiées ou sont invalides"
                     }
                 },
                 "security": [
@@ -14212,6 +14275,75 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/logement/getElementToVerify": {
+            "get": {
+                "tags": [
+                    "Housing"
+                ],
+                "summary": "Récupérer les éléments en attente de validation",
+                "description": "Compte les photos de logement en attente de validation et inclut les autres éléments à vérifier (préférences, catégories, équipements, etc.).",
+                "operationId": "1b66243cdb66ba710d19d0c7b4bacb73",
+                "responses": {
+                    "200": {
+                        "description": "Éléments en attente de validation récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "number_housing_photo_pending": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Aucune association vérifiée ou toutes étaient déjà vérifiées."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors de la récupération des éléments en attente de validation."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/logement/{housingId}/equipements": {

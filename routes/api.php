@@ -878,6 +878,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/getHousingSensibleOrInsensibleDetail/{housinId}', [HousingController::class, 'getHousingSensibleOrInsensibleDetail']);
             });
 
+            Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getElementToVerify']], function () {
+                Route::get('/getElementToVerify', [HousingController::class, 'getElementToVerify'])->name('logement.getElementToVerify');
+            });
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateInsensible']], function () {
                 Route::put('/update/insensible/{housingid}', [HousingController::class, 'updateInsensibleHousing'])->name('logement.updateInsensible');
             });
@@ -1060,7 +1064,8 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
        Route::get('/getTop10HousingByAverageNotes', [AdminHousingController::class, 'getTop10HousingByAverageNotes'])->name('logement.getTop10HousingByAverageNotes')->middleware('role_or_permission:superAdmin|admin|Managelogement.getTop10HousingByAverageNotes');
         //Gestion des categories côté admin
        Route::get('/category/default/invalid', [HousingCategoryFileController::class, 'getCategoryDefaultInvalidHousings'])->name('logement.getCategoryDefaultInvalidHousings')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDefaultInvalidHousings');
-       Route::put('/category/default/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateDefaultCategoryHousing'])->name('logement.validateDefaultCategoryHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateDefaultCategoryHousing');
+       Route::post('/category/default/validate', [HousingCategoryFileController::class, 'validateDefaultCategoriesHousing'])->name('logement.validateDefaultCategoriesHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateDefaultCategoriesHousing');
+       Route::post('/category/inexistant/validate', [HousingCategoryFileController::class, 'validateInexistantCategoriesHousing'])->name('logement.validateInexistantCategoriesHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateInexistantCategoriesHousing');
        Route::get('/category/unexist/invalid', [HousingCategoryFileController::class, 'getCategoryUnexistInvalidHousings'])->name('logement.getCategoryUnexistInvalidHousings')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryUnexistInvalidHousings');
        Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing'])->name('logement.validateUnexistCategoryHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateUnexistCategoryHousing');
        Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail'])->name('logement.getCategoryDetail')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDetail');

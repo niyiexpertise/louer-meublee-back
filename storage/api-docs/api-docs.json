@@ -11095,23 +11095,17 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "housing_id": {
-                                            "description": "ID du logement associé",
-                                            "type": "integer"
-                                        },
-                                        "categoryIds": {
-                                            "description": "Liste des IDs des catégories à valider",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "integer"
-                                            }
+                                "properties": {
+                                    "housing_category_file_ids": {
+                                        "description": "Tableau d'IDs des associations équipement logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
                                         }
-                                    },
-                                    "type": "object"
-                                }
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -11148,23 +11142,17 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "housing_id": {
-                                            "description": "ID du logement associé",
-                                            "type": "integer"
-                                        },
-                                        "categoryIds": {
-                                            "description": "Liste des IDs des catégories à valider",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "integer"
-                                            }
+                                "properties": {
+                                    "housing_category_file_ids": {
+                                        "description": "Tableau d'IDs des associations équipement logement",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 1
                                         }
-                                    },
-                                    "type": "object"
-                                }
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }

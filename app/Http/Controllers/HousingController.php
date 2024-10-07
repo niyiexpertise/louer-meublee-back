@@ -1952,7 +1952,7 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
                 ->where('is_updated', 0)
                 ->where('is_actif', 1)
                 ->where('is_destroy', 0)
-                ->where('number_of_traveller','<=', $nbtravaler)
+                ->where('number_of_traveller','>=', $nbtravaler)
                 ->where('is_finished', 1)
                 ->skip(($page - 1) * $perPage - count($sponsoredHousings))
                 ->take($remaining)

@@ -794,7 +794,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 
      $validator = Validator::make($request->all(), [
          'photos' => 'nullable',
-         'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        
      ]);
 
      if ($validator->fails()) {
@@ -917,7 +917,6 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
     try {
         $photoIds = $request->input('photo_ids');
 
-        // Vérifier si les IDs de photo sont fournis et si le format est correct
         if (empty($photoIds) || !is_array($photoIds)) {
             return (new ServiceController())->apiResponse(404, [], "Aucun ID de photo fourni ou le format est incorrect.");
         }
@@ -1663,69 +1662,87 @@ public function getUnverifiedHousingCategoryFilesWithDetails()
 
 
 
-public function getHousingCategoryFiles($isexist)
-{
-    try {
-        $housings = Housing::all();
+ public function getHousingCategoryFiles($isexist)
+ {
+     try {
+         $housings = Housing::all();
+         $data = [];
+ 
+         if (intval($isexist) != 0 && intval($isexist) != 1) {
+             return (new ServiceController())->apiResponse(404, [], "isexiste doit avoir pour valeur 1 ou 0");
+         }
 
-        $data = [];
+ 
+         foreach ($housings as $housing) {
+             $categories = Housing_category_file::where('housing_id', $housing->id)
+                 ->distinct()
+                 ->pluck('category_id');
+                 //a
 
-        if(intval($isexist)!=0 && intval($isexist)!=1){
-            return (new ServiceController())->apiResponse(404, [], "isexiste doit avoir pour valeur 1 ou 0");
-        }
+            //      $categories = Housing_category_file::where('housing_id', 2)
+            //      ->distinct()
+            //      ->where('is_verified',false)
+            //      ->pluck('category_id');
 
-        foreach ($housings as $housing) {
-            $categories = Housing_category_file::where('housing_id', $housing->id)
-                ->distinct()
-                ->pluck('category_id');
+            // return [2,$categories];
+            //a
+ 
+             $categoriesWithFiles = [];
+ 
+             foreach ($categories as $categoryId) {
+                 $category = Category::whereId($categoryId)
+                     ->where('is_deleted', false)
+                     ->where('is_blocked', false)
+                     ->where('is_verified', $isexist)
+                     ->first();
+ 
+                 if ($category) {
+                     $unverifiedFiles = Housing_category_file::where('housing_id', $housing->id)
+                         ->where('category_id', $categoryId)
+                         ->where('is_verified', false)
+                         ->pluck('file_id');
 
-            $categoriesWithFiles = [];
+                        //  return $unverifiedFiles;
+ 
+                     $files = File::whereIn('id', $unverifiedFiles)->get();
+ 
+                     foreach ($files as $file) {
+                         $file->housing_catgeory_file = Housing_category_file::where('housing_id', $housing->id)
+                             ->where('category_id', $categoryId)
+                             ->where('file_id', $file->id)
+                             ->first()->id;
+                     }
 
-            foreach ($categories as $categoryId) {
-                $category = Category::whereId($categoryId)
-                    ->where('is_deleted', false)
-                    ->where('is_blocked', false)
-                    ->where('is_verified', $isexist)
-                    ->first();
-
-               
-
-                if ($category) {
-                    $unverifiedFiles = Housing_category_file::where('housing_id', $housing->id)
-                        ->where('category_id', $categoryId)
-                        ->where('is_verified', false)
-                        ->pluck('file_id');
-
-                    $files = File::whereIn('id', $unverifiedFiles)->get();
-
-                    if ($files->isNotEmpty()) {
-                        $categoriesWithFiles[] = [
-                            'category' => $category,
-                            'unverified_photos' => $files
-                        ];
-                    }
-                }
-            }
-
-            if (!empty($categoriesWithFiles)) {
-                $data[] = [
-                    'housing_id' => $housing->id, 
-                    'housing_name' => $housing->name??"non renseigné", 
-                    'user_id' => $housing->user->id,
-                    'categories_with_unverified_photos' => $categoriesWithFiles
-                ];
-            }
-        }
-
-        if (empty($data)) {
-            return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
-        }
-
-        return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
-    } catch (\Exception $e) {
-        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-    }
-}
+ 
+                     if ($files->isNotEmpty()) {
+                         $categoriesWithFiles[] = [
+                             'category' => $category,
+                             'unverified_photos' => $files
+                         ];
+                     }
+                 }
+             }
+ 
+             if (!empty($categoriesWithFiles)) {
+                 $data[] = [
+                     'housing_id' => $housing->id,
+                     'housing_name' => $housing->name ?? "non renseigné",
+                     'user_id' => $housing->user->id,
+                     'categories_with_unverified_photos' => $categoriesWithFiles
+                 ];
+             }
+         }
+ 
+         if (empty($data)) {
+             return (new ServiceController())->apiResponse(404, [], 'Aucune photo non vérifiée trouvée pour les logements');
+         }
+ 
+         return (new ServiceController())->apiResponse(200, $data, 'Liste des logements avec photos non vérifiées par catégorie');
+     } catch (\Exception $e) {
+         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+     }
+ }
+ 
 
 /**
  * @OA\Post(
@@ -1738,25 +1755,18 @@ public function getHousingCategoryFiles($isexist)
  *          required=true,
  *          description="Tableau contenant les IDs des logements et les listes de catégories à valider",
  *          @OA\JsonContent(
- *              type="array",
- *              @OA\Items(
- *                  type="object",
- *                  @OA\Property(
- *                      property="housing_id",
- *                      type="integer",
- *                      description="ID du logement associé"
- *                  ),
- *                  @OA\Property(
- *                      property="categoryIds",
- *                      type="array",
- *                      description="Liste des IDs des catégories à valider",
- *                      @OA\Items(
- *                          type="integer"
- *                      )
- *                  )
- *              )
- *          )
- *      ),
+ *             type="object",
+ *             @OA\Property(
+ *                 property="housing_category_file_ids",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="integer",
+ *                     example=1
+ *                 ),
+ *                 description="Tableau d'IDs des associations équipement logement"
+ *             )
+ *         )
+ *     ),
  *      @OA\Response(
  *          response=200,
  *          description="Succès - Toutes les catégories ont été validées avec succès"
@@ -1772,48 +1782,49 @@ public function getHousingCategoryFiles($isexist)
  * )
  */
 
- public function validateDefaultCategoriesHousing(Request $request)
+
+public function validateDefaultCategoriesHousing(Request $request)
  {
      try {
          $housingCategories = $request->all();
+
+         $housingCategories = $request->input('housing_category_file_ids');
  
-     foreach ($housingCategories as $housingCategory) {
-         $housing_id = $housingCategory['housing_id'];
-         $categoryIds = $housingCategory['categoryIds'];
+     foreach ($housingCategories as $housingCategoryId) {
+
+        $housingCategory = Housing_category_file::whereId($housingCategoryId)->first();
+
+        if (!$housingCategory) {
+            return (new ServiceController())->apiResponse(404, [], "Aucune données trouvé poir l'id $housingCategoryId");
+        }
  
-         $housing = Housing::find($housing_id);
+         $housing = Housing::find($housingCategory->housing_id);
  
          if (!$housing) {
-             return response()->json(['error' => "Le logement avec l'ID $housing_id n'existe pas"], 404);
+            return (new ServiceController())->apiResponse(404, [], "Le logement avec l'ID $housingCategory->housing_id n'existe pas");
          }
  
-         foreach ($categoryIds as $categoryId) {
-             $category = Category::find($categoryId);
+             $category = Category::find($housingCategory->category_id);
+
+             if (!$category) {
+                return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $housingCategory->category_id pour le logement $housingCategory->housing_id n'existe pas");
+            }
  
-             if (!$category || !$category->is_verified) {
-                 return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $categoryId pour le logement $housing_id n'est pas vérifiée ou n'existe pas");
+             if (!$category->is_verified) {
+                 return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $housingCategory->category_id pour le logement $housingCategory->housing_id n'est pas vérifiée");
              }
- 
-             $housingCategoryFiles = Housing_category_file::where('housing_id', $housing_id)
-                 ->where('category_id', $categoryId)
-                 ->get();
- 
-             if ($housingCategoryFiles->isEmpty()) {
-                 return (new ServiceController())->apiResponse(404, [],"Aucune catégorie trouvée pour le logement $housing_id et la catégorie $categoryId");
+
+             if($housingCategory->is_verified){
+                return (new ServiceController())->apiResponse(404, [$housingCategoryId], "Déjà validé");
              }
- 
-             if(!Housing_category_file::where('housing_id', $housing_id)
-             ->where('category_id', $categoryId)
-             ->where('is_verified',false)
-             ->exists()){
-                 return (new ServiceController())->apiResponse(404, [],"Aucune catégorie en attente de validation pour le logement $housing_id et la catégorie $categoryId");
-             }
- 
-             foreach ($housingCategoryFiles as $housingCategoryFile) {
-                 $housingCategoryFile->update(['is_verified' => true]);
-             }
- 
-             $user_id = $housing->user_id;
+
+        }
+            foreach ($housingCategories as $housingCategoryId) {
+                $housingCategory = Housing_category_file::whereId($housingCategoryId)->first();
+                $housingCategory->is_verified = true;
+                $housingCategory->save();
+
+                $user_id = $housing->user_id;
  
              $notification = new Notification([
                  'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
@@ -1827,9 +1838,9 @@ public function getHousingCategoryFiles($isexist)
              ];
  
              dispatch(new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
-         }
-     }
- 
+
+            }
+
      return (new ServiceController())->apiResponse(200, [], 'Catégories validées avec succès pour tous les logements');
      } catch (\Exception $e) {
          return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -1848,26 +1859,19 @@ public function getHousingCategoryFiles($isexist)
  *      @OA\RequestBody(
  *          required=true,
  *          description="Tableau contenant les IDs des logements et les listes de catégories à valider",
- *          @OA\JsonContent(
- *              type="array",
- *              @OA\Items(
- *                  type="object",
- *                  @OA\Property(
- *                      property="housing_id",
- *                      type="integer",
- *                      description="ID du logement associé"
- *                  ),
- *                  @OA\Property(
- *                      property="categoryIds",
- *                      type="array",
- *                      description="Liste des IDs des catégories à valider",
- *                      @OA\Items(
- *                          type="integer"
- *                      )
- *                  )
- *              )
- *          )
- *      ),
+ *               @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="housing_category_file_ids",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="integer",
+ *                     example=1
+ *                 ),
+ *                 description="Tableau d'IDs des associations équipement logement"
+ *             )
+ *         )
+ *     ),
  *      @OA\Response(
  *          response=200,
  *          description="Succès - Toutes les catégories ont été validées avec succès"
@@ -1882,55 +1886,124 @@ public function getHousingCategoryFiles($isexist)
  *      )
  * )
  */
+// public function validateInexistantCategoriesHousing(Request $request)
+// {
+//     $data = $request->all();
+
+//     foreach ($data as $housingData) {
+//         $housing_id = $housingData['housing_id'];
+//         $categoryIds = $housingData['categoryIds'];
+
+//         foreach ($categoryIds as $category_id) {
+//             $housingCategoryFile = Housing_category_file::where('housing_id', $housing_id)
+//                 ->where('category_id', $category_id)
+//                 ->first();
+
+//             if (!$housingCategoryFile) {
+//                 return (new ServiceController())->apiResponse(404, [], 'Aucune catégorie trouvée pour le logement ID : ' . $housing_id . ' et la catégorie ID : ' . $category_id);
+//             }
+
+//             if ($housingCategoryFile->is_verified == true) {
+//                 return (new ServiceController())->apiResponse(404, [], 'La catégorie ID : ' . $category_id . ' pour le logement ID : ' . $housing_id . ' est déjà vérifiée');
+//             }
+
+//             $category = Category::find($category_id);
+
+//             if (!$category || $category->is_verified == true) {
+//                 return (new ServiceController())->apiResponse(404, [], 'La catégorie ID : ' . $category_id . ' est déjà vérifiée ou n\'existe pas');
+//             }
+
+//             $category->update(['is_verified' => true]);
+
+//             $housingCategoryFile->update(['is_verified' => true]);
+
+//             $user_id = $housingCategoryFile->housing->user_id;
+
+//             $notification = new Notification([
+//                 'name' => "Votre nouvelle pièce a été validée avec succès par l'administrateur",
+//                 'user_id' => $user_id,
+//             ]);
+//             $notification->save();
+
+//             $mail = [
+//                 'title' => "Validation de la nouvelle pièce",
+//                 'body' => "La nouvelle pièce pour la catégorie : " . $category->name . " a été validée par l'administrateur.",
+//             ];
+
+//             dispatch(new SendRegistrationEmail($housingCategoryFile->housing->user->email, $mail['body'], $mail['title'], 2));
+//         }
+//     }
+
+//     return (new ServiceController())->apiResponse(200, [], 'Toutes les nouvelles pièces ont été validées avec succès');
+// }
+
 public function validateInexistantCategoriesHousing(Request $request)
 {
-    $data = $request->all();
+    try {
+        $housingCategories = $request->all();
 
-    foreach ($data as $housingData) {
-        $housing_id = $housingData['housing_id'];
-        $categoryIds = $housingData['categoryIds'];
+        $housingCategories = $request->input('housing_category_file_ids');
 
-        foreach ($categoryIds as $category_id) {
-            $housingCategoryFile = Housing_category_file::where('housing_id', $housing_id)
-                ->where('category_id', $category_id)
-                ->first();
+    foreach ($housingCategories as $housingCategoryId) {
 
-            if (!$housingCategoryFile) {
-                return (new ServiceController())->apiResponse(404, [], 'Aucune catégorie trouvée pour le logement ID : ' . $housing_id . ' et la catégorie ID : ' . $category_id);
+       $housingCategory = Housing_category_file::whereId($housingCategoryId)->first();
+
+       if (!$housingCategory) {
+           return (new ServiceController())->apiResponse(404, [], "Aucune données trouvé poir l'id $housingCategoryId");
+       }
+
+        $housing = Housing::find($housingCategory->housing_id);
+
+        if (!$housing) {
+           return (new ServiceController())->apiResponse(404, [], "Le logement avec l'ID $housingCategory->housing_id n'existe pas");
+        }
+
+            $category = Category::find($housingCategory->category_id);
+
+            // return $category;
+
+            if (!$category) {
+                return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $housingCategory->category_id pour le logement $housingCategory->housing_id n'existe pas");
             }
 
-            if ($housingCategoryFile->is_verified == true) {
-                return (new ServiceController())->apiResponse(404, [], 'La catégorie ID : ' . $category_id . ' pour le logement ID : ' . $housing_id . ' est déjà vérifiée');
+            if ($category->is_verified==true) {
+                return (new ServiceController())->apiResponse(404, [], "La catégorie avec l'ID $housingCategory->category_id pour le logement $housingCategory->housing_id n'est pas une nouvelle catégorie ");
             }
 
-            $category = Category::find($category_id);
-
-            if (!$category || $category->is_verified == true) {
-                return (new ServiceController())->apiResponse(404, [], 'La catégorie ID : ' . $category_id . ' est déjà vérifiée ou n\'existe pas');
+            if($housingCategory->is_verified){
+               return (new ServiceController())->apiResponse(404, [$housingCategoryId], "Déjà validé");
             }
 
-            $category->update(['is_verified' => true]);
+       }
+           foreach ($housingCategories as $housingCategoryId) {
+               $housingCategory = Housing_category_file::whereId($housingCategoryId)->first();
+               $category = Category::whereId($housingCategory->category_id)->first();
+               $category->is_verified = true;
+               $category->save();
+               $housingCategory->is_verified = true;
+               $housingCategory->save();
 
-            $housingCategoryFile->update(['is_verified' => true]);
-
-            $user_id = $housingCategoryFile->housing->user_id;
+               $user_id = $housing->user_id;
 
             $notification = new Notification([
-                'name' => "Votre nouvelle pièce a été validée avec succès par l'administrateur",
+                'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
                 'user_id' => $user_id,
             ]);
             $notification->save();
 
             $mail = [
-                'title' => "Validation de la nouvelle pièce",
-                'body' => "La nouvelle pièce pour la catégorie : " . $category->name . " a été validée par l'administrateur.",
+                'title' => "Validation de la catégorie ajoutée au logement",
+                'body' => "L'ajout de cette catégorie : " . $category->name . " a été validé par l'administrateur.",
             ];
 
-            dispatch(new SendRegistrationEmail($housingCategoryFile->housing->user->email, $mail['body'], $mail['title'], 2));
-        }
-    }
+            dispatch(new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
 
-    return (new ServiceController())->apiResponse(200, [], 'Toutes les nouvelles pièces ont été validées avec succès');
+           }
+
+    return (new ServiceController())->apiResponse(200, [], 'Catégories validées avec succès pour tous les logements');
+    } catch (\Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
 }
 
 

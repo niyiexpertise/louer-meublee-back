@@ -835,11 +835,10 @@ class EquipementController extends Controller
 
                 $housingEquipment = Housing_equipment::where('equipment_id', $id)->first();
 
-                if(Housing_category_file::whereHousingId($housingEquipment->housing_id)->whereCategoryId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
-                    return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider cet équipement car la pièce à laquelle elle est associé n'est pas encore validée.");
-                }
-
                 if ($housingEquipment) {
+                    if(Category::whereId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
+                        return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider cet équipement car la pièce à laquelle elle est associé n'est pas encore validée.");
+                    }
                     $housingEquipment->is_verified = true;
                     $housingEquipment->save();
 

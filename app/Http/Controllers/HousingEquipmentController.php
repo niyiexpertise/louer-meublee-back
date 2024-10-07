@@ -602,7 +602,7 @@ public function makeVerifiedHousingEquipment(Request $request)
                     return (new ServiceController())->apiResponse(404,$id, "équipement en attente de validation pour cette association.");
                 }
 
-                if(Housing_category_file::whereHousingId($housingEquipment->housing_id)->whereCategoryId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
+                if(Category::whereId($housingEquipment->category_id)->whereIsVerified(false)->exists()){
                     return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider cet équipement car la pièce à laquelle elle est associé n'est pas encore validée.");
                 }
 

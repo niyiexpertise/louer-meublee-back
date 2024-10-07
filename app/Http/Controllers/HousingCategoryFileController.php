@@ -927,7 +927,7 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
                     return (new ServiceController())->apiResponse(404,$id,"Le fichier de logement avec cet ID n'a pas été trouvé");
                 }
 
-                if(Housing_category_file::whereHousingId($housingCategoryFile->housing_id)->whereCategoryId($housingCategoryFile->category_id)->whereIsVerified(false)->exists()){
+                if(Category::whereId($housingCategoryFile->category_id)->whereIsVerified(false)->exists()){
                     return (new ServiceController())->apiResponse(404,$id,"Vous ne pouvez pas valider ce fichier car la pièce à laquelle elle est associé n'est pas encore validée.");
                 }
 

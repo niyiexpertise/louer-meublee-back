@@ -775,12 +775,12 @@ public function updateUser(Request $request)
     ]);
 
     if ($validator->fails()) {
-        return response()->json(['error' => $validator->errors()], 400);
+        return (new ServiceController())->apiResponse(404,[],$validator->errors());
     }
 
     $user = User::find($userId);
     if (!$user) {
-        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+        return (new ServiceController())->apiResponse(404,[], 'Utilisateur non trouvé');
     }
 
     $user->firstname = strtoupper($request->nom);
@@ -795,10 +795,8 @@ public function updateUser(Request $request)
     $user->postal_code = $request->postal_code;
     $user->save();
 
-    return response()->json([
-        'message' => 'Informations de l\'utilisateur mises à jour avec succès',
-        'user' => $user
-    ], 200);
+    return (new ServiceController())->apiResponse(200,$user,'Informations de l\'utilisateur mises à jour avec succès');
+
 }
 
 /**

@@ -882,6 +882,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/getElementToVerify', [HousingController::class, 'getElementToVerify'])->name('logement.getElementToVerify');
             });
 
+            Route::group(['middleware' => ['role_or_permission:superAdmin|Admin|Managelogement.getHousing']], function () {
+                Route::get('/getHousing', [HousingController::class, 'getHousing'])->name('logement.getHousing');
+            });
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.updateInsensible']], function () {
                 Route::put('/update/insensible/{housingid}', [HousingController::class, 'updateInsensibleHousing'])->name('logement.updateInsensible');
             });

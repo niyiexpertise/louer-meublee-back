@@ -626,16 +626,16 @@ public function updatePassword(Request $request)
     ]);
 
     if ($validator->fails()) {
-        return response()->json(['message' => 'The given data was invalid.', 'errors' => $validator->errors()], 422);
+        return (new ServiceController())->apiResponse(404,$validator->errors(),'The given data was invalid.');
     }
 
     if (!Hash::check($request->old_password, $user->password)) {
-        return response()->json(['message' => 'Old password is incorrect.'], 422);
+        return (new ServiceController())->apiResponse(404,[],'Old password is incorrect.');
     }
     $user->password = Hash::make($request->new_password);
     $user->save();
 
-    return response()->json(['message' => 'Password updated successfully.'], 200);
+    return (new ServiceController())->apiResponse(200,[],'Password updated successfully.');
 }
 
 

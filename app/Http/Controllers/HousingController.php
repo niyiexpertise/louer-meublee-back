@@ -4594,5 +4594,59 @@ public function HousingHoteInProgress(){
 }
 
 
+/**
+ * @OA\Get(
+ *     path="/api/logement/getHousing",
+ *     summary="Récupérer la liste des logements",
+ *     description="Cette route renvoie la liste des logements.",
+ *     tags={"Housing"},
+ *  security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des logements récupérée avec succès",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="name", type="string", example="Appartement Parisien")
+ *                 )
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Liste des logements")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur interne",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="status", type="integer", example=500),
+ *             @OA\Property(property="data", type="array", @OA\Items()),
+ *             @OA\Property(property="message", type="string", example="Message d'erreur")
+ *         )
+ *     )
+ * )
+ */
+    public function getHousing(){
+        try{
+            $housings = Housing::all();
+            $data = [];
+            foreach($housings as $housing){
+                $data[] = [
+                    'id' => $housing->id,
+                    'name' => $housing->name ??"non renseigné"
+                ];
+            }
+            return (new ServiceController())->apiResponse(200,$data,"Liste des logements");
+        }catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+    }
+
+
 
 }

@@ -226,14 +226,24 @@ public function store(Request $request)
     {
         try{
             $review = Review::whereId($id)->first();
+
+
+            if (!$review) {
+                return (new ServiceController())->apiResponse(404,[], 'Commentaire non trouvé.');
+            }
+
+            if(Auth::user()->id != $review->user_id && Auth::user()->roles[0]->name != 'admin'  && Auth::user()->roles[0]->name != 'superAdmin' ){
+                return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez supprimé un commentaire que vous n'avez pas ajouté.");
+            }
+
+            if($review->is_deleted == true){
+                return (new ServiceController())->apiResponse(404,[], 'Commentaire déjà supprimé.');
+            }
+
             $review->is_deleted = true;
             $review->save();
 
-            if (!$review) {
-                return response()->json(['error' => 'Commentaire non trouvé.'], 404);
-            }
-
-            return response()->json(['data' => 'Commentaire supprimé avec succès.'], 200);
+           return (new ServiceController())->apiResponse(404,[], 'Commentaire supprimé avec succès.');
         }catch (Exception $e){
               return response()->json(['error' => $e->getMessage()], 500);
         }

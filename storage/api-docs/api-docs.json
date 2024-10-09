@@ -26477,6 +26477,92 @@
                 ]
             }
         },
+        "/api/servicepaiement/getServicesGroupedByMethodPaiement": {
+            "get": {
+                "tags": [
+                    "Service paiement"
+                ],
+                "summary": "Récupérer les services groupés par méthode de paiement",
+                "description": "Retourne les services de paiement actifs et non supprimés groupés par méthode de paiement.",
+                "operationId": "e9d98e369a3e8bedd2ada75a8dd358dd",
+                "responses": {
+                    "200": {
+                        "description": "Liste des services de paiement groupés par méthode de paiement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID de la méthode de paiement",
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "nom": {
+                                                "description": "Nom de la méthode de paiement",
+                                                "type": "string",
+                                                "example": "Carte de Crédit"
+                                            },
+                                            "service_paiement": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "description": "ID du service de paiement",
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "type": {
+                                                            "description": "Type du service de paiement",
+                                                            "type": "string",
+                                                            "example": "Visa"
+                                                        },
+                                                        "public_key": {
+                                                            "description": "Clé publique du service",
+                                                            "type": "string",
+                                                            "example": "public_key_value"
+                                                        },
+                                                        "is_actif": {
+                                                            "description": "État actif ou non du service",
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur du serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Erreur interne du serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/settings/update": {
             "post": {
                 "tags": [

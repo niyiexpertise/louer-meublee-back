@@ -491,7 +491,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::put('/update/{id}', [ReviewController::class, 'update'])->name('review.update');
         });
 
-        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.destroy'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|admin|Managereview.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [ReviewController::class, 'destroy'])->name('review.destroy');
         });
     });
@@ -1571,6 +1571,10 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('servicepaiement')->group(function() {
             Route::get('getServicesByMethodPaiement/{methodPaiementId}', [ServicePaiementController::class, 'getServicesByMethodPaiement'])
                 ->name('servicepaiement.getServicesByMethodPaiement') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getServicesByMethodPaiement');
+
+            Route::get('getServicesGroupedByMethodPaiement', [ServicePaiementController::class, 'getServicesGroupedByMethodPaiement'])
+                ->name('servicepaiement.getServicesGroupedByMethodPaiement') ->middleware('role_or_permission:superAdmin|Manageservicepaiement.getServicesGroupedByMethodPaiement');
+
             Route::get('getActiveServices', [ServicePaiementController::class, 'getActiveServices'])
                 ->name('servicepaiement.getActiveServices') ->middleware('role_or_permission:admin|superAdmin|Manageservicepaiement.getActiveServices');
             Route::get('getInactiveServices', [ServicePaiementController::class, 'getInactiveServices'])

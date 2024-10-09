@@ -763,14 +763,14 @@ public function updateUser(Request $request)
 {
     $userId = Auth::id();
     $validator = Validator::make($request->all(), [
-        'nom' => 'required|string',
-        'prenom' => 'required|string',
+        'lastname' => 'required|string',
+        'firstname' => 'required|string',
         'telephone' => 'required|string|unique:users,telephone,' . $userId,
         'code_pays' => 'required|string',
         'email' => 'required|email|unique:users,email,' . $userId,
-        'pays' => 'required|string',
-        'ville' => 'required|string',
-        'addresse' => 'required|string',
+        'country' => 'required|string',
+        'city' => 'required|string',
+        'address' => 'required|string',
         'sexe' => 'required|string',
     ]);
 
@@ -783,14 +783,14 @@ public function updateUser(Request $request)
         return (new ServiceController())->apiResponse(404,[], 'Utilisateur non trouvé');
     }
 
-    $user->firstname = strtoupper($request->nom);
-    $user->lastname = $request->prenom;
+    $user->lastname = $request->lastname;
+    $user->firstname = strtoupper($request->firstname);
     $user->telephone = $request->telephone;
     $user->code_pays = $request->code_pays;
     $user->email = $request->email;
-    $user->country = $request->pays;
-    $user->city = $request->ville;
-    $user->address = $request->addresse;
+    $user->country = $request->country;
+    $user->city = $request->city;
+    $user->address = $request->address;
     $user->sexe = $request->sexe;
     $user->postal_code = $request->postal_code;
     $user->save();

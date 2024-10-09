@@ -237,7 +237,7 @@ public function update(Request $request, $id)
  * )
  */
 
-public function getServicesByMethodPaiement($method_payement_id)
+public function getServicesByMethodPaiement($method_payement_id,$l=0)
 {
     try {
 
@@ -256,7 +256,10 @@ public function getServicesByMethodPaiement($method_payement_id)
                 'id' => $service->id,
                 'is_actif' => $service->is_actif,
                 'is_sandbox' => $service->is_sandbox,
-                'is_deleted' => $service->is_deleted
+                'is_deleted' => $service->is_deleted,
+                'private_key' =>$l==1?  $service->private_key:null,
+                'secret_key' => $l==1? $service->secret_key:null,
+                'created_at' => $service->created_at,
             ];
         }
 
@@ -892,6 +895,62 @@ public function getNotSandboxServices()
     }
    
 }
+
+    /**
+ * @OA\Get(
+ *     path="/api/servicepaiement/getServicesGroupedByMethodPaiement",
+ *     summary="Récupérer les services groupés par méthode de paiement",
+ *     description="Retourne les services de paiement actifs et non supprimés groupés par méthode de paiement.",
+ *     tags={"Service paiement"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des services de paiement groupés par méthode de paiement",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(
+ *                 type="object",
+ *                 @OA\Property(property="id", type="integer", example=1, description="ID de la méthode de paiement"),
+ *                 @OA\Property(property="nom", type="string", example="Carte de Crédit", description="Nom de la méthode de paiement"),
+ *                 @OA\Property(property="service_paiement", type="array", @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1, description="ID du service de paiement"),
+ *                     @OA\Property(property="type", type="string", example="Visa", description="Type du service de paiement"),
+ *                     @OA\Property(property="public_key", type="string", example="public_key_value", description="Clé publique du service"),
+ *                     @OA\Property(property="is_actif", type="boolean", example=true, description="État actif ou non du service")
+ *                 ))
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur du serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Erreur interne du serveur")
+ *         )
+ *     )
+ * )
+ */
+
+
+    public function getServicesGroupedByMethodPaiement(){
+        try {
+
+            $methodPayements = MethodPayement::where('is_deleted', false)
+                ->where('is_actif', true)
+                ->where('is_accepted', true)
+                ->Where('is_received',true)
+                ->get();
+
+            foreach($methodPayements as $methodPayement){
+                $methodPayement->service_paiement = $this->getServicesByMethodPaiement($methodPayement->id,1)->original['data'];
+            }
+
+            return (new ServiceController())->apiResponse(200,$methodPayements,"Methodes de paiement et leur services de paiement");
+    
+        } catch(\Exception $e) {
+        return (new ServiceController())->apiResponse(500,[],$e->getMessage());
+        }
+    }
 
 
 }

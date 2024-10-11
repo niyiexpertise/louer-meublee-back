@@ -1143,7 +1143,10 @@ public function getUserDetails($userId) {
             $user = auth()->user();
             $userId = $user->id;
 
-            $reservationCount = Reservation::where('user_id', $userId)->where('valeur_reduction_code_promo','!=', 0)->count();
+
+            $reservationCount = Reservation::where('user_id', $userId)->where('valeur_reduction_code_promo','>', 0)->count();
+
+
 
             $userPartenaire = user_partenaire::where('id', $user->partenaire_id)->first();
             $codePromoDetails = $userPartenaire ? [
@@ -1160,7 +1163,7 @@ public function getUserDetails($userId) {
             $nombre_reservation_restante = $nombre_reservation_restante ??null;
 
             return response()->json([
-                'count_reservation_with_promo_inscription' => ($nombre_reservation_restante>0)?$nombre_reservation_restante:0,
+                'count_reservation_with_promo_inscription' => $reservationCount,
                 'code_promo' => $codePromoDetails
             ], 200);
         } catch (\Exception $e) {

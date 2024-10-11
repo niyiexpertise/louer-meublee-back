@@ -197,6 +197,8 @@ class ReservationController extends Controller
             ->where('valeur_reduction_code_promo', '>', 0)
             ->count();
 
+            // return $countReservationWithPromoInscription;
+
         if ($countReservationWithPromoInscription < $userPartenaire->number_of_reservation) {
             $promotionPartenaireValue = $montantHousing* ($userPartenaire->reduction_traveler / 100);
         }
@@ -459,7 +461,6 @@ public function storeReservationWithPayment(Request $request)
         Carbon::parse($validatedData['date_of_starting'])->diffInDays($validatedData['date_of_end']),$validatedData['is_tranche_paiement']
     );
 
-    // return $calculatedPriceDetails;
 
 
     if ($calculatedPriceDetails['error']) {
@@ -491,7 +492,7 @@ public function storeReservationWithPayment(Request $request)
 
     if ($validatedData['montant_a_paye'] != $calculatedPriceDetails['montant_a_paye']) {
         // return$validatedData['montant_a_paye']==$calculatedPriceDetails['montant_a_paye'];
-        return (new ServiceController())->apiResponse(404, [$calculatedPriceDetails, $calculatedPriceDetails], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
+        return (new ServiceController())->apiResponse(404, [$validatedData, $calculatedPriceDetails], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
     }
 
     if ($validatedData['valeur_payee'] != $calculatedPriceDetails['valeur_paye']) {

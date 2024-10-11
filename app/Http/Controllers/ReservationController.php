@@ -491,7 +491,7 @@ public function storeReservationWithPayment(Request $request)
 
     if ($validatedData['montant_a_paye'] != $calculatedPriceDetails['montant_a_paye']) {
         // return$validatedData['montant_a_paye']==$calculatedPriceDetails['montant_a_paye'];
-        return (new ServiceController())->apiResponse(404, [$calculatedPriceDetails, $calculatedPriceDetails['montant_a_paye']], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
+        return (new ServiceController())->apiResponse(404, [$calculatedPriceDetails, $calculatedPriceDetails], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
     }
 
     if ($validatedData['valeur_payee'] != $calculatedPriceDetails['valeur_paye']) {

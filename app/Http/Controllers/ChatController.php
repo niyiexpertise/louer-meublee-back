@@ -550,16 +550,18 @@ class ChatController extends Controller
                 if (!$chat) {
                     return (new ServiceController())->apiResponse(404, [], "Conversation non trouvé");
                 }
-                   if($chat->sent_to !==$chat->receiver_id && $chat->sent_to !== $chat->sender_id)         {
-                    if($chat->sender_id == auth()->id()){
-                        $a = $chat->receiver_id;
-                    }
+                   if($recipientId !=$chat->sent_to && $recipientId != $chat->sent_by)         {
+                    // if($recipientId== auth()->id()){
+                    //     $a = $chat->sent_to;
+                    // }
 
-                    if($chat->receiver_id == auth()->id()){
-                        $a = $chat->sender_id;
-                    }
+                    // if($recipientId != auth()->id()){
+                    //     $a = $chat->sent_by;
+                    // }
+                    // return $a;
+                    // $a = $recipientId == auth()->id() ? $chat->sender_id : $chat->receiver_id;
 
-                    return (new ServiceController())->apiResponse(404, [], "Mauvaise valeur pour le recepteur donné. Le recepteur du message a normalement pour id {$a} et non {$recipientId}. ");
+                    return (new ServiceController())->apiResponse(404, [], "Mauvaise valeur pour le recepteur donné.");
 
                     }
 

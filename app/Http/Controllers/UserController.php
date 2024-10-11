@@ -349,7 +349,7 @@ public function userLanguages()
      }
 
      $validator = Validator::make($request->all(), [
-         'profile_photo' => 'required|image',
+         'profile_photo' => 'required',
      ]);
 
      if ($validator->fails()) {
@@ -367,7 +367,7 @@ public function userLanguages()
 
      $identity_profil_url = '';
 
-     $images = $request->file('icone');
+     $images = $request->file('profile_photo');
      if(!isset($images[0])){
          return (new ServiceController())->apiResponse(404, [], 'L\'image n\'a  pas été correctement envoyé.');
      }

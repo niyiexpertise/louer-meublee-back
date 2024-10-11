@@ -816,7 +816,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
          Route::get('/getAuditsByModelType/{modelType}', [AuditController::class, 'getAuditsByModelType']);
          Route::get('/getAuditsByModelTypeAndId/{modelType}/{modelId}', [AuditController::class, 'getAuditsByModelTypeAndId']);
          });
+        
       });
+
+      //model
+      Route::get('/model/getAllModels/{l}', [AuditController::class, 'getAllModels']);
 
 
    // Gestion des Notifications (Pas besoin de permission ,ni de role,il suffit d'etre connecté)

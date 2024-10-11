@@ -3635,6 +3635,81 @@
                 ]
             }
         },
+        "/api/model/getAllModels/{l}": {
+            "get": {
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Retrieve all model names from the application",
+                "description": "This endpoint retrieves the list of all models in the application that are not abstract and are subclasses of Laravel's Model class.",
+                "operationId": "getAllModels",
+                "parameters": [
+                    {
+                        "name": "l",
+                        "in": "path",
+                        "description": "toujours mettre 1",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of models successfully retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "User"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Models successfully retrieved"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users/assignPermsToRole/{role}": {
             "post": {
                 "tags": [
@@ -30894,5 +30969,267 @@
                 "bearerFormat": "JWT"
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Ajout de logement",
+            "description": "Ajout de logement"
+        },
+        {
+            "name": "Housing",
+            "description": "Housing"
+        },
+        {
+            "name": "Administration",
+            "description": "Administration"
+        },
+        {
+            "name": "Promotion Admin",
+            "description": "Promotion Admin"
+        },
+        {
+            "name": "Reduction Admin",
+            "description": "Reduction Admin"
+        },
+        {
+            "name": "Reservation",
+            "description": "Reservation"
+        },
+        {
+            "name": "Audits",
+            "description": "Audits"
+        },
+        {
+            "name": "Models",
+            "description": "Models"
+        },
+        {
+            "name": "ManageAccess",
+            "description": "ManageAccess"
+        },
+        {
+            "name": "Category",
+            "description": "Category"
+        },
+        {
+            "name": "Charge",
+            "description": "Charge"
+        },
+        {
+            "name": "Chats",
+            "description": "Chats"
+        },
+        {
+            "name": "Commission hote",
+            "description": "Commission hote"
+        },
+        {
+            "name": "Criteria",
+            "description": "Criteria"
+        },
+        {
+            "name": "Dashboard traveler",
+            "description": "Dashboard traveler"
+        },
+        {
+            "name": "Dashboard partenaire",
+            "description": "Dashboard partenaire"
+        },
+        {
+            "name": "Document",
+            "description": "Document"
+        },
+        {
+            "name": "Equipment",
+            "description": "Equipment"
+        },
+        {
+            "name": "Housing Equipment",
+            "description": "Housing Equipment"
+        },
+        {
+            "name": "Favorites",
+            "description": "Favorites"
+        },
+        {
+            "name": "Systeme stockage",
+            "description": "Systeme stockage"
+        },
+        {
+            "name": "Dashboard hote",
+            "description": "Dashboard hote"
+        },
+        {
+            "name": "Housing Category Photo",
+            "description": "Housing Category Photo"
+        },
+        {
+            "name": "Housing Charge",
+            "description": "Housing Charge"
+        },
+        {
+            "name": "Housing Photo",
+            "description": "Housing Photo"
+        },
+        {
+            "name": "Housing Preference",
+            "description": "Housing Preference"
+        },
+        {
+            "name": "Hote Housing Sponsoring",
+            "description": "Hote Housing Sponsoring"
+        },
+        {
+            "name": "Admin Housing Sponsoring",
+            "description": "Admin Housing Sponsoring"
+        },
+        {
+            "name": "Home Housing Sponsoring",
+            "description": "Home Housing Sponsoring"
+        },
+        {
+            "name": "HousingType",
+            "description": "HousingType"
+        },
+        {
+            "name": "Inscription",
+            "description": "Inscription"
+        },
+        {
+            "name": "Kkiapay",
+            "description": "Kkiapay"
+        },
+        {
+            "name": "Language",
+            "description": "Language"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Deconnexion",
+            "description": "Deconnexion"
+        },
+        {
+            "name": "MethodPayement",
+            "description": "MethodPayement"
+        },
+        {
+            "name": "MoyenPayement",
+            "description": "MoyenPayement"
+        },
+        {
+            "name": "Notification",
+            "description": "Notification"
+        },
+        {
+            "name": "Paiement",
+            "description": "Paiement"
+        },
+        {
+            "name": "Permission",
+            "description": "Permission"
+        },
+        {
+            "name": "Portefeuille",
+            "description": "Portefeuille"
+        },
+        {
+            "name": "Transaction",
+            "description": "Transaction"
+        },
+        {
+            "name": "Preference",
+            "description": "Preference"
+        },
+        {
+            "name": "Promotion hote",
+            "description": "Promotion hote"
+        },
+        {
+            "name": "PropertyType",
+            "description": "PropertyType"
+        },
+        {
+            "name": "Reduction hote",
+            "description": "Reduction hote"
+        },
+        {
+            "name": "Retraits",
+            "description": "Retraits"
+        },
+        {
+            "name": "Review",
+            "description": "Review"
+        },
+        {
+            "name": "Note et Commentaire sur les reservation (Logement)",
+            "description": "Note et Commentaire sur les reservation (Logement)"
+        },
+        {
+            "name": "Role",
+            "description": "Role"
+        },
+        {
+            "name": "Service paiement",
+            "description": "Service paiement"
+        },
+        {
+            "name": "Settings",
+            "description": "Settings"
+        },
+        {
+            "name": "Tarif Sponsoring",
+            "description": "Tarif Sponsoring"
+        },
+        {
+            "name": "type_demande",
+            "description": "type_demande"
+        },
+        {
+            "name": "User",
+            "description": "User"
+        },
+        {
+            "name": "Utilisateurs partenaires",
+            "description": "Utilisateurs partenaires"
+        },
+        {
+            "name": "Commission partenaire",
+            "description": "Commission partenaire"
+        },
+        {
+            "name": "Reduction partenaire",
+            "description": "Reduction partenaire"
+        },
+        {
+            "name": "Trafic",
+            "description": "Trafic"
+        },
+        {
+            "name": "User_preference",
+            "description": "User_preference"
+        },
+        {
+            "name": "Demande_hote",
+            "description": "Demande_hote"
+        },
+        {
+            "name": "Validation documents pour etre hôte",
+            "description": "Validation documents pour etre hôte"
+        },
+        {
+            "name": "Demande_partenaire",
+            "description": "Demande_partenaire"
+        },
+        {
+            "name": "Validation documents pour etre partenaire",
+            "description": "Validation documents pour etre partenaire"
+        },
+        {
+            "name": "Verification Paiement",
+            "description": "Verification Paiement"
+        }
+    ]
 }

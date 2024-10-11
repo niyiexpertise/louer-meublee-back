@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\App;
@@ -131,6 +132,8 @@ public function getAuditsByModelType($modelType)
 
     foreach ($audits as $audit) {
         $audit->auditable_type = str_replace('App\\Models\\', '', $audit->auditable_type);
+
+        $audit->acteur = $audit->user_id !=null ? "".User::whereId($audit->user_id)->first()->lastname." ". User::whereId($audit->user_id)->first()->firstname : "Système ou une personne non authentifié"  ;
     }
 
     return (new ServiceController())->apiResponse(200, $audits, 'Liste des audits groupée par type de modèle');
@@ -223,6 +226,8 @@ public function getAuditsByModelTypeAndId($modelType, $modelId)
 
     foreach ($audits as $audit) {
         $audit->auditable_type = str_replace('App\\Models\\', '', $audit->auditable_type);
+
+        $audit->acteur = $audit->user_id !=null ? "".User::whereId($audit->user_id)->first()->lastname." ". User::whereId($audit->user_id)->first()->firstname : "Système ou une personne non authentifié"  ;
     }
 
     return (new ServiceController())->apiResponse(200, $audits, 'Liste des audits groupés par type de model et l\'id du model ');
@@ -230,10 +235,67 @@ public function getAuditsByModelTypeAndId($modelType, $modelId)
 
 
 
+/**
+ * @OA\Get(
+ *     path="/api/model/getAllModels/{l}",
+ *     summary="Retrieve all model names from the application",
+ *     description="This endpoint retrieves the list of all models in the application that are not abstract and are subclasses of Laravel's Model class.",
+ *     operationId="getAllModels",
+ * security={{"bearerAuth": {}}},
+ *  @OA\Parameter(
+ *         name="l",
+ *         in="path",
+ *         required=true,
+ *         description="toujours mettre 1",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     tags={"Models"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="List of models successfully retrieved",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="status_code",
+ *                 type="integer",
+ *                 example=200
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="string",
+ *                     example="User"
+ *                 )
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Models successfully retrieved"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Internal server error",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="status_code",
+ *                 type="integer",
+ *                 example=500
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Internal server error"
+ *             )
+ *         )
+ *     )
+ * )
+ */
 
-
-
-public function getAllModels()
+public function getAllModels($l=0)
 {
     $models = [];
     $modelPath = app_path('Models');
@@ -258,6 +320,17 @@ public function getAllModels()
             $models[] = ltrim(str_replace($namespace . 'Models\\', '', $class), '\\');
         }
     }
+
+if($l==1){
+
+    foreach ($models as $model){
+        $data[] = [
+            'model' => $model
+        ];
+    }
+
+    return [ 'data' => $data];
+}
 
     return $models;
 }

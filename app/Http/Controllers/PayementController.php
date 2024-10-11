@@ -62,6 +62,12 @@ class PayementController extends Controller
                 'message' => 'Aucun paiement trouvé pour cet utilisateur',
             ]);
         }
+
+        foreach($payments as $payment){
+            $payment->acteur = $payment->user_id !=null ? "".User::whereId($payment->user_id)->first()->lastname." ". User::whereId($payment->user_id)->first()->firstname : "null"  ;
+        }
+
+        
     
         return response()->json([
             'message' => 'Liste des paiements pour l\'utilisateur connecté',
@@ -98,6 +104,10 @@ class PayementController extends Controller
             return response()->json([
                 'message' => 'Aucun paiement effectué sur le site',
             ], 404);
+        }
+
+        foreach($payments as $payment){
+            $payment->acteur = $payment->user_id !=null ? "".User::whereId($payment->user_id)->first()->lastname." ". User::whereId($payment->user_id)->first()->firstname : "null"  ;
         }
     
         return response()->json([

@@ -409,7 +409,7 @@ public function storeReservationWithPayment(Request $request)
         'message_to_hote' => 'nullable|string',
         'code_pays' => 'required|string',
         'telephone_traveler' => 'required|integer',
-        'photo' => 'nullable|file|mimes:jpg,jpeg,png',
+        'photo' => 'nullable',
         'heure_arrivee_max' => 'required',
         'heure_arrivee_min' => 'required',
         'is_tranche_paiement' => 'required',
@@ -466,6 +466,8 @@ public function storeReservationWithPayment(Request $request)
         return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails['message']);
     }
 
+    // return $validatedData;
+
     // Validation des montants calculés
     if ($validatedData['montant_total'] != $calculatedPriceDetails['montant_total']) {
         return (new ServiceController())->apiResponse(404, [], "Le montant total envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_total']);
@@ -488,7 +490,8 @@ public function storeReservationWithPayment(Request $request)
     }
 
     if ($validatedData['montant_a_paye'] != $calculatedPriceDetails['montant_a_paye']) {
-        return (new ServiceController())->apiResponse(404, [], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
+        // return$validatedData['montant_a_paye']==$calculatedPriceDetails['montant_a_paye'];
+        return (new ServiceController())->apiResponse(404, [$calculatedPriceDetails, $calculatedPriceDetails['montant_a_paye']], "Le montant à payer envoyé est incorrect. Calculé: " . $calculatedPriceDetails['montant_a_paye']);
     }
 
     if ($validatedData['valeur_payee'] != $calculatedPriceDetails['valeur_paye']) {

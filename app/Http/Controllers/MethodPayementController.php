@@ -98,6 +98,8 @@ class MethodPayementController extends Controller
                     return $methodPayement->makeHidden(['servicePaiement']);
                 });
 
+                $methodPayements [] = MethodPayement::whereName( (new ReservationController())->findSimilarPaymentMethod("portfeuille"))->first();
+
                 // foreach($methodPayements as $methodPayement){
                 //     $methodPayement->servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPayement->id);
                 // }

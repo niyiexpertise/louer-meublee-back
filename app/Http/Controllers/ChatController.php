@@ -905,7 +905,13 @@ class ChatController extends Controller
 
             $messages = ChatMessage::with('file')->where('chat_id', $chatId)->where('is_deleted_by_receiver',false)->where('is_deleted_by_sender',false)->get();
 
-            return (new ServiceController())->apiResponse(200, $messages,'Messages récupérés avec succès');
+            $data = [
+                'messages' => $messages,
+                'userAuth' => Auth::user()->id
+            ];
+
+
+            return (new ServiceController())->apiResponse(200,$data,'Messages récupérés avec succès');
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());
         }

@@ -197,7 +197,6 @@ class ReservationController extends Controller
             ->where('valeur_reduction_code_promo', '>', 0)
             ->count();
 
-            // return $countReservationWithPromoInscription;
 
         if ($countReservationWithPromoInscription < $userPartenaire->number_of_reservation) {
             $promotionPartenaireValue = $montantHousing* ($userPartenaire->reduction_traveler / 100);
@@ -467,7 +466,7 @@ public function storeReservationWithPayment(Request $request)
         return (new ServiceController())->apiResponse(404, [], $calculatedPriceDetails['message']);
     }
 
-    // return $validatedData;
+    // return $calculatedPriceDetails;
 
     // Validation des montants calculés
     if ($validatedData['montant_total'] != $calculatedPriceDetails['montant_total']) {

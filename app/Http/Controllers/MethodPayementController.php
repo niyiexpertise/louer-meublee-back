@@ -170,8 +170,8 @@ class MethodPayementController extends Controller
             try{
                 $data = $request->validate([
                     'name' => 'required|unique:method_payements|max:255',
-                    'is_accepted' => 'required',
-                    'is_received' => 'required'
+                    'is_accepted' => '',
+                    'is_received' => ''
                 ]);
 
                 if($request->is_accepted != 1 && $request->is_accepted != 0){
@@ -197,8 +197,8 @@ class MethodPayementController extends Controller
                     }
                     $methodPayement->icone = $identity_profil_url['result'];
                     }
-                    $methodPayement->is_accepted = $request->is_accepted;
-                    $methodPayement->is_received = $request->is_received;
+                    $methodPayement->is_accepted = $request->is_accepted??0;
+                    $methodPayement->is_received = $request->is_received??0;
                     $methodPayement->name = $request->name;
                     $methodPayement->save();
                     return response()->json(['data' => 'Méthode de payement créé avec succès.'

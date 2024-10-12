@@ -128,22 +128,27 @@ class DashBoardTravelerController extends Controller
          * )
          */
         public function getConfirmedReservations()
-        {
-            try {
-                $userId = Auth::id();
+{
+    try {
+        $userId = Auth::id();
 
-                $data["data"] = Reservation::where('user_id', $userId)
-                            ->where('is_confirmed_hote', true)
-                                ->where('is_integration', true)
-                                ->where('statut', 'payee')
-                                ->get();
-                $data["nombre"] = count($data["data"]) ;
+        $data["data"] = Reservation::where('user_id', $userId)
+            ->where('is_confirmed_hote', true)
+            ->where('is_integration', true)
+            ->where('statut', 'payee')
+            ->with(['housing' => function ($query) {
+                $query->select('id', 'user_id');
+            }])
+            ->get();
 
-                return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations confirmées par le voyageur.');
-            } catch (Exception $e) {
-                return (new ServiceController())->apiResponse(500, [], $e->getMessage());
-            }
-        }
+        $data["nombre"] = count($data["data"]);
+
+        return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations confirmées par le voyageur.');
+    } catch (Exception $e) {
+        return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+    }
+}
+
 
 
         /**
@@ -175,9 +180,14 @@ class DashBoardTravelerController extends Controller
                 $userId = Auth::id();
 
                 $data["data"] = Reservation::where('user_id', $userId)
-                                   ->where('is_rejected_hote', true)
-                                   ->where('statut', 'payee')
-                                   ->get();
+            ->where('is_rejected_hote', true)
+            ->where('statut', 'payee')
+            ->with(['housing' => function ($query) {
+                $query->select('id', 'user_id');
+            }])
+            ->get();
+
+
                 $data["nombre"] = count($data["data"]) ;
 
                 return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations rejetées par l\'hôte.');
@@ -215,12 +225,15 @@ class DashBoardTravelerController extends Controller
             try {
                 $userId = Auth::id();
 
-
                 $data["data"] = Reservation::where('user_id', $userId)
                 ->where('is_tranche_paiement', true)
                 ->whereColumn('valeur_payee', '<', 'montant_a_paye')
-                ->where('statut', 'payee')
-                ->get();
+            ->where('statut', 'payee')
+            ->with(['housing' => function ($query) {
+                $query->select('id', 'user_id');
+            }])
+            ->get();
+
 
                 $data["nombre"] = count($data["data"]) ;
 
@@ -260,13 +273,15 @@ class DashBoardTravelerController extends Controller
                 $userId = Auth::id();
 
                 $data["data"] = Reservation::where('user_id', $userId)
-                                    ->where('is_confirmed_hote', true)
-                                    ->where('statut', 'payee')
-                                    ->where('is_integration', false)
-                                     ->where('is_rejected_traveler', false)
+                ->where('is_confirmed_hote', true)
+                ->where('is_integration', false)
+                ->where('is_rejected_traveler', false)
+            ->where('statut', 'payee')
+            ->with(['housing' => function ($query) {
+                $query->select('id', 'user_id');
+            }])
+            ->get();
 
-
-                                    ->get();
                 $data["nombre"] = count($data["data"]);
 
                 return (new ServiceController())->apiResponse(200, $data, 'Liste des reservations en attente de confirmation d\'intégration.');

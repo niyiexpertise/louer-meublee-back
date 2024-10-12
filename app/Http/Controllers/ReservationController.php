@@ -1454,6 +1454,7 @@ public function findSimilarPaymentMethod($inputMethod)
             'housing' => $housing,
             'reservations' => $reservations,
             'reservation_count' => $reservationCount,
+            'proprietaire_id' =>$housing->user_id
                 ];
 
 

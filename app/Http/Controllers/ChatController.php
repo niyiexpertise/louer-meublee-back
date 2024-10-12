@@ -543,6 +543,34 @@ class ChatController extends Controller
                 return (new ServiceController())->apiResponse(404, [], "Model comportant le nom $ModelType non trouvé");
             }
 
+            $senderId = Auth::user()->id;
+
+
+            $existingChat = Chat::where('model_id', $ModelId)
+                ->where('model_type_concerned', $ModelType)
+                ->where(function($query) use ($senderId, $recipientId) {
+                    $query->where('sent_to', $senderId)
+                          ->where('sent_by', $recipientId)
+                          ->orWhere(function($query) use ($senderId, $recipientId) {
+                              $query->where('sent_to', $recipientId)
+                                    ->where('sent_by', $senderId);
+                          });
+                })
+                ->first();
+            if ($existingChat) {
+                // // Récupérer les informations des utilisateurs
+                // $recipient = User::find($recipientId);
+                // $sender = User::find($senderId);
+
+                // // Message clair avec les noms des utilisateurs
+                // $message = "Un chat entre {$sender->firstname} {$sender->lastname} et {$recipient->firstname} {$recipient->lastname} sur le sujet {$ModelType} ayant l'id {$ModelId}  existe déjà.";
+
+                // return (new ServiceController())->apiResponse(404, [], $message);
+
+                $chatId = $existingChat->id;
+
+            }
+
             if ($chatId) {
 
                 $chat = Chat::find($chatId);
@@ -588,28 +616,8 @@ class ChatController extends Controller
                 }
                 $sentTo = $recipientId;
                 $sentBy = auth()->id();
-                $existingChat = Chat::where('model_id', $ModelId)
-                ->where('model_type_concerned', $ModelType)
-                ->where(function($query) use ($sentTo, $sentBy) {
-                    $query->where('sent_to', $sentTo)
-                          ->where('sent_by', $sentBy)
-                          ->orWhere(function($query) use ($sentTo, $sentBy) {
-                              $query->where('sent_to', $sentBy)
-                                    ->where('sent_by', $sentTo);
-                          });
-                })
-                ->first();
-                if ($existingChat) {
-                    // Récupérer les informations des utilisateurs
-                    $recipient = User::find($sentTo);
-                    $sender = User::find($sentBy);
-
-                    // Message clair avec les noms des utilisateurs
-                    $message = "Un chat entre {$sender->firstname} {$sender->lastname} et {$recipient->firstname} {$recipient->lastname} sur le sujet {$ModelType} ayant l'id {$ModelId}  existe déjà.";
-
-                    return (new ServiceController())->apiResponse(404, [], $message);
-
-                }
+                
+               
 
                 $chat = new Chat();
                 $message = new ChatMessage();

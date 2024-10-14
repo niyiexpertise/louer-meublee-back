@@ -90,7 +90,6 @@ class ChatController extends Controller
                 return (new ServiceController())->apiResponse(404, [], "Le modèle $modelType spécifié n'existe pas.");
             }
 
-
              $chats = Chat::where('model_type_concerned', $modelType)
                           ->where(function($query) use ($userId) {
                               $query->where('sent_by', $userId)
@@ -101,6 +100,13 @@ class ChatController extends Controller
              if ($chats->isEmpty()) {
                 return (new ServiceController())->apiResponse(404, [],'Aucune donnée disponible');
              }
+
+            foreach($chats as $chat){
+
+                $chat->send_to_name =User::whereId($chat->sent_to)->first()->lastname." ". User::whereId($chat->sent_to)->first()->firstname   ;
+
+                $chat->send_to_file_profil = User::whereId($chat->sent_to)->first()->file_profil;
+            }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');
 

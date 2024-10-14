@@ -214,17 +214,18 @@ class ReservationController extends Controller
     // Retourner les détails
     return [
         'error' => false,
-        'montant_housing' => $montantHousing,
-        'montant_charge' => $montantCharge,
-        'montant_total' => $montantTotal,
-        'reduction_value' => $reductionValue,
-        'promotion_value' => $promotionValue,
-        'promotion_partenaire_value' => $promotionPartenaireValue,
-        'montant_a_paye' => $montantAPaye,
-        'valeur_paye' =>   $required_paid_value,
-        'montant_charge_actif' => $montantChargeActif,
-        'montant_charge_inactif' => $montantChargeInactif,
+        'montant_housing' => round($montantHousing, 2),
+        'montant_charge' => round($montantCharge, 2),
+        'montant_total' => round($montantTotal, 2),
+        'reduction_value' => round($reductionValue, 2),
+        'promotion_value' => round($promotionValue, 2),
+        'promotion_partenaire_value' => round($promotionPartenaireValue, 2),
+        'montant_a_paye' => round($montantAPaye, 2),
+        'valeur_paye' => round($required_paid_value, 2),
+        'montant_charge_actif' => round($montantChargeActif, 2),
+        'montant_charge_inactif' => round($montantChargeInactif, 2),
     ];
+    
 }
 
 

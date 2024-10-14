@@ -98,7 +98,7 @@ class MethodPayementController extends Controller
                     return $methodPayement->makeHidden(['servicePaiement']);
                 });
 
-                $methodPayements [] = MethodPayement::whereName( (new ReservationController())->findSimilarPaymentMethod("portfeuille"))->first();
+                $methodPayements [] = MethodPayement::whereName( (new ReservationController())->findSimilarPaymentMethod("portfeuille"))->first(); 
 
                 // foreach($methodPayements as $methodPayement){
                 //     $methodPayement->servicePaiement = (new ServicePaiementController())->showServiceActifByMethodPaiement($methodPayement->id);
@@ -115,7 +115,7 @@ class MethodPayementController extends Controller
 
 
 
-        return response()->json(['data' => $methodPayements], 200);
+        return response()->json(['data' => array_values($methodPayements->toArray())], 200);
     } catch (Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }

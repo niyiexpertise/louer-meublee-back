@@ -630,9 +630,9 @@ public function RevokePermsToRole(Request $request, $r){
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
- *             required={"permissions"},
+ *             required={"permissions_actif"},
  *             @OA\Property(
- *                 property="permissions",
+ *                 property="permissions_actif",
  *                 type="array",
  *                 @OA\Items(type="integer", format="int64"),
  *                 description="List of permission IDs to assign to the role"
@@ -660,13 +660,13 @@ public function RevokePermsToRole(Request $request, $r){
     public function assignPermsToUser(Request $request,$id,){
         try{
             $requestData = $request->validate([
-                'permissions' => 'required|array',
-                'permissions.*' => 'integer|exists:permissions,id'
+                'permissions_actif' => 'required|array',
+                'permissions_actif.*' => 'integer|exists:permissions,id'
             ]);
 
             $user = User::find($id);
 
-            $permissions=$request->input('permissions');
+            $permissions=$request->input('permissions_actif');
 
             if (!$user) {
                 return response()->json('user not found');
@@ -675,7 +675,7 @@ public function RevokePermsToRole(Request $request, $r){
         $assignedPermissions =[];
         $permission_name= "";
         $permission_add=[];
-        $permissions=$request->input('permissions');
+        $permissions=$request->input('permissions_actif');
 
         foreach ($permissions as $permissionId) {
             $permission = Permission::find($permissionId);
@@ -724,10 +724,9 @@ public function RevokePermsToRole(Request $request, $r){
                     } catch (\Exception $e) {
 
                     }
-            return response()->json([
-                'message'=>'permission add successfully',
-                'data' =>[
-                        'id' => $user->id,
+
+                return (new ServiceController())->apiResponse(200, [
+                    'id' => $user->id,
                         'lastname' => $user->lastname,
                         'firstname' => $user->firstname,
                         'telephone' => $user->telephone,
@@ -747,8 +746,8 @@ public function RevokePermsToRole(Request $request, $r){
                             'permissionDirect' => $permissionsDirect,
                             'permissionRole' => $uniquePermissions
                         ]
-                ]
-            ]);
+                ], 'permissions added successfully');
+           
         }catch(ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -782,9 +781,9 @@ public function RevokePermsToRole(Request $request, $r){
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
- *             required={"permissions"},
+ *             required={"permissions_inactif"},
  *             @OA\Property(
- *                 property="permissions",
+ *                 property="permissions_inactif",
  *                 type="array",
  *                 @OA\Items(type="integer", format="int64"),
  *                 description="List of permission IDs to assign to the role"
@@ -812,11 +811,11 @@ public function RevokePermsToRole(Request $request, $r){
     public function revokePermsToUser(Request $request,$id){
         try{
             $requestData = $request->validate([
-                'permissions' => 'required|array',
-                'permissions.*' => 'integer|exists:permissions,id'
+                'permissions_inactif' => 'required|array',
+                'permissions_inactif.*' => 'integer|exists:permissions,id'
             ]);
 
-            $permissions=$request->input('permissions');
+            $permissions=$request->input('permissions_inactif');
             $assignedPermissions =[];
             $permission_name= "";
             $user = User::find($id);
@@ -874,10 +873,9 @@ public function RevokePermsToRole(Request $request, $r){
                     } catch (\Exception $e) {
 
                     }
-            return response()->json([
-                'message'=>'permission deny successfully',
-                'data' =>[
-                    'id' => $user->id,
+
+            return (new ServiceController())->apiResponse(200, [
+                'id' => $user->id,
                     'lastname' => $user->lastname,
                     'firstname' => $user->firstname,
                     'telephone' => $user->telephone,
@@ -897,8 +895,7 @@ public function RevokePermsToRole(Request $request, $r){
                         'permissionDirect' => $permissionsDirect,
                         'permissionRole' => $uniquePermissions
                     ]
-            ]
-            ]);
+            ],'permission deny successfully');
         }catch(ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -975,12 +972,22 @@ public function RevokePermsToRole(Request $request, $r){
             }
             //$permissionsRole = $users->getPermissionsViaRoles();
 
-            return response()->json([
-                'data' => [
-                    'directPermissions' => $permissionsDirect,
-                    'indirectPermissions' => $uniquePermissions
-                ]
-            ]);
+            // return response()->json([
+            //     'data' => [
+            //         'directPermissions' => $permissionsDirect,
+            //         'indirectPermissions' => $uniquePermissions
+            //     ]
+            // ]);
+
+            $data =  [
+                'directPermissions' => $permissionsDirect,
+                'indirectPermissions' => $uniquePermissions
+            ];
+
+
+            return (new ServiceController())->apiResponse(200, $data,"liste des permissions d'un utilisateur");
+
+  
         }catch(ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -1222,9 +1229,11 @@ public function RevokePermsToRole(Request $request, $r){
                     return response()->json('role not found');
                 }
                 $data = $role->permissions;
-                return response()->json([
-                    'data' => $data
-                ]);
+
+                return (new ServiceController())->apiResponse(200, $data,"liste des permissions d'un role");
+                // return response()->json([
+                //     'data' => $data
+                // ]);
             }catch (Exception $e){
                   return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -1387,6 +1396,112 @@ public function RevokePermsToRole(Request $request, $r){
             }catch (Exception $e){
                   return response()->json(['error' => $e->getMessage()], 500);
             }
+       }
+
+  /**
+ * @OA\Post(
+ *     path="/api/users/AssignOrRevokeMultiplePermissionToUser/{id}",
+ *     summary="Assign or revoke multiple permissions to/from a user",
+ *     tags={"ManageAccess"},
+ *     security={{"bearerAuth": {}}}, 
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID of the user",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions_actif", "permissions_inactif"},
+ *             @OA\Property(
+ *                 property="permissions_actif",
+ *                 type="array",
+ *                 description="List of permission IDs to assign to the user",
+ *                 @OA\Items(type="integer", format="int64")
+ *             ),
+ *             @OA\Property(
+ *                 property="permissions_inactif",
+ *                 type="array",
+ *                 description="List of permission IDs to revoke from the user",
+ *                 @OA\Items(type="integer", format="int64")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Permissions assigned or revoked successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="data", type="string", example="Permissions updated successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="User or permission not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="User or permission not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Internal server error")
+ *         )
+ *     )
+ * )
+ */
+
+       public function AssignOrRevokeMultiplePermissionToUser(Request $request,$id){
+        try {
+            $requestData = $request->validate([
+                'permissions_inactif' => 'required|array',
+                'permissions_inactif.*' => 'integer|exists:permissions,id',
+                 'permissions_actif' => 'required|array',
+                'permissions_actif.*' => 'integer|exists:permissions,id'
+            ]);
+
+    if (count($request->permissions_actif) !== count(array_unique($request->permissions_actif))) {
+        return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions actives contient des doublons.");
+    }
+
+    if (count($request->permissions_inactif) !== count(array_unique($request->permissions_inactif))) {
+        return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions inactives contient des doublons.");
+    }
+
+    $intersection = array_intersect($request->permissions_actif, $request->permissions_inactif);
+    if (!empty($intersection)) {
+        return (new ServiceController())->apiResponse(404, [],"Certains éléments sont présents à la fois dans les permissions actives et inactives.");
+    }
+
+            $assignResult = $this->assignPermsToUser($request,$id);
+            
+            if( $assignResult->original['status_code']  != 200){
+                return $assignResult['message'];
+            }
+            $revokeResult = $this->revokePermsToUser($request,$id);
+
+           
+
+            if( $revokeResult->original['status_code']  != 200){
+                return $revokeResult['message'];
+            }
+
+            if( $assignResult->original['status_code']  == 200 && $revokeResult->original['status_code']  == 200){
+                return (new ServiceController())->apiResponse(200, [],"Permission added or Revoked successfully to user");
+            }
+
+
+           
+
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
        }
 
 }

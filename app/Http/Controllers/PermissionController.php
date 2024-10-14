@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role  ;
+
 class PermissionController extends Controller
 {
       /**
@@ -38,54 +41,7 @@ class PermissionController extends Controller
     }
 
 
-  /**
-      * @OA\Post(
-      *     path="/api/permission/store",
-      *     summary="Create a new permission ",
-      *     tags={"Permission"},
-      *security={{"bearerAuth": {}}},
-      *     @OA\RequestBody(
-      *         required=true,
-      *         @OA\JsonContent(
-      *             required={"name"},
-      *             @OA\Property(property="name", type="string", example="create"),
-      *         )
-      *     ),
-      *     @OA\Response(
-      *         response=200,
-      *         description="Permission  created successfully"
-      *     ),
-      *     @OA\Response(
-      *         response=401,
-      *         description="Invalid credentials"
-      *     )
-      * )
-      */
-    public function store(Request $request)
-    {
-        try{
-            $data = $request->validate([
-                'name' => 'required|unique:permissions|max:255',
-            ]);
-            $exist = Permission::where('name',$request->name)->exists();
-            if($exist){
-                return response()->json([
-                    "message"=>"This name has already taken"
-                ]);
-            }
-                $permission = new Permission();
-                $permission->name = $request->name;
-                $permission->guard_name= "web";
-                $permission->save();
-                return response()->json([
-                    'message' =>'Successfully created',
-                    'permission' => $permission
-                ],200);
-        }catch (Exception $e){
-              return response()->json(['error' => $e->getMessage()], 500);
-        }
-        
-    }
+  
 
      /**
      * @OA\Get(
@@ -137,33 +93,26 @@ class PermissionController extends Controller
     public function indexbycategorie()
 {
     try {
-        // Récupérer toutes les permissions
         $permissions = Permission::all();
         
-        // Grouper les permissions par groupe
         $groupedPermissions = $permissions->filter(function ($permission) {
-            return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
+            return !is_null($permission->groupe);
         })->groupBy('groupe')->map(function ($group, $groupeName) {
             return [
-                'id_permi' => $group->first()->id, // Utilise l'id de la première permission du groupe comme id_permi
-                'group_name' => $groupeName, // Nom du groupe
+                'group_name' => $groupeName, 
                 'permissions' => $group->map(function ($permission) use ($groupeName) {
                     return [
                         'id' => $permission->id,
-                        'id_permi' => $permission->id, // Assigner l'id de la permission
                         'name' => $permission->name,
                         'description' => $permission->description,
-                        'active' => true // Marquer toutes les permissions comme active (à ajuster selon ta logique)
                     ];
                 })->toArray(),
-                'count' => $group->count() // Nombre de permissions dans ce groupe
+                'count' => $group->count() 
             ];
         });
 
-        // Préparer la structure de la réponse
-        $response = $groupedPermissions->values()->toArray(); // Obtenir les valeurs sans les clés de groupe
+        $response = $groupedPermissions->values()->toArray();
 
-        // Retourner la réponse JSON
         return response()->json($response, 200);
 
     } catch (Exception $e) {
@@ -549,6 +498,144 @@ public function updatePermissions()
 
         return response()->json(['message' => 'Permissions mises à jour avec succès.']);
     }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/permission/indexbycategorieforuser/{userId}",
+     *     summary="Get all permissions groupe by categorie for user",
+     *     tags={"Permission"},
+     *       @OA\Parameter(
+ *         name="userId",
+ *         in="path",
+ *         required=true,
+ *         description="id de l'utilisateur)",
+ *         @OA\Schema(type="string")
+ *     ),
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of permissions groupe by category"
+     * 
+     *     )
+     * )
+     */
+    public function indexbycategorieforuser($userId)
+{
+    try {
+
+        $user= User::whereId($userId)->exists();
+
+        if(!$user){
+            return (new ServiceController())->apiResponse(404, [],'Utilisateur non trouvé');
+        }
+
+        $permissions = Permission::all();
+
+        $userPerms = (new AuthController)->getUserPerms($userId);
+
+
+
+        $userPermissions = array_merge(
+            $userPerms->original['data']['directPermissions'] ?? [],
+            $userPerms->original['data']['indirectPermissions'] ?? []
+        );
+
+        $groupedPermissions = $permissions->filter(function ($permission) {
+            return !is_null($permission->groupe); 
+        })->groupBy('groupe')->map(function ($group, $groupeName) use ($userPermissions) {
+            return [
+                'group_name' => $groupeName, 
+                'permissions' => $group->map(function ($permission) use ($userPermissions) {
+                    return [
+                        'id' => $permission->id,
+                        'name' => $permission->name,
+                        'description' => $permission->description,
+                        'active' => in_array($permission->name, $userPermissions) 
+                    ];
+                })->toArray(),
+                'count' => $group->count()
+            ];
+        });
+
+        $response = $groupedPermissions->values()->toArray(); 
+
+        return response()->json($response, 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/permission/indexbycategorieforrole/{roleId}",
+     *     summary="Get all permissions groupe by categorie for role",
+     *     tags={"Permission"},
+     *       @OA\Parameter(
+ *         name="roleId",
+ *         in="path",
+ *         required=true,
+ *         description="id de l'utilisateur)",
+ *         @OA\Schema(type="string")
+ *     ),
+     * security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of permissions groupe by category"
+     * 
+     *     )
+     * )
+     */
+
+public function indexbycategorieforrole($roleId)
+{
+    try {
+
+        $role= Role::whereId($roleId)->exists();
+
+        if(!$role){
+            return (new ServiceController())->apiResponse(404, [],'rôle non trouvé');
+        }
+        $permissions = Permission::all();
+
+
+        $rolePermissions =(new AuthController)->rolesPerms($roleId)->original['data']?? [];
+
+
+       $rolePermissionName = [];
+
+        foreach ($rolePermissions as $permission) {
+            $rolePermissionName[] = $permission->name;
+        }
+
+
+        $groupedPermissions = $permissions->filter(function ($permission) {
+            return !is_null($permission->groupe);
+        })->groupBy('groupe')->map(function ($group, $groupeName) use ($rolePermissionName) {
+            return [
+                'group_name' => $groupeName, 
+                'permissions' => $group->map(function ($permission) use ($rolePermissionName) {
+                    return [
+                        'id' => $permission->id,
+                        'name' => $permission->name,
+                        'description' => $permission->description,
+                        'active' => in_array($permission->name, $rolePermissionName)
+                    ];
+                })->toArray(),
+                'count' => $group->count()
+            ];
+        });
+
+        $response = $groupedPermissions->values()->toArray();
+        return response()->json($response, 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 
 
 

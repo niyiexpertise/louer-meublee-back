@@ -4209,10 +4209,10 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "permissions"
+                                    "permissions_actif"
                                 ],
                                 "properties": {
-                                    "permissions": {
+                                    "permissions_actif": {
                                         "description": "List of permission IDs to assign to the role",
                                         "type": "array",
                                         "items": {
@@ -4292,10 +4292,10 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "permissions"
+                                    "permissions_inactif"
                                 ],
                                 "properties": {
-                                    "permissions": {
+                                    "permissions_inactif": {
                                         "description": "List of permission IDs to assign to the role",
                                         "type": "array",
                                         "items": {
@@ -4756,6 +4756,114 @@
                                         "error": {
                                             "type": "string",
                                             "example": "An error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/AssignOrRevokeMultiplePermissionToUser/{id}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Assign or revoke multiple permissions to/from a user",
+                "operationId": "da8d0ad17e779d6b00810befb0e614a2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions_actif",
+                                    "permissions_inactif"
+                                ],
+                                "properties": {
+                                    "permissions_actif": {
+                                        "description": "List of permission IDs to assign to the user",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    },
+                                    "permissions_inactif": {
+                                        "description": "List of permission IDs to revoke from the user",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions assigned or revoked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Permissions updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User or permission not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "User or permission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Internal server error"
                                         }
                                     },
                                     "type": "object"
@@ -20427,47 +20535,6 @@
                 ]
             }
         },
-        "/api/permission/store": {
-            "post": {
-                "tags": [
-                    "Permission"
-                ],
-                "summary": "Create a new permission ",
-                "operationId": "aaa9a1489978d8237d358f1010932130",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "create"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Permission  created successfully"
-                    },
-                    "401": {
-                        "description": "Invalid credentials"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/permission/show/{id}": {
             "get": {
                 "tags": [
@@ -20570,6 +20637,66 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/permission/indexbycategorieforuser/{userId}": {
+            "get": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Get all permissions groupe by categorie for user",
+                "operationId": "a85bed677d4819844c03acd10b8391aa",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "id de l'utilisateur)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of permissions groupe by category"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/permission/indexbycategorieforrole/{roleId}": {
+            "get": {
+                "tags": [
+                    "Permission"
+                ],
+                "summary": "Get all permissions groupe by categorie for role",
+                "operationId": "c6d07c43005f848c1077b9107a4379a7",
+                "parameters": [
+                    {
+                        "name": "roleId",
+                        "in": "path",
+                        "description": "id de l'utilisateur)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of permissions groupe by category"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/logement/updatephoto/{photo_id}": {

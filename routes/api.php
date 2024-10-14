@@ -340,6 +340,10 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::post('/revokePermsToUser/{id}', [AuthController::class, 'revokePermsToUser'])->name('users.revokePermsToUser');
             });
 
+            Route::middleware(['role_or_permission:superAdmin|Manageusers.AssignOrRevokeMultiplePermissionToUser'])->group(function () {
+                Route::post('/AssignOrRevokeMultiplePermissionToUser/{id}', [AuthController::class, 'AssignOrRevokeMultiplePermissionToUser'])->name('users.AssignOrRevokeMultiplePermissionToUser');
+            });
+
             Route::middleware(['role_or_permission:superAdmin|Manageusers.getUserPerms'])->group(function () {
                 Route::get('/getUserPerms/{id}', [AuthController::class, 'getUserPerms'])->name('users.getUserPerms');
             });
@@ -458,6 +462,14 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         });
         Route::middleware(['role_or_permission:superAdmin|Managepermission.indexbycategorie'])->group(function () {
             Route::get('/indexbycategorie', [PermissionController::class, 'indexbycategorie'])->name('permission.indexbycategorie');
+        });
+
+        Route::middleware(['role_or_permission:superAdmin|Managepermission.indexbycategorieforuser'])->group(function () {
+            Route::get('/indexbycategorieforuser/{userId}', [PermissionController::class, 'indexbycategorieforuser'])->name('permission.indexbycategorieforuser');
+        });
+
+        Route::middleware(['role_or_permission:superAdmin|Managepermission.indexbycategorieforrole'])->group(function () {
+            Route::get('/indexbycategorieforrole/{userId}', [PermissionController::class, 'indexbycategorieforrole'])->name('permission.indexbycategorieforrole');
         });
 
         Route::middleware(['role_or_permission:superAdmin|Managepermission.store'])->group(function () {

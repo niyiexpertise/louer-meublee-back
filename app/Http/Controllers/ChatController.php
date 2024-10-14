@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Models\Housing;
 use App\Models\Reservation;
 use App\Models\ChatFile;
+use App\Models\photo;
 use App\Models\Right;
 use App\Models\User;
 use App\Models\User_right;
@@ -103,9 +104,15 @@ class ChatController extends Controller
 
             foreach($chats as $chat){
 
+                $chat->send_by_name =User::whereId($chat->sent_by)->first()->lastname." ". User::whereId($chat->sent_by)->first()->firstname   ;
+
+                $chat->send_by_file_profil = User::whereId($chat->sent_by)->first()->file_profil;
+
                 $chat->send_to_name =User::whereId($chat->sent_to)->first()->lastname." ". User::whereId($chat->sent_to)->first()->firstname   ;
 
                 $chat->send_to_file_profil = User::whereId($chat->sent_to)->first()->file_profil;
+
+                $chat->housing_file = photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->first()->path;
             }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');

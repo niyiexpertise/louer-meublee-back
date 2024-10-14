@@ -3735,10 +3735,10 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "permissions"
+                                    "permissions_actif"
                                 ],
                                 "properties": {
-                                    "permissions": {
+                                    "permissions_actif": {
                                         "description": "List of permission IDs to assign to the role",
                                         "type": "array",
                                         "items": {
@@ -3882,10 +3882,10 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "permissions"
+                                    "permissions_inactif"
                                 ],
                                 "properties": {
-                                    "permissions": {
+                                    "permissions_inactif": {
                                         "description": "List of permission IDs to revoke from the role",
                                         "type": "array",
                                         "items": {
@@ -4848,6 +4848,114 @@
                                         "error": {
                                             "type": "string",
                                             "example": "User or permission not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/AssignOrRevokeMultiplePermissionToRole/{id}": {
+            "post": {
+                "tags": [
+                    "ManageAccess"
+                ],
+                "summary": "Assign or revoke multiple permissions to/from a role",
+                "operationId": "d8b497f84c4632a72600f48717133c01",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the role",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions_actif",
+                                    "permissions_inactif"
+                                ],
+                                "properties": {
+                                    "permissions_actif": {
+                                        "description": "List of permission IDs to assign to the user",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    },
+                                    "permissions_inactif": {
+                                        "description": "List of permission IDs to revoke from the role",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions assigned or revoked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "Permissions updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Role or permission not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Role or permission not found"
                                         }
                                     },
                                     "type": "object"

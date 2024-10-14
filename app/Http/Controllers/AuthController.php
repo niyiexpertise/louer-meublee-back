@@ -45,9 +45,9 @@ class AuthController extends Controller
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
- *             required={"permissions"},
+ *             required={"permissions_actif"},
  *             @OA\Property(
- *                 property="permissions",
+ *                 property="permissions_actif",
  *                 type="array",
  *                 @OA\Items(type="integer", format="int64"),
  *                 description="List of permission IDs to assign to the role"
@@ -107,12 +107,12 @@ class AuthController extends Controller
             return response()->json('Role not found');
         }
         $requestData = $request->validate([
-            'permissions' => 'required|array',
-            'permissions.*' => 'integer|exists:permissions,id'
+            'permissions_actif' => 'required|array',
+            'permissions_actif.*' => 'integer|exists:permissions,id'
         ]);
 
         $assignedPermissions = [];
-        $permissions=$request->input('permissions');
+        $permissions=$request->input('permissions_actif');
 
         foreach ($permissions as $permissionId) {
             $permission = Permission::find($permissionId);
@@ -135,11 +135,11 @@ class AuthController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Permissions assigned to role successfully',
+
+        return (new ServiceController())->apiResponse(200, [
             'assigned_permissions' => $assignedPermissions,
             'role' => $role
-        ]);
+        ], 'Permissions assigned to role successfully');
     } catch(ValidationException $e) {
         return response()->json([
             'error' => 'Validation failed',
@@ -174,9 +174,9 @@ class AuthController extends Controller
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
- *             required={"permissions"},
+ *             required={"permissions_inactif"},
  *             @OA\Property(
- *                 property="permissions",
+ *                 property="permissions_inactif",
  *                 type="array",
  *                 @OA\Items(type="integer", format="int64"),
  *                 description="List of permission IDs to revoke from the role"
@@ -227,13 +227,14 @@ public function RevokePermsToRole(Request $request, $r){
         }
 
         $requestData = $request->validate([
-            'permissions' => 'required|array',
-            'permissions.*' => 'integer|exists:permissions,id'
+            'permissions_inactif' => 'required|array',
+            'permissions_inactif.*' => 'integer|exists:permissions,id'
         ]);
+
 
         $revokedPermissions = [];
 
-        foreach ($requestData['permissions'] as $permissionId) {
+        foreach ($requestData['permissions_inactif'] as $permissionId) {
             $permission = Permission::find($permissionId);
 
             if ($role->hasPermissionTo($permission->name)) {
@@ -242,11 +243,11 @@ public function RevokePermsToRole(Request $request, $r){
             }
         }
 
-        return response()->json([
-            'message' => 'Permissions revoked from role successfully',
+
+        return (new ServiceController())->apiResponse(200, [
             'revoked_permissions' => $revokedPermissions,
             'role' => $role
-        ]);
+        ], 'Permissions retiré au rôle avec succès');
     } catch(ValidationException $e) {
         return response()->json([
             'error' => 'Validation failed',
@@ -1466,38 +1467,211 @@ public function RevokePermsToRole(Request $request, $r){
                 'permissions_actif.*' => 'integer|exists:permissions,id'
             ]);
 
-    if (count($request->permissions_actif) !== count(array_unique($request->permissions_actif))) {
-        return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions actives contient des doublons.");
-    }
+            $user = User::find($id);
 
-    if (count($request->permissions_inactif) !== count(array_unique($request->permissions_inactif))) {
-        return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions inactives contient des doublons.");
-    }
+            $permissions=$request->input('permissions_actif');
 
-    $intersection = array_intersect($request->permissions_actif, $request->permissions_inactif);
-    if (!empty($intersection)) {
-        return (new ServiceController())->apiResponse(404, [],"Certains éléments sont présents à la fois dans les permissions actives et inactives.");
-    }
+            if (!$user) {
+                return response()->json('user not found');
+            }
 
-            $assignResult = $this->assignPermsToUser($request,$id);
+            if(!$request->permissions_actif && !$request->permissions_inactif){
+                return (new ServiceController())->apiResponse(404, [],"Envoyez au moins un tableaux entre permission_actif et permission_inactif.");
+            }
+            if($request->permissions_actif){
+                if (count($request->permissions_actif) !== count(array_unique($request->permissions_actif))) {
+                    return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions actives contient des doublons.");
+                }
+            }
+    
+
+            if($request->permissions_inactif){
+                if (count($request->permissions_inactif) !== count(array_unique($request->permissions_inactif))) {
+                    return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions inactives contient des doublons.");
+                }
+            }
+
+            if($request->permissions_actif && $request->permissions_inactif){
+                $intersection = array_intersect($request->permissions_actif, $request->permissions_inactif);
+            if (!empty($intersection)) {
+                return (new ServiceController())->apiResponse(404, [],"Certains éléments sont présents à la fois dans les permissions actives et inactives.");
+            }
+            }
+
+            if($request->permissions_actif){
+                $assignResult = $this->assignPermsToUser($request,$id);
             
-            if( $assignResult->original['status_code']  != 200){
-                return $assignResult['message'];
+                if( $assignResult->original['status_code']  != 200){
+                    return $assignResult['message'];
+                }
             }
-            $revokeResult = $this->revokePermsToUser($request,$id);
+
+            if($request->permissions_inactif){
+                $revokeResult = $this->revokePermsToUser($request,$id);
+
+                if( $revokeResult->original['status_code']  != 200){
+                    return $revokeResult['message'];
+                }
+            }
+            
+
+            if($request->permissions_inactif && $request->permissions_actif){
+                if( $assignResult->original['status_code']  == 200 && $revokeResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) ajoutée(s) et retirée(s) avec succès à l'utilisateur");
+                }
+            }
+
+            if($request->permissions_actif){
+                if( $assignResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) ajoutée(s) avec succès à l'utilisateur ");
+                }
+            } 
+            if($request->permissions_inactif){
+                if($revokeResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) retirée(s) avec succès à l'utilisateur");
+                }
+            }
 
            
 
-            if( $revokeResult->original['status_code']  != 200){
-                return $revokeResult['message'];
+        } catch (Exception $e) {
+            return (new ServiceController())->apiResponse(500, [], $e->getMessage());
+        }
+       }
+
+
+        /**
+ * @OA\Post(
+ *     path="/api/users/AssignOrRevokeMultiplePermissionToRole/{id}",
+ *     summary="Assign or revoke multiple permissions to/from a role",
+ *     tags={"ManageAccess"},
+ *     security={{"bearerAuth": {}}}, 
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID of the role",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="integer",
+ *             format="int64"
+ *         )
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             required={"permissions_actif", "permissions_inactif"},
+ *             @OA\Property(
+ *                 property="permissions_actif",
+ *                 type="array",
+ *                 description="List of permission IDs to assign to the user",
+ *                 @OA\Items(type="integer", format="int64")
+ *             ),
+ *             @OA\Property(
+ *                 property="permissions_inactif",
+ *                 type="array",
+ *                 description="List of permission IDs to revoke from the role",
+ *                 @OA\Items(type="integer", format="int64")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Permissions assigned or revoked successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="data", type="string", example="Permissions updated successfully")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Role or permission not found",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Role or permission not found")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Internal server error")
+ *         )
+ *     )
+ * )
+ */
+       public function AssignOrRevokeMultiplePermissionToRole(Request $request,$id){
+        try {
+
+            
+
+            $requestData = $request->validate([
+                'permissions_inactif' => '',
+                'permissions_inactif.*' => 'nullable|exists:permissions,id',
+                 'permissions_actif' => '',
+                'permissions_actif.*' => 'nullable|exists:permissions,id'
+            ]);
+
+        $role = Role::find($id);
+
+            if (!$role) {
+                return response()->json('Role not found');
             }
 
-            if( $assignResult->original['status_code']  == 200 && $revokeResult->original['status_code']  == 200){
-                return (new ServiceController())->apiResponse(200, [],"Permission added or Revoked successfully to user");
+            if(!$request->permissions_actif && !$request->permissions_inactif){
+                return (new ServiceController())->apiResponse(404, [],"Envoyez au moins un tableaux entre permission_actif et permission_inactif.");
             }
 
+            if($request->permissions_actif){
+                if (count($request->permissions_actif) !== count(array_unique($request->permissions_actif))) {
+                    return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions actives contient des doublons.");
+                }
+            }
 
-           
+            if($request->permissions_inactif){
+                if (count($request->permissions_inactif) !== count(array_unique($request->permissions_inactif))) {
+                    return (new ServiceController())->apiResponse(404, [],"Le tableau des permissions inactives contient des doublons.");
+                }
+            }
+
+            if($request->permissions_actif && $request->permissions_inactif){
+                $intersection = array_intersect($request->permissions_actif, $request->permissions_inactif);
+            if (!empty($intersection)) {
+                return (new ServiceController())->apiResponse(404, [],"Certains éléments sont présents à la fois dans les permissions actives et inactives.");
+            }
+            }
+
+            if($request->permissions_actif){
+                $assignResult = $this->assignPermsToRole($request,$id);
+
+                if( $assignResult->original['status_code']  != 200){
+                    return $assignResult['message'];
+                }
+            }
+
+            if($request->permissions_inactif){
+                $revokeResult = $this->RevokePermsToRole($request,$id);
+
+                if( $revokeResult->original['status_code']  != 200){
+                    return $revokeResult['message'];
+                }
+            }
+
+            if($request->permissions_inactif && $request->permissions_actif){
+                if( $assignResult->original['status_code']  == 200 && $revokeResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) ajoutée(s) et retirée(s) avec succès au rôle");
+                }
+            }
+
+            if($request->permissions_actif){
+                if( $assignResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) ajoutée(s) avec succès au rôle ");
+                }
+            } 
+            if($request->permissions_inactif){
+                if($revokeResult->original['status_code']  == 200){
+                    return (new ServiceController())->apiResponse(200, [],"Permission(s) retirée(s) avec succès au rôle ");
+                }
+            }
+
 
         } catch (Exception $e) {
             return (new ServiceController())->apiResponse(500, [], $e->getMessage());

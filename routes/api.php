@@ -340,8 +340,16 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::post('/revokePermsToUser/{id}', [AuthController::class, 'revokePermsToUser'])->name('users.revokePermsToUser');
             });
 
+            Route::middleware(['role_or_permission:superAdmin|Manageusers.revokePermsToUser'])->group(function () {
+                Route::post('/revokePermsToUser/{id}', [AuthController::class, 'revokePermsToUser'])->name('users.revokePermsToUser');
+            });
+
             Route::middleware(['role_or_permission:superAdmin|Manageusers.AssignOrRevokeMultiplePermissionToUser'])->group(function () {
                 Route::post('/AssignOrRevokeMultiplePermissionToUser/{id}', [AuthController::class, 'AssignOrRevokeMultiplePermissionToUser'])->name('users.AssignOrRevokeMultiplePermissionToUser');
+            });
+
+            Route::middleware(['role_or_permission:superAdmin|Manageusers.AssignOrRevokeMultiplePermissionToRole'])->group(function () {
+                Route::post('/AssignOrRevokeMultiplePermissionToRole/{id}', [AuthController::class, 'AssignOrRevokeMultiplePermissionToRole'])->name('users.AssignOrRevokeMultiplePermissionToRole');
             });
 
             Route::middleware(['role_or_permission:superAdmin|Manageusers.getUserPerms'])->group(function () {

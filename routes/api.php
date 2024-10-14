@@ -1199,7 +1199,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsRejectedByHost', [HoteReservationController::class, 'reservationsRejectedByHost'])
             ->name('reservation.reservationsRejectedByHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsRejectedByHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsRejectedByHost');
 
         Route::get('/reservationsCanceledByTravelerForHost', [HoteReservationController::class, 'reservationsCanceledByTravelerForHost'])
             ->name('reservation.reservationsCanceledByTravelerForHost')
@@ -1207,7 +1207,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::get('/reservationsNotConfirmedYetByHost', [HoteReservationController::class, 'reservationsNotConfirmedYetByHost'])
             ->name('reservation.reservationsNotConfirmedYetByHost')
-            ->middleware('role_or_permission:superAdmin|Managereservation.reservationsNotConfirmedYetByHost');
+            ->middleware('role_or_permission:superAdmin|hote|Managereservation.reservationsNotConfirmedYetByHost');
 
         // Traveler
         Route::put('/traveler_reject_reservation/{idReservation}', [ReservationController::class, 'traveler_reject_reservation'])

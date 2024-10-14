@@ -135,49 +135,42 @@ class PermissionController extends Controller
      * )
      */
     public function indexbycategorie()
-    {
-        try {
-            // Récupérer toutes les permissions
-            $permissions = Permission::all();
-    
-            // Grouper les permissions par groupe
-            $groupedPermissions = $permissions->filter(function ($permission) {
-                return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
-            })->groupBy('groupe')->map(function ($group) {
-                return [
-                    'permissions' => $group->map(function ($permission) {
-                        return [
-                            'id' => $permission->id,
-                            'name' => $permission->name,
-                            'description' => $permission->description,
-                            // Ajoutez d'autres champs pertinents ici
-                        ];
-                    }),
-                    'count' => $group->count() // Nombre de permissions dans ce groupe
-                ];
-            });
-    
-            // Calculer le nombre total de permissions en faisant la somme des sous-totaux
-            $totalPermissionsCount = $groupedPermissions->sum('count');
-    
-            // Préparer la structure de la réponse
-            $response = [
-                'groups' => $groupedPermissions->mapWithKeys(function ($data, $group) {
-                    return [$group => [
-                        'permissions' => $data['permissions'],
-                        'count' => $data['count']
-                    ]];
-                }),
-                'total_permissions_count' => $totalPermissionsCount
+{
+    try {
+        // Récupérer toutes les permissions
+        $permissions = Permission::all();
+        
+        // Grouper les permissions par groupe
+        $groupedPermissions = $permissions->filter(function ($permission) {
+            return !is_null($permission->groupe); // Filtrer les permissions où groupe n'est pas nul
+        })->groupBy('groupe')->map(function ($group, $groupeName) {
+            return [
+                'id_permi' => $group->first()->id, // Utilise l'id de la première permission du groupe comme id_permi
+                'group_name' => $groupeName, // Nom du groupe
+                'permissions' => $group->map(function ($permission) use ($groupeName) {
+                    return [
+                        'id' => $permission->id,
+                        'id_permi' => $permission->id, // Assigner l'id de la permission
+                        'name' => $permission->name,
+                        'description' => $permission->description,
+                        'active' => true // Marquer toutes les permissions comme active (à ajuster selon ta logique)
+                    ];
+                })->toArray(),
+                'count' => $group->count() // Nombre de permissions dans ce groupe
             ];
-    
-            // Retourner la réponse JSON
-            return response()->json($response, 200);
-    
-        } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        });
+
+        // Préparer la structure de la réponse
+        $response = $groupedPermissions->values()->toArray(); // Obtenir les valeurs sans les clés de groupe
+
+        // Retourner la réponse JSON
+        return response()->json($response, 200);
+
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
 
 
 

@@ -708,19 +708,18 @@ class DashBoardTravelerController extends Controller
          {
              try {
                  $userId = Auth::id();
- 
-                 $data["data"] = Reservation::where('user_id', $userId)
-                                     ->where('is_confirmed_hote', false)
-                                     ->where('statut', 'payee')
-                                     ->where('is_integration', false)
-                                     ->where('is_rejected_hote', false)
-                                     ->where('is_rejected_traveler', false)
 
+                $data["data"] = Reservation::where('user_id', $userId)
+                                ->where('is_confirmed_hote', false)
+                                ->where('is_integration', false)
+                                ->where('is_rejected_traveler', false)
+                                ->where('is_rejected_hote', false)
+                                 ->where('statut', 'payee')
+                                 ->with(['housing' => function ($query) {
+                                     $query->select('id', 'user_id');
+                                 }])
+                                 ->get();
 
-
- 
- 
-                                     ->get();
                  $data["nombre"] = count($data["data"]);
  
                  return (new ServiceController())->apiResponse(200, $data, 'Liste des réservations déjà payée sans action   pour le moment.');

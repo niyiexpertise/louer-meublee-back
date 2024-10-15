@@ -113,6 +113,8 @@ class ChatController extends Controller
                 $chat->send_to_file_profil = User::whereId($chat->sent_to)->first()->file_profil;
 
                 $chat->housing_file =  photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->exists() ? photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->first()->path: photo::whereHousingId($chat->model_id)->first()->path;
+
+                $chat->housing_name =  Housing::whereId($chat->model_id)->first()->name??"non renseigné";
             }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');
@@ -630,8 +632,6 @@ class ChatController extends Controller
                 $sentTo = $recipientId;
                 $sentBy = auth()->id();
                 
-               
-
                 $chat = new Chat();
                 $message = new ChatMessage();
                 $chat->sent_by = auth()->id();

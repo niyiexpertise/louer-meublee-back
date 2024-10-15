@@ -44,6 +44,7 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use GuzzleHttp\Client;
 
 class HousingController extends Controller
 {
@@ -930,93 +931,104 @@ public function ListeDesPhotosLogementAcceuil($id)
  */
 
 
- public function ListeDesLogementsAcceuil(Request $request)
-{
-
-    $page = intval($request->query('page', 1));
-    $perPage = Setting::first()->pagination_logement_acceuil;
-
-    // Étape 1: Récupérer les logements sponsorisés actifs
-    $today = date('Y-m-d');
-    $sponsoredHousings = DB::table('housing_sponsorings')
-        ->where('is_actif', true)
-        ->where('is_deleted', false)
-        ->where('date_debut', '<=', $today)
-        ->where('date_fin', '>=', $today)
-        ->orderBy(DB::raw('prix * nombre'), 'asc')
-        ->pluck('housing_id')
-        ->toArray();
-
-    // Récupérer les logements sponsorisés pour cette page
-    $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
-        ->where('status', 'verified')
-        ->where('is_deleted', 0)
-        ->where('is_blocked', 0)
-        ->where('is_updated', 0)
-        ->where('is_actif', 1)
-        ->where('is_destroy', 0)
-        ->where('is_finished', 1)
-        ->skip(($page - 1) * $perPage)
-        ->take($perPage)
-        ->get();
-
-    // Compter les logements sponsorisés récupérés
-    $sponsoredCount = $sponsoredListings->count();
-
-    // Liste finale des logements à retourner
-    $listings = collect();
-
-    // Si on n'a pas assez de logements sponsorisés pour la page actuelle
-    if ($sponsoredCount < $perPage) {
-        $remaining = $perPage - $sponsoredCount; // Nombre de logements manquants
-
-        // Récupérer les logements non sponsorisés seulement si on a des places restantes
-        $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
-            ->where('status', 'verified')
-            ->where('is_deleted', 0)
-            ->where('is_blocked', 0)
-            ->where('is_updated', 0)
-            ->where('is_actif', 1)
-            ->where('is_destroy', 0)
-            ->where('is_finished', 1)
-            ->skip(($page - 1) * $perPage - count($sponsoredHousings)) // Calculer le skip sur les non-sponsorisés uniquement
-            ->take($remaining)
-            ->get();
-
-        // Fusionner les logements sponsorisés et non sponsorisés dans la liste finale
-        $listings = $sponsoredListings->merge($nonSponsoredListings);
-    } else {
-        // Sinon, retourner uniquement les logements sponsorisés si suffisants
-        $listings = $sponsoredListings;
-    }
+ public function ListeDesLogementsAcceuil(Request $request,$pagel=null)
+ {
 
 
-    // Étape 2: Vérification de l'utilisateur
-    $userId = intval($request->query('id'));
-    if ($request->query('id') && $userId <= 0) {
-        return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
-    }
+     $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
 
-    // Étape 3: Formatter les données
-    $data = $this->formatListingsData($listings, $userId);
+     $perPage = Setting::first()->pagination_logement_acceuil;
+ 
+     // Étape 1: Récupérer les logements sponsorisés actifs
+     $today = date('Y-m-d');
+     $sponsoredHousings = DB::table('housing_sponsorings')
+         ->where('is_actif', true)
+         ->where('is_deleted', false)
+         ->where('date_debut', '<=', $today)
+         ->where('date_fin', '>=', $today)
+         ->orderBy(DB::raw('prix * nombre'), 'asc')
+         ->pluck('housing_id')
+         ->toArray();
+ 
+     // Récupérer les logements sponsorisés pour cette page
+     $sponsoredListings = Housing::whereIn('id', $sponsoredHousings)
+         ->where('status', 'verified')
+         ->where('is_deleted', 0)
+         ->where('is_blocked', 0)
+         ->where('is_updated', 0)
+         ->where('is_actif', 1)
+         ->where('is_destroy', 0)
+         ->where('is_finished', 1)
+         ->skip(($page - 1) * $perPage)
+         ->take($perPage)
+         ->get();
+ 
+     // Compter les logements sponsorisés récupérés
+     $sponsoredCount = $sponsoredListings->count();
+ 
+     // Liste finale des logements à retourner
+     $listings = collect();
+ 
+     // Si on n'a pas assez de logements sponsorisés pour la page actuelle
+     if ($sponsoredCount < $perPage) {
+         $remaining = $perPage - $sponsoredCount; // Nombre de logements manquants
+ 
+         // Récupérer les logements non sponsorisés seulement si on a des places restantes
+         $nonSponsoredListings = Housing::whereNotIn('id', $sponsoredHousings)
+             ->where('status', 'verified')
+             ->where('is_deleted', 0)
+             ->where('is_blocked', 0)
+             ->where('is_updated', 0)
+             ->where('is_actif', 1)
+             ->where('is_destroy', 0)
+             ->where('is_finished', 1)
+             ->skip(($page - 1) * $perPage - count($sponsoredHousings)) // Calculer le skip sur les non-sponsorisés uniquement
+             ->take($remaining)
+             ->get();
+ 
+         // Fusionner les logements sponsorisés et non sponsorisés dans la liste finale
+         $listings = $sponsoredListings->merge($nonSponsoredListings);
+     } else {
+         // Sinon, retourner uniquement les logements sponsorisés si suffisants
+         $listings = $sponsoredListings;
+     }
+ 
+     // Étape 2: Vérification de l'utilisateur
+     $userId = intval($request->query('id'));
+     if ($request->query('id') && $userId <= 0) {
+         return (new ServiceController())->apiResponse(404, [], "L'id qui doit servir à récupérer l'utilisateur connecté doit être positif");
+     }
+ 
+     // Étape 3: Formatter les données
+     $data = $this->formatListingsData($listings, $userId);
+ 
+     // Enregistrement des visites sur le site
+     $controllervisitesite = App::make('App\Http\Controllers\UserVisiteSiteController');
+     if ($request->has('user_id')) {
+         $user_id = $request->input('user_id');
+         $insertvisite = $controllervisitesite->recordSiteVisit($user_id);
+     } else {
+         $insertvisite = $controllervisitesite->recordSiteVisit();
+     }
 
-   
+     $datas= [
+        'data' => $data,
+     ];
 
+     if(is_null($pagel)){
+        if(count($this->ListeDesLogementsAcceuil($request,$page+1)->original['data']) == 0){
+            $datas['lastpage'] = true;
+        }else{
+            $datas['lastpage'] = false;
+        }
+     }
 
-    // Enregistrement des visites sur le site
-    $controllervisitesite = App::make('App\Http\Controllers\UserVisiteSiteController');
-    if ($request->has('user_id')) {
-        $user_id = $request->input('user_id');
-        $insertvisite = $controllervisitesite->recordSiteVisit($user_id);
-    } else {
-        $insertvisite = $controllervisitesite->recordSiteVisit();
-    }
+    //  return 4;
+ 
+     // Retourner la réponse JSON avec les données formatées
 
-    // Retourner la réponse JSON avec les données formatées
-  
-
-    return response()->json(['data' => $data], 200);
-}
+     return response()->json($datas, 200);
+ }
 
 
 
@@ -1324,14 +1336,14 @@ public function ListeDesPhotosLogementAcceuil($id)
  * )
  */
 
- public function  ListeDesLogementsAcceuilFilterByTypehousing(Request $request ,$id)
+ public function  ListeDesLogementsAcceuilFilterByTypehousing(Request $request ,$id,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
 
-        $page = intval($request->query('page', 1));
+        $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
         // $listings = Housing::where('status', 'verified')
         // ->where('is_deleted', 0)
@@ -1393,6 +1405,18 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         $data = $this->formatListingsData($listings);
 
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsAcceuilFilterByTypehousing($request,$id,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
+
         return response()->json(['data' => $data],200);
     }
 
@@ -1433,13 +1457,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsAcceuilFilterByTypeproperty(Request $request, $id)
+    public function  ListeDesLogementsAcceuilFilterByTypeproperty(Request $request, $id,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
-        $page = intval($request->query('page', 1));
+        $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
         $today = date('Y-m-d');
         $sponsoredHousings = DB::table('housing_sponsorings')
@@ -1492,6 +1516,19 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         $data = $this->formatListingsData($listings);
 
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsAcceuilFilterByTypeproperty($request,$id,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
+
         return response()->json(['data' => $data],200);
     }
 
@@ -1531,14 +1568,15 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-    public function  ListeDesLogementsFilterByCountry(Request $request,$country)
+    public function  ListeDesLogementsFilterByCountry(Request $request,$country,$pagel=null)
     {
+
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
 
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -1588,7 +1626,24 @@ public function ListeDesPhotosLogementAcceuil($id)
             $listings = $sponsoredListings;
         }
 
+        
+        
+
+        //  return (4);
+
         $data = $this->formatListingsData($listings);
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsFilterByCountry($request,$country,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
         return response()->json(['data' => $data],200);
 
       }
@@ -1628,13 +1683,13 @@ public function ListeDesPhotosLogementAcceuil($id)
  *     )
  * )
  */
-public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$preferenceId)
+public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$preferenceId,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -1689,6 +1744,19 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
 
         $data = $this->formatListingsData($listings);
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsAcceuilFilterByPreference($request,$preferenceId,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
+
         return response()->json(['data' => $data],200);
     }
 /**
@@ -1726,12 +1794,12 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByCity(Request $request, $city)
+ public function  ListeDesLogementsFilterByCity(Request $request, $city,$pagel=null)
     {
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -1781,7 +1849,19 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             $listings = $sponsoredListings;
         }
 
+       
         $data = $this->formatListingsData($listings);
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsFilterByCity($request,$city,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
         return response()->json(['data' => $data],200);
  }
 
@@ -1820,14 +1900,14 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
  *     )
  * )
  */
- public function  ListeDesLogementsFilterByDepartement(Request $request,$department)
+ public function  ListeDesLogementsFilterByDepartement(Request $request,$department,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
 
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -1877,6 +1957,18 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             $listings = $sponsoredListings;
         }
         $data = $this->formatListingsData($listings);
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsFilterByDepartement($request,$department,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
         return response()->json(['data' => $data],200);
  }
 /**
@@ -1914,13 +2006,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
  *     )
  * )
  */
- public function  ListeDesLogementsAcceuilFilterNbtravaller(Request $request, $nbtravaler)
+ public function  ListeDesLogementsAcceuilFilterNbtravaller(Request $request, $nbtravaler,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -1970,7 +2062,21 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
             $listings = $sponsoredListings;
         }
 
+       
+
         $data = $this->formatListingsData($listings);
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsAcceuilFilterNbtravaller($request,$nbtravaler,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
 
         return response()->json(['data' => $data],200);
     }
@@ -2030,13 +2136,13 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
  */
 
 
-    public function ListeDesLogementsFilterByDestination(Request $request, $location)
+    public function ListeDesLogementsFilterByDestination(Request $request, $location,$pagel=null)
 {
     if(!$request->page){
         return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
     }
 
-    $page = intval($request->query('page', 1));
+   $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
     $perPage = Setting::first()->pagination_logement_acceuil;
 
 
@@ -2096,7 +2202,22 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
 
 
+       
+
+
     $data = $this->formatListingsData($listings);
+
+    if(is_null($pagel)){
+        if(count($this->ListeDesLogementsFilterByDestination($request,$location,$page+1)->original['data']) == 0){
+            $data[] = [
+                'lastpage' => true
+             ];
+        }else{
+            $data[] = [
+                'lastpage' => false
+            ];
+        }
+     }
 
 
 
@@ -2141,12 +2262,12 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
  *     )
  * )
  */
-public function getListingsByNightPriceMax(Request $request, $price)
+public function getListingsByNightPriceMax(Request $request, $price,$pagel=null)
 {
     if(!$request->page){
         return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
     }
-    $page = intval($request->query('page', 1));
+   $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
     $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -2198,6 +2319,18 @@ public function getListingsByNightPriceMax(Request $request, $price)
 
     $data = $this->formatListingsData($listings);
 
+    if(is_null($pagel)){
+        if(count($this->getListingsByNightPriceMax($request,$price,$page+1)->original['data']) == 0){
+            $data[] = [
+                'lastpage' => true
+             ];
+        }else{
+            $data[] = [
+                'lastpage' => false
+            ];
+        }
+     }
+
     return response()->json(['data' => $data], 200);
 }
 
@@ -2236,14 +2369,14 @@ public function getListingsByNightPriceMax(Request $request, $price)
  *     )
  * )
  */
-public function getListingsByNightPriceMin(Request $request,$price)
+public function getListingsByNightPriceMin(Request $request,$price,$pagel=null)
 {
 
     if(!$request->page){
         return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
     }
 
-    $page = intval($request->query('page', 1));
+   $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
     $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -2295,6 +2428,18 @@ public function getListingsByNightPriceMin(Request $request,$price)
 
     $data = $this->formatListingsData($listings);
 
+    if(is_null($pagel)){
+        if(count($this->getListingsByNightPriceMin($request,$price,$page+1)->original['data']) == 0){
+            $data[] = [
+                'lastpage' => true
+             ];
+        }else{
+            $data[] = [
+                'lastpage' => false
+            ];
+        }
+     }
+
     return response()->json(['data' => $data], 200);
 }
 
@@ -2333,13 +2478,13 @@ public function getListingsByNightPriceMin(Request $request,$price)
  *     )
  * )
  */
- public function ListeDesLogementsFilterByHote(Request $request, $userId)
+ public function ListeDesLogementsFilterByHote(Request $request, $userId,$pagel=null)
     {
 
         if(!$request->page){
             return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
         }
-        $page = intval($request->query('page', 1));
+       $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
         $perPage = Setting::first()->pagination_logement_acceuil;
 
         $today = date('Y-m-d');
@@ -2390,6 +2535,18 @@ public function getListingsByNightPriceMin(Request $request,$price)
         }
 
         $data = $this->formatListingsData($listings);
+
+        if(is_null($pagel)){
+            if(count($this->ListeDesLogementsAcceuilFilterByTypehousing($request,$userId,$page+1)->original['data']) == 0){
+                $data[] = [
+                    'lastpage' => true
+                 ];
+            }else{
+                $data[] = [
+                    'lastpage' => false
+                ];
+            }
+         }
 
         return response()->json(['data' => $data,'nombre'=>$data->count()],200);
  }
@@ -3201,7 +3358,7 @@ public function enableHousing($housingId)
  * )
  */
 
- public function getAvailableHousingsAtDate(Request $request)
+ public function getAvailableHousingsAtDate(Request $request,$pagel=null)
  {
      $date = $request->query('date');
 
@@ -3223,7 +3380,7 @@ public function enableHousing($housingId)
          return (new ServiceController())->apiResponse(404, [], "Le numéro de page est obligatoire");
      }
 
-     $page = intval($request->query('page', 1));
+    $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
      $perPage = Setting::first()->pagination_logement_acceuil; // Nombre de logements par page
      $today = date('Y-m-d');
 
@@ -3292,11 +3449,19 @@ public function enableHousing($housingId)
 
      $formattedData = $this->formatListingsData(collect($pagedListings));
 
+     if(is_null($pagel)){
+        if(count($this->getAvailableHousingsAtDate($request,$page+1)->original['data']) == 0){
+            $lastpage = true;
+        }else{
+            $lastpage = false;
+        }
+     }
+
      return response()->json([
          'data' => $formattedData,
          'nombre' => count($formattedData),
          'current_page' => $page,
-         'last_page' => ceil($totalListings / $perPage),
+         'lastpage' => $lastpage,
          'per_page' => $perPage,
      ], 200);
  }
@@ -3677,7 +3842,7 @@ public function validatePhoto(Request $request)
  *     ),
  * )
  */
-public function getAvailableHousingsBetweenDates(Request $request)
+public function getAvailableHousingsBetweenDates(Request $request,$pagel=null)
 {
     $startDateParam = $request->query('start_date');
     $endDateParam = $request->query('end_date');
@@ -3715,7 +3880,7 @@ public function getAvailableHousingsBetweenDates(Request $request)
         ], 400);
     }
 
-    $page = intval($request->query('page', 1));
+   $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
     $perPage = Setting::first()->pagination_logement_acceuil; // Nombre de logements par page
 
     // Récupérer les logements sponsorisés actifs
@@ -3789,11 +3954,19 @@ public function getAvailableHousingsBetweenDates(Request $request)
 
     $formattedData = $this->formatListingsData(collect($pagedListings));
 
+    if(is_null($pagel)){
+        if(count($this->getAvailableHousingsBetweenDates($request,$page+1)->original['data']) == 0){
+            $lastpage = true;
+        }else{
+            $lastpage = false;
+        }
+     }
+
     return response()->json([
         'data' => $formattedData,
         'nombre' => count($formattedData),
         'current_page' => $page,
-        'last_page' => ceil($totalListings / $perPage),
+        'lastpage' => $lastpage,
         'per_page' => $perPage,
     ], 200);
 }
@@ -4330,7 +4503,7 @@ public function HousingHoteInProgress(){
  * )
  */
 
- public function ListeDesLogementsFilterByDestinationavailable_between_dates(Request $request, $location)
+ public function ListeDesLogementsFilterByDestinationavailable_between_dates(Request $request, $location,$pagel=null)
  {
      try {
          if (!$request->page) {
@@ -4367,7 +4540,7 @@ public function HousingHoteInProgress(){
              ], 400);
          }
 
-         $page = intval($request->query('page', 1));
+        $page = is_null($pagel)? intval($request->query('page', 1)) : $pagel;
          $perPage = Setting::first()->pagination_logement_acceuil;
 
          $sponsoredHousings = DB::table('housing_sponsorings')
@@ -4440,11 +4613,19 @@ public function HousingHoteInProgress(){
 
          $formattedData = $this->formatListingsData(collect($pagedHousings));
 
+         if(is_null($pagel)){
+            if(count($this->ListeDesLogementsFilterByDestinationavailable_between_dates($request,$location,$page+1)->original['data']) == 0){
+                $lastpage = true;
+            }else{
+                $lastpage = false;
+            }
+         }
+
          return response()->json([
              'data' => $formattedData,
              'nombre' => count($formattedData),
              'current_page' => $page,
-             'last_page' => ceil($totalListings / $perPage),
+             'lastpage' => $lastpage,
              'per_page' => $perPage,
          ], 200);
 
@@ -4656,26 +4837,33 @@ public function HousingHoteInProgress(){
 
 
     public function executerApi($url) {
-        return $url;
-        $ch = curl_init();
+        // $ch = curl_init();
+        
+        // curl_setopt($ch, CURLOPT_URL, $url); 
+        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+        // $response = curl_exec($ch);
+        // return $url;
     
-        curl_setopt($ch, CURLOPT_URL, $url); 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-        $response = curl_exec($ch);
+        // if (curl_errno($ch)) {
+        //     echo 'Erreur cURL: ' . curl_error($ch);
+        // } else {
+        //     $data = json_decode($response, true);
+        //     if (json_last_error() === JSON_ERROR_NONE) {
+        //         return $data;
+        //     } else {
+        //         return $response;
+        //     }
+        // }
+
+        // curl_close($ch);
+        $client = new Client();
+
+        $response = $client->get($url);
+
+        $data = json_decode($response->getBody(), true);
     
-        if (curl_errno($ch)) {
-            echo 'Erreur cURL: ' . curl_error($ch);
-        } else {
-            $data = json_decode($response, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $data;
-            } else {
-                return $response;
-            }
-        }
-    
+        return $data;
         // Fermer la session cURL
-        curl_close($ch);
     }
     
 

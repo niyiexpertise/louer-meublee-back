@@ -1461,9 +1461,9 @@ public function RevokePermsToRole(Request $request, $r){
        public function AssignOrRevokeMultiplePermissionToUser(Request $request,$id){
         try {
             $requestData = $request->validate([
-                'permissions_inactif' => 'required|array',
+                'permissions_inactif' => 'nullable',
                 'permissions_inactif.*' => 'integer|exists:permissions,id',
-                 'permissions_actif' => 'required|array',
+                 'permissions_actif' => 'nullable',
                 'permissions_actif.*' => 'integer|exists:permissions,id'
             ]);
 
@@ -1604,9 +1604,9 @@ public function RevokePermsToRole(Request $request, $r){
             
 
             $requestData = $request->validate([
-                'permissions_inactif' => '',
+                'permissions_inactif' => 'nullable',
                 'permissions_inactif.*' => 'nullable|exists:permissions,id',
-                 'permissions_actif' => '',
+                 'permissions_actif' => 'nullable',
                 'permissions_actif.*' => 'nullable|exists:permissions,id'
             ]);
 

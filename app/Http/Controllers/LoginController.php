@@ -141,6 +141,8 @@ public function login(Request $request){
                             'right_id' => $right->id,
                             'right_name' => $right->name,
                         ];
+
+                        $a[] =  $right->name;
                     }
                 }
 
@@ -156,10 +158,14 @@ public function login(Request $request){
 
                 // dd('salut');
               unset($user->code);
-              unset($user->roles);
+
+              $diffA = array_diff($a,  $user->getRoleNames()->toArray());         // Éléments dans $a qui ne sont pas dans $userRoles
+                $diffB = array_diff( $user->getRoleNames()->toArray(), $a);
+
               return response()->json([
                   'user' => $user,
                   'role_actif' => $user->getRoleNames(),
+                  'role_available' => array_merge($diffA, $diffB),
                   'appartement_id' => $token,
                   'user_role' =>$rightsDetails
               ]);
@@ -213,12 +219,22 @@ public function checkAuth(Request $request){
                     'right_id' => $right->id,
                     'right_name' => $right->name,
                 ];
+
+                $a[] =  $right->name;
             }
         }
+
+        $diffA = array_diff($a, Auth::user()->getRoleNames()->toArray());         // Éléments dans $a qui ne sont pas dans $userRoles
+        $diffB = array_diff(Auth::user()->getRoleNames()->toArray(), $a);
+
+        // return [$a,Auth::user()->getRoleNames()];
+
+        
         return response()->json([
             'data' => Auth::user(),
             'role_actif'=>Auth::user()->getRoleNames(),
             'user_roles'=>$rightsDetails,
+            'role_available' => array_merge($diffA, $diffB),
             'permissions' => (new AuthController)->getUserPerms(Auth::user()->id)->original['data']
         ]);
 

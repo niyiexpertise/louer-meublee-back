@@ -1418,7 +1418,7 @@ public function ListeDesPhotosLogementAcceuil($id)
             }
          }
 
-        return response()->json(['data' => $datas],200);
+        return response()->json($datas,200);
     }
 
 
@@ -1529,7 +1529,7 @@ public function ListeDesPhotosLogementAcceuil($id)
             }
          }
 
-        return response()->json(['data' => $datas],200);
+        return response()->json($datas,200);
     }
 
 
@@ -1641,7 +1641,7 @@ public function ListeDesPhotosLogementAcceuil($id)
                 $datas['lastpage'] = false;
             }
          }
-        return response()->json(['data' => $datas],200);
+        return response()->json($datas,200);
 
       }
 
@@ -1744,17 +1744,12 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
 
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsAcceuilFilterByPreference($request,$preferenceId,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+                $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
-
-        return response()->json(['data' => $data],200);
+        return response()->json($datas,200);
     }
 /**
  * @OA\Get(
@@ -1848,18 +1843,19 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
 
        
         $data = $this->formatListingsData($listings);
+
+        $datas= [
+            'data' => $data,
+         ];
+
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsFilterByCity($request,$city,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+               $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
-        return response()->json(['data' => $data],200);
+        return response()->json($datas,200);
  }
 
 /**
@@ -1955,18 +1951,18 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
         }
         $data = $this->formatListingsData($listings);
 
+        $datas= [
+            'data' => $data,
+         ];
+
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsFilterByDepartement($request,$department,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+                $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
-        return response()->json(['data' => $data],200);
+        return response()->json($datas,200);
  }
 /**
  * @OA\Get(
@@ -2063,19 +2059,19 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
 
         $data = $this->formatListingsData($listings);
 
+        $datas= [
+            'data' => $data,
+         ];
+
         if(is_null($pagel)){
-            if(count($this->ListeDesLogementsAcceuilFilterNbtravaller($request,$nbtravaler,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
-            }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
-            }
+        if(count($this->ListeDesLogementsAcceuilFilterNbtravaller($request,$nbtravaler,$page+1)->original['data']) == 0){
+            $datas['lastpage'] = true;
+        }else{
+            $datas['lastpage'] = false;
+        }
          }
 
-        return response()->json(['data' => $data],200);
+        return response()->json($datas,200);
     }
 
 
@@ -2204,21 +2200,21 @@ public function  ListeDesLogementsAcceuilFilterByPreference(Request $request,$pr
 
     $data = $this->formatListingsData($listings);
 
+    $datas= [
+        'data' => $data,
+     ];
+
     if(is_null($pagel)){
         if(count($this->ListeDesLogementsFilterByDestination($request,$location,$page+1)->original['data']) == 0){
-            $data[] = [
-                'lastpage' => true
-             ];
+            $datas['lastpage'] = true;
         }else{
-            $data[] = [
-                'lastpage' => false
-            ];
+            $datas['lastpage'] = false;
         }
      }
 
 
 
-    return response()->json(['data' => $data], 200);
+    return response()->json($datas, 200);
 
     return (new ServiceController())->apiResponse(403,[],'Liste des logements filtrés par destination');
 }
@@ -2315,20 +2311,19 @@ public function getListingsByNightPriceMax(Request $request, $price,$pagel=null)
         }
 
     $data = $this->formatListingsData($listings);
+    $datas= [
+        'data' => $data,
+     ];
 
     if(is_null($pagel)){
         if(count($this->getListingsByNightPriceMax($request,$price,$page+1)->original['data']) == 0){
-            $data[] = [
-                'lastpage' => true
-             ];
+            $datas['lastpage'] = true;
         }else{
-            $data[] = [
-                'lastpage' => false
-            ];
+            $datas['lastpage'] = false;
         }
      }
 
-    return response()->json(['data' => $data], 200);
+    return response()->json($datas, 200);
 }
 
    /**
@@ -2425,19 +2420,19 @@ public function getListingsByNightPriceMin(Request $request,$price,$pagel=null)
 
     $data = $this->formatListingsData($listings);
 
+    $datas= [
+        'data' => $data,
+     ];
+
     if(is_null($pagel)){
         if(count($this->getListingsByNightPriceMin($request,$price,$page+1)->original['data']) == 0){
-            $data[] = [
-                'lastpage' => true
-             ];
+            $datas['lastpage'] = true;
         }else{
-            $data[] = [
-                'lastpage' => false
-            ];
+            $datas['lastpage'] = false;
         }
      }
 
-    return response()->json(['data' => $data], 200);
+    return response()->json($datas, 200);
 }
 
  /**
@@ -2533,19 +2528,20 @@ public function getListingsByNightPriceMin(Request $request,$price,$pagel=null)
 
         $data = $this->formatListingsData($listings);
 
+        $datas= [
+            'data' => $data,
+            'nombre'=>$data->count()
+         ];
+
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsAcceuilFilterByTypehousing($request,$userId,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
-            }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
-            }
+                    $datas['lastpage'] = true;
+                }else{
+                    $datas['lastpage'] = false;
+                }
          }
 
-        return response()->json(['data' => $data,'nombre'=>$data->count()],200);
+        return response()->json($datas,200);
  }
 
 

@@ -1405,19 +1405,20 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         $data = $this->formatListingsData($listings);
 
+
+        $datas= [
+            'data' => $data,
+         ];
+
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsAcceuilFilterByTypehousing($request,$id,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+                $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
 
-        return response()->json(['data' => $data],200);
+        return response()->json(['data' => $datas],200);
     }
 
 
@@ -1516,20 +1517,19 @@ public function ListeDesPhotosLogementAcceuil($id)
 
         $data = $this->formatListingsData($listings);
 
+        $datas= [
+            'data' => $data,
+         ];
 
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsAcceuilFilterByTypeproperty($request,$id,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+                $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
 
-        return response()->json(['data' => $data],200);
+        return response()->json(['data' => $datas],200);
     }
 
 
@@ -1626,25 +1626,22 @@ public function ListeDesPhotosLogementAcceuil($id)
             $listings = $sponsoredListings;
         }
 
-        
-        
 
-        //  return (4);
 
         $data = $this->formatListingsData($listings);
 
+        $datas= [
+            'data' => $data,
+         ];
+
         if(is_null($pagel)){
             if(count($this->ListeDesLogementsFilterByCountry($request,$country,$page+1)->original['data']) == 0){
-                $data[] = [
-                    'lastpage' => true
-                 ];
+                $datas['lastpage'] = true;
             }else{
-                $data[] = [
-                    'lastpage' => false
-                ];
+                $datas['lastpage'] = false;
             }
          }
-        return response()->json(['data' => $data],200);
+        return response()->json(['data' => $datas],200);
 
       }
 

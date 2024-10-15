@@ -156,6 +156,7 @@ public function login(Request $request){
 
                 // dd('salut');
               unset($user->code);
+              unset($user->roles);
               return response()->json([
                   'user' => $user,
                   'role_actif' => $user->getRoleNames(),

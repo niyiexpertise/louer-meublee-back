@@ -38,6 +38,7 @@ use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
+use Spatie\Permission\Models\Role;
 
 class LoginController extends Controller
 {
@@ -227,14 +228,24 @@ public function checkAuth(Request $request){
         $diffA = array_diff($a, Auth::user()->getRoleNames()->toArray());         // Éléments dans $a qui ne sont pas dans $userRoles
         $diffB = array_diff(Auth::user()->getRoleNames()->toArray(), $a);
 
-        // return [$a,Auth::user()->getRoleNames()];
+        $diffC = array_merge($diffA, $diffB);
+
+        $role_available= [];
+
+        foreach($diffC as $r){
+            $role_available[] = [
+                'right_id' => Role::whereName($r)->first()->id,
+                'right_name' =>$r
+            ];
+        } 
+
 
         
         return response()->json([
             'data' => Auth::user(),
             'role_actif'=>Auth::user()->getRoleNames(),
             'user_roles'=>$rightsDetails,
-            'role_available' => array_merge($diffA, $diffB),
+            'role_available' =>$role_available,
             'permissions' => (new AuthController)->getUserPerms(Auth::user()->id)->original['data']
         ]);
 

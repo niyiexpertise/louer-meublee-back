@@ -932,6 +932,7 @@ public function ListeDesPhotosLogementAcceuil($id)
 
  public function ListeDesLogementsAcceuil(Request $request)
 {
+
     $page = intval($request->query('page', 1));
     $perPage = Setting::first()->pagination_logement_acceuil;
 
@@ -989,6 +990,7 @@ public function ListeDesPhotosLogementAcceuil($id)
         $listings = $sponsoredListings;
     }
 
+
     // Étape 2: Vérification de l'utilisateur
     $userId = intval($request->query('id'));
     if ($request->query('id') && $userId <= 0) {
@@ -997,6 +999,9 @@ public function ListeDesPhotosLogementAcceuil($id)
 
     // Étape 3: Formatter les données
     $data = $this->formatListingsData($listings, $userId);
+
+   
+
 
     // Enregistrement des visites sur le site
     $controllervisitesite = App::make('App\Http\Controllers\UserVisiteSiteController');
@@ -1008,6 +1013,8 @@ public function ListeDesPhotosLogementAcceuil($id)
     }
 
     // Retourner la réponse JSON avec les données formatées
+  
+
     return response()->json(['data' => $data], 200);
 }
 
@@ -4648,5 +4655,31 @@ public function HousingHoteInProgress(){
     }
 
 
+    public function executerApi($url) {
+        return $url;
+        $ch = curl_init();
+    
+        curl_setopt($ch, CURLOPT_URL, $url); 
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+        $response = curl_exec($ch);
+    
+        if (curl_errno($ch)) {
+            echo 'Erreur cURL: ' . curl_error($ch);
+        } else {
+            $data = json_decode($response, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $data;
+            } else {
+                return $response;
+            }
+        }
+    
+        // Fermer la session cURL
+        curl_close($ch);
+    }
+    
+
+    
+    
 
 }

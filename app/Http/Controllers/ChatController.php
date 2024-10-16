@@ -273,7 +273,7 @@ class ChatController extends Controller
      * )
      */
 
-/*
+
     public function markMessageAsRead($messageId){
         try {
 
@@ -290,7 +290,7 @@ class ChatController extends Controller
             $message->is_read = true;
 
             Chat::whereId($message->chat_id)->first()->update(['is_read' => 1]);
-            $message = Chat::find($chat_id);
+            $message = Chat::find($message->chat_id);
             if(Chat::whereId($message->chat_id)->first()->model_type_concerned == "Support Information"){
                 $message->done_by_id =  Auth::user()->id;
             }
@@ -303,7 +303,7 @@ class ChatController extends Controller
              return (new ServiceController())->apiResponse(500,[],$e->getMessage());
         }
     }
-*/
+
 
      
 
@@ -537,6 +537,8 @@ class ChatController extends Controller
 
             }
 
+            
+
             if ($ModelType && $ModelType!= "Support Information") {
 
                 $models = (new AuditController)->getAllModels();
@@ -552,6 +554,7 @@ class ChatController extends Controller
 
                 $modelClass = $modelMappings[$ModelType];
                 if (!(new $modelClass())::find($ModelId)) {
+                    return $modelId;
                     return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé pour l'id $ModelId");
                 }
             }else{

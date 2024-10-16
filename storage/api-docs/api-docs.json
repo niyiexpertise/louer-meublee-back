@@ -6170,6 +6170,105 @@
                 ]
             }
         },
+        "/api/chats/markMessageAsRead/{messageId}": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Marque un message comme lu",
+                "operationId": "6c348cadc010cdf4c1ed83a4d6203131",
+                "parameters": [
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "description": "ID du message",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message marqué comme lu avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "example": "[]"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message marqué comme lu avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Message non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "example": "[]"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Message non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "example": "[]"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur serveur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/chats/markMessageAsUnRead/{messageId}": {
             "post": {
                 "tags": [

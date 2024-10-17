@@ -240,9 +240,11 @@ public function checkAuth(Request $request){
         } 
 
 
+
         
         return response()->json([
             'data' => Auth::user(),
+            'solde_portfeuille' => Portfeuille::whereUserId(Auth::user()->id)->first()->solde,
             'role_actif'=>Auth::user()->getRoleNames(),
             'user_roles'=>$rightsDetails,
             'role_available' =>$role_available,

@@ -553,7 +553,7 @@ class RetraitController extends Controller
             $retrait->payment_method = $moyenPayement->methodPayement->name;
             $retrait->montant_reel = $request->montant_reel;
             $retrait->montant_valid = $request->montant_reel;
-            $retrait->libelle = $request->libelle;
+            $retrait->libelle = $request->libelle??'';
             $retrait->user_role = $roles[0] ;
             $retrait->identifiant_payement_method = $moyenPayement->valeur_method_payement;
             $retrait->save();

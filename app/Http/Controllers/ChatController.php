@@ -115,6 +115,8 @@ class ChatController extends Controller
                 $chat->housing_file =  photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->exists() ? photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->first()->path: photo::whereHousingId($chat->model_id)->first()->path;
 
                 $chat->housing_name =  Housing::whereId($chat->model_id)->first()->name??"non renseigné";
+
+                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->count();
             }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');

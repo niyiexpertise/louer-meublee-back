@@ -38,7 +38,7 @@ class CriteriaController extends Controller
   public function index()
   {
     try{
-            $criterias = Criteria::all()->where('is_deleted', false);
+            $criterias = Criteria::where('is_deleted', false)->orderBy('id', 'desc')->get();
                 return response()->json(['data' => $criterias], 200);
   } catch(Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);

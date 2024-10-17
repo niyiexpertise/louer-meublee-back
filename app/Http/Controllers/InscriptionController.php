@@ -127,7 +127,7 @@ protected $fileService;
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 200);
     }
-
+        
     $identity_profil_url = '';
 
     if ($request->hasFile('identity_profil')) {

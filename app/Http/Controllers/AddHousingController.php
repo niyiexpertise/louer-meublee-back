@@ -1435,21 +1435,29 @@ class AddHousingController extends Controller
                             return (new ServiceController())->apiResponse(404,[], 'Renseigner svp les valeurs de chaque charge. si elle ne sont renseigné,mettez comme valeur 0 pour chacun(Indicatif pour font end).');
                          }
                }
-               $items = $request->input('Hotecharges');
 
-               $uniqueItems = array_unique($items);
+               if ($request->has('Hotecharges')) {
+                    $items = $request->input('Hotecharges');
 
-               if (count($uniqueItems) < count($items)) {
-                    return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Hotecharges existants avec le même id.");
+                    $uniqueItems = array_unique($items);
+
+                    if (count($uniqueItems) < count($items)) {
+                            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Hotecharges existants avec le même id.");
+                    }
+               }
+               
+
+               if ($request->has('Travelercharges')) {
+                        $items = $request->input('Travelercharges');
+
+                        $uniqueItems = array_unique($items);
+        
+                        if (count($uniqueItems) < count($items)) {
+                            return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Travelercharges existants avec le même id.");
+                        }
                }
 
-               $items = $request->input('Travelercharges');
-
-               $uniqueItems = array_unique($items);
-
-               if (count($uniqueItems) < count($items)) {
-                    return (new ServiceController())->apiResponse(404,[], "Vous ne pouvez pas ajouter deux  Travelercharges existants avec le même id.");
-               }
+              
                foreach(Housing_charge::where('housing_id',$housingId)->get() as $exist){
                 $exist->delete();
                 }

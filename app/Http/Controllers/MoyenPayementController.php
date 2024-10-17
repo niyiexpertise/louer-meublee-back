@@ -354,7 +354,8 @@ public function ListeMoyenPayementUserAuth()
                 $moyenPayement->method_payement_id = $request->method_payement_id;
                 $moyenPayement->valeur_method_payement = $request->valeur_method_payement;
                 $moyenPayement->save();
-                return response()->json(['message' =>'moyen de payement enregistré avec succcès']);
+
+                return (new ServiceController())->apiResponse(200, [], 'moyen de payement enregistré avec succcès');
             } catch(Exception $e) {
                 return response()->json([
                     'error' => $e->getMessage()
@@ -422,10 +423,7 @@ public function ListeMoyenPayementUserAuth()
             'data' => $moyenPayement
         ], 200);
             } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
+              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
     }
 
@@ -503,17 +501,12 @@ public function ListeMoyenPayementUserAuth()
                 ->where('valeur_method_payement', $request->valeur_method_payement)
                 ->exists();
                 if ($exist) {
-                    return response()->json([
-                        "message" =>" la valeur du moyen de payement doit être unique par moyen de payement",
-                    ],200);
+                    return (new ServiceController())->apiResponse(404, $data, " la valeur du moyen de payement doit être unique par moyen de payement");
                 }
                 MoyenPayement::whereId($idMoyenPayement)->where('user_id', Auth::user()->id)->update($data);
-                return response()->json(['message' => 'modifié avec succès'], 200);
+                return (new ServiceController())->apiResponse(200, $data, 'modifié avec succès');
 ;            } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
+              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
     }
 
@@ -578,6 +571,7 @@ public function ListeMoyenPayementUserAuth()
                 return (new ServiceController())->apiResponse(404, [], "Vous n'êtes pas autorisé à effectuer cette action");
              }
              MoyenPayement::whereId($idMoyenPayement)->update(['is_deleted' => true]);
+             return (new ServiceController())->apiResponse(200, [], "Moyen de paiement supprimé avec succès");
             } catch(Exception $e) {
                 return response()->json([
                     'error' =>$e->getMessage()
@@ -656,10 +650,7 @@ public function ListeMoyenPayementUserAuth()
              }
              MoyenPayement::whereId($idMoyenPayement)->update(['is_blocked' => true]);
             } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
+              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
     }
 
@@ -735,10 +726,7 @@ public function ListeMoyenPayementUserAuth()
              }
              MoyenPayement::whereId($idMoyenPayement)->update(['is_blocked' => false]);
             } catch(Exception $e) {
-                return response()->json([
-                    'error' => 'An error occurred',
-                    'message' => $e->getMessage()
-                ], 500);
+              return (new ServiceController())->apiResponse(500, [], $e->getMessage());
             }
     }
 }

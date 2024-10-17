@@ -104,13 +104,13 @@ class ChatController extends Controller
 
             foreach($chats as $chat){
 
-                $chat->send_by_name =User::whereId($chat->sent_by)->first()->lastname." ". User::whereId($chat->sent_by)->first()->firstname   ;
+                $chat->send_by_name =User::whereId($chat->sent_by)->first() != null ?User::whereId($chat->sent_by)->first()->lastname." ". User::whereId($chat->sent_by)->first()->firstname:"Administrateur"   ;
 
-                $chat->send_by_file_profil = User::whereId($chat->sent_by)->first()->file_profil;
+                $chat->send_by_file_profil = User::whereId($chat->sent_by)->first() != null ?User::whereId($chat->sent_by)->first()->file_profil:"Administrateur";
 
-                $chat->send_to_name =User::whereId($chat->sent_to)->first()->lastname." ". User::whereId($chat->sent_to)->first()->firstname   ;
+                $chat->send_to_name =User::whereId($chat->sent_to)->first() != null ?User::whereId($chat->sent_to)->first()->lastname." ". User::whereId($chat->sent_to)->first()->firstname:"Administrateur"   ;
 
-                $chat->send_to_file_profil = User::whereId($chat->sent_to)->first()->file_profil;
+                $chat->send_to_file_profil = User::whereId($chat->sent_to)->first() != null ?User::whereId($chat->sent_to)->first()->file_profil:"Administrateur";
 
                 $chat->housing_file =  photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->exists() ? photo::whereHousingId($chat->model_id)->whereIsCouverture(true)->first()->path: photo::whereHousingId($chat->model_id)->first()->path;
 
@@ -229,73 +229,105 @@ class ChatController extends Controller
 
 
     /**
-     * @OA\Post(
-     *     path="/api/chats/markMessageAsRead/{messageId}",
-     *     summary="Marque un message comme lu",
-     *     tags={"Chats"},
-     *  security={{"bearerAuth": {}}},
-     *     @OA\Parameter(
-     *         name="messageId",
-     *         in="path",
-     *         required=true,
-     *         description="ID du message",
-     *         @OA\Schema(
-     *             type="integer"
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Message marqué comme lu avec succès",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status_code", type="integer", example=200),
-     *               @OA\Property(property="data", type="string", example="[]"),
-     *             @OA\Property(property="message", type="string", example="Message marqué comme lu avec succès")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Message non trouvé",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status_code", type="integer", example=404),
-     *               @OA\Property(property="data", type="string", example="[]"),
-     *             @OA\Property(property="message", type="string", example="Message non trouvé")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Erreur serveur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status_code", type="integer", example=500),
-     *               @OA\Property(property="data", type="string", example="[]"),
-     *             @OA\Property(property="message", type="string", example="Erreur serveur")
-     *         )
-     *     )
-     * )
-     */
+ * @OA\Post(
+ *     path="/api/chats/markMessageAsRead",
+ *     summary="Marque plusieurs messages comme lus",
+ *     tags={"Chats"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"messageIds"},
+ *             @OA\Property(
+ *                 property="messageIds",
+ *                 type="array",
+ *                 description="Tableau des IDs de messages à marquer comme lus",
+ *                 @OA\Items(
+ *                     type="integer",
+ *                     example=123
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Messages marqués comme lus avec succès",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=200),
+ *             @OA\Property(property="data", type="string", example="[]"),
+ *             @OA\Property(property="message", type="string", example="Messages marqués comme lus avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès refusé pour certains messages",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=403),
+ *             @OA\Property(property="data", type="string", example="[]"),
+ *             @OA\Property(property="message", type="string", example="Vous n'avez pas le droit de marquer ce message comme lu")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Message non trouvé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=404),
+ *             @OA\Property(property="data", type="string", example="[]"),
+ *             @OA\Property(property="message", type="string", example="Message non trouvé")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Erreur serveur",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="status_code", type="integer", example=500),
+ *             @OA\Property(property="data", type="string", example="[]"),
+ *             @OA\Property(property="message", type="string", example="Erreur serveur")
+ *         )
+ *     )
+ * )
+ */
 
 
-    public function markMessageAsRead($messageId){
+
+    public function markMessageAsRead(Request $request){
         try {
 
-            $message = ChatMessage::find($messageId);
+            $request->validate([
+                'messageIds' => 'required'
+            ]);
+
+            $chat = Chat::whereId(ChatMessage::whereId($request->messageIds[0])->first()->chat_id)->first();
 
 
-            if(!$message){
-                return (new ServiceController())->apiResponse(404, [],'Message non trouvé');
+
+            foreach($request->messageIds as $messageId){
+
+                $message = ChatMessage::find($messageId);
+
+                if(!$message){
+                    return (new ServiceController())->apiResponse(404, [],'Message non trouvé');
+                }
+
+                if($message->chat_id != $chat->id){
+                    return (new ServiceController())->apiResponse(404, [],'Tous les messages doivent provenir de la même conversation');
+                }
+    
+                if($message->receiver_id != Auth::user()->id && Chat::whereId($message->chat_id)->first()->model_type_concerned!= "Support Information"){
+                    return (new ServiceController())->apiResponse(404, [],'Vous n\'avez pas le droit de marquer ce message comme lu');
+                }
+    
             }
 
-            if($message->receiver_id != Auth::user()->id && Chat::whereId($message->chat_id)->first()->model_type_concerned!= "Support Information"){
-                return (new ServiceController())->apiResponse(403, [],'Vous n\'avez pas le droit de marquer ce message comme lu');
+            foreach($request->messageIds as $messageId){
+                $message = ChatMessage::find($messageId);
+                Chat::whereId($message->chat_id)->first()->update(['is_read' => 1]);
+                if(Chat::whereId($message->chat_id)->first()->model_type_concerned == "Support Information"){
+                    $message->done_by_id =  Auth::user()->id;
+                }
+                $message-> is_read = 1;
+                $message->save();
             }
-            $message->is_read = true;
-
-            Chat::whereId($message->chat_id)->first()->update(['is_read' => 1]);
-            $message = Chat::find($message->chat_id);
-            if(Chat::whereId($message->chat_id)->first()->model_type_concerned == "Support Information"){
-                $message->done_by_id =  Auth::user()->id;
-            }
-            $message-> is_read = 1;
-            $message->save();
 
             return (new ServiceController())->apiResponse(200, [],'Message marqué comme lu avec succès');
 
@@ -554,7 +586,6 @@ class ChatController extends Controller
 
                 $modelClass = $modelMappings[$ModelType];
                 if (!(new $modelClass())::find($ModelId)) {
-                    return $modelId;
                     return (new ServiceController())->apiResponse(404, [], "$ModelType non trouvé pour l'id $ModelId");
                 }
             }else{
@@ -814,7 +845,6 @@ class ChatController extends Controller
 
         return $errors;
     }
-
 
 
    /**

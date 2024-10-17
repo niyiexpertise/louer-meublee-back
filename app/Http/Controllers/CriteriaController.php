@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Criteria;
 use Illuminate\Http\Request;
 use Exception;

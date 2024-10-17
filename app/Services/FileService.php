@@ -94,7 +94,7 @@ class FileService
     private function getAllowedExtensions($type): array
     {
         $extensions = [
-            'extensionImage' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', ''],
+            'extensionImage' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'PNG'],
             'extensionImageVideo' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'mp4', 'mov', 'avi', 'mkv', 'mpeg', 'webm', ''],
             'extensionDocument' => ['pdf'],
             'extensionDocumentImage' => ['pdf','jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', '']

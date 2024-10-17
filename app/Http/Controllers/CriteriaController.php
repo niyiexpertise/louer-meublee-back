@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Cache;
 use App\Models\Criteria;
 use Illuminate\Http\Request;
 use Exception;
@@ -38,6 +38,7 @@ class CriteriaController extends Controller
   public function index()
   {
     try{
+
             $criterias = Criteria::where('is_deleted', false)->orderBy('id', 'desc')->get();
                 return response()->json(['data' => $criterias], 200);
   } catch(Exception $e) {

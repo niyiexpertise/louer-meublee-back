@@ -116,7 +116,7 @@ class ChatController extends Controller
 
                 $chat->housing_name =  Housing::whereId($chat->model_id)->first()->name??"non renseigné";
 
-                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->count();
+                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->whereReceiverId(Auth::user()->id)->count();
             }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');

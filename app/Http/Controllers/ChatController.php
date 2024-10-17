@@ -395,7 +395,7 @@ class ChatController extends Controller
                 return (new ServiceController())->apiResponse(404, [],'Message non trouvé');
             }
             if($message->receiver_id != Auth::user()->id && Chat::whereId($message->chat_id)->first()->model_type_concerned != "Support Information" ){
-                return (new ServiceController())->apiResponse(403, [],'Vous n\'avez pas le droit de marquer ce message comme non lu');
+                return (new ServiceController())->apiResponse(404, [],'Vous n\'avez pas le droit de marquer ce message comme non lu');
             }
             $message->is_read = false;
             $message->save();

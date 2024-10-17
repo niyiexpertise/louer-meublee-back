@@ -83,6 +83,8 @@ class KkiapayController extends Controller
             $sandbox=$sandbox);
             $verification = $kkiapay->verifyTransaction($transaction_id);
 
+            return $verification;
+
 
             if(is_int($verification)){
                 return (new ServiceController())->apiResponse($verification,[],"Assurez vous que vous soyez dans le bon mode ou que l'id de la transaction soit correcte ou que vos données concernant ce service soient valide.");

@@ -133,7 +133,7 @@ class PortfeuilleController extends Controller
            
            $status = (new PaiementService())->verifyTransactionOfMethod($request->paiement_methode,$request->transaction_id);
 
-        //    return $status;
+           return $status;
 
        
 
@@ -164,6 +164,7 @@ class PortfeuilleController extends Controller
             $payement = new Payement();
             $payement->amount =  $amount;
             $payement->payment_method = $request->paiement_methode;
+            // $payement->id_transaction = $request->transaction_id;
             $payement->id_transaction = $request->transaction_id;
             $payement->statut =$statusPayement;
             $payement->user_id = Auth::user()->id;

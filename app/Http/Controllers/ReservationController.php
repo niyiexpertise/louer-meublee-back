@@ -718,16 +718,11 @@ public function payReservation(Request $request,$reservationId){
                 }
             }
 
-            if ($method_paiement == $portfeuille) {
-
-                }
-
-
+            if ($method_paiement != $portfeuille) {
                 $statusPayement =  $request->statut_paiement;
                 $status = (new  (new PaiementService())())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
 
 
-    
                 if($status['status'] == 'ERROR'){
                     return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
                 }
@@ -750,10 +745,13 @@ public function payReservation(Request $request,$reservationId){
 
 
 
-        $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
-        if ($existTransaction) {
-            return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
-        }
+                $existTransaction = Payement::where('id_transaction',$request->id_transaction)->exists();
+                if ($existTransaction) {
+                    return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
+                }
+                }
+
+
 
         DB::beginTransaction();
         $payment = new Payement();
@@ -924,7 +922,10 @@ public function findSimilarPaymentMethod($inputMethod)
           }
           if ($reservation->is_confirmed_hote) {
             return (new ServiceController())->apiResponse(404,[], "La reservation avait déjà été confirmée auparavant.");
+          }
 
+          if($reservation->is_tranche_paiement ==1 && $reservation->valeur_payee < $reservation->montant_a_paye){
+            return (new ServiceController())->apiResponse(404,[], "Cette réservation n'est pas encore soldé");
           }
           $reservation->is_confirmed_hote = 1;
           $reservation->save();

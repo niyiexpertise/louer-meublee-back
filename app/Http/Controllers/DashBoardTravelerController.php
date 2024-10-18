@@ -7,6 +7,8 @@ use App\Models\Payement;
 use App\Models\Portfeuille;
 use App\Models\Portfeuille_transaction;
 use App\Models\Reservation;
+use App\Models\Review_reservation;
+use App\Services\PaiementService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -140,6 +142,10 @@ class DashBoardTravelerController extends Controller
                 $query->select('id', 'user_id');
             }])
             ->get();
+
+        foreach($data["data"] as $reservation){
+            $reservation->cannote = !Review_reservation::whereReservationId($reservation->id)->whereUserId(Auth::user()->id)->exists();
+        }
 
         $data["nombre"] = count($data["data"]);
 
@@ -455,7 +461,6 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], "Payé d'abord la première tranche avant de solder cette réservation.");
                     }
 
-
             $required_paid_value = $reservation->montant_a_paye / 2;
 
             if ($required_paid_value != $reservation->valeur_payee) {
@@ -472,17 +477,17 @@ class DashBoardTravelerController extends Controller
 
             try {
                 $statut_paiement =0;
-                if( $request->statut_paiement ==1 || $method_paiement == $portfeuille ||$method_paiement == $espece){
-                    $statut_paiement = 1;
-                    $reservation->valeur_payee += $required_paid_value;
-                    $reservation->save();
-                }
+                // if( $request->statut_paiement ==1 || $method_paiement == $portfeuille ||$method_paiement == $espece){
+                //     $statut_paiement = 1;
+                //     $reservation->valeur_payee += $required_paid_value;
+                //     $reservation->save();
+                // }
 
                 $payment = new Payement();
                 $payment->reservation_id = $reservation->id;
                 if($method_paiement == $portfeuille ||$method_paiement == $espece){
                     if($method_paiement == $espece){
-                        if($required_paid_value != $request->valeur_payee){
+                        if($required_paid_value < $request->valeur_payee){
                             return (new ServiceController())->apiResponse(404, [], "Vous devez payer $required_paid_value FCFA.");
                         }
                     }
@@ -492,7 +497,7 @@ class DashBoardTravelerController extends Controller
                 }
 
                 $payment->payment_method = $method_paiement;
-                $payment->id_transaction = $request->id_transaction;
+                // $payment->id_transaction = $request->id_transaction??'';
                 $payment->statut = $request->statut_paiement;
                 $payment->is_confirmed = true;
                 $payment->is_canceled = false;
@@ -502,7 +507,7 @@ class DashBoardTravelerController extends Controller
                 if ($method_paiement == $portfeuille) {
 
                     if ($reservation->user_id != $user_id) {
-                        return (new ServiceController())->apiResponse(403, [], "Vous n'êtes pas autorisé à effectuer ce paiement");
+                        return (new ServiceController())->apiResponse(404, [], "Vous n'êtes pas autorisé à effectuer ce paiement");
                     }
 
                     $portefeuille = Portfeuille::where('user_id', $user_id)->first();
@@ -520,12 +525,14 @@ class DashBoardTravelerController extends Controller
                     $portefeuilleTransaction->reservation_id = $reservation->id;
                     $portefeuilleTransaction->payment_method =$method_paiement;
                     $portefeuilleTransaction->operation_type = 'debit';
-                    $portefeuilleTransaction->id_transaction = "0";
+                    // $portefeuilleTransaction->id_transaction = "0";
                     $portefeuilleTransaction->portfeuille_id = $portefeuille->id;
 
                     $portefeuilleTransaction->save();
                     $portefeuille->save();
-                    $portefeuilleTransaction->save();
+                    $statut_paiement = 1;
+                    $reservation->valeur_payee += $request->valeur_payee;
+                    $reservation->save();
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
 
                 }else if($method_paiement == $espece){
@@ -545,6 +552,9 @@ class DashBoardTravelerController extends Controller
                     $portefeuilleTransaction->id_transaction = "0";
 
                     $portefeuilleTransaction->save();
+                    $statut_paiement = 1;
+                    $reservation->valeur_payee += $required_paid_value;
+                    $reservation->save();
                     (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
 
                 }else {
@@ -554,7 +564,7 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
                     }
 
-                    $portefeuille = Portfeuille::where('user_id', $reservation->user_id)->first();
+                    
 
                     if(!$request->valeur_payee){
                         return (new ServiceController())->apiResponse(404, [], "Vous devez saisir la valeur à payer");
@@ -565,6 +575,30 @@ class DashBoardTravelerController extends Controller
                     }
 
                     if( $request->statut_paiement ==1){
+
+                        $statusPayement =  $request->statut_paiement;
+                $status = (new  (new PaiementService())())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
+
+
+                if($status['status'] == 'ERROR'){
+                    return (new ServiceController())->apiResponse(404, [], 'ID de transaction invalid.');
+                }
+    
+                if($status['status'] == 'FAILED'){
+                    $motif = $status['message'];
+                    if($request->statut_paiement == 1){
+                        return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a échoué et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
+                    }
+                    $statut_paiement = 0;
+                }
+    
+                if($status['status'] == 'SUCCESS'){
+                    $motif =  "Réservation effectuée avec autre moyen que le portefeuille";
+                    if($request->statut_paiement == 0){
+                        return (new ServiceController())->apiResponse(404, [], "Vérifiez bien le statut de paiement que vous retourné. Dans ce cas, le paiement a réussi et vous nous envoyé un statut qui a pour valeur  ".$request->statut_paiement);
+                    }
+                    $statut_paiement = 1;
+                }
                         $portefeuilleTransaction = new Portfeuille_transaction();
                         $portefeuilleTransaction->credit = true;
                         $portefeuilleTransaction->debit = false;
@@ -575,6 +609,9 @@ class DashBoardTravelerController extends Controller
                         $portefeuilleTransaction->id_transaction =$request->id_transaction;
 
                         $portefeuilleTransaction->save();
+                        $statut_paiement = 1;
+                        $reservation->valeur_payee += $request->valeur_payee;
+                        $reservation->save();
                         (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
                     }
                 }
@@ -589,7 +626,7 @@ class DashBoardTravelerController extends Controller
                 if($statut_paiement ==1){
                     return (new ServiceController())->apiResponse(200, $data, "Paiement effectué avec succès");
                 }else{
-                    return (new ServiceController())->apiResponse(200, $data, "Echec de paiement");
+                    return (new ServiceController())->apiResponse(404, $data, "Echec de paiement");
                 }
 
 

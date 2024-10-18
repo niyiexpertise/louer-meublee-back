@@ -586,7 +586,7 @@ if (!$housingCharges->isEmpty()) {
          $notificationName = "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme.";
         
          $mail = [
-            'title' => "Confirmation d'ajout d'un logement",
+            'title' => "Confirmation de validation de d'un logement",
             'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
            ];
 

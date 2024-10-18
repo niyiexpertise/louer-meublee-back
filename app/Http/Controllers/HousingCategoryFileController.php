@@ -953,6 +953,8 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 
                 dispatch(new SendRegistrationEmail($housingCategoryFile->housing->user->email, $mail['body'], $mail['title'], 2));
 
+                
+
         }
 
         return (new ServiceController())->apiResponse(200, $id, 'Statut de vérification mis à jour avec succès');
@@ -1491,12 +1493,24 @@ public function validateUnexistCategoryHousing($housing_id, $category_id)
 
             $mail = [
                 "title" => "Ajout d'une/de nouvelle(s) catégorie(s) à un logement",
-                "body" => "Un hote vient d'ajouter une/de categorie(s) photo(s) à un logement."
+                "body" => "Un hote vient d'ajouter une/de pièce(s) à un logement."
             ];
        
             dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
                   }
 
+                  $right = Right::where('name','admin')->first();
+                  $adminUsers = User_right::where('right_id', $right->id)->get();
+                  foreach ($adminUsers as $adminUser) {
+             
+                  $adminmail = [
+                      "title" => "Ajout d'une/de nouvelle(s) pièce(s) à un logement",
+                      "body" => "Un hôte  vient d'ajouter sur le site une nouvelle pièce pour son logement.Veuilez vous connecter pour valider."
+                  ];
+             
+             
+                  dispatch( new SendRegistrationEmail($adminUser->user->email, $adminmail['body'], $adminmail['title'], 2));
+                    }
         return (new ServiceController())->apiResponse(200, [], 'Catégories ajoutées avec succès.');
     } catch (\Exception $e) {
         return (new ServiceController())->apiResponse(500, [], $e->getMessage());
@@ -1826,11 +1840,7 @@ public function validateDefaultCategoriesHousing(Request $request)
 
                 $user_id = $housing->user_id;
  
-             $notification = new Notification([
-                 'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
-                 'user_id' => $user_id,
-             ]);
-             $notification->save();
+
  
              $mail = [
                  'title' => "Validation de la catégorie ajoutée au logement",
@@ -1985,11 +1995,6 @@ public function validateInexistantCategoriesHousing(Request $request)
 
                $user_id = $housing->user_id;
 
-            $notification = new Notification([
-                'name' => "Votre ajout de catégorie a été validé avec succès par l'administrateur",
-                'user_id' => $user_id,
-            ]);
-            $notification->save();
 
             $mail = [
                 'title' => "Validation de la catégorie ajoutée au logement",

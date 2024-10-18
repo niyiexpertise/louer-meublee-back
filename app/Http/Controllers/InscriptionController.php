@@ -102,6 +102,10 @@ protected $fileService;
 
  public function register(Request $request)
 {
+
+   
+
+
     $validator = Validator::make($request->all(), [
         'nom' => 'required|string',
         'prenom' => 'required|string',
@@ -127,7 +131,7 @@ protected $fileService;
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 200);
     }
-        
+
     $identity_profil_url = '';
 
     if ($request->hasFile('identity_profil')) {
@@ -217,6 +221,9 @@ protected $fileService;
                 'error' => "Utilisateur non trouvé.",
             ], 404);
         }
+
+
+
 
          dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
 

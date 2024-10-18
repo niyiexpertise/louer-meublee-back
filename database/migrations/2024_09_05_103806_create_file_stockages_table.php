@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('file_stockages', function (Blueprint $table) {
             $table->id();
-            $table->text('type')->unique()->nullable();
+            $table->string('type')->unique()->nullable();
             $table->text('access_key_id')->nullable();
             $table->text('secret_access_key')->nullable();
             $table->text('default_region')->nullable();

@@ -930,7 +930,7 @@ class HousingSponsoringController extends Controller
                 DB::commit();
 
                 $hotemail = [
-                    'title' => "Rejet de votre demande de sponsoring",
+                    'title' => "Désactivation de votre demande de sponsoring",
                     "body" => "Motif: {$request->motif} Votre portefeuille a été crédité. Nouveau solde:". Portfeuille::where('user_id',$hote->id)->first()->solde
                 ];
 

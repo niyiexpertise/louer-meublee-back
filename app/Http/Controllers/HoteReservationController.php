@@ -127,6 +127,7 @@ class HoteReservationController extends Controller
         }
 
         /**
+         * 
      * @OA\Get(
      *     path="/api/reservation/reservationsNotConfirmedYetByHost",
      *     summary="Liste des réservations en attente de confirmation pour l'hote connecté",
@@ -152,6 +153,10 @@ class HoteReservationController extends Controller
             ->where('statut', 'payee');
 
         })->with(['housing','user'])->get();
+
+        foreach($reservations as $reservation){
+            $reservation->is_solde = ($reservation->is_tranche_paiement==1 &&$reservation->valeur_payee >= $reservation->montant_a_paye);
+        }
 
         return response()->json(['data' => $reservations]);
     }

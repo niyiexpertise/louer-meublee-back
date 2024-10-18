@@ -61,7 +61,7 @@ class ReviewReservationController extends Controller
  * )
  */
 
- public function AddReviewNote(Request $request)
+    public function AddReviewNote(Request $request)
  {
 
      $validatedData = $request->validate([
@@ -79,6 +79,10 @@ class ReviewReservationController extends Controller
 
      if($userId != $reservation->user_id){
         return (new ServiceController())->apiResponse(404,[], 'Vous ne pouvez pas donner votre avis ou une note sur une réservation qui ne vous appartient pas');
+     }
+
+     if($reservation->is_integration !=1){
+        return (new ServiceController())->apiResponse(404,[], 'Vous ne pouvez pas donner votre avis ou une note sur une réservation pour laquelle vous n\'avez pas encore intégrer le logement concerné');
      }
 
      $criteriaIds = [];
@@ -139,7 +143,8 @@ class ReviewReservationController extends Controller
          $review->save();
      }
 
-     return response()->json(['message' => 'Notes et commentaire ajoutés avec succès'], 200);
+     return (new ServiceController())->apiResponse(200,[], 'Avis effectué avec succès');
+
  }
 
 

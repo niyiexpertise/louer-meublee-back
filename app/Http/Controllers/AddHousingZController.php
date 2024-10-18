@@ -1839,12 +1839,12 @@ public function addHousing_step_8(Request $request, $housingId){
                 if (!is_int($piece['nombre'])) {
                     return (new ServiceController())->apiResponse(404, [], "Le nombre de  pièce " . $piece['name'] . " doit être un entier");
                 }
-
+               
                 if (!isset($piece['equipments']) || !isset($piece['equipments'][0]['equipmentsId']) || count($piece['equipments'][0]['equipmentsId']) == 0) {
                     return (new ServiceController())->apiResponse(404, [], "Renseigner au moins un équipement s'il vous plaît à la pièce ". $piece['name'] );
                 }
 
-                $items = $piece['equipments']['equipmentsId'];
+                $items = $piece['equipments'][0]['equipmentsId'];
                 $uniqueItems = array_unique($items);
 
                 if (count($uniqueItems) < count($items)) {
@@ -1852,7 +1852,7 @@ public function addHousing_step_8(Request $request, $housingId){
                 }
                 $piece['nombre']=intval ($piece['nombre']);
 
-                foreach ($piece['equipments']['equipmentsId'] as $equipmentId) {
+                foreach ($piece['equipments'][0]['equipmentsId'] as $equipmentId) {
                     $equipmentId=intval ($equipmentId);
                     if (!is_int($equipmentId)) {
                         return (new ServiceController())->apiResponse(404, [], "Les ids équipements de la pièce ".$piece['name']." doivent être des entiers");

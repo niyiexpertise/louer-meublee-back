@@ -165,6 +165,7 @@ class NotificationController extends Controller
                 'body' =>$notificationName
             ];
             Mail::to($email)->send(new NotificationEmailwithoutfile($mail));
+
         }
 
         return response()->json([
@@ -467,3 +468,4 @@ public function notifyUsers(Request $request, $mode){
     }
 }
 }
+

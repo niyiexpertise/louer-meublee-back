@@ -124,7 +124,7 @@ public function verifyTransactionOfMethod($methodPaiement, $transactionId)
     private function getVerificationKkiapayStatus($transactionId){
         $result = (new KkiapayController())->verifyTransaction($transactionId);
 
-        return $result;
+        // return $result;
 
         $validTransaction = isset($result->status)?true:false;
 

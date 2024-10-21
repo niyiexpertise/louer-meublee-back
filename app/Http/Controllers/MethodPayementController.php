@@ -113,6 +113,23 @@ class MethodPayementController extends Controller
             ->get();
         }
 
+        if($is_received == false && $is_accepted == false){
+            $methodPayements = MethodPayement::where('is_deleted', false)
+                ->where('is_actif', true)
+                ->with('servicePaiementactif')
+                ->where('is_accepted', true)
+                ->get()
+                ->filter(function($methodPayement) {
+                    
+                    return $methodPayement->servicePaiement->contains(function($service) {
+
+                        return $service->is_actif == true;
+                    });
+                })
+                ->map(function($methodPayement) {
+                    return $methodPayement->makeHidden(['servicePaiement']);
+                });
+        }
 
 
         return response()->json(['data' => array_values($methodPayements->toArray())], 200);

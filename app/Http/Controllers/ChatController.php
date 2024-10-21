@@ -78,6 +78,7 @@ class ChatController extends Controller
      public function getChatsByModelType($modelType)
      {
          try {
+
              $userId = auth()->id();
 
              $models = (new AuditController)->getAllModels();
@@ -116,7 +117,7 @@ class ChatController extends Controller
 
                 $chat->housing_name =  Housing::whereId($chat->model_id)->first()->name??"non renseigné";
 
-                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->whereReceivedId(Auth::user())->count();
+                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->whereReceiverId(Auth::user()->id)->count();
             }
 
              return (new ServiceController())->apiResponse(200, $chats,'Liste des discussions groupées par type de modèle pour l\'utilisateur connecté');
@@ -221,6 +222,10 @@ class ChatController extends Controller
              if ($chats->isEmpty()) {
                 return (new ServiceController())->apiResponse(404, $chats,'Aucune donnée disponible');
              }
+
+             foreach($chats as $chat){
+                $chat->number_unread_message = ChatMessage::whereChatId($chat->id)->whereIsRead(0)->whereReceiverId(Auth::user()->id)->count();
+            }
 
              return (new ServiceController())->apiResponse(200,$chats,'Liste des discussions groupées par type de modèle et concernant un modèle spécifique pour l\'utilisateur connecté');
 

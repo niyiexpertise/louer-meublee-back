@@ -83,7 +83,7 @@ class KkiapayController extends Controller
             $sandbox=$sandbox);
             $verification = $kkiapay->verifyTransaction($transaction_id);
 
-            return $verification;
+            // return $verification;
 
 
             if(is_int($verification)){

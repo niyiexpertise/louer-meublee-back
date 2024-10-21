@@ -448,12 +448,19 @@ class DashBoardTravelerController extends Controller
                 return response()->json(['message' => 'Réservation non trouvée'], 404);
             }
 
+            $required_paid_value = $reservation->montant_a_paye / 2;
+
             if (!$reservation->is_tranche_paiement) {
                 return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez pas terminer le paiement d'une reservation qui ne peut  être payé par tranche.");
             }
 
             if ($reservation->montant_a_paye == $reservation->valeur_payee) {
                 return (new ServiceController())->apiResponse(404, [], 'Réservation déjà soldé .');
+            }
+
+            // return [$request->valeur_payee ,$reservation->valeur_payee,$request->valeur_payee < $reservation->valeur_payee];
+            if ($request->valeur_payee < $required_paid_value) {
+                return (new ServiceController())->apiResponse(404, [], "La valeur que vous saisissez est inférieur à celle requise qui est de $required_paid_value  FCFA.");
             }
 
             $existPremierTranche = Portfeuille_transaction::where('reservation_id',$request->reservation_id)->exists();
@@ -463,7 +470,7 @@ class DashBoardTravelerController extends Controller
 
             $required_paid_value = $reservation->montant_a_paye / 2;
 
-            if ($required_paid_value != $reservation->valeur_payee) {
+            if ($required_paid_value < $required_paid_value) {
                 return (new ServiceController())->apiResponse(404, [], "Vous devez payer $required_paid_value FCFA.");
             }
 
@@ -497,7 +504,7 @@ class DashBoardTravelerController extends Controller
                 }
 
                 $payment->payment_method = $method_paiement;
-                // $payment->id_transaction = $request->id_transaction??'';
+                $payment->id_transaction = $request->id_transaction??'';
                 $payment->statut = $request->statut_paiement;
                 $payment->is_confirmed = true;
                 $payment->is_canceled = false;
@@ -564,8 +571,6 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], 'L\'id de la transaction existe déjà');
                     }
 
-                    
-
                     if(!$request->valeur_payee){
                         return (new ServiceController())->apiResponse(404, [], "Vous devez saisir la valeur à payer");
                     }
@@ -574,9 +579,8 @@ class DashBoardTravelerController extends Controller
                         return (new ServiceController())->apiResponse(404, [], "Montant insuffisant. Vous devez payer $required_paid_value FCFA ou plus");
                     }
 
-                    if( $request->statut_paiement ==1){
 
-                        $statusPayement =  $request->statut_paiement;
+                        $statut_paiement =  $request->statut_paiement;
                 $status = (new  (new PaiementService())())->verifyTransactionOfMethod($method_paiement,$request->id_transaction);
 
 
@@ -613,7 +617,6 @@ class DashBoardTravelerController extends Controller
                         $reservation->valeur_payee += $request->valeur_payee;
                         $reservation->save();
                         (new ReservationController())->initialisePortefeuilleTransaction($portefeuilleTransaction->id);
-                    }
                 }
                 $payment->motif = $portefeuilleTransaction->motif??"Echec de paiement lors du soldage de la seconde partie" ;
                 $payment->save();

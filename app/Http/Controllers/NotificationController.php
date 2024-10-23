@@ -166,6 +166,10 @@ class NotificationController extends Controller
             ];
             Mail::to($email)->send(new NotificationEmailwithoutfile($mail));
 
+
+
+// Mail::to($to)->send(new YourMailable());
+
         }
 
         return response()->json([
@@ -341,20 +345,22 @@ public function notifyUserHaveRoles(Request $request,$mode){
                     }
                 }
 
-
             }
+
             foreach($request->roleIds as $roleId){
 
                 $role = Right::where('id', $roleId)->first();
 
                 $userR = User_right::where('right_id', $role->id)->get();
+                $emails = [];
 
                 foreach($userR as $user){
-                    dispatch( new SendRegistrationEmail(User::whereId($user->user_id)->first()->email, $request->content, $request->object, $mode));
+                    $emails[] = User::whereId($user->user_id)->first()->email;
                 }
 
-
             }
+
+            (new NotificationController())->store($emails, $request->content,$request->object,$mode);
 
         return (new ServiceController())->apiResponse(200, [],'Notification envoyé avec succès');
 
@@ -453,14 +459,16 @@ public function notifyUsers(Request $request, $mode){
 
     foreach($request->userIds as $userId){
         if(!User::find($userId)){
-            return (new ServiceController())->apiResponse(404,[],'Utilisateur non trouvé');
+            return (new ServiceController())->apiResponse(404,[$userId],'Utilisateur non trouvé');
         }
     }
 
+    $emails = [];
     foreach($request->userIds as $userId){
-        dispatch( new SendRegistrationEmail(User::whereId($userId)->first()->email, $request->content, $request->object, $mode));
+        $emails[] = User::whereId($userId)->first()->email;
     }
 
+    (new NotificationController())->store($emails, $request->content,$request->object,$mode);
     return (new ServiceController())->apiResponse(200, [],'Notification envoyé avec succès');
        
     } catch(Exception $e) {

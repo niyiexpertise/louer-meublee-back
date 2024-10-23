@@ -279,37 +279,14 @@ public function index()
                  $verificationDocuments[] = $verificationDocument;
              }
 
-             $adminRole = DB::table('rights')->where('name', 'admin')->first();
+             $mail = [
+                'title' => 'Demande d\'être hôte',
+                'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Connecté vous pour voir les documents afin de valider sa demande."
+            ];
 
-             if (!$adminRole) {
-                 return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
-             }
+            $personToNotify = (new PermissionController())->getEmailsByPermissionName('Manageverificationdocumenthote.validateDocument');
 
-             $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
-                 $query->where('right_id', $adminRole->id);
-             })
-             ->get();
-
-             foreach ($adminUsers as $adminUser) {
-                 $notification = new Notification();
-                 $notification->user_id = $adminUser->id;
-                 $notification->name = "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname.";
-                 $notification->save();
-
-                 $mail = [
-                     'title' => 'Demande d\'être hôte',
-                     'body' => "Une demande d'être hôte vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. Cliquez sur le lien suivant pour valider la demande : https://gethouse.com/validation/"
-                 ];
-
-                 try {
-                    //  Mail::to($adminUser->email)->send(new NotificationEmail($mail, $filePaths));
-
-                     dispatch(new NotificationWithFile($adminUser->email, $mail['body'], $mail['title'],$filePaths));
-
-                 } catch (\Exception $e) {
-                     // Gérer l'erreur de l'envoi de l'email
-                 }
-             }
+            (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
              return response()->json(['message' => 'Documents de vérification créés avec succès.', 'verification_documents' => $verificationDocuments], 201);
          } catch (Exception $e) {
@@ -488,8 +465,7 @@ public function validateDocuments(Request $request)
             'body' => "Votre demande d'être hôte a été validée avec succès."
         ];
 
-
-         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 1));
+        (new NotificationController())->store($user->email,$mail['body'],$mail['title'],2);
 
         return (new ServiceController())->apiResponse(200, [],  'Documents validés avec succès et notification envoyée.');
     } catch (\Exception $e) {
@@ -594,7 +570,8 @@ public function validateDocument(Request $request)
                 'title' => 'Demande d\'être hôte',
                 'body' => "Votre demande d'être hôte a été validée avec succès."
             ];
-             dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+
+            (new NotificationController())->store($user->email,$mail['body'],$mail['title'],2);
 
         }
 

@@ -268,23 +268,13 @@ public function DeleteEquipementHousing(Request $request)
                     $housingEquipment->save();
                     $userId = Auth::id();
 
-                    $mailhote = [
-                        "title" => "Notification ajout d'un équipement à un logement",
-                        "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
-                     ];
-
-                    dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
-
-                     $right = Right::where('name','admin')->first();
-                     $adminUsers = User_right::where('right_id', $right->id)->get();
-                     foreach ($adminUsers as $adminUser) {
-                     $mail = [
+                    $mail = [
                         'title' => "Notification sur l'ajout d'un nouveau équipement",
                         'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
                     ];
 
-                     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-                       }
+                    $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.makeVerifiedHousingEquipment');
+                    (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
                     return response()->json([
                         "message" =>"save successfully",
@@ -377,24 +367,13 @@ public function DeleteEquipementHousing(Request $request)
 
                 $userId = Auth::id();
 
-                    $mailhote = [
-                        "title" => "Notification ajout d'un équipement à un logement",
-                        "body" => "L'enregistrement de ce nouvel  équipement a été pris en compte.l'administrateur validera dans moin de 48h."
-                     ];
+                $mail = [
+                    'title' => "Notification sur l'ajout d'un nouveau équipement",
+                    'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
+                ];
 
-                    dispatch( new SendRegistrationEmail(Auth::user()->email, $mailhote['body'], $mailhote['title'], 2));
-
-                     $right = Right::where('name','admin')->first();
-                     $adminUsers = User_right::where('right_id', $right->id)->get();
-                     foreach ($adminUsers as $adminUser) {
-
-
-                     $mail = [
-                        'title' => "Notification sur l'ajout d'un nouveau équipement",
-                        'body' => "Un hôte  vient d'enregistrer un nouvel équipement'.Veuilez vous connecter pour valider.",
-                    ];
-                     dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-                       }
+                $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.makeVerifiedHousingEquipment');
+                (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
                 return response()->json([
                     'message' => empty($m) ? 'Erreur' : $m,
@@ -619,7 +598,7 @@ public function makeVerifiedHousingEquipment(Request $request)
                     'body' => "L'ajout de cet équipement : " . Equipment::find($housingEquipment->equipment_id)->name . " a été validé par l'administrateur.",
                 ];
 
-                dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+                (new NotificationController())->store($housingEquipment->housing->user->email,$mail['body'],$mail['title'],2);
         }
 
         return (new ServiceController())->apiResponse(200, [], "Association équipement logement vérifiée avec succès.");
@@ -1135,19 +1114,14 @@ public function getHousingCategoriesEquipment($housingId){
 
             }
         }
+        $mail = [
+            "title" => "Ajout d'un/de nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement",
+            "body" => "Un hote vient d'ajouter un/plusieurs nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement."
+        ];
 
-        $right = Right::where('name','admin')->first();
-        $adminUsers = User_right::where('right_id', $right->id)->get();
+        $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.makeVerifiedHousingEquipment');
+        (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
-        foreach ($adminUsers as $adminUser) {
-            $mail = [
-                "title" => "Ajout d'un/de nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement",
-                "body" => "Un hote vient d'ajouter un/plusieurs nouvelle(s) équipement(s) à un/plusieurs catégorie(s) d'un logement."
-            ];
-       
-            dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-                  }
-    
             return (new ServiceController())->apiResponse(200, [], 'Équipement(s) ajouté(s) avec succès');
     
         } catch (\Exception $e) {

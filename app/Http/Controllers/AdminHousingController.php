@@ -582,15 +582,15 @@ if (!$housingCharges->isEmpty()) {
  
          $housing->status = 'verified';
          $housing->save();
- 
-         $notificationName = "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme.";
+
         
          $mail = [
             'title' => "Confirmation de validation de d'un logement",
             'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
            ];
 
-           dispatch( new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
+
+           (new NotificationController())->store($housing->user->email,$mail['body'],$mail['title'],2);
  
          return response()->json(['message' => 'Statut du logement mis à jour avec succès'], 200);
      } catch (\Exception $e) {
@@ -679,8 +679,8 @@ if (!$housingCharges->isEmpty()) {
                 'title' => "Confirmation d'ajout d'un logement",
                 'body' => "Félicitations ! Votre logement a été validé et est maintenant visible sur la plateforme."
                ];
-            
-            dispatch( new SendRegistrationEmail($housing->user->email, $mail['body'], $mail['title'], 2));
+
+            (new NotificationController())->store($housing->user->email,$mail['body'],$mail['title'],2);
 
          }
  

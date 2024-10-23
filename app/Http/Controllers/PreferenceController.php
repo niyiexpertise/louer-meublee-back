@@ -698,8 +698,9 @@ class PreferenceController extends Controller
                          'title' => "Validation de la nouvelle préférence ajoutée au logement",
                          'body' => "L'ajout de cette préférence : " . $preference->name . " a été validé par l'administrateur.",
                      ];
+
+                     (new NotificationController())->store($housingPreference->housing->user->email,$mail['body'],$mail['title'],2);
  
-                     dispatch(new SendRegistrationEmail($housingPreference->housing->user->email, $mail['body'], $mail['title'], 2));
                  }
  
                  $results[] = [

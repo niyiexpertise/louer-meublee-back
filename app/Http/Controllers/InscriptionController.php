@@ -103,7 +103,10 @@ protected $fileService;
  public function register(Request $request)
 {
 
-   
+
+    // $to = ['email1@example.com', 'email2@example.com'];
+    
+    // Mail::to($to)->send(new YourMailable());
 
 
     $validator = Validator::make($request->all(), [
@@ -222,10 +225,7 @@ protected $fileService;
             ], 404);
         }
 
-
-
-
-         dispatch(new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 2));
+        (new NotificationController())->store($request->email,$mail['body'],$mail['title'],2);
 
         if ($request->has('code_promo') and !empty( $request->code_promo)) {
             $user_partenaire = user_partenaire::where('code_promo', $request->code_promo)->first();
@@ -234,7 +234,7 @@ protected $fileService;
                 'body' => "Compte créé avec succès le " . $date_creation . " via votre code promo .",
             ];
 
-            dispatch( new SendRegistrationEmail($user_partenaire->user->email, $mailpartenaire['body'], $mailpartenaire['title'], 2));
+            (new NotificationController())->store($user_partenaire->user->email,$mailpartenaire['body'],$mailpartenaire['title'],0);
         }
 
 

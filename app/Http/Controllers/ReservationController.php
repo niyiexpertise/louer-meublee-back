@@ -827,14 +827,8 @@ public function payReservation(Request $request,$reservationId){
                     " Date de début : " . $reservation->date_of_starting . "\n" .
                     " Date de fin : " . $reservation->date_of_end . "\n"
             ];
-            $mail_to_traveler = [
-                'title' => 'Confirmation de Réservation',
-                'body' => "Félicitations ! Vous avez réservé un logement. D'ici 24 heures, l'hôte confirmera ou rejettera la réservation. Dates de réservation : du " . $reservation->date_of_starting . " au " . $reservation->date_of_end . "."
-            ];
 
-            dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
-
-            dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_host['body'],$mail_to_host['title'], 2));
+            (new NotificationController())->store($reservation->housing->user->email, $mail_to_host['body'],$mail_to_host['title'], 2);
 
             return (new ServiceController())->apiResponse(200,$payment, 'Paiement fait avec succès');
         }else{
@@ -907,7 +901,7 @@ public function findSimilarPaymentMethod($inputMethod)
      */
     public function hote_confirm_reservation($idReservation){
         try{
-          $reservation = Reservation::find($idReservation);
+            $reservation = Reservation::find($idReservation);
           if(!$reservation){
             return (new ServiceController())->apiResponse(404,[], "Reservation non trouvée");
 
@@ -933,9 +927,9 @@ public function findSimilarPaymentMethod($inputMethod)
             "title" => "Confirmation  de  réservation",
             "body" => " Votre réservation concernant le logement '{$reservation->housing->name}'.   vient d'être confirmée par l'hôte"
                 ];
-        dispatch(new SendRegistrationEmail(auth()->user()->email, $mail_to_traveler['body'],$mail_to_traveler['title'], 2));
 
-        //Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mail) );
+            (new NotificationController())->store( $reservation->user->email,$mail_to_traveler['body'],$mail_to_traveler['title'], 2);
+
         return (new ServiceController())->apiResponse(200,[], 'Confirmation de réservation éffectuée avec succès');
 
         } catch(Exception $e) {
@@ -1036,29 +1030,9 @@ public function findSimilarPaymentMethod($inputMethod)
             "title" => "Rejet de votre réservation",
             "body" => " Votre réservation concernant le logement '{$reservation->housing->name}'. vient d'être rejetée  par l'hôte pour le motif suivant << $request->motif_rejet_hote>>.Votre portefeuille a été crédité de {$reservation->montant_total} FCFA.Nouveau solde:{$portfeuille->user->portfeuille->solde}FCFA "
             ];
-        dispatch( new SendRegistrationEmail($reservation->user->email, $mail['body'], $mail['title'], 2));
 
-        // Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mail) );
+        (new NotificationController())->store($reservation->user->email,$mail['body'],$mail['title'],2);
 
-        $adminRole = DB::table('rights')->where('name', 'admin')->first();
-
-         if (!$adminRole) {
-             return (new ServiceController())->apiResponse(404, [], 'Le rôle d\'admin n\'a pas été trouvé.');
-         }
-
-         $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
-             $query->where('right_id', $adminRole->id);
-         })->get();
-
-         foreach ($adminUsers as $adminUser) {
-
-             $mail = [
-                 'title' => "Rejet d'une réservation par l'hôte",
-                 'body' => "Une reservation vient d\être annulé  par l hote pour le motif suivant << $request->motif_rejet_hote >>  et le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}."
-             ];
-
-            dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-         }
          return (new ServiceController())->apiResponse(200,[], 'rejet de réservation éffectué avec succès');
 
 
@@ -1073,28 +1047,10 @@ public function findSimilarPaymentMethod($inputMethod)
      public function notifyAnnulation(Request $request,$reservation_id,$mailtraveler,$mailhote,$montant_commission){
         $reservation = Reservation::find($reservation_id);
 
-        dispatch( new SendRegistrationEmail($reservation->user->email, $mailtraveler['body'], $mailtraveler['title'], 2));
+        (new NotificationController())->store($reservation->user->email,$mailtraveler['body'],$mailtraveler['title'],0);
 
+        (new NotificationController())->store($reservation->housing->user->email,$mailhote['body'],$mailhote['title'],2);
 
-       //Mail::to($reservation->user->email)->send(new NotificationEmailwithoutfile($mailtraveler) );
-
-
-       // Mail::to($reservation->housing->user->email)->send(new NotificationEmailwithoutfile($mailhote) );
-        dispatch( new SendRegistrationEmail($reservation->housing->user->email, $mailhote['body'], $mailhote['title'], 2));
-
-      $right = Right::where('name','admin')->first();
-      $adminUsers = User_right::where('right_id', $right->id)->get();
-        foreach ($adminUsers as $adminUser) {
-
-            $mail = [
-                "title" => "Annulation d'une réservation par un voyageur",
-                "body" => "Une réservation vient d'être annulée par un client avec l'identifiant {$reservation->user->id}. Le motif de l'annulation est le suivant : « $request->motif_rejet_traveler ». Le logement appartient à {$reservation->housing->user->firstname} {$reservation->housing->user->lastname}, avec l'identifiant {$reservation->housing->user->id}. Vous recevez une commission de {$montant_commission} FCFA sur cette opération"
-            ];
-
-         // Mail::to($adminUser->user->email)->send(new NotificationEmailwithoutfile($mail) );
-         dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-
-        }
      }
 
               /**
@@ -1728,24 +1684,8 @@ public function confirmIntegration(Request $request)
             "body" => "Un voyageur vient de confirmer l'intégration dans votre logement intitulé {$reservation->housing->name}. Vous venez de recevoir un dépôt de {$remaining_amount} FCFA sur votre portefeuille. Nouveau solde: {$portefeuille->solde} FCFA"
         ];
 
-        dispatch(new SendRegistrationEmail($reservation->housing->user->email, $mail['body'], $mail['title'], 2));
 
-
-        $right = Right::where('name', 'admin')->first();
-        $adminUsers = User_right::where('right_id', $right->id)->get();
-
-        foreach ($adminUsers as $adminUser) {
-
-
-            $mail = [
-                "title" => " Confirmation de l'intégration d'un voyageur dans un logement",
-                "body" => "Le client ayant fait une réservation pour le logement {$reservation->housing->name} vient de confirmer son intégration à ce logement. Vous bénéficiez d'une commission de {$transaction->montant_commission_admin} FCFA"
-            ];
-            dispatch(new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-
-
-        }
-
+        (new NotificationController())->store($reservation->housing->user->email,$mail['body'],$mail['title'],0);
 
         return (new ServiceController())->apiResponse(200,[], 'Intégration confirmée avec succès');
 
@@ -1872,7 +1812,8 @@ public function handlePartnerLogic($transactionId,$is_received=true,$titre="")
             ];
 
         }
-        dispatch(new SendRegistrationEmail($email_partenaire, $mail['body'], $mail['title'], 2));
+
+        (new NotificationController())->store($email_partenaire,$mail['body'],$mail['title'],2);
 
 
 

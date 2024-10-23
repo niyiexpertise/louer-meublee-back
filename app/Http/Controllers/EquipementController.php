@@ -847,7 +847,8 @@ class EquipementController extends Controller
                         'body' => "L'ajout de cet équipement : " . $equipment->name . " a été validé par l'administrateur.",
                     ];
 
-                    dispatch(new SendRegistrationEmail($housingEquipment->housing->user->email, $mail['body'], $mail['title'], 2));
+                    (new NotificationController())->store($housingEquipment->housing->user->email,$mail['body'],$mail['title'],2);
+
                 }
 
         }

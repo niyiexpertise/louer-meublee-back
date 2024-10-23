@@ -430,17 +430,14 @@ class HousingSponsoringController extends Controller
             $payement->save();
 
             DB::commit();
-            $right = Right::where('name','admin')->first();
-                    $adminUsers = User_right::where('right_id', $right->id)->get();
-                    foreach ($adminUsers as $adminUser) {
 
-                        $mailadmin = [
-                            'title' => "Demande de sponsoring",
-                            "body" => "Une demande de sponsoring vient d'être fait par un hôte, veuillez vous connectez pour la valider"
-                        ];
-                    dispatch( new SendRegistrationEmail($adminUser->user->email, $mailadmin['body'], $mailadmin['title'], 2));
-                }
+            $mailadmin = [
+                'title' => "Demande de sponsoring",
+                "body" => "Une demande de sponsoring vient d'être fait par un hôte, veuillez vous connectez pour la valider"
+            ];
 
+            $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managesponsoring.validSponsoringRequest');
+            (new NotificationController())->store($personToNotify,$mailadmin['body'],$mailadmin['title'],2);
 
             if($statusPayement == 1||$payment_method == $portfeuille){
                 return (new ServiceController())->apiResponse(200,[],'Paiement de la demande de sponsoring fait avec succès');
@@ -768,7 +765,7 @@ class HousingSponsoringController extends Controller
                     "body" => "Motif:{$request->motif} Votre portefeuille a été crédité. Nouveau solde: ". Portfeuille::where('user_id',$hote->id)->first()->solde." FCFA"
                 ];
 
-            dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
+                (new NotificationController())->store($hote->email,$hotemail['body'],$hotemail['title'],0);
 
             return (new ServiceController())->apiResponse(200,[] ,'Sponsoring rejeté avec succès');
         } catch (Exception $e) {
@@ -934,7 +931,7 @@ class HousingSponsoringController extends Controller
                     "body" => "Motif: {$request->motif} Votre portefeuille a été crédité. Nouveau solde:". Portfeuille::where('user_id',$hote->id)->first()->solde
                 ];
 
-            dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
+            ( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
 
             return (new ServiceController())->apiResponse(200,[],'Sponsoring désactivé avec succès');
         } catch (Exception $e) {
@@ -1066,7 +1063,8 @@ class HousingSponsoringController extends Controller
                     Nous vous remercions pour votre confiance."
                 ];
 
-            dispatch( new SendRegistrationEmail($hote->email, $hotemail['body'], $hotemail['title'], 2));
+                (new NotificationController())->store($hote->email,$hotemail['body'],$hotemail['title'],2);
+
 
             return (new ServiceController())->apiResponse(200,[],'Demande de sponsoring activé avec succès');
         } catch (Exception $e) {

@@ -107,42 +107,42 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     //Gestion des catégories.
     Route::prefix('category')->group(function () {
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.VerifiednotBlockDelete'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.VerifiednotBlockDelete'])->group(function () {
             Route::get('/VerifiednotBlockDelete', [CategorieController::class, 'VerifiednotBlockDelete'])->name('category.VerifiednotBlockDelete');
         });
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.store'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.store'])->group(function () {
             Route::post('/store', [CategorieController::class, 'store'])->name('category.store');
         });
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.show'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.show'])->group(function () {
             Route::get('/show/{id}', [CategorieController::class, 'show'])->name('category.show');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.destroy'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [CategorieController::class, 'destroy'])->name('category.destroy');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.block'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.block'])->group(function () {
             Route::put('/block/{id}', [CategorieController::class, 'block'])->name('category.block');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.unblock'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.unblock'])->group(function () {
             Route::put('/unblock/{id}', [CategorieController::class, 'unblock'])->name('category.unblock');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.VerifiednotBlocknotDelete'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.VerifiednotBlocknotDelete'])->group(function () {
             Route::get('/VerifiednotBlocknotDelete', [CategorieController::class, 'VerifiednotBlocknotDelete'])->name('category.VerifiednotBlocknotDelete');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.VerifiedBlocknotDelete'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.VerifiedBlocknotDelete'])->group(function () {
             Route::get('/VerifiedBlocknotDelete', [CategorieController::class, 'VerifiedBlocknotDelete'])->name('category.VerifiedBlocknotDelete');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.updateName'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.updateName'])->group(function () {
             Route::put('/updateName/{id}', [CategorieController::class, 'updateName'])->name('category.updateName');
         });
 
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managecategory.updateIcone'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managecategory.updateIcone'])->group(function () {
             Route::post('/updateIcone/{id}', [CategorieController::class, 'updateIcone'])->name('category.updateIcone');
         });
 
@@ -303,7 +303,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::middleware(['role_or_permission:admin|superAdmin|Manageequipment.indexUnverified'])->group(function () {
             Route::get('/indexUnverified', [EquipementController::class, 'indexUnverified'])->name('indexUnverified');
         });
-        Route::group(['middleware' => ['role_or_permission:superAdmin|Manageequipment.makeVerified']], function () {
+        Route::group(['middleware' => ['role_or_permission:superAdmin|Managelogement.makeVerifiedHousingEquipment']], function () {
             Route::post('/makeVerified', [EquipementController::class, 'makeVerified'])->name('equipment.makeVerified');
         });
      });
@@ -373,7 +373,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/rolesPermsCount/{role}', [AuthController::class, 'rolesPermsCount'])->name('users.rolesPermsCount');
             });
 
-            Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.usersCountByRole'])->group(function () {
+            Route::middleware(['role_or_permission:superAdmin|Manageusers.usersCountByRole'])->group(function () {
                 Route::get('/usersCountByRole', [AuthController::class, 'usersCountByRole'])->name('users.usersCountByRole');
             });
 
@@ -419,39 +419,39 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     // Gestion des utilisateurs du côté de l'admin
     Route::prefix('users')->group(function () {
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.index'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.index'])->group(function () {
             Route::get('/index', [UserController::class, 'index'])->name('users.index');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.destroy'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [UserController::class, 'destroy'])->name('users.destroy');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.block'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.block'])->group(function () {
             Route::put('/block/{id}', [UserController::class, 'block'])->name('users.block');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.unblock'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.unblock'])->group(function () {
             Route::put('/unblock/{id}', [UserController::class, 'unblock'])->name('users.unblock');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersByCountry'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.getUsersByCountry'])->group(function () {
             Route::get('/pays/{pays}', [UserController::class, 'getUsersByCountry'])->name('users.getUsersByCountry');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersWithRoletraveler'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.getUsersWithRoletraveler'])->group(function () {
             Route::get('/travelers', [UserController::class, 'getUsersWithRoletraveler'])->name('users.getUsersWithRoletraveler');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersWithRoleHost'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.getUsersWithRoleHost'])->group(function () {
             Route::get('/hotes', [UserController::class, 'getUsersWithRoleHost'])->name('users.getUsersWithRoleHost');
         });
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersPartenaire'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.getUsersPartenaire'])->group(function () {
             Route::get('/partenaires', [UserPartenaireController::class, 'getUsersPartenaire'])->name('users.getUsersPartenaire');
         });
 
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Manageusers.getUsersWithRoleAdmin'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Manageusers.getUsersWithRoleAdmin'])->group(function () {
             Route::get('/admins', [UserController::class, 'getUsersWithRoleAdmin'])->name('users.getUsersWithRoleAdmin');
         });
 
@@ -499,19 +499,19 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     // Gestion des commentaires
     Route::prefix('review')->group(function () {
-        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.store'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|Managereview.store'])->group(function () {
             Route::post('/store', [ReviewController::class, 'store'])->name('review.store');
         });
 
-        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.show'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|Managereview.show'])->group(function () {
             Route::get('/show/{id}', [ReviewController::class, 'show'])->name('review.show');
         });
 
-        Route::middleware(['role_or_permission:traveler|superAdmin|hote|admin|Managereview.update'])->group(function () {
+        Route::middleware(['role_or_permission:traveler|superAdmin|hote|Managereview.update'])->group(function () {
             Route::put('/update/{id}', [ReviewController::class, 'update'])->name('review.update');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|admin|Managereview.destroy'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managereview.destroy'])->group(function () {
             Route::delete('/destroy/{id}', [ReviewController::class, 'destroy'])->name('review.destroy');
         });
     });
@@ -527,7 +527,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     });
 
     //Gestion de quelques stats
-    Route::prefix('stat')->middleware(['role:superAdmin|admin'])->group(function () {
+    Route::prefix('stat')->middleware(['role:superAdmin'])->group(function () {
         Route::get('/getUsersGroupedByCountry', [AdminReservationController::class, 'getUsersGroupedByCountry']);
         Route::get('/getHousingGroupedByCountry', [AdminReservationController::class, 'getHousingGroupedByCountry']);
         Route::get('/getReservationGroupedByCountry', [AdminReservationController::class, 'getReservationGroupedByCountry']);
@@ -598,7 +598,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::delete('/destroy/{id}', [PreferenceController::class, 'destroy'])->name('preference.destroy');
         });
 
-        Route::middleware(['role_or_permission:superAdmin|Managepreference.makeVerified'])->group(function () {
+        Route::middleware(['role_or_permission:superAdmin|Managelogement.makeVerifiedHousingPreference'])->group(function () {
             Route::post('/makeVerified', [PreferenceController::class, 'makeVerified'])->name('preference.makeVerified');
         });
 
@@ -742,7 +742,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/show/{id}', [VerificationDocumentController::class, 'show'])->name('verificationdocumenthote.show');
             });
 
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.validateDocuments'])->group(function () {
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumenthote.validateDocument'])->group(function () {
                 Route::post('/hote/valider/all', [VerificationDocumentController::class, 'validateDocuments'])->name('verificationdocumenthote.validateDocuments');
             });
 
@@ -761,7 +761,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/show/{id}', [VerificationDocumentPartenaireController::class, 'show'])->name('verificationdocumentpartenaire.show');
             });
 
-            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.validateDocuments'])->group(function () {
+            Route::middleware(['role_or_permission:admin|superAdmin|Manageverificationdocumentpartenaire.validateDocument'])->group(function () {
                 Route::post('/partenaire/valider/all', [VerificationDocumentPartenaireController::class, 'validateDocuments'])->name('verificationdocumentpartenaire.validateDocuments');
             });
 
@@ -830,13 +830,13 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     });
 
     //Gestion des audits
-    Route::group(['middleware' => ['role:superAdmin|admin']], function () {
+    Route::group(['middleware' => ['role:superAdmin']], function () {
         Route::prefix('audit')->group(function () {
          Route::get('/getAudits', [AuditController::class, 'getAudits']);
          Route::get('/getAuditsByModelType/{modelType}', [AuditController::class, 'getAuditsByModelType']);
          Route::get('/getAuditsByModelTypeAndId/{modelType}/{modelId}', [AuditController::class, 'getAuditsByModelTypeAndId']);
          });
-        
+
       });
 
       //model
@@ -850,7 +850,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::get('/unread', [NotificationController::class, 'getUnreadNotifications']);
     });
 
-    Route::group(['middleware' => ['role:superAdmin|admin']], function () {
+    Route::group(['middleware' => ['role:superAdmin']], function () {
       Route::prefix('notifications')->group(function () {
        Route::get('/index', [NotificationController::class, 'index']);
        Route::get('/getUserForNotification', [NotificationController::class, 'getUserForNotification']);
@@ -906,7 +906,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/getElementToVerify', [HousingController::class, 'getElementToVerify'])->name('logement.getElementToVerify');
             });
 
-            Route::group(['middleware' => ['role_or_permission:superAdmin|Admin|Managelogement.getHousing']], function () {
+            Route::group(['middleware' => ['role_or_permission:superAdmin|Managelogement.getHousing']], function () {
                 Route::get('/getHousing', [HousingController::class, 'getHousing'])->name('logement.getHousing');
             });
 
@@ -932,7 +932,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingForHotesimple']], function () {
                 Route::get('/getHousingForHotesimple', [HousingController::class, 'getHousingForHotesimple'])->name('logement.getHousingForHotesimple');
             });
-            
+
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.getHousingDisabledByHote']], function () {
                 Route::get('/getHousingDisabledByHote', [HousingController::class, 'getHousingDisabledByHote'])->name('logement.getHousingDisabledByHote');
             });
@@ -983,7 +983,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
                 Route::get('/equipment/getUnverifiedHousingCategoryEquipmentInexistant', [HousingEquipmentController::class, 'getUnverifiedHousingCategoryEquipmentInexistant'])->name('logement.getUnverifiedHousingCategoryEquipmentInexistant');
             });
 
-            
+
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.addEquipmentToHousingCategory']], function () {
                 Route::post('/equipment/addEquipmentToHousingCategory/{housingId}', [HousingEquipmentController::class, 'addEquipmentToHousingCategory'])->name('logement.addEquipmentToHousingCategory');
@@ -1008,7 +1008,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
             // Gestion des catégories pour un hôte qui ajoute déjà un logement
 
-           
+
 
             Route::group(['middleware' => ['role_or_permission:superAdmin|hote|Managelogement.deletePhotoCategory']], function () {
                 Route::delete('/category/photo/{photoid}', [HousingCategoryFileController::class, 'deletePhotoHousingCategory'])->name('logement.deletePhotoCategory');
@@ -1083,52 +1083,52 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('logement')->group(function () {
 
         //Gestion des logements coté administrateur
-       Route::get('/index/ListeDesLogementsValideBloque', [AdminHousingController::class, 'ListeDesLogementsValideBloque'])->name('logement.ListeDesLogementsValideBloque')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideBloque');
-       Route::get('/index/ListeDesLogementsValideDelete', [AdminHousingController::class, 'ListeDesLogementsValideDelete'])->name('logement.ListeDesLogementsValideDelete')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideDelete');
-       Route::get('/index/ListeDesLogementsValideDisable', [AdminHousingController::class, 'ListeDesLogementsValideDisable'])->name('logement.ListeDesLogementsValideDisable')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListeDesLogementsValideDisable');
-       Route::get('/hote_with_many_housing', [AdminHousingController::class, 'hote_with_many_housing'])->name('logement.hote_with_many_housing')->middleware('role_or_permission:superAdmin|admin|Managelogement.hote_with_many_housing');
-       Route::get('/country_with_many_housing', [AdminHousingController::class, 'country_with_many_housing'])->name('logement.country_with_many_housing')->middleware('role_or_permission:superAdmin|admin|Managelogement.country_with_many_housing');
-       Route::get('/getHousingDestroyedByHote', [AdminHousingController::class, 'getHousingDestroyedByHote'])->name('logement.getHousingDestroyedByHote')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingDestroyedByHote');
-       Route::get('/getTop10HousingByAverageNotes', [AdminHousingController::class, 'getTop10HousingByAverageNotes'])->name('logement.getTop10HousingByAverageNotes')->middleware('role_or_permission:superAdmin|admin|Managelogement.getTop10HousingByAverageNotes');
+       Route::get('/index/ListeDesLogementsValideBloque', [AdminHousingController::class, 'ListeDesLogementsValideBloque'])->name('logement.ListeDesLogementsValideBloque')->middleware('role_or_permission:superAdmin|Managelogement.ListeDesLogementsValideBloque');
+       Route::get('/index/ListeDesLogementsValideDelete', [AdminHousingController::class, 'ListeDesLogementsValideDelete'])->name('logement.ListeDesLogementsValideDelete')->middleware('role_or_permission:superAdmin|Managelogement.ListeDesLogementsValideDelete');
+       Route::get('/index/ListeDesLogementsValideDisable', [AdminHousingController::class, 'ListeDesLogementsValideDisable'])->name('logement.ListeDesLogementsValideDisable')->middleware('role_or_permission:superAdmin|Managelogement.ListeDesLogementsValideDisable');
+       Route::get('/hote_with_many_housing', [AdminHousingController::class, 'hote_with_many_housing'])->name('logement.hote_with_many_housing')->middleware('role_or_permission:superAdmin|Managelogement.hote_with_many_housing');
+       Route::get('/country_with_many_housing', [AdminHousingController::class, 'country_with_many_housing'])->name('logement.country_with_many_housing')->middleware('role_or_permission:superAdmin|Managelogement.country_with_many_housing');
+       Route::get('/getHousingDestroyedByHote', [AdminHousingController::class, 'getHousingDestroyedByHote'])->name('logement.getHousingDestroyedByHote')->middleware('role_or_permission:superAdmin|Managelogement.getHousingDestroyedByHote');
+       Route::get('/getTop10HousingByAverageNotes', [AdminHousingController::class, 'getTop10HousingByAverageNotes'])->name('logement.getTop10HousingByAverageNotes')->middleware('role_or_permission:superAdmin|Managelogement.getTop10HousingByAverageNotes');
         //Gestion des categories côté admin
-       Route::get('/category/default/invalid', [HousingCategoryFileController::class, 'getCategoryDefaultInvalidHousings'])->name('logement.getCategoryDefaultInvalidHousings')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDefaultInvalidHousings');
-       Route::post('/category/default/validate', [HousingCategoryFileController::class, 'validateDefaultCategoriesHousing'])->name('logement.validateDefaultCategoriesHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateDefaultCategoriesHousing');
-       Route::post('/category/inexistant/validate', [HousingCategoryFileController::class, 'validateInexistantCategoriesHousing'])->name('logement.validateInexistantCategoriesHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateInexistantCategoriesHousing');
-       Route::get('/category/unexist/invalid', [HousingCategoryFileController::class, 'getCategoryUnexistInvalidHousings'])->name('logement.getCategoryUnexistInvalidHousings')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryUnexistInvalidHousings');
-       Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing'])->name('logement.validateUnexistCategoryHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateUnexistCategoryHousing');
-       Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail'])->name('logement.getCategoryDetail')->middleware('role_or_permission:superAdmin|admin|Managelogement.getCategoryDetail');
-       Route::get('/category/photo/unverified', [HousingCategoryFileController::class, 'getUnverifiedHousingCategoryFilesWithDetails'])->name('logement.getUnverifiedHousingCategoryFilesWithDetails')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingCategoryFilesWithDetails');
+       Route::get('/category/default/invalid', [HousingCategoryFileController::class, 'getCategoryDefaultInvalidHousings'])->name('logement.getCategoryDefaultInvalidHousings')->middleware('role_or_permission:superAdmin|Managelogement.getCategoryDefaultInvalidHousings');
+       Route::post('/category/default/validate', [HousingCategoryFileController::class, 'validateDefaultCategoriesHousing'])->name('logement.validateDefaultCategoriesHousing')->middleware('role_or_permission:superAdmin|Managelogement.validateCategoriesHousing');
+       Route::post('/category/inexistant/validate', [HousingCategoryFileController::class, 'validateInexistantCategoriesHousing'])->name('logement.validateInexistantCategoriesHousing')->middleware('role_or_permission:superAdmin|Managelogement.validateCategoriesHousing');
+       Route::get('/category/unexist/invalid', [HousingCategoryFileController::class, 'getCategoryUnexistInvalidHousings'])->name('logement.getCategoryUnexistInvalidHousings')->middleware('role_or_permission:superAdmin|Managelogement.getCategoryUnexistInvalidHousings');
+       Route::put('/category/unexist/{housing_id}/{category_id}/validate', [HousingCategoryFileController::class, 'validateUnexistCategoryHousing'])->name('logement.validateUnexistCategoryHousing')->middleware('role_or_permission:superAdmin|Managelogement.validateCategoriesHousing');
+       Route::get('/category/{housing_id}/{category_id}/detail', [HousingCategoryFileController::class, 'getCategoryDetail'])->name('logement.getCategoryDetail')->middleware('role_or_permission:superAdmin|Managelogement.getCategoryPhotoUnverified');
+       Route::get('/category/photo/unverified', [HousingCategoryFileController::class, 'getUnverifiedHousingCategoryFilesWithDetails'])->name('logement.getUnverifiedHousingCategoryFilesWithDetails')->middleware('role_or_permission:superAdmin|Managelogement.getUnverifiedHousingCategoryFilesWithDetails');
 
-       Route::get('/category/getHousingCategoryFiles/{isexist}', [HousingCategoryFileController::class, 'getHousingCategoryFiles'])->name('logement.getHousingCategoryFiles')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingCategoryFiles');
-       
-       Route::put('/category/photo/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|admin|Managelogement.validateHousingCategoryFile');
+       Route::get('/category/getHousingCategoryFiles/{isexist}', [HousingCategoryFileController::class, 'getHousingCategoryFiles'])->name('logement.getHousingCategoryFiles')->middleware('role_or_permission:superAdmin|Managelogement.getHousingCategoryUnverifiedFiles');
+
+       Route::put('/category/photo/validate', [HousingCategoryFileController::class, 'validateHousingCategoryFile'])->name('logement.validateHousingCategoryFile')->middleware('role_or_permission:superAdmin|Managelogement.validateHousingCategoryFile');
        //Gestion des équipements côté admin
-       Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid'])->name('logement.ListHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingEquipmentInvalid');
+       Route::get('/equipment/ListHousingEquipmentInvalid/{housingId}', [HousingEquipmentController::class, 'ListHousingEquipmentInvalid'])->name('logement.ListHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|Managelogement.ListHousingEquipmentInvalid');
 
        Route::get('/equipment/getHousingCategoriesEquipmentForAdd/{id}', [HousingEquipmentController::class, 'getHousingCategoriesEquipment'])->name('logement.getHousingCategoriesEquipment')
-       ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingCategoriesEquipment');
-       Route::post('/equipment/makeVerifiedHousingEquipment', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment'])->name('logement.makeVerifiedHousingEquipment')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingEquipment');
-       Route::get('/equipment/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid'])->name('logement.ListEquipmentForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListEquipmentForHousingInvalid');
-       Route::get('/equipment/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid'])->name('logement.getHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingEquipmentInvalid');
-       Route::get('/equipment/getUnexistEquipmentInvalidForHousing', [HousingEquipmentController::class, 'getUnexistEquipmentInvalidForHousing'])->name('logement.getUnexistEquipmentInvalidForHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnexistEquipmentInvalidForHousing');
+       ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingCategoriesEquipmentForAdd');
+       Route::post('/equipment/makeVerifiedHousingEquipment', [HousingEquipmentController::class, 'makeVerifiedHousingEquipment'])->name('logement.makeVerifiedHousingEquipment')->middleware('role_or_permission:superAdmin|Managelogement.makeVerifiedHousingEquipment');
+       Route::get('/equipment/ListEquipmentForHousingInvalid/{housingId}', [HousingEquipmentController::class, 'ListEquipmentForHousingInvalid'])->name('logement.ListEquipmentForHousingInvalid')->middleware('role_or_permission:superAdmin|Managelogement.ListEquipmentForHousingInvalid');
+       Route::get('/equipment/getHousingEquipmentInvalid', [HousingEquipmentController::class, 'getHousingEquipmentInvalid'])->name('logement.getHousingEquipmentInvalid')->middleware('role_or_permission:superAdmin|Managelogement.getHousingEquipmentInvalid');
+       Route::get('/equipment/getUnexistEquipmentInvalidForHousing', [HousingEquipmentController::class, 'getUnexistEquipmentInvalidForHousing'])->name('logement.getUnexistEquipmentInvalidForHousing')->middleware('role_or_permission:superAdmin|Managelogement.getUnexistEquipmentInvalidForHousing');
        //Gestion des preference côté admin
-       Route::get('/preference/getHousingPreferenceInvalid', [HousingPreferenceController::class, 'getHousingPreferenceInvalid'])->name('logement.getHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.getHousingPreferenceInvalid');
-       Route::get('/preference/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing'])->name('logement.getUnexistPreferenceInvalidForHousing')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnexistPreferenceInvalidForHousing')
+       Route::get('/preference/getHousingPreferenceInvalid', [HousingPreferenceController::class, 'getHousingPreferenceInvalid'])->name('logement.getHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|Managelogement.getHousingPreferenceInvalid');
+       Route::get('/preference/getUnexistPreferenceInvalidForHousing', [HousingPreferenceController::class, 'getUnexistPreferenceInvalidForHousing'])->name('logement.getUnexistPreferenceInvalidForHousing')->middleware('role_or_permission:superAdmin|Managelogement.getUnexistPreferenceInvalidForHousing')
        ;
 
-       Route::get('/preference/getUnverifiedHousingPreferencesExistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesExistant'])->name('logement.getUnverifiedHousingPreferencesExistant')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingPreferencesExistant');
+       Route::get('/preference/getUnverifiedHousingPreferencesExistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesExistant'])->name('logement.getUnverifiedHousingPreferencesExistant')->middleware('role_or_permission:superAdmin|Managelogement.getUnverifiedHousingPreferencesExistant');
 
-       Route::get('/preference/getUnverifiedHousingPreferencesInexistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesInexistant'])->name('logement.getUnverifiedHousingPreferencesInexistant')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedHousingPreferencesInexistant');
+       Route::get('/preference/getUnverifiedHousingPreferencesInexistant', [HousingPreferenceController::class, 'getUnverifiedHousingPreferencesInexistant'])->name('logement.getUnverifiedHousingPreferencesInexistant')->middleware('role_or_permission:superAdmin|Managelogement.getUnverifiedHousingPreferencesInexistant');
 
-       Route::get('/preference/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid'])->name('logement.ListHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListHousingPreferenceInvalid');
-       Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|admin|Managelogement.ListPreferenceForHousingInvalid');
-       Route::post('/preference/makeVerifiedHousingPreferences', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|admin|Managelogement.makeVerifiedHousingPreference');
-       Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|admin|Managelogement.block');
-       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|admin|Managelogement.delete');
-       Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|admin|Managelogement.unblock');
+       Route::get('/preference/ListHousingPreferenceInvalid/{housingId}', [HousingPreferenceController::class, 'ListHousingPreferenceInvalid'])->name('logement.ListHousingPreferenceInvalid')->middleware('role_or_permission:superAdmin|Managelogement.ListHousingPreferenceInvalid');
+       Route::get('/preference/ListPreferenceForHousingInvalid/{housingId}', [HousingPreferenceController::class, 'ListPreferenceForHousingInvalid'])->name('logement.ListPreferenceForHousingInvalid')->middleware('role_or_permission:superAdmin|Managelogement.ListPreferenceForHousingInvalid');
+       Route::post('/preference/makeVerifiedHousingPreferences', [HousingPreferenceController::class, 'makeVerifiedHousingPreference'])->name('logement.makeVerifiedHousingPreference')->middleware('role_or_permission:superAdmin|Managelogement.makeVerifiedHousingPreference');
+       Route::post('/block/{housingId}', [HousingController::class, 'block'])->name('logement.block')->middleware('role_or_permission:superAdmin|Managelogement.block');
+       Route::post('/delete/{housingId}', [HousingController::class, 'delete'])->name('logement.delete')->middleware('role_or_permission:superAdmin|Managelogement.delete');
+       Route::post('/unblock/{housingId}', [HousingController::class, 'unblock'])->name('logement.unblock')->middleware('role_or_permission:superAdmin|Managelogement.unblock');
        //Gestion des photos de logement
-       Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|admin|Managelogement.getUnverifiedPhotos');
-       Route::put('/photos/validate', [HousingController::class, 'validatePhoto'])->name('logement.validatePhoto')->middleware('role_or_permission:superAdmin|admin|Managelogement.validatePhoto');
+       Route::get('/photos/unverified', [HousingController::class, 'getUnverifiedPhotos'])->name('logement.getUnverifiedPhotos')->middleware('role_or_permission:superAdmin|Managelogement.getUnverifiedPhotos');
+       Route::put('/photos/validate', [HousingController::class, 'validatePhoto'])->name('logement.validatePhoto')->middleware('role_or_permission:superAdmin|Managelogement.validatePhoto');
 
    });
 
@@ -1156,11 +1156,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
     Route::put('/validate/one/{id}', [AdminHousingController::class, 'ValidateOneHousing'])
         ->name('logement.ValidateOneHousing')
-        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateOneHousing');
+        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateHousing');
 
     Route::put('/validate/many/', [AdminHousingController::class, 'ValidateManyHousing'])
         ->name('logement.ValidateManyHousing')
-        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateManyHousing');
+        ->middleware('role_or_permission:superAdmin|Managelogement.ValidateHousing');
 
     Route::put('/update/one/{id}', [AdminHousingController::class, 'UpdateOneHousing'])
         ->name('logement.UpdateOneHousing')
@@ -1292,11 +1292,11 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 Route::prefix('portefeuille')->group(function () {
     Route::post('/credit', [PortfeuilleController::class, 'creditPortfeuille'])
         ->name('portefeuille.credit')
-        ->middleware('role_or_permission:superAdmin|admin|hote|traveler|Manageportefeuille.credit');
+        ->middleware('role_or_permission:superAdmin|hote|traveler|Manageportefeuille.credit');
 
     Route::post('/verifyTransactionOfMethod/{methodId}/{transactionId}', [PaiementService::class, 'verifyTransactionOfMethod'])
         ->name('portefeuille.verifyTransactionOfMethod');
-     
+
 
     Route::get('/user/transaction', [PortfeuilleTransactionController::class, 'getPortfeuilleDetails'])
         ->name('portefeuille.user.transaction');
@@ -1320,81 +1320,81 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('methodPayement')->group(function () {
             Route::post('/store', [MethodPayementController::class, 'store'])
                 ->name('methodPayement.store')
-                ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.store|superAdmin');
 
             Route::get('/index', [MethodPayementController::class, 'index'])
                 ->name('methodPayement.index')
-                // ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin|admin')
+                // ->middleware('role_or_permission:ManagemethodPayement.index|superAdmin')
                 ;
             Route::get('/indexInactive', [MethodPayementController::class, 'indexInactive'])
                 ->name('methodPayement.indexInactive')
-                ->middleware('role_or_permission:ManagemethodPayement.indexInactive|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.indexInactive|superAdmin');
             Route::get('/indexActive', [MethodPayementController::class, 'indexActive'])
                 ->name('methodPayement.indexActive')
-                ->middleware('role_or_permission:ManagemethodPayement.indexActive|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.indexActive|superAdmin');
 
             Route::get('/show/{id}', [MethodPayementController::class, 'show'])
                 ->name('methodPayement.show')
-                ->middleware('role_or_permission:ManagemethodPayement.show|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.show|superAdmin');
 
             Route::put('/updateName/{id}', [MethodPayementController::class, 'updateName'])
                 ->name('methodPayement.updateName')
-                ->middleware('role_or_permission:ManagemethodPayement.updateName|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.updateName|superAdmin');
 
             Route::post('/updateIcone/{id}', [MethodPayementController::class, 'updateIcone'])
                 ->name('methodPayement.updateIcone')
-                ->middleware('role_or_permission:ManagemethodPayement.updateIcone|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.updateIcone|superAdmin');
 
             Route::delete('/destroy/{id}', [MethodPayementController::class, 'destroy'])
                 ->name('methodPayement.destroy')
-                ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.destroy|superAdmin');
             Route::post('/active/{id}', [MethodPayementController::class, 'active'])
                 ->name('methodPayement.active')
-                ->middleware('role_or_permission:ManagemethodPayement.active|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.active|superAdmin');
             Route::post('/desactive/{id}', [MethodPayementController::class, 'desactive'])
                 ->name('methodPayement.desactive')
-                ->middleware('role_or_permission:ManagemethodPayement.desactive|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.desactive|superAdmin');
 
             Route::put('/block/{id}', [MethodPayementController::class, 'block'])
                 ->name('methodPayement.block')
-                ->middleware('role_or_permission:ManagemethodPayement.block|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.block|superAdmin');
 
             Route::post('/makeAccepted/{id}', [MethodPayementController::class, 'makeAccepted'])
                 ->name('methodPayement.makeAccepted')
-                ->middleware('role_or_permission:ManagemethodPayement.makeAccepted|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.makeAccepted|superAdmin');
 
             Route::post('/makeNotAccepted/{id}', [MethodPayementController::class, 'makeNotAccepted'])
                 ->name('methodPayement.makeNotAccepted')
-                ->middleware('role_or_permission:ManagemethodPayement.makeNotAccepted|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.makeNotAccepted|superAdmin');
 
             Route::post('/makeReceived/{id}', [MethodPayementController::class, 'makeReceived'])
                 ->name('methodPayement.makeReceived')
-                ->middleware('role_or_permission:ManagemethodPayement.makeReceived|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.makeReceived|superAdmin');
 
 
             Route::post('/makeNotReceived/{id}', [MethodPayementController::class, 'makeNotReceived'])
                 ->name('methodPayement.makeNotReceived')
-                ->middleware('role_or_permission:ManagemethodPayement.makeNotReceived|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.makeNotReceived|superAdmin');
 
             Route::get('/getMethodPaiementWithAcceptedTrue', [MethodPayementController::class, 'getMethodPaiementWithAcceptedTrue'])
                 ->name('methodPayement.getMethodPaiementWithAcceptedTrue')
-                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedTrue|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedTrue|superAdmin');
 
             Route::get('/getMethodPaiementWithAcceptedFalse', [MethodPayementController::class, 'getMethodPaiementWithAcceptedFalse'])
                 ->name('methodPayement.getMethodPaiementWithAcceptedFalse')
-                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedFalse|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithAcceptedFalse|superAdmin');
 
             Route::get('/getMethodPaiementWithReceivedFalse', [MethodPayementController::class, 'getMethodPaiementWithReceivedFalse'])
                 ->name('methodPayement.getMethodPaiementWithReceivedFalse')
-                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedFalse|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedFalse|superAdmin');
 
             Route::get('/getMethodPaiementWithReceivedTrue', [MethodPayementController::class, 'getMethodPaiementWithReceivedTrue'])
                 ->name('methodPayement.getMethodPaiementWithReceivedTrue')
-                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedTrue|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.getMethodPaiementWithReceivedTrue|superAdmin');
 
             Route::put('/unblock/{id}', [MethodPayementController::class, 'unblock'])
                 ->name('methodPayement.unblock')
-                ->middleware('role_or_permission:ManagemethodPayement.unblock|superAdmin|admin');
+                ->middleware('role_or_permission:ManagemethodPayement.unblock|superAdmin');
         });
   //Gestion des retraits
 
@@ -1451,18 +1451,18 @@ Route::prefix('portefeuille')->group(function () {
         Route::prefix('moyenPayement')->group(function () {
             Route::get('/ListeMoyenPayement', [MoyenPayementController::class, 'ListeMoyenPayement'])
                 ->name('moyenPayement.ListeMoyenPayement')
-                ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.ListeMoyenPayement');
+                ->middleware('role_or_permission:superAdmin|ManagemoyenPayement.ListeMoyenPayement');
 
             Route::get('/ListeMoyenPayementUserAuth', [MoyenPayementController::class, 'ListeMoyenPayementUserAuth'])
                 ->name('moyenPayement.ListeMoyenPayementUserAuth');
 
             Route::get('/ListeMoyenPayementBlocked', [MoyenPayementController::class, 'ListeMoyenPayementBlocked'])
                 ->name('moyenPayement.ListeMoyenPayementBlocked')
-                ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.ListeMoyenPayementBlocked');
+                ->middleware('role_or_permission:superAdmin|ManagemoyenPayement.ListeMoyenPayementBlocked');
 
             Route::get('/ListeMoyenPayementDeleted', [MoyenPayementController::class, 'ListeMoyenPayementDeleted'])
                 ->name('moyenPayement.ListeMoyenPayementDeleted')
-                ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.ListeMoyenPayementDeleted');
+                ->middleware('role_or_permission:superAdmin|ManagemoyenPayement.ListeMoyenPayementDeleted');
 
             Route::post('/store', [MoyenPayementController::class, 'store'])
                 ->name('moyenPayement.store');
@@ -1478,11 +1478,11 @@ Route::prefix('portefeuille')->group(function () {
 
             Route::put('/block/{idMoyenPayement}', [MoyenPayementController::class, 'block'])
                 ->name('moyenPayement.block')
-                ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.block');
+                ->middleware('role_or_permission:superAdmin|ManagemoyenPayement.block');
 
             Route::put('/unblock/{idMoyenPayement}', [MoyenPayementController::class, 'unblock'])
                 ->name('moyenPayement.unblock')
-                ->middleware('role_or_permission:superAdmin|admin|ManagemoyenPayement.unblock');
+                ->middleware('role_or_permission:superAdmin|ManagemoyenPayement.unblock');
         });
 
 
@@ -1493,7 +1493,7 @@ Route::prefix('portefeuille')->group(function () {
 
                 Route::get('/reservation/all', [PayementController::class, 'listAllPayments'])
                     ->name('paiement.reservation.all')
-                    ->middleware('role_or_permission:superAdmin|admin|Managepaiement.reservation.all');
+                    ->middleware('role_or_permission:superAdmin|Managepaiement.reservation.all');
             });
 
 
@@ -1649,7 +1649,7 @@ Route::prefix('portefeuille')->group(function () {
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.housing');
                    Route::get('/all', [PromotionController::class, 'getAllPromotions'])
                        ->name('promotion.all')
-                       ->middleware('role_or_permission:superAdmin|admin|Managepromotion.all');
+                       ->middleware('role_or_permission:superAdmin|Managepromotion.all');
                    Route::delete('/delete/{id}', [PromotionController::class, 'DeletePromotion'])
                        ->name('promotion.delete')
                        ->middleware('role_or_permission:superAdmin|hote|Managepromotion.delete');
@@ -1685,7 +1685,7 @@ Route::prefix('portefeuille')->group(function () {
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.housing');
                     Route::get('/all', [ReductionController::class, 'getAllReductions'])
                         ->name('reduction.all')
-                        ->middleware('role_or_permission:superAdmin|admin|Managereduction.all');
+                        ->middleware('role_or_permission:superAdmin|Managereduction.all');
                     Route::delete('/delete/{id}', [ReductionController::class, 'DeleteReduction'])
                         ->name('reduction.delete')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.delete');
@@ -1695,30 +1695,30 @@ Route::prefix('portefeuille')->group(function () {
                         Route::post('/desactive/{reductionId}/{housingId}', [ReductionController::class, 'desactiveReduction'])
                         ->name('reduction.desactiveReduction')
                         ->middleware('role_or_permission:superAdmin|hote|Managereduction.desactiveReduction');
-                        
+
                 });
 
                 //Crud de type de demande
         Route::prefix('type_demande')->group(function () {
             Route::post('/store', [TypeDemandeController::class, 'store'])
                 ->name('type_demande.store')
-                ->middleware('role_or_permission:Managetype_demande.store|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.store|superAdmin');
 
             Route::get('/index', [TypeDemandeController::class, 'index'])
                 ->name('type_demande.index')
-                ->middleware('role_or_permission:Managetype_demande.index|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.index|superAdmin');
 
             Route::get('/show/{id}', [TypeDemandeController::class, 'show'])
                 ->name('type_demande.show')
-                ->middleware('role_or_permission:Managetype_demande.show|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.show|superAdmin');
 
             Route::put('/updateName/{id}', [TypeDemandeController::class, 'updateName'])
                 ->name('type_demande.updateName')
-                ->middleware('role_or_permission:Managetype_demande.updateName|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.updateName|superAdmin');
 
             Route::delete('/destroy/{id}', [TypeDemandeController::class, 'destroy'])
                 ->name('type_demande.destroy')
-                ->middleware('role_or_permission:Managetype_demande.destroy|superAdmin|admin');
+                ->middleware('role_or_permission:Managetype_demande.destroy|superAdmin');
 
 
         });
@@ -1813,7 +1813,7 @@ Route::prefix('logement')->group(function () {
    Route::get('/available_at_date', [HousingController::class, 'getAvailableHousingsAtDate']);
    Route::get('/available_between_dates', [HousingController::class, 'getAvailableHousingsBetweenDates']);
 
-   
+
 
 
 
@@ -1824,24 +1824,24 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('site')->group(function () {
         Route::get('/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatistics'])
             ->name('site.getSiteVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|admin');
+            ->middleware('role_or_permission:superAdmin');
 
         Route::get('/date/visit_statistics', [UserVisiteSiteController::class, 'getSiteVisitStatisticsDate'])
-            ->middleware('role_or_permission:superAdmin|admin');
+            ->middleware('role_or_permission:superAdmin');
 
         Route::get('/current_month/visit_statistics', [UserVisiteSiteController::class, 'getCurrentMonthVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|admin');
+            ->middleware('role_or_permission:superAdmin');
 
         Route::get('/current_year/visit_statistics', [UserVisiteSiteController::class, 'getCurrentYearVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|admin');
+            ->middleware('role_or_permission:superAdmin');
 
         Route::get('/yearly/visit_statistics', [UserVisiteSiteController::class, 'getYearlyVisitStatistics'])
-            ->middleware('role_or_permission:superAdmin|admin');
+            ->middleware('role_or_permission:superAdmin');
     });
 
     Route::get('logement/admin/statistique', [AdminHousingController::class, 'getAdminStatistics'])
         ->name('logement.getAdminStatistics')
-        ->middleware('role_or_permission:Admin|superAdmin|admin');
+        ->middleware('role_or_permission:Admin|superAdmin');
 
 
 });
@@ -1893,26 +1893,26 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
     Route::prefix('logement')->group(function () {
         Route::get('{housing_id}/date/visit_statistics', [UserVisiteHousingController::class, 'getVisitStatisticsDate'])
             ->name('logement.getVisitStatisticsDate')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate|admin');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getVisitStatisticsDate');
 
         Route::get('{housing_id}/current_month/visit_statistics', [UserVisiteHousingController::class, 'getCurrentMonthVisitStatistics'])
             ->name('logement.getCurrentMonthVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics|admin');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentMonthVisitStatistics');
 
         Route::get('{housing_id}/current_year/visit_statistics', [UserVisiteHousingController::class, 'getCurrentYearVisitStatistics'])
             ->name('logement.getCurrentYearVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics|admin');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getCurrentYearVisitStatistics');
 
         Route::get('{housing_id}/yearly/visit_statistics', [UserVisiteHousingController::class, 'getYearlyVisitStatistics'])
             ->name('logement.getYearlyVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics|admin');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getYearlyVisitStatistics');
 
         Route::get('/{housingId}/visit_statistics', [UserVisiteHousingController::class, 'getHousingVisitStatistics'])
             ->name('logement.getHousingVisitStatistics')
-            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics|admin');
+            ->middleware('role_or_permission:superAdmin|hote|Managelogement.getHousingVisitStatistics');
     });
 
-    Route::middleware(['role_or_permission:superAdmin|admin|Managepartenaire.getUsersPartenaire'])->group(function () {
+    Route::middleware(['role_or_permission:superAdmin|Managepartenaire.getUsersPartenaire'])->group(function () {
         Route::get('/partenaire/getPartenaires', [VerificationDocumentPartenaireController::class, 'getPartenaires'])->name('partenaire.getPartenaires');
     });
 
@@ -1929,7 +1929,7 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
 
         Route::post('/update', [SettingController::class, 'update'])
             ->name('settings.update')
-            ->middleware('role_or_permission:superAdmin|admin|Managesettings.update');
+            ->middleware('role_or_permission:superAdmin|Managesettings.update');
     });
 });
 

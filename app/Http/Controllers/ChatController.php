@@ -323,7 +323,7 @@ class ChatController extends Controller
                 if($message->receiver_id != Auth::user()->id && Chat::whereId($message->chat_id)->first()->model_type_concerned!= "Support Information"){
                     return (new ServiceController())->apiResponse(404, [],'Vous n\'avez pas le droit de marquer ce message comme lu');
                 }
-    
+
             }
 
             foreach($request->messageIds as $messageId){
@@ -730,14 +730,17 @@ class ChatController extends Controller
                             'title' => " Réponse d'un voyageur ",
                             "body" => "Réponse d'un voyageur"
                         ];
-                    dispatch( new SendRegistrationEmail($adminUser->user->email, $mailadmin['body'], $mailadmin['title'], 0));
+
+                    // (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
+
                     }
                 }else{
                     $mailreceiver = [
                         'title' => " Nouveau message ",
                          "body" => "Nouveau message !"
                     ];
-                    dispatch( new SendRegistrationEmail(User::whereId($recipientId)->first()->email, $mailreceiver['body'], $mailreceiver['title'], 0));
+
+                    (new NotificationController())->store(User::whereId($recipientId)->first()->email,$mailreceiver['body'],$mailreceiver['title'],0);
                 }
 
             }else{
@@ -752,7 +755,7 @@ class ChatController extends Controller
                             'title' => " Nouvelle préoccupation d'un voyageur ",
                              "body" => "Nouvelle préoccupation d'un voyageur"
                         ];
-                    dispatch( new SendRegistrationEmail($adminUser->user->email, $mailadmin['body'], $mailadmin['title'], 2));
+
                       }
 
                 }else{
@@ -761,7 +764,8 @@ class ChatController extends Controller
                         'title' => " Nouvelle conversation ",
                          "body" => "Vous venez de recevoir une nouvelle demande de discussion d'un voyageur concernant un(e) $ModelType"
                     ];
-                    dispatch( new SendRegistrationEmail(User::whereId($recipientId)->first()->email, $mailreceiver['body'], $mailreceiver['title'], 2));
+
+                    (new NotificationController())->store(User::whereId($recipientId)->first()->email,$mailreceiver['body'],$mailreceiver['title'],0);
                 }
             }
 

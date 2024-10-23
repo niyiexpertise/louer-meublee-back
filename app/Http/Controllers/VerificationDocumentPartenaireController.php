@@ -274,31 +274,13 @@ public function index()
             $verificationDocuments[] = $verificationDocument;
         }
 
-        $adminRole = DB::table('rights')->where('name', 'admin')->first();
+        $mail = [
+            'title' => 'Demande d\'être partenaire',
+            'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Connecté vous pour voir les documents afin de valider sa demande. "
+        ];
 
-        if (!$adminRole) {
-            return response()->json(['message' => 'Le rôle d\'admin n\'a pas été trouvé.'], 404);
-        }
-
-        $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
-            $query->where('right_id', $adminRole->id);
-        })
-        ->get();
-
-        foreach ($adminUsers as $adminUser) {
-
-            $mail = [
-                'title' => 'Demande d\'être partenaire',
-                'body' => "Une demande d'être partenaire vient d'être envoyée par $user_name $user_firstname. Les documents fournis sont en pièce jointe. "
-            ];
-
-            try {
-                dispatch(new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'],2));
-
-            } catch (\Exception $e) {
-
-            }
-        }
+        $personToNotify = (new PermissionController())->getEmailsByPermissionName('Manageverificationdocumentpartenaire.validateDocument');
+        (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
         return (new ServiceController())->apiResponse(200, $verificationDocuments, 'Documents de vérification créés avec succès.');
 
@@ -471,10 +453,9 @@ public function validateDocuments(Request $request)
             'body' => "Votre demande d'être partenaire a été validée avec succès."
         ];
 
-       
+        (new NotificationController())->store($user->email,$mail['body'],$mail['title'],2);
 
         return (new ServiceController())->apiResponse(200, [], 'Documents validés avec succès.');
-        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
     } catch (\Exception $e) {
         return response()->json(['error' =>  $e->getMessage()], 500);
     }
@@ -577,7 +558,9 @@ public function validateDocument(Request $request)
                 'body' => "Votre demande d'être partenaire a été validée avec succès."
             ];
 
-             dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
+            (new NotificationController())->store($user->email,$mail['body'],$mail['title'],2);
+
+
 
         }
 

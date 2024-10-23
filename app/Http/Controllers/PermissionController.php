@@ -152,6 +152,7 @@ class PermissionController extends Controller
 public function updatePermissions()
     {
         $permissions = [
+            //GESTION_CHARGE_ADMIN
             [
                 'name' => 'Managecharge.indexChargeActive',
                 'groupe' => 'GESTION_CHARGE_ADMIN',
@@ -471,6 +472,99 @@ public function updatePermissions()
         'groupe' => 'GESTION_SERVICE_PAIEMENT_ADMIN',
         'description' => 'Récupérer la liste des services qui ne sont pas en mode sandbox'
     ],
+    // validateCategoriesHousing
+    //GESTION_CATEGORIE_ADMIN_LOGEMENT
+    [
+        'name' => 'Managelogement.validateHousingCategoryFile',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Mettre à jour le statut de vérification des fichiers des pièces d'un logement"
+    ],
+    [
+        'name' => 'Managelogement.getCategoryPhotoUnverified',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Récupérer les photos des catégories(pièce) en attente de validation"
+    ],
+    [
+        'name' => 'Managelogement.getHousingCategoryUnverifiedFiles',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Récupérer les logements avec des photos non vérifiées par catégorie (vérifié ou non)"
+    ],
+    [
+        'name' => 'Managelogement.validateDefaultCategoriesHousing',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Valide plusieurs catégories par défaut en attente de validation pour différents logements"
+    ],
+    [
+        'name' => 'Managelogement.validateInexistantCategoriesHousing',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Valide plusieurs nouvelles catégories  en attente de validation pour différents logement."
+    ],
+    [
+        'name' => 'Managelogement.validateCategoriesHousing',
+        'groupe' => 'GESTION_CATEGORIE_ADMIN_LOGEMENT',
+        'description' => "Valide plusieurs  catégories qu'elles soient vérifié ou non  en attente de validation pour différents logement."
+    ],
+
+    //GESTION_CATEGORIES_HOTE_LOGEMENT
+    [
+        'name' => 'Managelogement.addPhotoCategory',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Ajouter des photos à une catégorie d'un logement"
+    ],
+    [
+        'name' => 'Managelogement.updateHousingCategoryNumber',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Mettre à jour le nombre de pièces d'une catégorie de logement"
+    ],
+    [
+        'name' => 'Managelogement.getHousingCategoryFile',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Obtenir les fichiers d'une catégorie pour un logement"
+    ],
+    [
+        'name' => 'Managelogement.getRemainingCategories',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Récupérer les catégories (pièces) restant à ajouter à un logement"
+    ],
+    [
+        'name' => 'Managelogement.getHousingCategories',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Récupérer les catégories (pièces) d'un logement"
+    ],
+    [
+        'name' => 'Managelogement.addCategoryToHousing',
+        'groupe' => 'GESTION_CATEGORIES_HOTE_LOGEMENT',
+        'description' => "Ajouter des catégories à un logement"
+    ],
+    //GESTION_EQUIPEMENT__HOTE_LOGEMENT
+    [
+        'name' => 'Managelogement.addCategoryToHousing',
+        'groupe' => 'GESTION_EQUIPEMENT__HOTE_LOGEMENT',
+        'description' => "Ajouter des équipements aux pièces d'un logement"
+    ],
+    //GESTION_EQUIPEMENT_ADMIN_LOGEMENT
+    [
+        'name' => 'Managelogement.getUnverifiedHousingCategoryEquipmentExistant',
+        'groupe' => 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT',
+        'description' => "Récupérer les équipements existants des catégories(pièce) en attente de validation"
+    ],
+    [
+        'name' => 'Managelogement.getUnverifiedHousingCategoryEquipmentInexistant',
+        'groupe' => 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT',
+        'description' => "Récupérer les équipements inexistants des catégories(pièce) en attente de validation"
+    ],
+    [
+        'name' => 'Managelogement.getHousingCategoriesEquipmentForAdd',
+        'groupe' => 'GESTION_EQUIPEMENT_ADMIN_LOGEMENT',
+        'description' => "Récupère la liste des pièces (catégories) et les équipements qui restent à ajouter pour chaque pièce associée à un logement donné."
+    ],
+
+    //GESTION_PHOTO__HOTE_LOGEMENT
+    [
+        'name' => 'Managelogement.getHousingPhoto',
+        'groupe' => 'GESTION_PHOTO__HOTE_LOGEMENT',
+        'description' => "Obtenir les photos d'un logement"
+    ],
         ];
 
         foreach ($permissions as $permission) {
@@ -637,6 +731,79 @@ public function indexbycategorieforrole($roleId)
     }
 }
 
+function getEmailsByPermissionName(string $permissionName)
+{
+    $permission = Permission::where('name', $permissionName)->first();
+
+    if (!$permission) {
+        return [];
+    }
+
+    $directUsers = DB::table('model_has_permissions')
+        ->join('users', 'model_has_permissions.model_id', '=', 'users.id')
+        ->where('model_has_permissions.permission_id', $permission->id)
+        ->pluck('users.email')
+        ->toArray();
+
+    $roleUsers = DB::table('model_has_roles')
+        ->join('role_has_permissions', 'model_has_roles.role_id', '=', 'role_has_permissions.role_id')
+        ->join('users', 'model_has_roles.model_id', '=', 'users.id')
+        ->where('role_has_permissions.permission_id', $permission->id)
+        ->pluck('users.email')
+        ->toArray();
+
+    $allEmails = array_unique(array_merge($directUsers, $roleUsers));
+
+    if(count($allEmails) == 0){
+        return $this->getSuperAdminEmails();
+
+    }
+
+    return $allEmails;
+}
+
+function getSuperAdminEmails()
+{
+
+    $superAdminRole = Role::where('name', 'superAdmin')->first();
+
+    if (!$superAdminRole) {
+        return [];
+    }
+
+    $superAdminEmails = DB::table('model_has_roles')
+        ->join('users', 'model_has_roles.model_id', '=', 'users.id')
+        ->where('model_has_roles.role_id', $superAdminRole->id)
+        ->pluck('users.email')
+        ->toArray();
+
+    return $superAdminEmails;
+}
+
+
+
 
 
 }
+
+
+// $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.validateCategoriesHousing');
+//     (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
+
+// Managelogement.validateHousingCategoryFile
+// Managelogement.validatePhoto
+// Managelogement.validatePhoto
+// Managelogement.makeVerifiedHousingEquipment
+
+//  $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.makeVerifiedHousingEquipment');
+// (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
+
+// Managelogement.makeVerifiedHousingPreference
+
+//Managesponsoring.validSponsoringRequest
+// Manageretrait.validateRetraitByAdmin
+//Manageverificationdocumenthote.validateDocument
+
+// (new NotificationController())->storeAndSendFileEmail($this->email,$this->name,$this->object,$this->attachedFiles)
+
+// Manageverificationdocumentpartenaire.validateDocument

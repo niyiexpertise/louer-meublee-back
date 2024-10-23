@@ -354,12 +354,8 @@ class PortfeuilleTransactionController extends Controller
                     "body" => "Une mise à jour a été effectuée sur votre portefeuille concernant la transaction {$transaction->id}. Ancien montant reçu de la transaction: {$oldValues['montant_restant']} FCFA. Nouveau montant reçu de la transaction : {$transaction->montant_restant} FCFA. Motif : {$request->motif}.Nouveau solde du portefeuille:{$userPortefeuille->solde}",
                 ];
 
-                dispatch(new SendRegistrationEmail(
-                    $userPortefeuille->user->email,
-                    $mail['body'],
-                    $mail['title'],
-                    2
-                ));
+                (new NotificationController())->store($userPortefeuille->user->email,$mail['body'],$mail['title'],0);
+
             }
         }
 
@@ -382,12 +378,7 @@ class PortfeuilleTransactionController extends Controller
                         "body" => "Une mise à jour a été effectuée sur votre portefeuille concernant la transaction {$transaction->id}.  Ancienne commission partenaire reçue   : {$oldValues['montant_commission_partenaire']} FCFA. Nouvelle commission partenaire : {$transaction->montant_commission_partenaire} FCFA. Motif : {$request->motif}. Nouveau solde du portefeuille:{$partenairePortefeuille->solde}",
                     ];
 
-                    dispatch(new SendRegistrationEmail(
-                        $partenaireUser->email,
-                        $mail['body'],
-                        $mail['title'],
-                        2
-                    ));
+                    (new NotificationController())->store($partenaireUser->email,$mail['body'],$mail['title'],0);
 
                     // Mise à jour du portefeuille du partenaire
                    

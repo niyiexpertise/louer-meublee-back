@@ -110,14 +110,14 @@ public function login(Request $request){
                 return response()->json([
                     'error' => 'Vous avez été bloqué. Veuillez contacter l\'administrateur pour plus de détails.'
                 ], 200);
-                
-            } 
+
+            }
             if($user->is_deleted){
                 return response()->json([
                     'error' => 'Veuillez contacter l\'administrateur pour plus de détails car vous avez été supprimé.'
                 ], 200);
-                
-            } 
+
+            }
             if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('auth_token')->plainTextToken;
                 $codes = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -131,7 +131,7 @@ public function login(Request $request){
                 ];
 
                 $userRights = User_right::where('user_id', $user->id)->get();
-                              
+
                 $rightsDetails = [];
 
                 foreach ($userRights as $userRight) {
@@ -237,11 +237,11 @@ public function checkAuth(Request $request){
                 'right_id' => Role::whereName($r)->first()->id,
                 'right_name' =>$r
             ];
-        } 
+        }
 
 
 
-        
+
         return response()->json([
             'data' => Auth::user(),
             'solde_portfeuille' => Portfeuille::whereUserId(Auth::user()->id)->first()->solde,
@@ -345,14 +345,14 @@ public function verification_code(Request $request)
     try {
         $verification = $request->code;
         // $code = User::where('code', $verification)->first();
-       
+
 
         if(!(User::whereId(Auth::user()->id)->first())){
             return (new ServiceController())->apiResponse(404,[], 'Utilisateur non trouvé');
         }
 
         if(User::whereId(Auth::user()->id)->first()->code !=$verification ){
-            return [User::whereId(Auth::user()->id)->first()->code,$verification]; 
+            return [User::whereId(Auth::user()->id)->first()->code,$verification];
             return (new ServiceController())->apiResponse(404,[], "Ce code n'appartient pas à l'utilisateur connecté");
         }
 
@@ -366,7 +366,7 @@ public function verification_code(Request $request)
     //   {
     //         return (new ServiceController())->apiResponse(404,[], 'Utilisateur ayant ce code non trouvé');
     //     }
-        $code->code=0;  
+        $code->code=0;
         $code->is_double_authentification = true;
         $code->save();
         if ($code !== null) {
@@ -444,12 +444,12 @@ public function new_code($id) {
                 'body' => $user->code
             ];
             Mail::to($email)->send(new ConfirmationLoginEmail($mail) );
-            
+
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Code sent successfully',
             ]);
-        } 
+        }
         return response()->json([
             'status_code' => 404,
             'message' => 'This id does not exist'
@@ -529,7 +529,7 @@ public function password_recovery_start_step(Request $request){
             if($exists){
                 DB::table('password_reset_tokens')->where('email', $request->email)->delete();
             }
-
+                     
             $token = Str::random(60);
 
             DB::table('password_reset_tokens')->insert([
@@ -538,8 +538,10 @@ public function password_recovery_start_step(Request $request){
                 'created_at' => now(),
             ]);
 
+            // getEmailsByPermissionName
+
             // URL du frontend pour le formulaire de réinitialisation de mot de passe
-            $frontendUrl = 'https://mon-frontend.com/reset-password';
+            $frontendUrl = 'http://192.168.100.15:5173/auth/forgot-password';
 
             // Génère le lien avec le token et l'email
             $resetLink = $frontendUrl . '?token=' . $token . '&email=' . urlencode($request->email);
@@ -550,7 +552,7 @@ public function password_recovery_start_step(Request $request){
                 'body' => "Cliquez sur ce lien : {$resetLink} et suivez les étapes pour réinitialiser votre mot de passe."
             ];
 
-            dispatch( new SendRegistrationEmail($request->email, $mail['body'], $mail['title'], 1));
+            (new NotificationController())->store($request->email,$mail['body'],$mail['title'],1);
 
             return (new ServiceController())->apiResponse(200,[], "Email envoyé avec succès");
 
@@ -660,7 +662,7 @@ public function password_recovery_end_step(Request $request){
                         $deconnecte->delete();
             }
 
-        return (new ServiceController())->apiResponse(404, [],"Mot de passe modifié avec succès.");
+        return (new ServiceController())->apiResponse(200, [],"Mot de passe modifié avec succès.");
 
           } catch(\Exception $e) {
             return response()->json($e->getMessage());

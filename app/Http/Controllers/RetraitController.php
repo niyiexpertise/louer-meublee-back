@@ -304,8 +304,9 @@ class RetraitController extends Controller
              'title' => 'Confirmation de la demande de retrait',
              'body' => "Votre demande de retrait a été validée par l'administrateur. Le montant transféré est de {$montant} FCFA. Votre nouveau solde est de {$portfeuille->solde} FCFA."
          ];
- 
-         dispatch(new SendRegistrationEmail($retrait->user->email, $mail['body'], $mail['title'], 2));
+
+         (new NotificationController())->store($retrait->user->email,$mail['body'],$mail['title'],0);
+
  
          return (new ServiceController())->apiResponse(200, [], 'Retrait validé avec succès');
      } catch (Exception $e) {
@@ -420,7 +421,8 @@ class RetraitController extends Controller
                         'body' => "Votre demande de retrait a été rejeté pour le motif suivant <<".$request->input('motif').">>. Pour plus d'informations vous pouvez contactez l'administrateur"
                     ];
 
-                     dispatch( new SendRegistrationEmail($retrait->user->email, $mail['body'], $mail['title'], 2));
+                    (new NotificationController())->store($retrait->user->email,$mail['body'],$mail['title'],0);
+
                     return response()->json([
                     'message' => 'Retrait successfully rejected',
                  ]);
@@ -557,30 +559,17 @@ class RetraitController extends Controller
             $retrait->user_role = $roles[0] ;
             $retrait->identifiant_payement_method = $moyenPayement->valeur_method_payement;
             $retrait->save();
+
+            $mail = [
+                'title' => 'Demande de retrait',
+                'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
+               ];
+
+             $personToNotify = (new PermissionController())->getEmailsByPermissionName('Manageretrait.validateRetraitByAdmin');
+            (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
     
-                      
-                           $mail = [
-                            'title' => 'Demande de retrait',
-                            'body' => "Votre demande de retrait a été pris en compte, patientez un moment pour recevoir le paiement."
-                           ];
-                        
-                         dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
     
-                         $right = Right::where('name', 'admin')->first();
-                         $adminUsers = User_right::where('right_id', $right->id)->get();
-                 
-                         foreach ($adminUsers as $adminUser) {
-                             
-                 
-                            $mail = [
-                                'title' => 'Demande de retrait',
-                                'body' => "Un utilisateur vient de soumettre une demande de retrait. Veuillez vous connecter rapidement pour la traiter."
-                               ];
-                             dispatch(new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-                 
-                 
-                         }
-                         return (new ServiceController())->apiResponse(200,$retrait, 'Demande de retrait fait avec succès');
+        return (new ServiceController())->apiResponse(200,$retrait, 'Demande de retrait fait avec succès. D\ici là vous aurez un retour de l\'administrateur');
         
         } catch(Exception $e) {
              return (new ServiceController())->apiResponse(500,[],$e->getMessage());

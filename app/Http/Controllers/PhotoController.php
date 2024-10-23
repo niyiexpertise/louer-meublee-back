@@ -323,7 +323,7 @@ class PhotoController extends Controller
            }
     
            if(Auth::user()->id != $housing->user_id){
-            return (new ServiceController())->apiResponse(403,[],'Vous n\'avez pas le droit d\'afficher les photos d\'un logement qui ne vous appartiennent pas');
+            return (new ServiceController())->apiResponse(404,[],'Vous n\'avez pas le droit d\'afficher les photos d\'un logement qui ne vous appartiennent pas');
            }
 
            $data = photo::where('housing_id',$housing->id)->get();

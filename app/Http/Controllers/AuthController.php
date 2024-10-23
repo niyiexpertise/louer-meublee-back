@@ -422,17 +422,6 @@ public function RevokePermsToRole(Request $request, $r){
                 foreach($permission_role as $pr){
                     $permission_name .= " " . $pr['name'] . ",";
                 }
-                $message_notification ="Vous avez maintenant le rôle de ". $role->name .".";
-
-                    $mail = [
-                        'title' => "Attribution du role de ".$role->name,
-                        'body' => $message_notification
-                    ];
-                    try {
-                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-                    } catch (\Exception $e) {
-
-                    }
 
                 return response()->json([
                     'message' => 'role assigné avec success',
@@ -564,18 +553,7 @@ public function RevokePermsToRole(Request $request, $r){
                 if($user->roles->count()!= 1){
                     $user->assignRole($roles);
                 }
-                $message_notification ="Vous n'avez plus maintenant le rôle de  ". $role->name .". Ce role vient de vous être retiré par l'administrateur.";
-
-                    $mail = [
-                        'title' => "Retrait du role de ".$role->name,
-                        'body' => $message_notification
-                    ];
-                    try {
-                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-
-                    } catch (\Exception $e) {
-
-                    }
+               
                 return response()->json([
                     'message' => 'role retire avec success',
                      'data' => [
@@ -714,17 +692,7 @@ public function RevokePermsToRole(Request $request, $r){
             }
 
             $uniquePermissions = array_unique($permissions);
-            $message_notification= "Vous avez maintenant les permissions suivantes: ". $permission_name . ".";
-                    $mail = [
-                        'title' => "Notification sur les nouvelle permissions attribuées",
-                        'body' => $message_notification
-                    ];
-                    try {
 
-                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-                    } catch (\Exception $e) {
-
-                    }
 
                 return (new ServiceController())->apiResponse(200, [
                     'id' => $user->id,
@@ -862,18 +830,6 @@ public function RevokePermsToRole(Request $request, $r){
             }
 
             $uniquePermissions = array_unique($permissions);
-            $message_notification= "Vous n'avez plus les permissions suivantes: ". $permission_name . ".Elles vous ont été retiré par l'admin.";
-                    $mail = [
-                        'title' => "Notification sur le retrait des permissions ",
-                        'body' => $message_notification
-                    ];
-                    try {
-
-
-                        dispatch( new SendRegistrationEmail($user->email, $mail['body'], $mail['title'], 2));
-                    } catch (\Exception $e) {
-
-                    }
 
             return (new ServiceController())->apiResponse(200, [
                 'id' => $user->id,
@@ -1098,13 +1054,8 @@ public function RevokePermsToRole(Request $request, $r){
 
     //Liste des utilisateurs ayant une permission donné
     public function usersWithPerm($p){
-        // try{
-
-        // }catch (Exception $e){
-        //       return response()->json(['error' => $e->getMessage()], 500);
-        // }
         try{
-            $permission = permission::find($p);
+            $permission = Permission::find($p);
             $users = User::permission($permission->name)->get();
             if (!$permission) {
                 return response()->json('permission not found');

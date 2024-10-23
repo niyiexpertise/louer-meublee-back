@@ -8,6 +8,7 @@ use App\Models\Housing;
 use App\Models\HousingType;
 use App\Models\PropertyType;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\App;
 use App\Models\Charge;
@@ -1400,6 +1401,7 @@ public function addHousing_step_16(Request $request, $housingId) {
 
  public function addHousing_step_17(Request $request, $housingId)
  {
+
      try {
               $housing = Housing::find($housingId);
         if (!$housing) {
@@ -1425,7 +1427,7 @@ public function addHousing_step_16(Request $request, $housingId) {
 
          // Si un champ est présent, tous les autres doivent l'être aussi
          if (!empty($promotionProvided) && count($promotionProvided) !== count($promotionFields)) {
-             return (new ServiceController())->apiResponse(400, ["err"=>$request], 'Tous les champs de promotion doivent être présents ou absents.');
+             return (new ServiceController())->apiResponse(400, [], 'Tous les champs de promotion doivent être présents ou absents.');
          }
 
          // Valider les champs de promotion s'ils sont présents
@@ -1436,19 +1438,19 @@ public function addHousing_step_16(Request $request, $housingId) {
              $promotionValue = $request->input('promotion_value');
 
              if (!strtotime($promotionDateDebut)) {
-                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de début de la promotion doit être une date valide.');
+                 return (new ServiceController())->apiResponse(404, [], 'La date de début de la promotion doit être une date valide.');
              }
              if (!strtotime($promotionDateFin)) {
-                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de fin de la promotion doit être une date valide.');
+                 return (new ServiceController())->apiResponse(404, [], 'La date de fin de la promotion doit être une date valide.');
              }
              if (strtotime($promotionDateFin) < strtotime($promotionDateDebut)) {
-                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La date de fin de la promotion doit être après ou égale à la date de début.');
+                 return (new ServiceController())->apiResponse(404, [], 'La date de fin de la promotion doit être après ou égale à la date de début.');
              }
              if (intval($promotionNumberOfReservation)<= 0) {
-                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'Le nombre de réservations doit être un entier supérieur à zéro.');
+                 return (new ServiceController())->apiResponse(404, [], 'Le nombre de réservations doit être un entier supérieur à zéro.');
              }
              if (floatval($promotionValue) <= 0) {
-                 return (new ServiceController())->apiResponse(404, ["err"=>$request], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
+                 return (new ServiceController())->apiResponse(404, [], 'La valeur de la promotion doit être un nombre non négatif et non nul.');
              }
 
              if(!is_null(Setting::first()->max_number_of_reservation)){
@@ -1495,44 +1497,19 @@ public function addHousing_step_16(Request $request, $housingId) {
         $housing->is_finished=1;
          $housing->save();
 
-         // Notifications
-         $userId = auth()->user()->id;
-         $notificationName = "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur.";
-
-        //  $notification = new Notification([
-        //      'name' => $notificationName,
-        //      'user_id' => $userId,
-        //  ]);
-        //  $notification->save();
-
-         $mail = [
-             'title' => "Ajout d'un logement",
-             'body' => "Félicitation! Vous venez d'ajouter un nouveau logement sur la plateforme. Le logement ne sera visible sur le site qu'après validation de l'administrateur."
-         ];
-
-
-         dispatch( new SendRegistrationEmail(Auth::user()->email, $mail['body'], $mail['title'], 2));
-
-
          $adminRole = DB::table('rights')->where('name', 'admin')->first();
 
          if (!$adminRole) {
              return (new ServiceController())->apiResponse(404, [], 'Le rôle d\'admin n\'a pas été trouvé.');
          }
 
-         $adminUsers = User::whereHas('user_right', function ($query) use ($adminRole) {
-             $query->where('right_id', $adminRole->id);
-         })->get();
+         $mail = [
+            'title' => "Notification d'ajout d'un logement",
+            'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
+        ];
 
-         foreach ($adminUsers as $adminUser) {
-
-             $mail = [
-                 'title' => "Notification d'ajout d'un logement",
-                 'body' => "Un nouveau logement vient d'être ajouté sur le site par un hôte."
-             ];
-
-            dispatch( new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-         }
+        $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.ValidateHousing');
+        (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
          return (new ServiceController())->apiResponse(200, ["housing_id" => $housing->id], 'Étape 17 terminée avec succès');
 

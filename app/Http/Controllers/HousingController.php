@@ -2657,16 +2657,13 @@ public function getListingsByNightPriceMin(Request $request,$price,$pagel=null)
     $housing->is_updated = true;
     $housing->save();
 
-    $right = Right::where('name', 'admin')->first();
-    $adminUsers = User_right::where('right_id', $right->id)->get();
-    foreach ($adminUsers as $adminUser) {
-        $mail = [
-            "title" => "Mise à jour de logement",
-            "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
-        ];
+    $mail = [
+        "title" => "Mise à jour de logement",
+        "body" => "Un logement avec ID: $id a été mis à jour. Veuillez valider la mise à jour dès que possible."
+    ];
 
-        dispatch(new SendRegistrationEmail($adminUser->email, $mail['body'], $mail['title'], 2));
-    }
+    $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.ValidateHousing');
+    (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
 
     return response()->json(['message' => 'Logement mis à jour avec succès'], 200);
 }
@@ -3537,16 +3534,14 @@ public function enableHousing($housingId)
              $photoModel->save();
          }
 
-     $right = Right::where('name','admin')->first();
-     $adminUsers = User_right::where('right_id', $right->id)->get();
-     foreach ($adminUsers as $adminUser) {
-          $mail = [
-         "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
-        "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
-     ];
+         $mail = [
+            "title" => "Ajout d'une/de nouvelle(s) photo(s) à un logement",
+           "body" => "Un hote vient d'ajouter une/de nouvelle(s) photo(s) pour le logement {$housing->name}."
+        ];
 
-         dispatch( new SendRegistrationEmail($adminUser->user->email, $mail['body'], $mail['title'], 2));
-       }
+        $personToNotify = (new PermissionController())->getEmailsByPermissionName('Managelogement.validatePhoto');
+        (new NotificationController())->store($personToNotify,$mail['body'],$mail['title'],2);
+
              return response()->json(['data' => 'Photos de logement ajouté avec succès'], 200);
 
    } catch (Exception $e) {
@@ -3762,7 +3757,7 @@ public function validatePhoto(Request $request)
                     'body' => "Une des photos que vous avez ajouté à un de vos logements été validé avec succès par l'administrateur.",
                 ];
 
-                dispatch(new SendRegistrationEmail(Housing::whereId($photo->housing_id)->first()->user->email, $mail['body'], $mail['title'], 2));
+                (new NotificationController())->store(Housing::whereId($photo->housing_id)->first()->user->email,$mail['body'],$mail['title'],2);
 
                 $photo->is_verified = true;
                 $photo->save();

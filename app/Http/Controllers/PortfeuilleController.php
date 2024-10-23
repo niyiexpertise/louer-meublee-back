@@ -199,12 +199,7 @@ class PortfeuilleController extends Controller
             
 
             if( $statusPayement==1){
-                $mail = [
-                    "title" => "Confirmation de dépôt sur votre portefeuille",
-                    "body" => "Votre portefeuille a été crédité de {$amount} FCFA. Nouveau solde : {$portefeuille->solde} FCFA"
-                ];
-    
-                dispatch(new SendRegistrationEmail(User::find($userId)->email, $mail['body'], $mail['title'], 2));
+
                 $data = ["solde" => $portefeuille->solde];
                 return (new ServiceController())->apiResponse(200, $data, 'Le portefeuille a été crédité avec succès.');
             }else{

@@ -20,14 +20,14 @@ return new class extends Migration
 
         
         $user = new User();
-        $user->lastname = 'ADMIN'; 
-        $user->firstname = 'Super'; 
+        $user->lastname = 'ADMIN';
+        $user->firstname = 'ADMIN';
         $user->password = bcrypt('Pasword2000!');
         $user->telephone = '123456789';
-        $user->code_pays = 'FR'; 
-        $user->email = 'superadmin@example.com'; 
+        $user->code_pays = 'FR';
+        $user->email = 'ayenaaurel15@gmail.com';
         $user->country = 'France';
-        $user->city = 'Paris'; 
+        $user->city = 'Paris';
         $user->address = '123 SuperAdmin Street';
         $user->sexe = 'Masculin';
 

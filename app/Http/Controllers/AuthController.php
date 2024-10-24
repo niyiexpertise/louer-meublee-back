@@ -20,7 +20,6 @@ use App\Mail\ConfirmationLoginEmail;
 use App\Mail\NotificationEmail;
 use App\Models\Notification;
 use App\Mail\NotificationEmailwithoutfile;
-use Dotenv\Exception\ValidationException as ExceptionValidationException;
 
 class AuthController extends Controller
 {
@@ -388,6 +387,10 @@ public function RevokePermsToRole(Request $request, $r){
                     ]);
                 }
 
+                if($role->name == "hote" || $role->name == "traveler" || $role->name == "partenaire"){
+                    return (new ServiceController())->apiResponse(404, [], "Vous ne pouvez assigner le rôle $role->name");
+                }
+
                 if($role->name == "superAdmin"){
                     return (new ServiceController())->apiResponse(404, [], "Repentez vous.");
                 }
@@ -395,16 +398,16 @@ public function RevokePermsToRole(Request $request, $r){
                 if (!$right) {
                     return response()->json([
                         'message' => 'role not found',
-                    ]);
+                    ],404);
                 }
 
                 if (!$user) {
-                    return response()->json('user not found');
+                    return response()->json('user not found',404);
                 }
                 if(User_right::where('user_id',$id)->where('right_id',$r)->exists()){
                     return response()->json([
                         'message' => 'Ce rôle a déjà été assigné à cet utilisateur'
-                    ]);
+                    ],404);
                 }
                 $u = User_right::where('user_id',$id)->get();
                 foreach($u as $utilisateur){

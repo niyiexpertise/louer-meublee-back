@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->integer('min_housing_file')->nullable();
+            $table->integer('min_housing_file')->default(2)->nullable();
         });
     }
 

@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->integer('max_night_number');
-            $table->float('max_value_reduction');
-            $table->integer('max_number_of_reservation');
-            $table->float('max_value_promotion');
+            $table->integer('max_night_number')->default(30);
+            $table->float('max_value_reduction')->default(10);
+            $table->integer('max_number_of_reservation')->default(30);
+            $table->float('max_value_promotion')->default(10);
         });
     }
 

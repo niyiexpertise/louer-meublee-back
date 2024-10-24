@@ -15,19 +15,19 @@ return new class extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
 
-            $table->integer('pagination_logement_acceuil')->nullable();
-            $table->text('condition_tranche_paiement')->nullable();
-            $table->text('condition_prix_logement')->nullable();
-            $table->text('condition_sponsoring_logement')->nullable();
-            $table->string('contact_email')->nullable();
-            $table->string('contact_telephone')->nullable();
-            $table->string('facebook_url')->nullable();
-            $table->string('twitter_url')->nullable();
-            $table->string('instagram_url')->nullable();
-            $table->string('linkedin_url')->nullable();
-            $table->string('logo')->nullable();
-            $table->string('adresse_serveur_fichier')->nullable();
-            $table->string('app_mode')->nullable();
+            $table->integer('pagination_logement_acceuil')->default(10)->nullable();
+            $table->text('condition_tranche_paiement')->default('condition')->nullable();
+            $table->text('condition_prix_logement')->default('condition')->nullable();
+            $table->text('condition_sponsoring_logement')->default('condition')->nullable();
+            $table->string('contact_email')->default('zakiyoubababodi@gmail.com')->nullable();
+            $table->string('contact_telephone')->default('97546933')->nullable();
+            $table->string('facebook_url')->default('url')->nullable();
+            $table->string('twitter_url')->default('url')->nullable();
+            $table->string('instagram_url')->default('url')->nullable();
+            $table->string('linkedin_url')->default('url')->nullable();
+            $table->string('logo')->default('logo')->nullable();
+            $table->string('adresse_serveur_fichier')->default('https://example.com/files')->nullable();
+            $table->string('app_mode')->default('developpement')->nullable();
 
             $table->timestamps();
         });
@@ -35,16 +35,6 @@ return new class extends Migration
         // Insert a default row
         DB::table('settings')->insert([
             'pagination_logement_acceuil' => 10,
-            'condition_tranche_paiement' => '',
-            'condition_prix_logement' => '',
-            'condition_sponsoring_logement' => '',
-            'contact_email' => 'example@domain.com',
-            'contact_telephone' => '',
-            'facebook_url' => '',
-            'twitter_url' => '',
-            'instagram_url' => '',
-            'linkedin_url' => '',
-            'logo' => '',
             'adresse_serveur_fichier' => 'https://example.com/files',
             'app_mode' => 'production',
             'created_at' => now(),

@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->decimal('montant_maximum_recharge', 10, 2)->nullable();
-            $table->decimal('montant_minimum_recharge', 10, 2)->nullable();
-            $table->decimal('montant_minimum_retrait', 10, 2)->nullable();
-            $table->decimal('montant_maximum_retrait', 10, 2)->nullable();
-            $table->decimal('montant_minimum_solde_retrait', 10, 2)->nullable();
+            $table->decimal('montant_maximum_recharge', 15, 2)->default(1000000000)->nullable();
+            $table->decimal('montant_minimum_recharge', 15, 2)->default(10000)->nullable();
+            $table->decimal('montant_minimum_retrait', 15, 2)->default(5000)->nullable();
+            $table->decimal('montant_maximum_retrait', 15, 2)->default(1000000)->nullable();
+            $table->decimal('montant_minimum_solde_retrait', 15, 2)->default(10000)->nullable();
         });
+        
     }
 
     /**

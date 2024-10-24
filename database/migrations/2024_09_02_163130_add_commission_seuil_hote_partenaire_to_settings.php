@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->float('commission_seuil_hote_partenaire')->default(5)->nullable();
+            // $table->float('commission_seuil_hote_partenaire')->nullable();
         });
     }
 

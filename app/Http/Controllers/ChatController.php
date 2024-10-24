@@ -777,7 +777,7 @@ class ChatController extends Controller
             }
     }
 
-    private function generateRandomAlphaNumeric($length,$class,$colonne) {
+    public function generateRandomAlphaNumeric($length,$class,$colonne) {
         $bytes = random_bytes(ceil($length * 3 / 4));
         $randomS =  substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
 

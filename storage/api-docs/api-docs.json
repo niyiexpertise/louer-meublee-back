@@ -10730,7 +10730,7 @@
                 "tags": [
                     "Housing Category Photo"
                 ],
-                "summary": "Mettre à jour le statut de vérification des fichiers de logement",
+                "summary": "Mettre à jour le statut de vérification des fichiers des pièces d'un logement",
                 "operationId": "196dff9e1982fe8ff69ac78928bf6929",
                 "requestBody": {
                     "required": true,
@@ -27604,6 +27604,314 @@
                 ]
             }
         },
+        "/api/ticketChat/createTicketOrMessage": {
+            "post": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Créer un ticket ou envoyer un message",
+                "description": "Cette fonction permet de créer un nouveau ticket ou d'envoyer un message dans un ticket existant.",
+                "operationId": "0c8252cffa710f280494da9230b3ba8f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "description",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "ticket_chat_id": {
+                                        "description": "ID du ticket de discussion existant",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "description": "Titre du ticket",
+                                        "type": "string",
+                                        "example": "Problème de connexion"
+                                    },
+                                    "description": {
+                                        "description": "Description du ticket",
+                                        "type": "string",
+                                        "example": "Je ne peux pas me connecter à mon compte."
+                                    },
+                                    "content": {
+                                        "description": "Contenu du message",
+                                        "type": "string",
+                                        "example": "Veuillez m'aider avec ce problème."
+                                    },
+                                    "files": {
+                                        "description": "Fichiers à joindre",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket créé ou message envoyé avec succès"
+                    },
+                    "404": {
+                        "description": "Erreur de validation ou ticket non trouvé"
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/getuserTicketChat": {
+            "get": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Récupérer les tickets de discussion de l'utilisateur connecté",
+                "operationId": "b606bd9fac1f5f2ed0863ba3e39aae51",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tickets de discussion d'une personne connectée"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des tickets"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/getTicketChat": {
+            "get": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Récupérer tous les tickets de discussion",
+                "operationId": "8014b1e1363150ca8ef119b87b91b388",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tickets de discussion"
+                    },
+                    "404": {
+                        "description": "Non autorisé à afficher la liste des préoccupations"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des tickets"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/getTicketChatMessageByTicketChat/{ticketChatId}": {
+            "get": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Récupérer les messages d'un ticket de discussion",
+                "operationId": "4c76e8d68bc3183e61cdecb5ee29b30e",
+                "parameters": [
+                    {
+                        "name": "ticketChatId",
+                        "in": "path",
+                        "description": "ID du ticket de discussion",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des messages d'un ticket de discussion"
+                    },
+                    "404": {
+                        "description": "Ticket de discussion non trouvé ou non autorisé"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la récupération des messages"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/markMessageAsRead": {
+            "post": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Marquer les messages comme lus",
+                "operationId": "49ad447feca0cfc982dde294b772d2c8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "messageIds"
+                                ],
+                                "properties": {
+                                    "messageIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message marqué comme lu avec succès"
+                    },
+                    "404": {
+                        "description": "Message non trouvé ou non autorisé"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la mise à jour des messages"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/markMessageAsUnRead/{messageId}": {
+            "patch": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Marquer un message comme non lu",
+                "operationId": "40e13c19a2c2f4eb1dfa40222578ee10",
+                "parameters": [
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "description": "ID du message",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message marqué comme non lu avec succès"
+                    },
+                    "404": {
+                        "description": "Message non trouvé ou non autorisé"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la mise à jour du message"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/closeTicket/{ticketChatId}": {
+            "post": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Fermer un ticket de discussion",
+                "operationId": "425d953fd28f2d45dd6c9c9c00f92ac9",
+                "parameters": [
+                    {
+                        "name": "ticketChatId",
+                        "in": "path",
+                        "description": "ID du ticket de discussion à fermer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket de discussion fermé avec succès"
+                    },
+                    "404": {
+                        "description": "Ticket de discussion non trouvé ou non autorisé"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la fermeture du ticket"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ticketChat/deleteChatTicketMessage/{messageId}": {
+            "post": {
+                "tags": [
+                    "Ticket Chat"
+                ],
+                "summary": "Supprimer un message de ticket de discussion",
+                "operationId": "73f16058bdf02cbf96c2e27d01d403a9",
+                "parameters": [
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "description": "ID du message à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message supprimé avec succès"
+                    },
+                    "404": {
+                        "description": "Message non trouvé ou non autorisé"
+                    },
+                    "500": {
+                        "description": "Erreur lors de la suppression du message"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/type_demande/index": {
             "get": {
                 "tags": [
@@ -31552,6 +31860,10 @@
         {
             "name": "Tarif Sponsoring",
             "description": "Tarif Sponsoring"
+        },
+        {
+            "name": "Ticket Chat",
+            "description": "Ticket Chat"
         },
         {
             "name": "type_demande",

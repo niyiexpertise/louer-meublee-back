@@ -69,6 +69,7 @@ use App\Http\Controllers\ServicePaiementController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\KkiapayController;
 use App\Services\PaiementService;
+use App\Http\Controllers\TicketChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -524,6 +525,18 @@ Route::middleware(['auth:sanctum', '2fa'])->group(function () {
         Route::post('/markMessageAsRead', [ChatController::class, 'markMessageAsRead']);
         Route::post('/markMessageAsUnRead/{messageId}', [ChatController::class, 'markMessageAsUnRead']);
         Route::get('/getMessagesByChatId/{chatId}', [ChatController::class, 'getMessagesByChatId']);
+    });
+
+     // Gestion des ticket_chats
+     Route::prefix('ticketChat')->group(function () {
+        Route::post('/createTicketOrMessage', [TicketChatController::class, 'createTicketOrMessage']);
+        Route::get('/getuserTicketChat', [TicketChatController::class, 'getuserTicketChat']);
+        Route::get('/getTicketChat', [TicketChatController::class, 'getTicketChat']);
+        Route::post('/markMessageAsRead', [TicketChatController::class, 'markMessageAsRead']);
+        Route::post('/markMessageAsUnRead/{messageId}', [TicketChatController::class, 'markMessageAsUnRead']);
+        Route::get('/getTicketChatMessageByTicketChat/{ticketChatId}', [TicketChatController::class, 'getTicketChatMessageByTicketChat']);
+        Route::post('/closeTicket/{ticketChatId}', [TicketChatController::class, 'closeTicket']);
+        Route::post('/deleteChatTicketMessage/{ticketChatMessageId}', [TicketChatController::class, 'deleteChatTicketMessage']);
     });
 
     //Gestion de quelques stats
